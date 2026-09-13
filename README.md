@@ -4,9 +4,7 @@
 It keeps independent evidence channels in a `MessageFingerprint` instead of
 forcing a single interpretation of a message.
 
-The Rust crate is the primary implementation. The original Python MVP remains
-in `textintel/` as a migration reference while downstream users move to the
-typed Rust API.
+The Rust crate is the sole implementation and exposes a typed API.
 
 ## Quick start
 

@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
 use super::error::ProviderError;
-use super::types::{LanguageCandidate, MessageFingerprint, PhoneticCandidate, SymbolReading};
+use super::types::{
+    LanguageCandidate, MessageFingerprint, PhoneticCandidate, SymbolConcept, SymbolReading,
+};
 
 /// Provider boundary for multilingual embeddings.  Providers may be local or
 /// remote; the core never chooses a vendor or sends data implicitly.
@@ -29,9 +31,27 @@ pub trait LemmatizerProvider: Send + Sync {
     ) -> Result<Vec<String>, ProviderError>;
 }
 
+/// Language-independent boundary for word, lemma, and stop-word resources.
+/// Implementations can be backed by JSON, SQLite, a compressed dictionary, or
+/// a remote/local service without changing the analysis pipeline.
+pub trait LexiconProvider: Send + Sync {
+    fn contains(&self, word: &str, languages: Option<&[String]>) -> bool;
+    fn starts_with(&self, prefix: &str, languages: Option<&[String]>) -> bool;
+    fn is_stop_word(&self, word: &str, languages: Option<&[String]>) -> bool;
+    fn lemma(&self, word: &str, languages: Option<&[String]>) -> Option<String>;
+}
+
 /// Optional knowledge source for symbols, emoji, and number readings.
 pub trait SymbolKnowledgeProvider: Send + Sync {
     fn readings(&self, token: &str, max_readings: usize) -> Vec<SymbolReading>;
+
+    fn concepts(&self, _token: &str) -> Vec<SymbolConcept> {
+        Vec::new()
+    }
+
+    fn unicode_name(&self, _token: &str) -> Option<String> {
+        None
+    }
 }
 
 /// Optional reranker for a retrieved candidate set.  Returning the input is a
@@ -61,5 +81,6 @@ pub type SharedEmbeddingProvider = Arc<dyn EmbeddingProvider>;
 pub type SharedG2PProvider = Arc<dyn G2PProvider>;
 pub type SharedLanguageProvider = Arc<dyn LanguageDetectionProvider>;
 pub type SharedLemmatizerProvider = Arc<dyn LemmatizerProvider>;
+pub type SharedLexiconProvider = Arc<dyn LexiconProvider>;
 pub type SharedSymbolProvider = Arc<dyn SymbolKnowledgeProvider>;
 pub type SharedRerankerProvider = Arc<dyn RerankerProvider>;
