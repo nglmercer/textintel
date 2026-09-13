@@ -32,8 +32,9 @@ pub use core::types::*;
 pub use engine::TextIntelligence;
 pub use phonetic::{NullG2PProvider, RuleBasedG2PProvider};
 pub use resources::{
-    embedded_common, DefaultLexiconProvider, LanguagePack, LexiconEntry, ResourceError,
-    ResourceLoader, SymbolPack, SymbolResource,
+    embedded_common, embedded_resources, normalize_key, DefaultLexiconProvider, IndexKey,
+    LanguageIndex, LanguagePack, LexiconEntry, LexiconLookup, LexiconRecord, LookupStatus,
+    ResourceError, ResourceLoader, SymbolPack, SymbolResource, SUPPORTED_SCHEMA_VERSION,
 };
 pub use semantic::{NullEmbeddingProvider, StaticEmbeddingProvider};
 pub use storage::MemoryStore;

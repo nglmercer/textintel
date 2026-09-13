@@ -7,8 +7,8 @@ use textintel::lexical::tokenizer::{stop_words, tokenize};
 use textintel::normalization::leetspeak::detect_leet;
 use textintel::visual::unicode_features::analyze_unicode;
 use textintel::{
-    EngineConfig, ResourceLoader, SimilarityWeights, StaticEmbeddingProvider, TextIntelError,
-    TextIntelligence,
+    EngineConfig, LookupStatus, ResourceLoader, SimilarityWeights, StaticEmbeddingProvider,
+    TextIntelError, TextIntelligence,
 };
 
 fn engine() -> TextIntelligence {
@@ -268,5 +268,56 @@ fn resource_loader_indexes_seed_languages_and_supports_custom_packs() {
     assert_eq!(
         custom.detect_languages("zyx"),
         vec![textintel::core::types::LanguageCandidate::new("xx", 1.0)]
+    );
+}
+
+#[test]
+fn resource_index_is_stable_and_tracks_ambiguous_terms() {
+    let mut loader = ResourceLoader::default();
+    loader
+        .load_language_json(
+            r#"{
+                "language": "xx",
+                "words": ["10", "2", "a", "á", "z"],
+                "stop_words": ["a"]
+            }"#,
+            "<test:xx/00-09.json>",
+        )
+        .unwrap();
+    loader
+        .load_language_json(
+            r#"{
+                "language": "yy",
+                "entries": [{"word": "a", "lemma": "a"}]
+            }"#,
+            "<test:yy/a.json>",
+        )
+        .unwrap();
+
+    let keys = loader.index_keys();
+    assert_eq!(keys, vec!["2", "10", "a", "z", "á"]);
+    assert_eq!(loader.lookup("z").status, LookupStatus::Unique);
+    assert_eq!(loader.lookup("missing").status, LookupStatus::NotFound);
+    let ambiguous = loader.lookup("a");
+    assert_eq!(ambiguous.status, LookupStatus::Ambiguous);
+    assert!(ambiguous
+        .matches
+        .iter()
+        .any(|record| record.language == "xx"));
+    assert!(ambiguous
+        .matches
+        .iter()
+        .any(|record| record.language == "yy"));
+    assert!(ambiguous
+        .matches
+        .iter()
+        .all(|record| record.source.starts_with("<test:")));
+    assert_eq!(
+        loader.lookup_in_language("a", "xx").status,
+        LookupStatus::Unique
+    );
+    assert_eq!(
+        loader.lookup_in_language("a", "zz").status,
+        LookupStatus::NotFound
     );
 }

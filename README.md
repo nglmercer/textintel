@@ -74,7 +74,11 @@ let engine = textintel::TextIntelligence::default().with_resources(resources);
 
 The initial English pack includes the requested examples `this is a example`
 and `a good example`. See [`resources/README.md`](resources/README.md) for the
-pack schema and compact `words` / `stop_words` forms.
+pack schema, compact `words` / `stop_words` forms, and source-aware lookup
+records. Index keys are deterministic: numeric runs sort first using natural
+numeric order, followed by Unicode letters and then other characters. This is
+only an ordering rule; matching still preserves the exact language and Unicode
+form needed for reliable tracking.
 
 ## CLI
 

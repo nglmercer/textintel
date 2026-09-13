@@ -2,6 +2,7 @@
 name = "textintel"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 description = "Multilingual text intelligence with independent, explainable analysis channels"
 license = "MIT"
 readme = "README.md"

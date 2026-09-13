@@ -2,8 +2,17 @@
 
 `ResourceLoader` indexes every `.json` file below `resources/languages` and
 `resources/symbols` recursively. The repository intentionally ships only a
-small seed vocabulary for common languages (`en`, `es`, `pt`, `fr`, `de`, and
-`it`); it is not a complete dictionary.
+small seed vocabulary for six languages (`en`, `es`, `pt`, `fr`, `de`, and
+`it`); it is not a complete dictionary. The loader itself has no language
+allow-list: every valid language pack discovered on disk is indexed.
+
+Each language can be split into multiple JSON files or subdirectories. Files
+with the same `language` code are merged, while every lookup record retains
+its source path, origin, provenance, and license metadata.
+
+Use `lookup_in_language` when a report must be scoped to one language. A plain
+`lookup` returns `NotFound`, `Unique`, or `Ambiguous`; it never silently treats
+a word found in another language as an exact match.
 
 Language packs use schema version `1`:
 

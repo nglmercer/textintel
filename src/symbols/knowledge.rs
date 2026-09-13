@@ -1,6 +1,6 @@
 use crate::core::providers::SymbolKnowledgeProvider;
 use crate::core::types::{SymbolConcept, SymbolReading};
-use crate::resources::embedded_common;
+use crate::resources::embedded_resources;
 
 /// Compatibility wrapper around the embedded symbol resource pack.
 /// Applications with larger or domain-specific packs should inject their own
@@ -9,15 +9,15 @@ use crate::resources::embedded_common;
 pub struct DefaultSymbolKnowledge;
 
 pub fn readings_for_token(token: &str, max_readings: usize) -> Vec<SymbolReading> {
-    SymbolKnowledgeProvider::readings(embedded_common(), token, max_readings)
+    SymbolKnowledgeProvider::readings(embedded_resources(), token, max_readings)
 }
 
 pub fn concepts_for_token(token: &str) -> Vec<SymbolConcept> {
-    SymbolKnowledgeProvider::concepts(embedded_common(), token)
+    SymbolKnowledgeProvider::concepts(embedded_resources(), token)
 }
 
 pub fn unicode_name_for_token(token: &str) -> Option<String> {
-    SymbolKnowledgeProvider::unicode_name(embedded_common(), token)
+    SymbolKnowledgeProvider::unicode_name(embedded_resources(), token)
 }
 
 impl SymbolKnowledgeProvider for DefaultSymbolKnowledge {
