@@ -9,7 +9,9 @@ pub struct MemoryStore {
 }
 
 impl MemoryStore {
-    pub fn get(&self, id: &str) -> Option<&MessageFingerprint> { self.records.get(id) }
+    pub fn get(&self, id: &str) -> Option<&MessageFingerprint> {
+        self.records.get(id)
+    }
 }
 
 impl VectorStore for MemoryStore {
@@ -22,10 +24,14 @@ impl VectorStore for MemoryStore {
         Ok(self.records.remove(id).is_some())
     }
 
-    fn len(&self) -> usize { self.records.len() }
+    fn len(&self) -> usize {
+        self.records.len()
+    }
 
     fn records(&self) -> Vec<(String, MessageFingerprint)> {
-        self.records.iter().map(|(id, fingerprint)| (id.clone(), fingerprint.clone())).collect()
+        self.records
+            .iter()
+            .map(|(id, fingerprint)| (id.clone(), fingerprint.clone()))
+            .collect()
     }
 }
-

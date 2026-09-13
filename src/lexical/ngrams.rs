@@ -2,10 +2,7 @@ pub fn word_ngrams(tokens: &[String], n: usize) -> Vec<String> {
     if n <= 1 {
         return tokens.to_vec();
     }
-    tokens
-        .windows(n)
-        .map(|window| window.join(" "))
-        .collect()
+    tokens.windows(n).map(|window| window.join(" ")).collect()
 }
 
 pub fn character_ngrams(text: &str, n: usize) -> Vec<String> {
@@ -13,6 +10,8 @@ pub fn character_ngrams(text: &str, n: usize) -> Vec<String> {
     if n == 0 || chars.len() < n {
         return Vec::new();
     }
-    chars.windows(n).map(|window| window.iter().collect()).collect()
+    chars
+        .windows(n)
+        .map(|window| window.iter().collect())
+        .collect()
 }
-

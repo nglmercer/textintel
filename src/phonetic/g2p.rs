@@ -38,7 +38,11 @@ fn emit_word(word: &str, language: &str) -> Vec<String> {
             ('l', Some('l')) if language == "es" => Some("ʝ"),
             ('r', Some('r')) => Some("r"),
             ('q', Some('u')) => Some("k"),
-            ('g', Some('u')) if chars.get(index + 2) == Some(&'e') || chars.get(index + 2) == Some(&'i') => Some("g"),
+            ('g', Some('u'))
+                if chars.get(index + 2) == Some(&'e') || chars.get(index + 2) == Some(&'i') =>
+            {
+                Some("g")
+            }
             _ => None,
         };
         if let Some(value) = pair {
@@ -94,7 +98,11 @@ impl G2PProviderTrait for RuleBasedG2PProvider {
                 phonemes.extend(emit_word(word, language));
             }
         }
-        let ipa = if phonemes.is_empty() { None } else { Some(phonemes.join("")) };
+        let ipa = if phonemes.is_empty() {
+            None
+        } else {
+            Some(phonemes.join(""))
+        };
         Ok(PhoneticCandidate {
             source: text.to_string(),
             language: language.to_string(),
@@ -104,4 +112,3 @@ impl G2PProviderTrait for RuleBasedG2PProvider {
         })
     }
 }
-

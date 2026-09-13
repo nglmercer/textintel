@@ -7,4 +7,3 @@ pub fn visual_similarity(a: &str, b: &str) -> f64 {
     let sb = casefold_text(&confusable_skeleton(b));
     combined_character_similarity(&sa, &sb)
 }
-

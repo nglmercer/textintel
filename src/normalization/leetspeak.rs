@@ -47,4 +47,3 @@ pub fn apply_leet(text: &str) -> String {
         })
         .collect()
 }
-

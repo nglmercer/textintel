@@ -4,4 +4,3 @@ pub mod scorer;
 pub mod tokenizer;
 
 pub use decoder::RebusDecoder;
-

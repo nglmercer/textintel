@@ -14,8 +14,12 @@ pub fn jaccard(a: &BTreeSet<String>, b: &BTreeSet<String>) -> f64 {
 }
 
 pub fn lexical_similarity(a: &str, b: &str) -> f64 {
-    let left: BTreeSet<_> = simple_lemmas(&tokenize(&casefold_text(a))).into_iter().collect();
-    let right: BTreeSet<_> = simple_lemmas(&tokenize(&casefold_text(b))).into_iter().collect();
+    let left: BTreeSet<_> = simple_lemmas(&tokenize(&casefold_text(a)))
+        .into_iter()
+        .collect();
+    let right: BTreeSet<_> = simple_lemmas(&tokenize(&casefold_text(b)))
+        .into_iter()
+        .collect();
     jaccard(&left, &right)
 }
 
@@ -46,6 +50,9 @@ pub fn tfidf_similarity(a: &[String], b: &[String]) -> f64 {
     let dot: f64 = left.iter().zip(&right).map(|(x, y)| x * y).sum();
     let nl = left.iter().map(|value| value * value).sum::<f64>().sqrt();
     let nr = right.iter().map(|value| value * value).sum::<f64>().sqrt();
-    if nl == 0.0 || nr == 0.0 { 0.0 } else { dot / (nl * nr) }
+    if nl == 0.0 || nr == 0.0 {
+        0.0
+    } else {
+        dot / (nl * nr)
+    }
 }
-

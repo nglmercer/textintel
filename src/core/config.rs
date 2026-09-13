@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 /// Weights used by the final score.  Missing channels are omitted and the
 /// remaining weights are renormalized, so disabling a provider is safe.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
 pub struct SimilarityWeights {
     pub semantic: f64,
     pub lexical: f64,
@@ -16,18 +17,19 @@ pub struct SimilarityWeights {
 
 impl Default for SimilarityWeights {
     fn default() -> Self {
-        // The deterministic channels are useful without downloading models.
-        // Semantic and phonetic weights are ready for providers but are zero
-        // by default so the base engine remains fully local and predictable.
+        // Provider channels are weighted by default, but missing channels are
+        // skipped and the remaining weights are renormalized. This keeps the
+        // base engine model-free while making an injected semantic/G2P
+        // provider effective without a second score configuration.
         Self {
-            semantic: 0.0,
-            lexical: 0.14,
-            character: 0.18,
-            visual: 0.18,
-            phonetic: 0.0,
+            semantic: 0.20,
+            lexical: 0.10,
+            character: 0.10,
+            visual: 0.10,
+            phonetic: 0.15,
             symbolic: 0.10,
-            decoded: 0.28,
-            obfuscation: 0.12,
+            decoded: 0.20,
+            obfuscation: 0.05,
         }
     }
 }
@@ -74,6 +76,7 @@ impl SimilarityWeights {
 /// Resource and provider limits.  These bounds protect candidate generation
 /// from untrusted input and make runtime behavior predictable.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
 pub struct EngineConfig {
     pub max_input_length: usize,
     pub max_segments: usize,
@@ -124,4 +127,3 @@ impl EngineConfig {
         self.similarity_weights.validate()
     }
 }
-

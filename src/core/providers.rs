@@ -22,7 +22,11 @@ pub trait LanguageDetectionProvider: Send + Sync {
 /// Optional language-aware lemmatization.  The built-in light stemmer remains
 /// available when this provider is not configured.
 pub trait LemmatizerProvider: Send + Sync {
-    fn lemmatize(&self, tokens: &[String], language: Option<&str>) -> Result<Vec<String>, ProviderError>;
+    fn lemmatize(
+        &self,
+        tokens: &[String],
+        language: Option<&str>,
+    ) -> Result<Vec<String>, ProviderError>;
 }
 
 /// Optional knowledge source for symbols, emoji, and number readings.
@@ -47,6 +51,9 @@ pub trait VectorStore: Send + Sync {
     fn upsert(&mut self, id: String, fingerprint: MessageFingerprint) -> Result<(), String>;
     fn remove(&mut self, id: &str) -> Result<bool, String>;
     fn len(&self) -> usize;
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
     fn records(&self) -> Vec<(String, MessageFingerprint)>;
 }
 
@@ -56,4 +63,3 @@ pub type SharedLanguageProvider = Arc<dyn LanguageDetectionProvider>;
 pub type SharedLemmatizerProvider = Arc<dyn LemmatizerProvider>;
 pub type SharedSymbolProvider = Arc<dyn SymbolKnowledgeProvider>;
 pub type SharedRerankerProvider = Arc<dyn RerankerProvider>;
-

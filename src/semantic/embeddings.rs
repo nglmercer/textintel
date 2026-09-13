@@ -9,8 +9,8 @@ pub use crate::core::providers::EmbeddingProvider;
 pub struct NullEmbeddingProvider;
 
 impl EmbeddingProviderTrait for NullEmbeddingProvider {
-    fn embed(&self, _texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
-        Ok(Vec::new())
+    fn embed(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
+        Ok(vec![Vec::new(); texts.len()])
     }
 }
 
@@ -22,7 +22,9 @@ pub struct StaticEmbeddingProvider {
 }
 
 impl StaticEmbeddingProvider {
-    pub fn new(values: BTreeMap<String, Vec<f32>>) -> Self { Self { values } }
+    pub fn new(values: BTreeMap<String, Vec<f32>>) -> Self {
+        Self { values }
+    }
 
     pub fn insert(&mut self, text: impl Into<String>, vector: Vec<f32>) {
         self.values.insert(text.into(), vector);
@@ -31,7 +33,9 @@ impl StaticEmbeddingProvider {
 
 impl EmbeddingProviderTrait for StaticEmbeddingProvider {
     fn embed(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
-        Ok(texts.iter().filter_map(|text| self.values.get(text).cloned()).collect())
+        Ok(texts
+            .iter()
+            .map(|text| self.values.get(text).cloned().unwrap_or_default())
+            .collect())
     }
 }
-

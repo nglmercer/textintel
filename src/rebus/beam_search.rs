@@ -19,10 +19,20 @@ pub fn beam_decode_with_provider(
 ) -> Vec<BeamNode> {
     let tokens = rebus_tokens(text);
     if tokens.is_empty() {
-        return vec![BeamNode { text: String::new(), score: 0.0, transforms: Vec::new(), language: None }];
+        return vec![BeamNode {
+            text: String::new(),
+            score: 0.0,
+            transforms: Vec::new(),
+            language: None,
+        }];
     }
     let width = beam_width.max(1);
-    let mut beam = vec![BeamNode { text: String::new(), score: 1.0, transforms: Vec::new(), language: None }];
+    let mut beam = vec![BeamNode {
+        text: String::new(),
+        score: 1.0,
+        transforms: Vec::new(),
+        language: None,
+    }];
     for token in tokens {
         let readings = token_readings_with_provider(&token, max_symbol_readings.max(1), provider);
         let mut next = Vec::new();
@@ -68,4 +78,3 @@ pub fn beam_decode(
         &DefaultSymbolKnowledge,
     )
 }
-

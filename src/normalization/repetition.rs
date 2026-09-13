@@ -35,4 +35,3 @@ pub fn repetition_ratio(text: &str) -> f64 {
     let collapsed = collapse_repetition(text, 1).chars().count();
     ((length.saturating_sub(collapsed)) as f64 / length as f64).min(1.0)
 }
-

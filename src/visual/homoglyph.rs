@@ -10,7 +10,12 @@ pub fn confusable_hits(text: &str) -> Vec<(usize, String, String, String)> {
         let script = script_name(ch);
         if let (Some(mapped), Some(script)) = (mapped, script) {
             if !matches!(script, "Latin" | "Common" | "Symbol") {
-                hits.push((index, ch.to_string(), script.to_string(), mapped.to_string()));
+                hits.push((
+                    index,
+                    ch.to_string(),
+                    script.to_string(),
+                    mapped.to_string(),
+                ));
             }
         }
     }
@@ -32,4 +37,3 @@ pub fn confusable_characters(text: &str) -> Vec<ConfusableCharacter> {
 pub fn confusable_skeleton(text: &str) -> String {
     skeleton(text)
 }
-

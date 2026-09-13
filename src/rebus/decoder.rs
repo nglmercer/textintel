@@ -7,18 +7,12 @@ use crate::normalization::repetition::collapse_repetition;
 use crate::normalization::unicode::casefold_text;
 use crate::normalization::whitespace::normalize_whitespace;
 use crate::rebus::beam_search::beam_decode_with_provider;
-use crate::rebus::scorer::score_candidate;
+use crate::rebus::scorer::score_candidate_with_limit;
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RebusDecoder {
     pub config: EngineConfig,
-}
-
-impl Default for RebusDecoder {
-    fn default() -> Self {
-        Self { config: EngineConfig::default() }
-    }
 }
 
 impl RebusDecoder {
@@ -51,7 +45,12 @@ impl RebusDecoder {
             provider,
         );
         let language = languages.and_then(|values| values.first()).cloned();
-        let compact = |value: String| value.chars().filter(|ch| !ch.is_whitespace()).collect::<String>();
+        let compact = |value: String| {
+            value
+                .chars()
+                .filter(|ch| !ch.is_whitespace())
+                .collect::<String>()
+        };
         let extra_views = [
             normalize_whitespace(text),
             casefold_text(text),
@@ -63,7 +62,8 @@ impl RebusDecoder {
         ];
         let mut candidates = std::collections::BTreeMap::<String, DecodedCandidate>::new();
         for node in nodes {
-            let (score, lexical, phonetic, context) = score_candidate(&node.text, node.score);
+            let (score, lexical, phonetic, context) =
+                score_candidate_with_limit(&node.text, node.score, self.config.max_recursion);
             if node.text.is_empty() {
                 continue;
             }
@@ -74,7 +74,13 @@ impl RebusDecoder {
                 transformations: node
                     .transforms
                     .into_iter()
-                    .map(|(source, replacement, transformation_type)| Transformation { source, replacement, transformation_type })
+                    .map(
+                        |(source, replacement, transformation_type)| Transformation {
+                            source,
+                            replacement,
+                            transformation_type,
+                        },
+                    )
                     .collect(),
                 language: node.language.or_else(|| language.clone()),
                 lexical_score: lexical,
@@ -82,7 +88,10 @@ impl RebusDecoder {
                 context_score: context,
                 symbol_score: node.score.min(1.0),
             };
-            if candidates.get(&key).is_none_or(|old| candidate.score > old.score) {
+            if candidates
+                .get(&key)
+                .map_or(true, |old| candidate.score > old.score)
+            {
                 candidates.insert(key, candidate);
             }
         }
@@ -91,7 +100,8 @@ impl RebusDecoder {
             if value.is_empty() {
                 continue;
             }
-            let (score, lexical, phonetic, context) = score_candidate(&value, 0.4);
+            let (score, lexical, phonetic, context) =
+                score_candidate_with_limit(&value, 0.4, self.config.max_recursion);
             let candidate = DecodedCandidate {
                 text: value.clone(),
                 score: score * 0.9,
@@ -103,14 +113,19 @@ impl RebusDecoder {
                 symbol_score: 0.3,
             };
             let key = casefold_text(&value);
-            if candidates.get(&key).is_none_or(|old| candidate.score > old.score) {
+            if candidates
+                .get(&key)
+                .map_or(true, |old| candidate.score > old.score)
+            {
                 candidates.insert(key, candidate);
             }
         }
-        let mut ranked: Vec<_> = candidates.into_values().filter(|candidate| candidate.score >= 0.08).collect();
+        let mut ranked: Vec<_> = candidates
+            .into_values()
+            .filter(|candidate| candidate.score >= 0.08)
+            .collect();
         ranked.sort_by(|left, right| right.score.total_cmp(&left.score));
         ranked.truncate(limit);
         ranked
     }
 }
-

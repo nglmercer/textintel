@@ -39,7 +39,10 @@ impl Display for TextIntelError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::InputTooLong { length, maximum } => {
-                write!(f, "input length {length} exceeds max_input_length={maximum}")
+                write!(
+                    f,
+                    "input length {length} exceeds max_input_length={maximum}"
+                )
             }
             Self::TooManySegments { maximum } => {
                 write!(f, "message exceeds max_segments={maximum}")
@@ -65,4 +68,3 @@ impl From<serde_json::Error> for TextIntelError {
         Self::Serialization(value.to_string())
     }
 }
-

@@ -24,37 +24,65 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "analyze" => {
             let text = args.get(1).ok_or("analyze requires <text>")?;
             let result = engine.analyze(text)?;
-            if json { print_json(&result)?; } else {
+            if json {
+                print_json(&result)?;
+            } else {
                 println!("raw: {}", result.raw);
                 println!("normalized: {}", result.normalized.as_deref().unwrap_or(""));
                 println!("languages: {:?}", result.language_candidates);
-                println!("decoded: {:?}", result.rebus_candidates.iter().map(|candidate| (&candidate.text, candidate.score)).collect::<Vec<_>>());
-                println!("obfuscation: {:.3} {:?}", result.obfuscation_features.score, result.obfuscation_features.flags);
+                println!(
+                    "decoded: {:?}",
+                    result
+                        .rebus_candidates
+                        .iter()
+                        .map(|candidate| (&candidate.text, candidate.score))
+                        .collect::<Vec<_>>()
+                );
+                println!(
+                    "obfuscation: {:.3} {:?}",
+                    result.obfuscation_features.score, result.obfuscation_features.flags
+                );
             }
         }
         "decode" => {
             let text = args.get(1).ok_or("decode requires <text>")?;
             let result = engine.decode(text)?;
-            if json { print_json(&result)?; } else {
-                for candidate in result { println!("{:.3}\t{}", candidate.score, candidate.text); }
+            if json {
+                print_json(&result)?;
+            } else {
+                for candidate in result {
+                    println!("{:.3}\t{}", candidate.score, candidate.text);
+                }
             }
         }
         "compare" => {
-            let left = args.get(1).ok_or("compare requires <message-a> <message-b>")?;
-            let right = args.get(2).ok_or("compare requires <message-a> <message-b>")?;
+            let left = args
+                .get(1)
+                .ok_or("compare requires <message-a> <message-b>")?;
+            let right = args
+                .get(2)
+                .ok_or("compare requires <message-a> <message-b>")?;
             let result = engine.compare(left, right)?;
-            if json { print_json(&result)?; } else {
+            if json {
+                print_json(&result)?;
+            } else {
                 println!("score: {:.3}", result.score);
-                for explanation in result.explanations { println!("- {}", explanation); }
+                for explanation in result.explanations {
+                    println!("- {}", explanation);
+                }
             }
         }
         "spam" => {
             let text = args.get(1).ok_or("spam requires <text>")?;
             let result = engine.detect_spam(text)?;
-            if json { print_json(&result)?; } else {
+            if json {
+                print_json(&result)?;
+            } else {
                 println!("probability: {:.3}", result.probability);
                 println!("labels: {:?}", result.labels);
-                for reason in result.reasons { println!("- {}", reason); }
+                for reason in result.reasons {
+                    println!("- {}", reason);
+                }
             }
         }
         _ => {
@@ -64,4 +92,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     Ok(())
 }
-

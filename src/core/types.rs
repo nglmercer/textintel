@@ -41,6 +41,7 @@ pub struct UnicodeFeatures {
     pub scripts: Vec<String>,
     pub mixed_scripts: bool,
     pub invisible_characters: Vec<String>,
+    pub unusual_whitespace: Vec<String>,
     pub combining_characters: Vec<String>,
     pub bidirectional_controls: Vec<String>,
     pub confusable_characters: Vec<ConfusableCharacter>,
@@ -78,6 +79,7 @@ pub struct CharacterSimilarity {
 pub struct LexicalFeatures {
     pub tokens: Vec<String>,
     pub lemmas: Vec<String>,
+    pub stop_words: Vec<String>,
     pub word_ngrams: Vec<String>,
     pub token_ngrams: Vec<String>,
     pub jaccard_ready: BTreeSet<String>,
@@ -218,7 +220,9 @@ impl MessageFingerprint {
     }
 
     pub fn decoded_texts(&self) -> impl Iterator<Item = &str> {
-        self.rebus_candidates.iter().map(|candidate| candidate.text.as_str())
+        self.rebus_candidates
+            .iter()
+            .map(|candidate| candidate.text.as_str())
     }
 }
 
@@ -274,4 +278,3 @@ pub struct DuplicateResult {
     pub score: f64,
     pub reason: String,
 }
-

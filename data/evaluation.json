@@ -1,0 +1,51 @@
+[
+  {
+    "a": "Fra🏠do",
+    "b": "fracasado",
+    "languages": ["es"],
+    "labels": {"similar": true, "rebus": true, "obfuscated": true}
+  },
+  {
+    "a": "salU2",
+    "b": "saludos",
+    "languages": ["es"],
+    "labels": {"similar": true, "rebus": true, "obfuscated": true}
+  },
+  {
+    "a": "c0mpr4 ah0r4",
+    "b": "compra ahora",
+    "languages": ["es"],
+    "labels": {"similar": true, "obfuscated": true}
+  },
+  {
+    "a": "gana 💰",
+    "b": "gana dinero",
+    "languages": ["es"],
+    "labels": {"similar": true, "symbolic": true}
+  },
+  {
+    "a": "paypal",
+    "b": "pаypal",
+    "languages": ["unknown"],
+    "labels": {"similar": true, "homoglyph": true, "obfuscated": true}
+  },
+  {
+    "a": "Fra🏠do",
+    "b": "ferrocarril",
+    "languages": ["es"],
+    "labels": {"similar": false}
+  },
+  {
+    "a": "salU2",
+    "b": "cansado",
+    "languages": ["es"],
+    "labels": {"similar": false}
+  },
+  {
+    "a": "compra ahora",
+    "b": "ferrocarril",
+    "languages": ["es"],
+    "labels": {"similar": false}
+  }
+]
+

@@ -14,4 +14,3 @@ pub fn nfkc(text: &str) -> String {
 pub fn casefold_text(text: &str) -> String {
     nfc(text).chars().flat_map(char::to_lowercase).collect()
 }
-

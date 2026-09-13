@@ -19,7 +19,11 @@ pub fn simhash(tokens: &[String], bits: usize) -> u64 {
         }
     }
     sums.into_iter().enumerate().fold(0, |value, (index, sum)| {
-        if sum > 0 { value | (1u64 << index) } else { value }
+        if sum > 0 {
+            value | (1u64 << index)
+        } else {
+            value
+        }
     })
 }
 
@@ -50,6 +54,9 @@ pub fn minhash_similarity(a: &[u32], b: &[u32]) -> f64 {
     if a.is_empty() || b.is_empty() || a.len() != b.len() {
         return 0.0;
     }
-    a.iter().zip(b).filter(|(left, right)| left == right).count() as f64 / a.len() as f64
+    a.iter()
+        .zip(b)
+        .filter(|(left, right)| left == right)
+        .count() as f64
+        / a.len() as f64
 }
-

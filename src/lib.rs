@@ -29,4 +29,7 @@ pub use core::providers::{
 };
 pub use core::types::*;
 pub use engine::TextIntelligence;
-
+pub use phonetic::{NullG2PProvider, RuleBasedG2PProvider};
+pub use semantic::{NullEmbeddingProvider, StaticEmbeddingProvider};
+pub use storage::MemoryStore;
+pub use symbols::DefaultSymbolKnowledge;

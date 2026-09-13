@@ -1,12 +1,7 @@
 pub fn is_extra_whitespace(ch: char) -> bool {
     matches!(
         ch,
-        '\u{00a0}'
-            | '\u{1680}'
-            | '\u{2000}'..='\u{200b}'
-            | '\u{202f}'
-            | '\u{205f}'
-            | '\u{3000}'
+        '\u{00a0}' | '\u{1680}' | '\u{2000}'..='\u{200b}' | '\u{202f}' | '\u{205f}' | '\u{3000}'
     )
 }
 
@@ -26,4 +21,3 @@ pub fn normalize_whitespace(text: &str) -> String {
     }
     output
 }
-

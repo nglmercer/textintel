@@ -2,8 +2,7 @@ use crate::core::providers::SymbolKnowledgeProvider;
 use crate::core::types::{MessageFingerprint, SymbolInstance};
 use crate::language::segmentation::segment_message;
 use crate::lexical::character::combined_character_similarity;
-use crate::lexical::tokenizer::tokenize;
-use crate::symbols::knowledge::{concepts_for_token, readings_for_token, DefaultSymbolKnowledge};
+use crate::symbols::knowledge::{concepts_for_token, DefaultSymbolKnowledge};
 
 fn unicode_name(token: &str) -> Option<String> {
     let name = match token {
@@ -64,23 +63,27 @@ pub fn resolve_symbols(text: &str, max_readings: usize) -> Vec<SymbolInstance> {
 /// identity; otherwise it measures the best supported cross-view match.
 pub fn symbolic_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
     if a.symbols.is_empty() && b.symbols.is_empty() {
-        return if a.unicode_features.casefolded == b.unicode_features.casefolded { 1.0 } else { 0.0 };
+        return if a.unicode_features.casefolded == b.unicode_features.casefolded {
+            1.0
+        } else {
+            0.0
+        };
     }
-    let b_text = b
-        .normalized
-        .as_deref()
-        .unwrap_or(&b.raw)
-        .replace(char::is_whitespace, "");
-    let a_text = a
-        .normalized
-        .as_deref()
-        .unwrap_or(&a.raw)
-        .replace(char::is_whitespace, "");
+    let compact = |text: &str| {
+        text.chars()
+            .filter(|ch| !ch.is_whitespace())
+            .collect::<String>()
+    };
+    let b_text = compact(b.normalized.as_deref().unwrap_or(&b.raw));
+    let a_text = compact(a.normalized.as_deref().unwrap_or(&a.raw));
     let mut best: f64 = 0.0;
     for symbol in &a.symbols {
         for reading in &symbol.readings {
             best = best.max(combined_character_similarity(&reading.text, &b_text));
-            if b.lexical_features.jaccard_ready.contains(&reading.text.to_lowercase()) {
+            if b.lexical_features
+                .jaccard_ready
+                .contains(&reading.text.to_lowercase())
+            {
                 best = best.max(reading.probability);
             }
         }
@@ -88,7 +91,10 @@ pub fn symbolic_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f6
     for symbol in &b.symbols {
         for reading in &symbol.readings {
             best = best.max(combined_character_similarity(&reading.text, &a_text));
-            if a.lexical_features.jaccard_ready.contains(&reading.text.to_lowercase()) {
+            if a.lexical_features
+                .jaccard_ready
+                .contains(&reading.text.to_lowercase())
+            {
                 best = best.max(reading.probability);
             }
         }
@@ -107,4 +113,3 @@ pub fn symbolic_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f6
     let direct = combined_character_similarity(&a_text, &b_text);
     best.max(direct * 0.55).clamp(0.0, 1.0)
 }
-

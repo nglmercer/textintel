@@ -8,10 +8,10 @@ use crate::normalization::leetspeak::apply_leet;
 use crate::normalization::repetition::collapse_repetition;
 use crate::normalization::unicode::casefold_text;
 use crate::normalization::whitespace::normalize_whitespace;
+use crate::phonetic::similarity::phonetic_similarity;
 use crate::semantic::similarity::cosine;
 use crate::symbols::resolver::symbolic_similarity;
 use crate::visual::similarity::visual_similarity;
-use crate::phonetic::similarity::phonetic_similarity;
 
 fn compact(text: &str) -> String {
     text.chars().filter(|ch| !ch.is_whitespace()).collect()
@@ -26,13 +26,21 @@ fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
     for value in [b.raw.clone(), b.normalized.clone().unwrap_or_default()] {
         right.insert(compact(&casefold_text(&value)));
     }
-    for candidate in &a.rebus_candidates { left.insert(compact(&casefold_text(&candidate.text))); }
-    for candidate in &b.rebus_candidates { right.insert(compact(&casefold_text(&candidate.text))); }
+    for candidate in &a.rebus_candidates {
+        left.insert(compact(&casefold_text(&candidate.text)));
+    }
+    for candidate in &b.rebus_candidates {
+        right.insert(compact(&casefold_text(&candidate.text)));
+    }
     let mut best: f64 = 0.0;
     for left_value in &left {
-        if left_value.is_empty() { continue; }
+        if left_value.is_empty() {
+            continue;
+        }
         for right_value in &right {
-            if left_value == right_value { return 1.0; }
+            if left_value == right_value {
+                return 1.0;
+            }
             best = best.max(combined_character_similarity(left_value, right_value));
         }
     }
@@ -50,7 +58,10 @@ fn semantic_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> Option
     let mut best: Option<f64> = None;
     for left in a.semantic_embeddings.values() {
         for right in b.semantic_embeddings.values() {
-            best = Some(best.map_or_else(|| cosine(left, right), |value| value.max(cosine(left, right))));
+            best = Some(best.map_or_else(
+                || cosine(left, right),
+                |value| value.max(cosine(left, right)),
+            ));
         }
     }
     best
@@ -60,7 +71,9 @@ fn phonetic_channel(a: &MessageFingerprint, b: &MessageFingerprint) -> Option<f6
     let mut best: Option<f64> = None;
     for left in &a.phonetic_candidates {
         for right in &b.phonetic_candidates {
-            if left.phonemes.is_empty() || right.phonemes.is_empty() { continue; }
+            if left.phonemes.is_empty() || right.phonemes.is_empty() {
+                continue;
+            }
             let score = phonetic_similarity(left, right);
             best = Some(best.map_or(score, |value| value.max(score)));
         }
@@ -77,15 +90,25 @@ pub fn combine_scores(
     let mut score = 0.0;
     let mut used = BTreeMap::new();
     for (name, value) in channels {
-        let Some(value) = value else { continue; };
-        let Some(weight) = weight_map.get(name) else { continue; };
-        if *weight <= 0.0 { continue; }
+        let Some(value) = value else {
+            continue;
+        };
+        let Some(weight) = weight_map.get(name) else {
+            continue;
+        };
+        if *weight <= 0.0 {
+            continue;
+        }
         score += value.clamp(0.0, 1.0) * weight;
         total_weight += weight;
         used.insert(name.clone(), *weight);
     }
-    if total_weight == 0.0 { return (0.0, used); }
-    for value in used.values_mut() { *value /= total_weight; }
+    if total_weight == 0.0 {
+        return (0.0, used);
+    }
+    for value in used.values_mut() {
+        *value /= total_weight;
+    }
     (score / total_weight, used)
 }
 
@@ -123,11 +146,29 @@ pub fn score_fingerprints(
         format!("decoded={decoded:.3}"),
         format!("obfuscation_norm={obfuscation:.3}"),
     ];
-    evidence.push(match semantic { Some(value) => format!("semantic={value:.3}"), None => "semantic=absent".to_string() });
-    evidence.push(match phonetic { Some(value) => format!("phonetic={value:.3}"), None => "phonetic=absent".to_string() });
-    if a.obfuscation_features.detected { evidence.push(format!("obfuscation_flags_a={:?}", a.obfuscation_features.flags)); }
-    if b.obfuscation_features.detected { evidence.push(format!("obfuscation_flags_b={:?}", b.obfuscation_features.flags)); }
-    if !a.unicode_features.confusable_characters.is_empty() || !b.unicode_features.confusable_characters.is_empty() {
+    evidence.push(match semantic {
+        Some(value) => format!("semantic={value:.3}"),
+        None => "semantic=absent".to_string(),
+    });
+    evidence.push(match phonetic {
+        Some(value) => format!("phonetic={value:.3}"),
+        None => "phonetic=absent".to_string(),
+    });
+    if a.obfuscation_features.detected {
+        evidence.push(format!(
+            "obfuscation_flags_a={:?}",
+            a.obfuscation_features.flags
+        ));
+    }
+    if b.obfuscation_features.detected {
+        evidence.push(format!(
+            "obfuscation_flags_b={:?}",
+            b.obfuscation_features.flags
+        ));
+    }
+    if !a.unicode_features.confusable_characters.is_empty()
+        || !b.unicode_features.confusable_characters.is_empty()
+    {
         evidence.push("confusable_unicode".to_string());
     }
     let explanations = evidence.clone();
@@ -147,4 +188,3 @@ pub fn score_fingerprints(
         weights_used,
     }
 }
-

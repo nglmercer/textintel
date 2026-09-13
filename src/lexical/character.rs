@@ -19,7 +19,9 @@ pub fn char_features(text: &str) -> CharacterFeatures {
             whitespace += 1;
         } else if ch.is_alphanumeric() {
             other += 1;
-        } else if ch.is_ascii_punctuation() || ch.is_punctuation() {
+        } else if ch.is_ascii_punctuation()
+            || matches!(ch as u32, 0x2000..=0x206f | 0x2e00..=0x2e7f | 0x3000..=0x303f)
+        {
             punctuation += 1;
         } else {
             other += 1;
@@ -79,8 +81,8 @@ pub fn damerau_levenshtein(a: &str, b: &str) -> usize {
     for (i, row) in matrix.iter_mut().enumerate() {
         row[0] = i;
     }
-    for j in 0..=b.len() {
-        matrix[0][j] = j;
+    for (j, value) in matrix[0].iter_mut().enumerate() {
+        *value = j;
     }
     for i in 1..=a.len() {
         for j in 1..=b.len() {
@@ -175,16 +177,31 @@ pub fn ngram_similarity(a: &str, b: &str, n: usize) -> f64 {
     for gram in right {
         *right_counts.entry(gram).or_insert(0usize) += 1;
     }
-    let keys: std::collections::BTreeSet<_> = left_counts.keys().chain(right_counts.keys()).collect();
+    let keys: std::collections::BTreeSet<_> =
+        left_counts.keys().chain(right_counts.keys()).collect();
     let intersection = keys
         .iter()
-        .map(|key| left_counts.get(*key).unwrap_or(&0).min(right_counts.get(*key).unwrap_or(&0)))
+        .map(|key| {
+            left_counts
+                .get(*key)
+                .unwrap_or(&0)
+                .min(right_counts.get(*key).unwrap_or(&0))
+        })
         .sum::<usize>();
     let union = keys
         .iter()
-        .map(|key| left_counts.get(*key).unwrap_or(&0).max(right_counts.get(*key).unwrap_or(&0)))
+        .map(|key| {
+            left_counts
+                .get(*key)
+                .unwrap_or(&0)
+                .max(right_counts.get(*key).unwrap_or(&0))
+        })
         .sum::<usize>();
-    if union == 0 { 0.0 } else { intersection as f64 / union as f64 }
+    if union == 0 {
+        0.0
+    } else {
+        intersection as f64 / union as f64
+    }
 }
 
 pub fn lcs_len(a: &str, b: &str) -> usize {
@@ -238,4 +255,3 @@ pub fn character_similarity(a: &str, b: &str) -> CharacterSimilarity {
 pub fn combined_character_similarity(a: &str, b: &str) -> f64 {
     character_similarity(a, b).combined
 }
-

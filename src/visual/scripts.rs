@@ -43,4 +43,3 @@ pub fn scripts_in(text: &str) -> Vec<String> {
     }
     scripts.into_iter().collect()
 }
-
