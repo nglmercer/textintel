@@ -1,0 +1,72 @@
+from __future__ import annotations
+
+# Common homoglyphs → Latin skeleton (not exhaustive; sufficient for mixed-script paypal).
+CONFUSABLE_TO_LATIN: dict[str, str] = {
+    "а": "a",  # Cyrillic
+    "е": "e",
+    "о": "o",
+    "р": "p",
+    "с": "c",
+    "у": "y",
+    "х": "x",
+    "і": "i",
+    "ј": "j",
+    "ѕ": "s",
+    "һ": "h",
+    "Α": "A",
+    "Β": "B",
+    "Ε": "E",
+    "Ζ": "Z",
+    "Η": "H",
+    "Ι": "I",
+    "Κ": "K",
+    "Μ": "M",
+    "Ν": "N",
+    "Ο": "O",
+    "Ρ": "P",
+    "Τ": "T",
+    "Υ": "Y",
+    "Χ": "X",
+    "α": "a",
+    "ο": "o",
+    "ν": "v",
+    "ρ": "p",
+    "τ": "t",
+    "υ": "u",
+    "χ": "x",
+    "і": "i",
+    "Ⅰ": "I",
+    "а": "a",
+    "А": "A",
+    "В": "B",
+    "Е": "E",
+    "К": "K",
+    "М": "M",
+    "Н": "H",
+    "О": "O",
+    "Р": "P",
+    "С": "C",
+    "Т": "T",
+    "Х": "X",
+    "０": "0",
+    "１": "1",
+    "２": "2",
+    "３": "3",
+    "４": "4",
+    "５": "5",
+    "６": "6",
+    "７": "7",
+    "８": "8",
+    "９": "9",
+    "ａ": "a",
+    "ｐ": "p",
+    "ｙ": "y",
+    "ｌ": "l",
+}
+
+
+def skeleton(text: str) -> str:
+    out = []
+    for ch in text.casefold():
+        out.append(CONFUSABLE_TO_LATIN.get(ch, ch))
+    return "".join(out)
