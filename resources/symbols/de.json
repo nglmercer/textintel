@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "language": "de",
+  "name": "Deutsche Symbollesungen",
+  "symbols": [
+    {"token": "🏠", "readings": [{"text": "haus", "probability": 0.90, "reading_type": "symbol_reading"}, {"text": "heim", "probability": 0.50, "reading_type": "symbol_reading"}]},
+    {"token": "🔥", "readings": [{"text": "feuer", "probability": 0.70, "reading_type": "symbol_reading"}, {"text": "heiß", "probability": 0.40, "reading_type": "symbol_reading"}]},
+    {"token": "💰", "readings": [{"text": "geld", "probability": 0.90, "reading_type": "symbol_reading"}]},
+    {"token": "❤", "readings": [{"text": "liebe", "probability": 0.80, "reading_type": "symbol_reading"}, {"text": "herz", "probability": 0.50, "reading_type": "symbol_reading"}]},
+    {"token": "❤️", "readings": [{"text": "liebe", "probability": 0.80, "reading_type": "symbol_reading"}, {"text": "herz", "probability": 0.50, "reading_type": "symbol_reading"}]},
+    {"token": "0", "readings": [{"text": "null", "probability": 0.80, "reading_type": "number_reading"}]},
+    {"token": "1", "readings": [{"text": "eins", "probability": 0.80, "reading_type": "number_reading"}, {"text": "ein", "probability": 0.50, "reading_type": "number_reading"}]},
+    {"token": "2", "readings": [{"text": "zwei", "probability": 0.80, "reading_type": "number_reading"}]},
+    {"token": "3", "readings": [{"text": "drei", "probability": 0.80, "reading_type": "number_reading"}]},
+    {"token": "4", "readings": [{"text": "vier", "probability": 0.75, "reading_type": "number_reading"}]},
+    {"token": "5", "readings": [{"text": "fünf", "probability": 0.75, "reading_type": "number_reading"}]},
+    {"token": "6", "readings": [{"text": "sechs", "probability": 0.75, "reading_type": "number_reading"}]},
+    {"token": "7", "readings": [{"text": "sieben", "probability": 0.75, "reading_type": "number_reading"}]},
+    {"token": "8", "readings": [{"text": "acht", "probability": 0.75, "reading_type": "number_reading"}]},
+    {"token": "9", "readings": [{"text": "neun", "probability": 0.75, "reading_type": "number_reading"}]},
+    {"token": "10", "readings": [{"text": "zehn", "probability": 0.80, "reading_type": "number_reading"}]},
+    {"token": "100", "readings": [{"text": "hundert", "probability": 0.80, "reading_type": "number_reading"}]}
+  ]
+}

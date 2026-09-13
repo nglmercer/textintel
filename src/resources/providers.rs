@@ -32,10 +32,20 @@ impl LanguageDetectionProvider for ResourceLoader {
 
 impl SymbolKnowledgeProvider for ResourceLoader {
     fn readings(&self, token: &str, max_readings: usize) -> Vec<SymbolReading> {
-        self.symbol_index
+        let mut readings = self
+            .symbol_index
             .get(token)
-            .map(|symbol| symbol.readings.iter().take(max_readings).cloned().collect())
-            .unwrap_or_default()
+            .map(|symbol| symbol.readings.clone())
+            .unwrap_or_default();
+        readings.sort_by(|left, right| {
+            right
+                .probability
+                .total_cmp(&left.probability)
+                .then_with(|| left.text.cmp(&right.text))
+                .then_with(|| left.language.cmp(&right.language))
+        });
+        readings.truncate(max_readings);
+        readings
     }
 
     fn concepts(&self, token: &str) -> Vec<SymbolConcept> {

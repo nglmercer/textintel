@@ -272,6 +272,76 @@ fn resource_loader_indexes_seed_languages_and_supports_custom_packs() {
 }
 
 #[test]
+fn symbol_resources_are_split_by_language() {
+    let loader = ResourceLoader::common().unwrap();
+    let expected_languages = ["de", "en", "es", "fr", "it", "pt"];
+    let expected_tokens = vec![
+        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "100", "❤", "❤️", "🏠", "💰", "🔥",
+    ];
+
+    assert_eq!(loader.symbol_count(), 17);
+    assert_eq!(loader.symbol_tokens(), expected_tokens);
+    for token in &expected_tokens {
+        let languages = loader.symbol_languages(token);
+        assert!(
+            expected_languages
+                .iter()
+                .all(|language| languages.iter().any(|value| value == language)),
+            "token={token} languages={languages:?}"
+        );
+    }
+    assert_eq!(
+        loader.symbol_languages("🔥").last().map(String::as_str),
+        Some("und")
+    );
+}
+
+#[test]
+fn symbol_pack_languages_are_normalized_and_scoped() {
+    let mut loader = ResourceLoader::default();
+    loader
+        .load_symbol_json(
+            r#"{
+                "schema_version": 1,
+                "language": "PT_BR",
+                "symbols": [{
+                    "token": "☂",
+                    "readings": [{
+                        "text": "guarda-chuva",
+                        "probability": 0.8,
+                        "reading_type": "symbol_reading"
+                    }]
+                }]
+            }"#,
+            "<test:pt_br-symbols.json>",
+        )
+        .unwrap();
+    assert_eq!(loader.symbol_languages("☂"), vec!["pt-br"]);
+
+    let error = loader
+        .load_symbol_json(
+            r#"{
+                "schema_version": 1,
+                "language": "es",
+                "symbols": [{
+                    "token": "☀",
+                    "readings": [{
+                        "text": "sun",
+                        "language": "EN",
+                        "probability": 0.8,
+                        "reading_type": "symbol_reading"
+                    }]
+                }]
+            }"#,
+            "<test:conflicting-symbols.json>",
+        )
+        .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("conflicts with symbol pack language"));
+}
+
+#[test]
 fn resource_index_is_stable_and_tracks_ambiguous_terms() {
     let mut loader = ResourceLoader::default();
     loader

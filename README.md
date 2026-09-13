@@ -62,8 +62,8 @@ large model runtimes into the default build.
 
 ## Language and symbol resources
 
-The default engine uses a versioned, embedded seed index for six common
-languages: English, Spanish, Portuguese, French, German, and Italian. The
+The default engine uses a versioned, embedded seed index for six languages:
+English, Spanish, Portuguese, French, German, and Italian. The
 loader indexes every JSON pack found recursively, so larger licensed
 dictionaries can be added without hardcoding words in Rust:
 
@@ -79,6 +79,10 @@ records. Index keys are deterministic: numeric runs sort first using natural
 numeric order, followed by Unicode letters and then other characters. This is
 only an ordering rule; matching still preserves the exact language and Unicode
 form needed for reliable tracking.
+
+Symbols are modularized into neutral Unicode metadata and per-language reading
+packs. Adding another language JSON pack automatically extends symbol coverage
+without changing Rust code.
 
 ## CLI
 

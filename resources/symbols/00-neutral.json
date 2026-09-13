@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "name": "Unicode symbol metadata",
+  "symbols": [
+    {"token": "🏠", "unicode_name": "HOUSE BUILDING", "concepts": [{"id": "house", "probability": 0.95}]},
+    {"token": "🔥", "unicode_name": "FIRE", "concepts": [{"id": "fire", "probability": 0.70}, {"id": "hotness", "probability": 0.45}], "readings": [{"text": "unknown", "language": "und", "probability": 0.20, "reading_type": "symbol_reading"}]},
+    {"token": "💰", "unicode_name": "MONEY BAG", "concepts": [{"id": "money", "probability": 0.90}]},
+    {"token": "❤", "unicode_name": "HEAVY BLACK HEART", "concepts": [{"id": "love", "probability": 0.80}]},
+    {"token": "❤️", "unicode_name": "HEAVY BLACK HEART", "concepts": [{"id": "love", "probability": 0.80}]},
+    {"token": "0", "concepts": [{"id": "number", "probability": 0.80}], "readings": [{"text": "o", "probability": 0.50, "reading_type": "number_reading"}]},
+    {"token": "1", "concepts": [{"id": "number", "probability": 0.80}], "readings": [{"text": "i", "probability": 0.40, "reading_type": "number_reading"}]},
+    {"token": "2", "concepts": [{"id": "number", "probability": 0.80}]},
+    {"token": "3", "concepts": [{"id": "number", "probability": 0.80}], "readings": [{"text": "e", "probability": 0.35, "reading_type": "number_reading"}]},
+    {"token": "4", "concepts": [{"id": "number", "probability": 0.80}], "readings": [{"text": "a", "probability": 0.55, "reading_type": "number_reading"}]},
+    {"token": "5", "concepts": [{"id": "number", "probability": 0.80}], "readings": [{"text": "s", "probability": 0.40, "reading_type": "number_reading"}]},
+    {"token": "6", "concepts": [{"id": "number", "probability": 0.80}]},
+    {"token": "7", "concepts": [{"id": "number", "probability": 0.80}], "readings": [{"text": "t", "probability": 0.30, "reading_type": "number_reading"}]},
+    {"token": "8", "concepts": [{"id": "number", "probability": 0.80}]},
+    {"token": "9", "concepts": [{"id": "number", "probability": 0.80}]},
+    {"token": "10", "concepts": [{"id": "number", "probability": 0.80}]},
+    {"token": "100", "concepts": [{"id": "number", "probability": 0.80}]}
+  ]
+}

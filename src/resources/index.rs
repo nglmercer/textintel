@@ -287,23 +287,31 @@ impl LanguageIndex {
 
 #[derive(Debug, Clone, Default)]
 pub struct SymbolIndex {
-    symbols: BTreeMap<String, SymbolResource>,
+    symbols: BTreeMap<IndexKey, SymbolResource>,
 }
 
 impl SymbolIndex {
     pub fn merge(&mut self, symbol: SymbolResource) {
+        let key = IndexKey::new(&symbol.token);
         self.symbols
-            .entry(symbol.token.clone())
+            .entry(key)
             .and_modify(|existing| merge_symbol(existing, &symbol))
             .or_insert(symbol);
     }
 
     pub fn get(&self, token: &str) -> Option<&SymbolResource> {
-        self.symbols.get(token)
+        self.symbols.get(&IndexKey::new(token))
     }
 
     pub fn len(&self) -> usize {
         self.symbols.len()
+    }
+
+    pub fn tokens(&self) -> Vec<String> {
+        self.symbols
+            .values()
+            .map(|symbol| symbol.token.clone())
+            .collect()
     }
 }
 

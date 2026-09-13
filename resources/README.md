@@ -14,6 +14,10 @@ Use `lookup_in_language` when a report must be scoped to one language. A plain
 `lookup` returns `NotFound`, `Unique`, or `Ambiguous`; it never silently treats
 a word found in another language as an exact match.
 
+Symbol resources use one neutral metadata pack (`00-neutral.json`) plus one
+language pack per locale. A pack's `language` fills missing reading-language
+fields, so every reading remains attributable to a language.
+
 Language packs use schema version `1`:
 
 ```json

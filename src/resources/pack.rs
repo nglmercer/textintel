@@ -64,6 +64,10 @@ pub struct SymbolResource {
 pub struct SymbolPack {
     #[serde(default = "default_schema_version")]
     pub schema_version: u32,
+    /// Optional default language for readings in this pack. A neutral pack
+    /// omits it and may contain only concepts/Unicode metadata.
+    #[serde(default)]
+    pub language: Option<String>,
     #[serde(default)]
     pub name: String,
     #[serde(default)]

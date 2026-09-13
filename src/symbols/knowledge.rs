@@ -2,7 +2,7 @@ use crate::core::providers::SymbolKnowledgeProvider;
 use crate::core::types::{SymbolConcept, SymbolReading};
 use crate::resources::embedded_resources;
 
-/// Compatibility wrapper around the embedded symbol resource pack.
+/// Compatibility wrapper around the embedded symbol resources.
 /// Applications with larger or domain-specific packs should inject their own
 /// `ResourceLoader` through `TextIntelligence::with_resources`.
 #[derive(Debug, Default, Clone, Copy)]

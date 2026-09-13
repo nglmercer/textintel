@@ -17,7 +17,7 @@ pub struct ResourceLoader {
 }
 
 impl ResourceLoader {
-    /// Load every embedded language pack and the embedded symbol pack.
+    /// Load every embedded language pack and embedded symbol pack.
     /// Embedded data is a seed only; directory loading accepts any language
     /// pack that follows the schema.
     pub fn embedded() -> Result<Self, ResourceError> {
@@ -113,9 +113,47 @@ impl ResourceLoader {
 
     pub fn add_symbol_pack(
         &mut self,
-        pack: SymbolPack,
+        mut pack: SymbolPack,
         source_path: impl AsRef<Path>,
     ) -> Result<(), ResourceError> {
+        if let Some(language) = &mut pack.language {
+            *language = canonical_language(language);
+            if language.is_empty() {
+                return Err(ResourceError::Validation {
+                    path: source_path.as_ref().to_path_buf(),
+                    message: "symbol pack language cannot be empty".to_string(),
+                });
+            }
+        }
+        let default_language = pack.language.clone();
+        for symbol in &mut pack.symbols {
+            for reading in &mut symbol.readings {
+                if let Some(language) = &mut reading.language {
+                    *language = canonical_language(language);
+                    if language.is_empty() {
+                        return Err(ResourceError::Validation {
+                            path: source_path.as_ref().to_path_buf(),
+                            message: format!(
+                                "reading language cannot be empty for symbol {:?}",
+                                symbol.token
+                            ),
+                        });
+                    }
+                    if let Some(default) = default_language.as_deref() {
+                        if language != default {
+                            return Err(ResourceError::Validation {
+                                path: source_path.as_ref().to_path_buf(),
+                                message: format!(
+                                    "reading language {language:?} conflicts with symbol pack language {default:?}"
+                                ),
+                            });
+                        }
+                    }
+                } else {
+                    reading.language = default_language.clone();
+                }
+            }
+        }
         validate_symbol_pack(&pack, source_path.as_ref())?;
         for symbol in pack.symbols {
             self.symbol_index.merge(symbol);
@@ -173,6 +211,21 @@ impl ResourceLoader {
 
     pub fn symbol_count(&self) -> usize {
         self.symbol_index.len()
+    }
+
+    pub fn symbol_tokens(&self) -> Vec<String> {
+        self.symbol_index.tokens()
+    }
+
+    pub fn symbol_languages(&self, token: &str) -> Vec<String> {
+        let languages = self
+            .symbol_index
+            .get(token)
+            .into_iter()
+            .flat_map(|symbol| symbol.readings.iter())
+            .filter_map(|reading| reading.language.clone())
+            .collect::<std::collections::BTreeSet<_>>();
+        languages.into_iter().collect()
     }
 
     pub fn language_pack(&self, language: &str) -> Option<&LanguagePack> {
