@@ -1,5 +1,5 @@
 use crate::core::config::EngineConfig;
-use crate::core::providers::SymbolKnowledgeProvider;
+use crate::core::providers::{LexiconProvider, SymbolKnowledgeProvider};
 use crate::core::types::{DecodedCandidate, Transformation};
 use crate::normalization::confusables::skeleton;
 use crate::normalization::leetspeak::apply_leet;
@@ -7,7 +7,8 @@ use crate::normalization::repetition::collapse_repetition;
 use crate::normalization::unicode::casefold_text;
 use crate::normalization::whitespace::normalize_whitespace;
 use crate::rebus::beam_search::beam_decode_with_provider;
-use crate::rebus::scorer::score_candidate_with_limit;
+use crate::rebus::scorer::score_candidate_with_provider;
+use crate::resources::DefaultLexiconProvider;
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
 #[derive(Debug, Clone, Default)]
@@ -36,13 +37,30 @@ impl RebusDecoder {
         max_candidates: Option<usize>,
         provider: &dyn SymbolKnowledgeProvider,
     ) -> Vec<DecodedCandidate> {
+        self.decode_with_providers(
+            text,
+            languages,
+            max_candidates,
+            provider,
+            &DefaultLexiconProvider,
+        )
+    }
+
+    pub fn decode_with_providers(
+        &self,
+        text: &str,
+        languages: Option<&[String]>,
+        max_candidates: Option<usize>,
+        symbol_provider: &dyn SymbolKnowledgeProvider,
+        lexicon_provider: &dyn LexiconProvider,
+    ) -> Vec<DecodedCandidate> {
         let limit = max_candidates.unwrap_or(self.config.max_candidates).max(1);
         let nodes = beam_decode_with_provider(
             text,
             self.config.beam_width,
             (limit * 3).max(self.config.beam_width),
             self.config.max_symbol_readings,
-            provider,
+            symbol_provider,
         );
         let language = languages.and_then(|values| values.first()).cloned();
         let compact = |value: String| {
@@ -62,8 +80,13 @@ impl RebusDecoder {
         ];
         let mut candidates = std::collections::BTreeMap::<String, DecodedCandidate>::new();
         for node in nodes {
-            let (score, lexical, phonetic, context) =
-                score_candidate_with_limit(&node.text, node.score, self.config.max_recursion);
+            let (score, lexical, phonetic, context) = score_candidate_with_provider(
+                &node.text,
+                node.score,
+                self.config.max_recursion,
+                languages,
+                lexicon_provider,
+            );
             if node.text.is_empty() {
                 continue;
             }
@@ -100,8 +123,13 @@ impl RebusDecoder {
             if value.is_empty() {
                 continue;
             }
-            let (score, lexical, phonetic, context) =
-                score_candidate_with_limit(&value, 0.4, self.config.max_recursion);
+            let (score, lexical, phonetic, context) = score_candidate_with_provider(
+                &value,
+                0.4,
+                self.config.max_recursion,
+                languages,
+                lexicon_provider,
+            );
             let candidate = DecodedCandidate {
                 text: value.clone(),
                 score: score * 0.9,

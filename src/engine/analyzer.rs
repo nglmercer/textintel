@@ -5,7 +5,7 @@ use crate::comparison::scorer::score_fingerprints;
 use crate::core::config::EngineConfig;
 use crate::core::error::{ProviderError, TextIntelError};
 use crate::core::providers::{
-    EmbeddingProvider, G2PProvider, LanguageDetectionProvider, LemmatizerProvider,
+    EmbeddingProvider, G2PProvider, LanguageDetectionProvider, LemmatizerProvider, LexiconProvider,
     RerankerProvider, SymbolKnowledgeProvider, VectorStore,
 };
 use crate::core::types::{
@@ -15,12 +15,11 @@ use crate::core::types::{
 use crate::detection::duplicates::duplicate_result;
 use crate::detection::patterns::match_pattern_fingerprint;
 use crate::detection::spam::predict_spam;
-use crate::language::detector::DefaultLanguageDetector;
-use crate::language::segmentation::segment_message;
+use crate::language::segmentation::segment_message_with_provider;
 use crate::lexical::character::char_features;
 use crate::lexical::minhash::{minhash_signature, simhash};
 use crate::lexical::ngrams::word_ngrams;
-use crate::lexical::tokenizer::{simple_lemmas, stop_words, tokenize};
+use crate::lexical::tokenizer::{simple_lemmas_with_provider, stop_words_with_provider, tokenize};
 use crate::normalization::leetspeak::apply_leet;
 use crate::normalization::repetition::collapse_repetition;
 use crate::normalization::unicode::{casefold_text, nfkc};
@@ -28,9 +27,9 @@ use crate::normalization::whitespace::normalize_whitespace;
 use crate::obfuscation::features::obfuscation_features;
 use crate::phonetic::g2p::RuleBasedG2PProvider;
 use crate::rebus::decoder::RebusDecoder;
+use crate::resources::ResourceLoader;
 use crate::semantic::embeddings::NullEmbeddingProvider;
 use crate::storage::memory::MemoryStore;
-use crate::symbols::knowledge::DefaultSymbolKnowledge;
 use crate::symbols::resolver::resolve_symbols_with_provider;
 use crate::visual::unicode_features::analyze_unicode;
 
@@ -46,6 +45,7 @@ pub struct TextIntelligence {
     embedding_provider: Arc<dyn EmbeddingProvider>,
     g2p_provider: Arc<dyn G2PProvider>,
     language_provider: Arc<dyn LanguageDetectionProvider>,
+    lexicon_provider: Arc<dyn LexiconProvider>,
     lemmatizer_provider: Option<Arc<dyn LemmatizerProvider>>,
     symbol_provider: Arc<dyn SymbolKnowledgeProvider>,
     reranker_provider: Option<Arc<dyn RerankerProvider>>,
@@ -70,13 +70,18 @@ impl TextIntelligence {
         config
             .validate()
             .map_err(TextIntelError::InvalidConfiguration)?;
+        let resources = Arc::new(
+            ResourceLoader::common()
+                .map_err(|error| TextIntelError::Serialization(error.to_string()))?,
+        );
         Ok(Self {
             config,
             embedding_provider: Arc::new(NullEmbeddingProvider),
             g2p_provider: Arc::new(RuleBasedG2PProvider),
-            language_provider: Arc::new(DefaultLanguageDetector),
+            language_provider: resources.clone(),
+            lexicon_provider: resources.clone(),
             lemmatizer_provider: None,
-            symbol_provider: Arc::new(DefaultSymbolKnowledge),
+            symbol_provider: resources,
             reranker_provider: None,
             store: RwLock::new(Box::new(MemoryStore::default())),
             patterns: RwLock::new(BTreeMap::new()),
@@ -102,6 +107,21 @@ impl TextIntelligence {
         provider: P,
     ) -> Self {
         self.language_provider = Arc::new(provider);
+        self
+    }
+
+    pub fn with_lexicon_provider<P: LexiconProvider + 'static>(mut self, provider: P) -> Self {
+        self.lexicon_provider = Arc::new(provider);
+        self
+    }
+
+    /// Replace the language, lexicon, and symbol indexes with one coherent
+    /// resource set. This is the normal entry point for application packs.
+    pub fn with_resources(mut self, resources: ResourceLoader) -> Self {
+        let resources = Arc::new(resources);
+        self.language_provider = resources.clone();
+        self.lexicon_provider = resources.clone();
+        self.symbol_provider = resources;
         self
     }
 
@@ -197,17 +217,36 @@ impl TextIntelligence {
     pub fn analyze(&self, text: &str) -> Result<MessageFingerprint, TextIntelError> {
         self.check_length(text)?;
         let unicode = analyze_unicode(text);
+        let languages = self.detect(text)?;
+        let language_names: Vec<String> = languages
+            .iter()
+            .map(|candidate| candidate.language.clone())
+            .collect();
+        let segments = segment_message_with_provider(
+            text,
+            self.config.max_segments,
+            self.language_provider.as_ref(),
+        )
+        .map_err(TextIntelError::from)?;
         let tokens = tokenize(text);
         let lemmas = match &self.lemmatizer_provider {
             Some(provider) => provider
                 .lemmatize(&tokens, None)
                 .map_err(TextIntelError::from)?,
-            None => simple_lemmas(&tokens),
+            None => simple_lemmas_with_provider(
+                &tokens,
+                Some(&language_names),
+                self.lexicon_provider.as_ref(),
+            ),
         };
         let lexical = LexicalFeatures {
             tokens: tokens.clone(),
             lemmas: lemmas.clone(),
-            stop_words: stop_words(&tokens),
+            stop_words: stop_words_with_provider(
+                &tokens,
+                Some(&language_names),
+                self.lexicon_provider.as_ref(),
+            ),
             word_ngrams: word_ngrams(&tokens, 2),
             token_ngrams: word_ngrams(&tokens, 3),
             jaccard_ready: lemmas.iter().cloned().collect(),
@@ -219,23 +258,18 @@ impl TextIntelligence {
             self.config.max_symbol_readings,
             self.symbol_provider.as_ref(),
         );
-        let segments = segment_message(text, self.config.max_segments);
-        let languages = self.detect(text)?;
         let obfuscation = obfuscation_features(text, &unicode);
         let normalized = normalize_whitespace(&collapse_repetition(
             &apply_leet(&casefold_text(&nfkc(text))),
             1,
         ));
-        let language_names: Vec<String> = languages
-            .iter()
-            .map(|candidate| candidate.language.clone())
-            .collect();
         let decoder = RebusDecoder::new(self.config.clone());
-        let rebus = decoder.decode_with_provider(
+        let rebus = decoder.decode_with_providers(
             text,
             Some(&language_names),
             Some(self.config.max_candidates),
             self.symbol_provider.as_ref(),
+            self.lexicon_provider.as_ref(),
         );
         let spoken_candidates = rebus
             .iter()
@@ -321,11 +355,12 @@ impl TextIntelligence {
     ) -> Result<Vec<DecodedCandidate>, TextIntelError> {
         self.check_length(text)?;
         let decoder = RebusDecoder::new(self.config.clone());
-        Ok(decoder.decode_with_provider(
+        Ok(decoder.decode_with_providers(
             text,
             languages,
             max_candidates,
             self.symbol_provider.as_ref(),
+            self.lexicon_provider.as_ref(),
         ))
     }
 

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "language": "pt",
+  "name": "Português",
+  "entries": [
+    {"word": "a", "lemma": "a", "stop_word": true},
+    {"word": "o", "lemma": "o", "stop_word": true},
+    {"word": "os", "lemma": "o", "stop_word": true},
+    {"word": "as", "lemma": "a", "stop_word": true},
+    {"word": "de", "lemma": "de", "stop_word": true},
+    {"word": "que", "lemma": "que", "stop_word": true},
+    {"word": "e", "lemma": "e", "stop_word": true},
+    {"word": "do", "lemma": "de", "stop_word": true},
+    {"word": "da", "lemma": "de", "stop_word": true},
+    {"word": "para", "lemma": "para", "stop_word": true},
+    {"word": "com", "lemma": "com", "stop_word": true},
+    {"word": "não", "lemma": "não", "stop_word": true},
+    {"word": "dinheiro", "lemma": "dinheiro"},
+    {"word": "casa", "lemma": "casa"},
+    {"word": "agora", "lemma": "agora"},
+    {"word": "comprar", "lemma": "comprar"},
+    {"word": "exemplo", "lemma": "exemplo"},
+    {"word": "bom", "lemma": "bom"},
+    {"word": "isto", "lemma": "isto"},
+    {"word": "é", "lemma": "ser", "stop_word": true},
+    {"word": "um", "lemma": "um", "stop_word": true},
+    {"word": "uma", "lemma": "um", "stop_word": true},
+    {"word": "olá", "lemma": "olá"},
+    {"word": "fogo", "lemma": "fogo"},
+    {"word": "amor", "lemma": "amor"}
+  ],
+  "examples": [
+    "isto é um exemplo",
+    "bom exemplo",
+    "comprar agora"
+  ]
+}

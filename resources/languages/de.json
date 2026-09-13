@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "language": "de",
+  "name": "Deutsch",
+  "entries": [
+    {"word": "der", "lemma": "der", "stop_word": true},
+    {"word": "die", "lemma": "die", "stop_word": true},
+    {"word": "das", "lemma": "das", "stop_word": true},
+    {"word": "ein", "lemma": "ein", "stop_word": true},
+    {"word": "eine", "lemma": "ein", "stop_word": true},
+    {"word": "und", "lemma": "und", "stop_word": true},
+    {"word": "ist", "lemma": "sein", "stop_word": true},
+    {"word": "mit", "lemma": "mit", "stop_word": true},
+    {"word": "von", "lemma": "von", "stop_word": true},
+    {"word": "für", "lemma": "für", "stop_word": true},
+    {"word": "beispiel", "lemma": "beispiel"},
+    {"word": "gut", "lemma": "gut"},
+    {"word": "gutes", "lemma": "gut"},
+    {"word": "dies", "lemma": "dies"},
+    {"word": "haus", "lemma": "haus"},
+    {"word": "geld", "lemma": "geld"},
+    {"word": "kaufen", "lemma": "kaufen"},
+    {"word": "jetzt", "lemma": "jetzt"},
+    {"word": "hallo", "lemma": "hallo"},
+    {"word": "liebe", "lemma": "liebe"}
+  ],
+  "examples": [
+    "das ist ein beispiel",
+    "gutes beispiel",
+    "jetzt kaufen"
+  ]
+}

@@ -25,16 +25,16 @@ pub mod visual;
 pub use core::config::{EngineConfig, SimilarityWeights};
 pub use core::error::{ProviderError, TextIntelError};
 pub use core::providers::{
-    EmbeddingProvider, G2PProvider, LanguageDetectionProvider, LemmatizerProvider,
-    LexiconProvider, RerankerProvider, SymbolKnowledgeProvider, VectorStore,
+    EmbeddingProvider, G2PProvider, LanguageDetectionProvider, LemmatizerProvider, LexiconProvider,
+    RerankerProvider, SymbolKnowledgeProvider, VectorStore,
 };
 pub use core::types::*;
 pub use engine::TextIntelligence;
 pub use phonetic::{NullG2PProvider, RuleBasedG2PProvider};
-pub use semantic::{NullEmbeddingProvider, StaticEmbeddingProvider};
-pub use storage::MemoryStore;
 pub use resources::{
     embedded_common, DefaultLexiconProvider, LanguagePack, LexiconEntry, ResourceError,
     ResourceLoader, SymbolPack, SymbolResource,
 };
+pub use semantic::{NullEmbeddingProvider, StaticEmbeddingProvider};
+pub use storage::MemoryStore;
 pub use symbols::DefaultSymbolKnowledge;

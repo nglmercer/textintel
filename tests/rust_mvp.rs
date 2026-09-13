@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 
 use textintel::lexical::character::{character_similarity, levenshtein};
 use textintel::lexical::similarity::lexical_similarity;
@@ -6,7 +7,8 @@ use textintel::lexical::tokenizer::{stop_words, tokenize};
 use textintel::normalization::leetspeak::detect_leet;
 use textintel::visual::unicode_features::analyze_unicode;
 use textintel::{
-    EngineConfig, SimilarityWeights, StaticEmbeddingProvider, TextIntelError, TextIntelligence,
+    EngineConfig, ResourceLoader, SimilarityWeights, StaticEmbeddingProvider, TextIntelError,
+    TextIntelligence,
 };
 
 fn engine() -> TextIntelligence {
@@ -220,4 +222,51 @@ fn urls_and_stop_words_keep_their_own_evidence() {
         .unwrap()
         .segments;
     assert!(segments.iter().any(|segment| segment.segment_type == "url"));
+}
+
+#[test]
+fn resource_loader_indexes_seed_languages_and_supports_custom_packs() {
+    let loader = ResourceLoader::common().unwrap();
+    assert_eq!(loader.languages(), vec!["de", "en", "es", "fr", "it", "pt"]);
+    assert!(loader.language_count() == 6);
+    assert!(loader.word_count() > 100);
+    assert!(loader.contains_in_language("A", "en"));
+    assert!(loader.contains_in_language("ejemplo", "es"));
+    assert!(loader
+        .lookup_languages("example")
+        .contains(&"en".to_string()));
+    let resource_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources");
+    let from_disk = ResourceLoader::from_resource_root(resource_root).unwrap();
+    assert_eq!(from_disk.languages(), loader.languages());
+    assert_eq!(from_disk.symbol_count(), loader.symbol_count());
+
+    let fingerprint = TextIntelligence::default()
+        .with_resources(loader.clone())
+        .analyze("this is a example")
+        .unwrap();
+    assert_eq!(fingerprint.top_language(), Some("en"));
+    assert!(fingerprint
+        .lexical_features
+        .stop_words
+        .iter()
+        .any(|word| word == "this"));
+
+    let mut custom = ResourceLoader::default();
+    custom
+        .load_language_json(
+            r#"{
+                "schema_version": 1,
+                "language": "xx",
+                "name": "Example",
+                "entries": [{"word": "zyx", "lemma": "zyx"}],
+                "examples": ["zyx sample"]
+            }"#,
+            "<test:xx.json>",
+        )
+        .unwrap();
+    assert!(custom.contains_in_language("zyx", "xx"));
+    assert_eq!(
+        custom.detect_languages("zyx"),
+        vec![textintel::core::types::LanguageCandidate::new("xx", 1.0)]
+    );
 }

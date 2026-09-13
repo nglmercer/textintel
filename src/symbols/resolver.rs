@@ -2,18 +2,7 @@ use crate::core::providers::SymbolKnowledgeProvider;
 use crate::core::types::{MessageFingerprint, SymbolInstance};
 use crate::language::segmentation::segment_message;
 use crate::lexical::character::combined_character_similarity;
-use crate::symbols::knowledge::{concepts_for_token, DefaultSymbolKnowledge};
-
-fn unicode_name(token: &str) -> Option<String> {
-    let name = match token {
-        "🏠" => "HOUSE BUILDING",
-        "🔥" => "FIRE",
-        "💰" => "MONEY BAG",
-        "❤" | "❤️" => "HEAVY BLACK HEART",
-        _ => return None,
-    };
-    Some(name.to_string())
-}
+use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
 pub fn resolve_symbols_with_provider(
     text: &str,
@@ -46,8 +35,8 @@ pub fn resolve_symbols_with_provider(
                 start: segment.start,
                 end: segment.end,
                 kind: segment.segment_type,
-                unicode_name: unicode_name(&segment.text),
-                concepts: concepts_for_token(&segment.text),
+                unicode_name: provider.unicode_name(&segment.text),
+                concepts: provider.concepts(&segment.text),
                 readings,
             }
         })

@@ -60,6 +60,22 @@ Optional feature names are available for packaging integrations:
 `semantic`, `phonetic`, `ml`, and `all`. The core intentionally does not pull
 large model runtimes into the default build.
 
+## Language and symbol resources
+
+The default engine uses a versioned, embedded seed index for six common
+languages: English, Spanish, Portuguese, French, German, and Italian. The
+loader indexes every JSON pack found recursively, so larger licensed
+dictionaries can be added without hardcoding words in Rust:
+
+```rust
+let resources = textintel::ResourceLoader::from_resource_root("resources")?;
+let engine = textintel::TextIntelligence::default().with_resources(resources);
+```
+
+The initial English pack includes the requested examples `this is a example`
+and `a good example`. See [`resources/README.md`](resources/README.md) for the
+pack schema and compact `words` / `stop_words` forms.
+
 ## CLI
 
 ```text

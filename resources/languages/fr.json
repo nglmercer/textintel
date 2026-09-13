@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "language": "fr",
+  "name": "Français",
+  "entries": [
+    {"word": "le", "lemma": "le", "stop_word": true},
+    {"word": "la", "lemma": "la", "stop_word": true},
+    {"word": "les", "lemma": "le", "stop_word": true},
+    {"word": "de", "lemma": "de", "stop_word": true},
+    {"word": "des", "lemma": "de", "stop_word": true},
+    {"word": "et", "lemma": "et", "stop_word": true},
+    {"word": "un", "lemma": "un", "stop_word": true},
+    {"word": "une", "lemma": "un", "stop_word": true},
+    {"word": "est", "lemma": "être", "stop_word": true},
+    {"word": "pour", "lemma": "pour", "stop_word": true},
+    {"word": "avec", "lemma": "avec", "stop_word": true},
+    {"word": "bonjour", "lemma": "bonjour"},
+    {"word": "maison", "lemma": "maison"},
+    {"word": "argent", "lemma": "argent"},
+    {"word": "acheter", "lemma": "acheter"},
+    {"word": "maintenant", "lemma": "maintenant"},
+    {"word": "exemple", "lemma": "exemple"},
+    {"word": "bon", "lemma": "bon"},
+    {"word": "ceci", "lemma": "ceci"},
+    {"word": "amour", "lemma": "amour"}
+  ],
+  "examples": [
+    "c'est un exemple",
+    "bon exemple",
+    "acheter maintenant"
+  ]
+}

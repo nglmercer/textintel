@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "language": "it",
+  "name": "Italiano",
+  "entries": [
+    {"word": "a", "lemma": "a", "stop_word": true},
+    {"word": "il", "lemma": "il", "stop_word": true},
+    {"word": "la", "lemma": "la", "stop_word": true},
+    {"word": "di", "lemma": "di", "stop_word": true},
+    {"word": "e", "lemma": "e", "stop_word": true},
+    {"word": "un", "lemma": "un", "stop_word": true},
+    {"word": "una", "lemma": "un", "stop_word": true},
+    {"word": "è", "lemma": "essere", "stop_word": true},
+    {"word": "per", "lemma": "per", "stop_word": true},
+    {"word": "con", "lemma": "con", "stop_word": true},
+    {"word": "questo", "lemma": "questo"},
+    {"word": "esempio", "lemma": "esempio"},
+    {"word": "buono", "lemma": "buono"},
+    {"word": "buon", "lemma": "buono"},
+    {"word": "casa", "lemma": "casa"},
+    {"word": "denaro", "lemma": "denaro"},
+    {"word": "comprare", "lemma": "comprare"},
+    {"word": "ora", "lemma": "ora"},
+    {"word": "ciao", "lemma": "ciao"},
+    {"word": "amore", "lemma": "amore"}
+  ],
+  "examples": [
+    "questo è un esempio",
+    "buon esempio",
+    "comprare ora"
+  ]
+}
