@@ -1,7 +1,8 @@
-use crate::core::providers::SymbolKnowledgeProvider;
+use crate::core::providers::{AbbreviationProvider, SymbolKnowledgeProvider};
 use crate::core::types::SymbolReading;
 use crate::language::segmentation::segment_message;
 use crate::normalization::leetspeak::{apply_leet, leet_map};
+use crate::resources::embedded_resources;
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
 /// Tokenize a rebus into text, number, emoji, and punctuation pieces.  The
@@ -40,6 +41,19 @@ pub fn token_readings_with_provider_and_languages(
     token: &str,
     max_readings: usize,
     provider: &dyn SymbolKnowledgeProvider,
+    languages: Option<&[String]>,
+) -> Vec<(String, f64, String, String)> {
+    token_readings_with_abbreviation_provider(token, max_readings, provider, None, languages)
+}
+
+/// Full variant with an explicit abbreviation source. `abbreviations` of
+/// `None` uses the embedded versioned abbreviation packs; custom packs let
+/// applications override or extend chat mappings without touching core code.
+pub fn token_readings_with_abbreviation_provider(
+    token: &str,
+    max_readings: usize,
+    provider: &dyn SymbolKnowledgeProvider,
+    abbreviations: Option<&dyn AbbreviationProvider>,
     languages: Option<&[String]>,
 ) -> Vec<(String, f64, String, String)> {
     let symbol_readings = provider.readings_in_languages(token, max_readings, languages);
@@ -100,7 +114,9 @@ pub fn token_readings_with_provider_and_languages(
                 "leetspeak".to_string(),
             ),
         ]
-    } else if let Some(readings) = chat_readings(token, max_readings) {
+    } else if let Some(readings) =
+        abbreviation_lookup(token, max_readings, abbreviations, languages)
+    {
         readings
     } else {
         vec![
@@ -135,27 +151,31 @@ fn language_allowed(language: Option<&str>, languages: Option<&[String]>) -> boo
         })
 }
 
-fn chat_readings(token: &str, max_readings: usize) -> Option<Vec<(String, f64, String, String)>> {
-    let folded = token.to_ascii_lowercase();
-    let values: &[(&str, &str, f64)] = match folded.as_str() {
-        "u" => &[("you", "en", 0.55), ("tu", "es", 0.35)],
-        "r" => &[("are", "en", 0.55)],
-        "ur" => &[("your", "en", 0.55), ("you're", "en", 0.40)],
-        "b4" => &[("before", "en", 0.60)],
-        "gr8" => &[("great", "en", 0.65)],
-        "l8r" => &[("later", "en", 0.65)],
-        _ => return None,
+/// Chat-abbreviation expansions from versioned resource packs. Core holds no
+/// language-specific mapping: every `(token → reading)` pair comes from an
+/// `AbbreviationProvider` (embedded packs by default, custom packs on demand).
+fn abbreviation_lookup(
+    token: &str,
+    max_readings: usize,
+    abbreviations: Option<&dyn AbbreviationProvider>,
+    languages: Option<&[String]>,
+) -> Option<Vec<(String, f64, String, String)>> {
+    let readings = match abbreviations {
+        Some(provider) => provider.abbreviation_readings(token, languages, max_readings),
+        None => embedded_resources().abbreviation_readings(token, languages, max_readings),
     };
+    if readings.is_empty() {
+        return None;
+    }
     Some(
-        values
-            .iter()
-            .take(max_readings.max(1))
-            .map(|(text, language, probability)| {
+        readings
+            .into_iter()
+            .map(|reading| {
                 (
-                    (*text).to_string(),
-                    *probability,
-                    (*language).to_string(),
-                    "chat_abbreviation".to_string(),
+                    reading.text,
+                    reading.probability,
+                    reading.language.unwrap_or_else(|| "und".to_string()),
+                    reading.reading_type,
                 )
             })
             .collect(),

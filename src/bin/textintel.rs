@@ -5,7 +5,7 @@ use textintel::evaluation::{EvaluateOptions, EvaluationDataset, EvaluationReport
 use textintel::{EngineConfig, ResourceLoader, TextIntelligence};
 
 fn usage() -> &'static str {
-    "Usage:\n  textintel analyze <text> [--json]\n  textintel explain <text> [--json]\n  textintel decode <text> [--languages <es,en>] [--json]\n  textintel compare <message-a> <message-b> [--json]\n  textintel spam <text> [--json]\n  textintel batch <input.jsonl> [--json]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel evaluate <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel index <store.json> <id> <text>\n  textintel search <store.json> <text> <limit> [--json]"
+    "Usage:\n  textintel analyze <text> [--json] [--production]\n  textintel explain <text> [--json]\n  textintel decode <text> [--languages <es,en>] [--json]\n  textintel compare <message-a> <message-b> [--json]\n  textintel spam <text> [--json]\n  textintel batch <input.jsonl> [--json]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel evaluate <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel index <store.json> <id> <text>\n  textintel search <store.json> <text> <limit> [--json]"
 }
 
 fn print_json<T: serde::Serialize>(value: &T) -> Result<(), Box<dyn std::error::Error>> {
@@ -182,13 +182,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args().skip(1).collect::<Vec<_>>();
     let json = args.iter().any(|arg| arg == "--json");
     args.retain(|arg| arg != "--json");
+    // `--production` selects the local production preset (resource packs,
+    // trained models when present, espeak-ng with fallback). It never
+    // downloads models or touches the network.
+    let production = args.iter().any(|arg| arg == "--production");
+    args.retain(|arg| arg != "--production");
     let Some(command) = args.first().map(String::as_str) else {
         eprintln!("{}", usage());
         std::process::exit(2);
     };
     // Flags with values must not be mistaken for positional arguments.
     let positionals = positional_args(&args);
-    let engine = TextIntelligence::new(EngineConfig::default());
+    let engine = if production {
+        TextIntelligence::production_local()?
+    } else {
+        TextIntelligence::new(EngineConfig::default())
+    };
     let exit_code = match command {
         "analyze" | "explain" => {
             let text = positionals.get(1).ok_or("analyze requires <text>")?;
@@ -338,16 +347,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             0
         }
         "diagnostics" | "provider-info" => {
+            let diagnostics = engine.diagnostics();
             let report = serde_json::json!({
                 "api_version": textintel::API_VERSION,
                 "fingerprint_schema_version": textintel::FINGERPRINT_SCHEMA_VERSION,
                 "providers": engine.provider_capabilities(),
+                "degraded": diagnostics.degraded,
+                "symbol_languages": diagnostics.symbol_languages,
+                "abbreviation_languages": diagnostics.abbreviation_languages,
             });
             if json {
                 print_json(&report)?;
             } else {
                 println!("api: {}", textintel::API_VERSION);
                 println!("providers: {:?}", engine.provider_capabilities());
+                for item in &diagnostics.degraded {
+                    println!(
+                        "degraded: {} (serving {}; want {}): {}",
+                        item.capability, item.configured, item.wanted, item.detail
+                    );
+                }
             }
             0
         }

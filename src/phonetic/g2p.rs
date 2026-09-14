@@ -1,7 +1,9 @@
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::error::ProviderError;
 use crate::core::providers::G2PProvider as G2PProviderTrait;
 use crate::core::types::PhoneticCandidate;
 use crate::normalization::unicode::casefold_text;
+use crate::visual::scripts::scripts_in;
 
 pub use crate::core::providers::G2PProvider;
 
@@ -21,6 +23,10 @@ impl G2PProviderTrait for NullG2PProvider {
             articulatory_features: Vec::new(),
             confidence: 0.0,
         })
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("null_g2p").with_quality(CapabilityLevel::Unavailable)
     }
 }
 
@@ -107,6 +113,21 @@ impl G2PProviderTrait for RuleBasedG2PProvider {
         } else {
             Some(phonemes.join(""))
         };
+        // Honest coverage: Latin-script rules only. Unknown scripts keep
+        // their (unreliable) phoneme guess but are marked low confidence
+        // instead of being presented as accurate pronunciations.
+        let scripts = scripts_in(&folded);
+        let latin = scripts.iter().any(|script| script == "Latin");
+        let other = scripts.iter().any(|script| script != "Latin");
+        let confidence = if phonemes.is_empty() {
+            0.0
+        } else if latin && !other {
+            0.65
+        } else if latin {
+            0.35
+        } else {
+            0.15
+        };
         Ok(PhoneticCandidate {
             source: text.to_string(),
             language: language.to_string(),
@@ -122,7 +143,14 @@ impl G2PProviderTrait for RuleBasedG2PProvider {
                 .map(|phoneme| crate::phonetic::features::feature_label(phoneme).to_string())
                 .collect(),
             phonemes,
-            confidence: if text.is_empty() { 0.0 } else { 0.65 },
+            confidence,
         })
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("rule_based_g2p")
+            .with_languages(["es", "en"])
+            .with_quality(CapabilityLevel::Basic)
+            .with_fallback("Latin-script rules only; unknown scripts yield low confidence")
     }
 }

@@ -8,8 +8,9 @@ use crate::core::capabilities::ProviderCapabilities;
 use crate::core::config::EngineConfig;
 use crate::core::error::{ProviderError, TextIntelError};
 use crate::core::providers::{
-    EmbeddingProvider, G2PProvider, LanguageDetectionProvider, LemmatizerProvider, LexiconProvider,
-    RerankerProvider, SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, VectorStore,
+    AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
+    LemmatizerProvider, LexiconProvider, RerankerProvider, SimilarityScorer, SpamPredictor,
+    SymbolKnowledgeProvider, VectorStore,
 };
 use crate::core::types::{
     ChannelAvailability, ComparisonResult, DecodedCandidate, DuplicateMode, DuplicateResult,
@@ -19,6 +20,7 @@ use crate::core::types::{
 use crate::detection::duplicates::{duplicate_result, duplicate_result_with_mode};
 use crate::detection::patterns::match_pattern_fingerprint;
 use crate::detection::spam::HeuristicSpamPredictor;
+use crate::engine::production::{DegradedCapability, EngineBuilder, EngineDiagnostics};
 use crate::language::segmentation::segment_message_with_provider;
 use crate::language::NgramLanguageDetector;
 use crate::lexical::character::char_features;
@@ -53,12 +55,14 @@ struct EmbeddingInput {
 /// optional providers can be injected through the `with_*` methods.
 pub struct TextIntelligence {
     config: EngineConfig,
+    resources: Arc<ResourceLoader>,
     embedding_provider: Arc<dyn EmbeddingProvider>,
     g2p_provider: Arc<dyn G2PProvider>,
     language_provider: Arc<dyn LanguageDetectionProvider>,
     lexicon_provider: Arc<dyn LexiconProvider>,
     lemmatizer_provider: Option<Arc<dyn LemmatizerProvider>>,
     symbol_provider: Arc<dyn SymbolKnowledgeProvider>,
+    abbreviation_provider: Option<Arc<dyn AbbreviationProvider>>,
     reranker_provider: Option<Arc<dyn RerankerProvider>>,
     spam_predictor: Arc<dyn SpamPredictor>,
     similarity_scorer: Option<Arc<dyn SimilarityScorer>>,
@@ -88,9 +92,14 @@ impl TextIntelligence {
             ResourceLoader::common()
                 .map_err(|error| TextIntelError::Serialization(error.to_string()))?,
         );
+        Ok(Self::from_parts(config, resources))
+    }
+
+    fn from_parts(config: EngineConfig, resources: Arc<ResourceLoader>) -> Self {
         let language_detector = NgramLanguageDetector::from_resources(&resources);
-        Ok(Self {
+        Self {
             config,
+            resources: resources.clone(),
             // `NullEmbeddingProvider` keeps the default engine dependency-free;
             // inject `FeatureHashEmbeddingProvider` (or a model) for local
             // semantic evidence. See `with_embedding_provider`.
@@ -99,14 +108,94 @@ impl TextIntelligence {
             language_provider: Arc::new(language_detector),
             lexicon_provider: resources.clone(),
             lemmatizer_provider: None,
-            symbol_provider: resources,
+            symbol_provider: resources.clone(),
+            abbreviation_provider: Some(resources),
             reranker_provider: None,
             spam_predictor: Arc::new(HeuristicSpamPredictor),
             similarity_scorer: None,
             similarity_profile: None,
             store: RwLock::new(Box::new(MemoryStore::default())),
             patterns: RwLock::new(BTreeMap::new()),
-        })
+        }
+    }
+
+    /// Ergonomic construction: `TextIntelligence::builder().build()?`.
+    pub fn builder() -> EngineBuilder {
+        EngineBuilder::new()
+    }
+
+    /// Local production preset: resource packs, trained models from
+    /// `./models` when present, espeak-ng G2P with a rule-based fallback,
+    /// and a local embedding baseline. Unavailable pieces degrade gracefully
+    /// and are reported by [`Self::diagnostics`]; nothing touches the network.
+    pub fn production_local() -> Result<Self, TextIntelError> {
+        Self::builder().production_local().build()
+    }
+
+    pub(crate) fn assemble(builder: EngineBuilder) -> Result<Self, TextIntelError> {
+        builder
+            .config
+            .validate()
+            .map_err(TextIntelError::InvalidConfiguration)?;
+        let resources = Arc::new(match builder.resources {
+            Some(loader) => loader,
+            None => ResourceLoader::common()
+                .map_err(|error| TextIntelError::Serialization(error.to_string()))?,
+        });
+        let mut engine = Self::from_parts(builder.config, resources);
+        if let Some(provider) = builder.embedding {
+            engine.embedding_provider = provider;
+        }
+        if let Some(provider) = builder.g2p {
+            engine.g2p_provider = provider;
+        }
+        if let Some(provider) = builder.language {
+            engine.language_provider = provider;
+        }
+        if let Some(provider) = builder.lexicon {
+            engine.lexicon_provider = provider;
+        }
+        if let Some(provider) = builder.lemmatizer {
+            engine.lemmatizer_provider = Some(provider);
+        }
+        if let Some(provider) = builder.symbols {
+            engine.symbol_provider = provider;
+        }
+        if let Some(provider) = builder.abbreviations {
+            engine.abbreviation_provider = Some(provider);
+        }
+        if let Some(provider) = builder.reranker {
+            engine.reranker_provider = Some(provider);
+        }
+        if let Some(predictor) = builder.spam {
+            engine.spam_predictor = predictor;
+        }
+        if let Some(scorer) = builder.similarity_scorer {
+            engine.similarity_scorer = Some(scorer);
+        }
+        if let Some(profile) = builder.similarity_profile {
+            engine.similarity_profile = Some(profile);
+        }
+        if let Some(path) = builder.similarity_model_path {
+            if let Some(scorer) = crate::engine::production::load_similarity_scorer(
+                &path,
+                builder.similarity_model_required,
+            )? {
+                engine.similarity_scorer = Some(Arc::new(scorer));
+            }
+        }
+        if let Some(path) = builder.spam_model_path {
+            if let Some(predictor) =
+                crate::engine::production::load_spam_predictor(&path, builder.spam_model_required)?
+            {
+                engine.spam_predictor = Arc::new(predictor);
+            }
+        }
+        if let Some(path) = builder.json_store_path {
+            let store = JsonFileStore::open(path).map_err(TextIntelError::Storage)?;
+            engine.store = RwLock::new(Box::new(store));
+        }
+        Ok(engine)
     }
 
     pub fn config(&self) -> &EngineConfig {
@@ -128,13 +217,19 @@ impl TextIntelligence {
         );
         capabilities.insert("lexicon".to_string(), self.lexicon_provider.capabilities());
         capabilities.insert("symbols".to_string(), self.symbol_provider.capabilities());
+        if let Some(abbreviations) = &self.abbreviation_provider {
+            capabilities.insert("abbreviations".to_string(), abbreviations.capabilities());
+        }
         capabilities.insert("spam".to_string(), self.spam_predictor.capabilities());
         capabilities.insert(
             "store".to_string(),
             self.store
                 .read()
                 .map(|store| store.capabilities())
-                .unwrap_or_else(|_| ProviderCapabilities::new("store:unavailable")),
+                .unwrap_or_else(|_| {
+                    ProviderCapabilities::new("store:unavailable")
+                        .with_quality(crate::core::capabilities::CapabilityLevel::Unavailable)
+                }),
         );
         if let Some(reranker) = &self.reranker_provider {
             capabilities.insert("reranker".to_string(), reranker.capabilities());
@@ -149,6 +244,138 @@ impl TextIntelligence {
         self.embedding_provider
             .health_check()
             .map_err(TextIntelError::from)
+    }
+
+    /// Provenance for every loaded linguistic resource pack (source, license,
+    /// revision, hash when declared).
+    pub fn resource_manifest(&self) -> Vec<crate::resources::ResourcePackInfo> {
+        self.resources.manifest().to_vec()
+    }
+
+    /// Deployment and reproducibility report: provider lineup, resource
+    /// revisions, and every capability serving below production quality.
+    /// Inspection is local and never performs network or model work.
+    pub fn diagnostics(&self) -> EngineDiagnostics {
+        let capabilities = self.provider_capabilities();
+        let get = |name: &str| {
+            capabilities
+                .get(name)
+                .cloned()
+                .unwrap_or_else(|| ProviderCapabilities::new(format!("{name}:unknown")))
+        };
+        let symbol_languages = self.resources.symbol_pack_languages();
+        EngineDiagnostics {
+            api_version: env!("CARGO_PKG_VERSION").to_string(),
+            fingerprint_schema: crate::core::types::FINGERPRINT_SCHEMA_VERSION,
+            resource_languages: self.resources.languages(),
+            abbreviation_languages: self.resources.abbreviation_languages(),
+            symbol_languages,
+            symbol_tokens: self.resources.symbol_count(),
+            embedding: get("embedding"),
+            g2p: get("g2p"),
+            language: get("language"),
+            lexicon: get("lexicon"),
+            symbols: get("symbols"),
+            abbreviations: capabilities.get("abbreviations").cloned(),
+            spam: get("spam"),
+            similarity: capabilities.get("similarity").cloned(),
+            reranker: capabilities.get("reranker").cloned(),
+            store: get("store"),
+            ann_enabled: get("store").provider == "hnsw_ann",
+            degraded: self.degraded_capabilities(&capabilities),
+            resource_manifest: self.resource_manifest(),
+        }
+    }
+
+    fn degraded_capabilities(
+        &self,
+        capabilities: &BTreeMap<String, ProviderCapabilities>,
+    ) -> Vec<DegradedCapability> {
+        use crate::core::capabilities::CapabilityLevel;
+        let mut degraded = Vec::new();
+        let mut note = |capability: &str, configured: &str, wanted: &str, detail: &str| {
+            degraded.push(DegradedCapability {
+                capability: capability.to_string(),
+                configured: configured.to_string(),
+                wanted: wanted.to_string(),
+                detail: detail.to_string(),
+            });
+        };
+        match capabilities.get("embedding").map(|info| info.quality) {
+            Some(CapabilityLevel::Production) => {}
+            Some(CapabilityLevel::Basic) => note(
+                "semantic",
+                &capabilities["embedding"].provider,
+                "multilingual transformer embeddings",
+                "serving a Basic fallback; configure a transformer provider for production quality",
+            ),
+            _ => note(
+                "semantic",
+                "none",
+                "multilingual transformer embeddings",
+                "no embedding backend configured; semantic channel is skipped and weights renormalize",
+            ),
+        }
+        match capabilities.get("g2p").map(|info| info.provider.as_str()) {
+            Some("espeak_ng_g2p") => {}
+            Some(name) => note(
+                "phonetic",
+                name,
+                "espeak_ng_g2p",
+                "install espeak-ng and use EspeakNgG2PProvider::auto_detect for production phonetics",
+            ),
+            None => note("phonetic", "none", "espeak_ng_g2p", "no G2P backend configured"),
+        }
+        if !capabilities.contains_key("similarity") {
+            note(
+                "similarity",
+                "weighted deterministic scorer",
+                "trained similarity model",
+                "load models/similarity-v1.json through trained_similarity_model() for calibrated scoring",
+            );
+        }
+        if capabilities
+            .get("spam")
+            .map(|info| info.provider.starts_with("heuristic"))
+            .unwrap_or(true)
+        {
+            note(
+                "spam",
+                "heuristic",
+                "trained spam model",
+                "load models/spam-v1.json through trained_spam_model() for the trained predictor",
+            );
+        }
+        if !capabilities.contains_key("reranker") {
+            note(
+                "reranker",
+                "disabled",
+                "channel-score reranker",
+                "full-comparison order is final; configure a RerankerProvider to rescore top candidates",
+            );
+        }
+        if capabilities
+            .get("store")
+            .map(|info| info.provider.as_str())
+            .unwrap_or("memory_store")
+            == "memory_store"
+        {
+            note(
+                "persistence",
+                "in-memory",
+                "local JSON or redb store",
+                "fingerprints do not survive restarts; use json_store() or a persistent VectorStore",
+            );
+        }
+        if capabilities.get("store").map(|info| info.provider.as_str()) != Some("hnsw_ann") {
+            note(
+                "retrieval",
+                "index scan",
+                "HNSW ANN (ann-hnsw feature)",
+                "large stores compare exhaustively; enable the ANN index for sublinear retrieval",
+            );
+        }
+        degraded
     }
 
     pub fn with_embedding_provider<P: EmbeddingProvider + 'static>(mut self, provider: P) -> Self {
@@ -174,13 +401,24 @@ impl TextIntelligence {
         self
     }
 
-    /// Replace the language, lexicon, and symbol indexes with one coherent
-    /// resource set. This is the normal entry point for application packs.
+    /// Replace the language, lexicon, symbol, and abbreviation indexes with one
+    /// coherent resource set. This is the normal entry point for application
+    /// packs.
     pub fn with_resources(mut self, resources: ResourceLoader) -> Self {
         let resources = Arc::new(resources);
         self.language_provider = Arc::new(NgramLanguageDetector::from_resources(&resources));
         self.lexicon_provider = resources.clone();
-        self.symbol_provider = resources;
+        self.symbol_provider = resources.clone();
+        self.abbreviation_provider = Some(resources.clone());
+        self.resources = resources;
+        self
+    }
+
+    pub fn with_abbreviation_provider<P: AbbreviationProvider + 'static>(
+        mut self,
+        provider: P,
+    ) -> Self {
+        self.abbreviation_provider = Some(Arc::new(provider));
         self
     }
 
@@ -354,13 +592,16 @@ impl TextIntelligence {
         );
         let obfuscation = obfuscation_features(text, &unicode);
         let decoder = RebusDecoder::new(self.config.clone());
-        let rebus = decoder.decode_with_all_providers(
+        let abbreviations = self.abbreviation_provider.as_deref();
+        let rebus = decoder.decode_with_abbreviations(
             text,
             Some(&language_names),
             Some(self.config.max_candidates),
             self.symbol_provider.as_ref(),
             self.lexicon_provider.as_ref(),
             self.g2p_provider.as_ref(),
+            None,
+            abbreviations,
         );
         let spoken_candidates = rebus
             .iter()
@@ -699,7 +940,7 @@ impl TextIntelligence {
         } else {
             None
         };
-        Ok(decoder.decode_with_semantic(
+        Ok(decoder.decode_with_abbreviations(
             text,
             languages,
             max_candidates,
@@ -707,6 +948,7 @@ impl TextIntelligence {
             self.lexicon_provider.as_ref(),
             self.g2p_provider.as_ref(),
             semantic_ref,
+            self.abbreviation_provider.as_deref(),
         ))
     }
 

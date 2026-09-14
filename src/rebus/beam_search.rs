@@ -1,5 +1,5 @@
-use crate::core::providers::SymbolKnowledgeProvider;
-use crate::rebus::tokenizer::{rebus_tokens, token_readings_with_provider_and_languages};
+use crate::core::providers::{AbbreviationProvider, SymbolKnowledgeProvider};
+use crate::rebus::tokenizer::{rebus_tokens, token_readings_with_abbreviation_provider};
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
 #[derive(Debug, Clone)]
@@ -37,6 +37,31 @@ pub fn beam_decode_with_provider_and_languages(
     languages: Option<&[String]>,
     max_branches: usize,
 ) -> Vec<BeamNode> {
+    beam_decode_with_abbreviation_provider(
+        text,
+        beam_width,
+        max_candidates,
+        max_symbol_readings,
+        provider,
+        None,
+        languages,
+        max_branches,
+    )
+}
+
+/// Full variant with an explicit abbreviation source (`None` selects the
+/// embedded versioned abbreviation packs).
+#[allow(clippy::too_many_arguments)]
+pub fn beam_decode_with_abbreviation_provider(
+    text: &str,
+    beam_width: usize,
+    max_candidates: usize,
+    max_symbol_readings: usize,
+    provider: &dyn SymbolKnowledgeProvider,
+    abbreviations: Option<&dyn AbbreviationProvider>,
+    languages: Option<&[String]>,
+    max_branches: usize,
+) -> Vec<BeamNode> {
     let tokens = rebus_tokens(text);
     if tokens.is_empty() {
         return vec![BeamNode {
@@ -55,10 +80,11 @@ pub fn beam_decode_with_provider_and_languages(
         language: None,
     }];
     for (position, token) in tokens.iter().enumerate() {
-        let readings = token_readings_with_provider_and_languages(
+        let readings = token_readings_with_abbreviation_provider(
             token,
             max_symbol_readings.max(1),
             provider,
+            abbreviations,
             languages,
         );
         let last = position + 1 >= tokens.len();

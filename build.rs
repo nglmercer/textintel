@@ -6,11 +6,13 @@ use std::path::{Path, PathBuf};
 fn main() -> io::Result<()> {
     println!("cargo:rerun-if-changed=resources/languages");
     println!("cargo:rerun-if-changed=resources/symbols");
+    println!("cargo:rerun-if-changed=resources/abbreviations");
 
     let manifest_dir = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
     let out_dir = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let languages = json_files(&manifest_dir.join("resources/languages"))?;
     let symbols = json_files(&manifest_dir.join("resources/symbols"))?;
+    let abbreviations = json_files(&manifest_dir.join("resources/abbreviations"))?;
 
     let mut generated = String::new();
     generated.push_str("pub const LANGUAGE_PACKS: &[(&str, &str)] = &[\n");
@@ -21,6 +23,11 @@ fn main() -> io::Result<()> {
     generated.push_str("pub const SYMBOL_PACKS: &[(&str, &str)] = &[\n");
     for path in &symbols {
         write_entry(&mut generated, path, &manifest_dir, "symbol");
+    }
+    generated.push_str("];\n\n");
+    generated.push_str("pub const ABBREVIATION_PACKS: &[(&str, &str)] = &[\n");
+    for path in &abbreviations {
+        write_entry(&mut generated, path, &manifest_dir, "abbreviation");
     }
     generated.push_str("];\n");
 

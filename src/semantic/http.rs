@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use serde::Deserialize;
 
-use crate::core::capabilities::{ModelMetadata, ProviderCapabilities};
+use crate::core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 use crate::core::error::ProviderError;
 use crate::core::providers::EmbeddingProvider;
 
@@ -139,6 +139,7 @@ impl EmbeddingProvider for HttpEmbeddingProvider {
         ProviderCapabilities::new("http_embedding")
             .remote()
             .with_version("openai-compatible-v1")
+            .with_quality(CapabilityLevel::Production)
     }
 
     fn model_metadata(&self) -> Option<ModelMetadata> {

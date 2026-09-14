@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
-use crate::core::capabilities::ProviderCapabilities;
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::providers::VectorStore;
 use crate::core::types::{MessageFingerprint, SearchCandidateSet};
 
@@ -166,7 +166,7 @@ impl VectorStore for JsonFileStore {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("json_file_store")
+        ProviderCapabilities::new("json_file_store").with_quality(CapabilityLevel::Basic)
     }
 }
 

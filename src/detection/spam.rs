@@ -1,4 +1,4 @@
-use crate::core::capabilities::ProviderCapabilities;
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::error::ProviderError;
 use crate::core::providers::SpamPredictor;
 use crate::core::types::{MessageFingerprint, PatternMatch, SpamFeatures, SpamResult};
@@ -72,7 +72,7 @@ impl SpamPredictor for HeuristicSpamPredictor {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("heuristic_spam_v1")
+        ProviderCapabilities::new("heuristic_spam_v1").with_quality(CapabilityLevel::Basic)
     }
 }
 
@@ -344,9 +344,12 @@ impl SpamPredictor for TrainedSpamPredictor {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        let mut capabilities = ProviderCapabilities::new("trained_spam");
+        let mut capabilities =
+            ProviderCapabilities::new("trained_spam").with_quality(CapabilityLevel::Production);
         if let Some(revision) = &self.artifact.revision {
-            capabilities = capabilities.with_version(revision.clone());
+            capabilities = capabilities
+                .with_version(revision.clone())
+                .with_model_revision(revision.clone());
         }
         capabilities
     }

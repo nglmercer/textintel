@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::capabilities::{ModelMetadata, ProviderCapabilities};
+use super::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 use super::error::ProviderError;
 use super::types::{
     ComparisonResult, LanguageCandidate, MessageFingerprint, PatternMatch, PhoneticCandidate,
@@ -58,7 +58,7 @@ pub trait LanguageDetectionProvider: Send + Sync {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("language")
+        ProviderCapabilities::new("language").with_quality(CapabilityLevel::Basic)
     }
 }
 
@@ -72,7 +72,7 @@ pub trait LemmatizerProvider: Send + Sync {
     ) -> Result<Vec<String>, ProviderError>;
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("lemmatizer")
+        ProviderCapabilities::new("lemmatizer").with_quality(CapabilityLevel::Basic)
     }
 }
 
@@ -90,7 +90,7 @@ pub trait LexiconProvider: Send + Sync {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("lexicon")
+        ProviderCapabilities::new("lexicon").with_quality(CapabilityLevel::Basic)
     }
 }
 
@@ -144,7 +144,25 @@ pub trait SymbolKnowledgeProvider: Send + Sync {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("symbols")
+        ProviderCapabilities::new("symbols").with_quality(CapabilityLevel::Basic)
+    }
+}
+
+/// Optional knowledge source for chat abbreviations and slang expansions.
+///
+/// Language-specific mappings live in versioned resource packs
+/// (`resources/abbreviations/*.json`); generic core logic must stay
+/// language-neutral and consult this provider instead of hardcoding tokens.
+pub trait AbbreviationProvider: Send + Sync {
+    fn abbreviation_readings(
+        &self,
+        token: &str,
+        languages: Option<&[String]>,
+        max_readings: usize,
+    ) -> Vec<SymbolReading>;
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("abbreviations").with_quality(CapabilityLevel::Basic)
     }
 }
 
@@ -196,10 +214,11 @@ pub trait VectorStore: Send + Sync {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("vector_store")
+        ProviderCapabilities::new("vector_store").with_quality(CapabilityLevel::Basic)
     }
 }
 
+pub type SharedAbbreviationProvider = Arc<dyn AbbreviationProvider>;
 pub type SharedEmbeddingProvider = Arc<dyn EmbeddingProvider>;
 pub type SharedG2PProvider = Arc<dyn G2PProvider>;
 pub type SharedLanguageProvider = Arc<dyn LanguageDetectionProvider>;

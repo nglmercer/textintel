@@ -64,6 +64,70 @@ pub struct SymbolResource {
     pub readings: Vec<SymbolReading>,
 }
 
+fn default_reading_type() -> String {
+    "chat_abbreviation".to_string()
+}
+
+/// One spoken expansion of a chat abbreviation token.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AbbreviationReading {
+    pub text: String,
+    #[serde(default = "default_weight")]
+    pub probability: f64,
+    #[serde(default = "default_reading_type", rename = "type")]
+    pub kind: String,
+}
+
+/// Versioned chat/slang abbreviation entries for one language. Language
+/// specific mappings live here, never in generic core logic.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AbbreviationEntry {
+    pub token: String,
+    #[serde(default)]
+    pub readings: Vec<AbbreviationReading>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AbbreviationPack {
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
+    pub language: String,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub entries: Vec<AbbreviationEntry>,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(default)]
+    pub license: Option<String>,
+    #[serde(default)]
+    pub revision: Option<String>,
+    #[serde(default)]
+    pub sha256: Option<String>,
+}
+
+/// Provenance record for one loaded resource pack, surfaced through
+/// `ResourceLoader::manifest` and `TextIntelligence::resource_manifest` so
+/// deployments can report exactly which linguistic data backs an analysis.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ResourcePackInfo {
+    /// Pack family: `"language"`, `"symbol"`, or `"abbreviation"`.
+    pub kind: String,
+    pub language: Option<String>,
+    #[serde(default)]
+    pub name: String,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(default)]
+    pub license: Option<String>,
+    #[serde(default)]
+    pub revision: Option<String>,
+    #[serde(default)]
+    pub sha256: Option<String>,
+    /// Where the pack was loaded from (file path or `<embedded:...>` tag).
+    pub origin: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SymbolPack {
     #[serde(default = "default_schema_version")]

@@ -23,7 +23,7 @@ use std::path::{Path, PathBuf};
 
 use candle_core::{DType, Device, Tensor};
 
-use crate::core::capabilities::{ModelMetadata, ProviderCapabilities};
+use crate::core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 use crate::core::error::ProviderError;
 use crate::core::providers::EmbeddingProvider as EmbeddingProviderTrait;
 use crate::normalization::unicode::casefold_text;
@@ -252,9 +252,16 @@ impl EmbeddingProviderTrait for CandleEmbeddingProvider {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new(PROVIDER)
+        // Static mean-pooled token embeddings: a Basic local backend, not a
+        // contextual transformer encoder.
+        let mut capabilities = ProviderCapabilities::new(PROVIDER)
             .with_dimensions(self.dimensions)
             .with_languages(self.languages.clone())
+            .with_quality(CapabilityLevel::Basic);
+        if let Some(revision) = &self.revision {
+            capabilities = capabilities.with_model_revision(revision.clone());
+        }
+        capabilities
     }
 
     fn model_metadata(&self) -> Option<ModelMetadata> {

@@ -34,6 +34,7 @@ phonetic = ["phonetic-ipa"]
 phonetic-ipa = []
 persist = []
 ml = ["lang-profile", "semantic-local", "phonetic-ipa"]
+production-local = []
 all = ["lang-profile", "semantic-local", "semantic-candle", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb", "ml"]
 
 [dependencies]

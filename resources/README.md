@@ -16,9 +16,17 @@ Use `lookup_in_language` when a report must be scoped to one language. A plain
 a word found in another language as an exact match.
 
 Symbol resources use one neutral metadata pack (`00-neutral.json`) plus
-language packs per locale. The seed packs cover emoji, numbers, currency, and
-math symbols. A pack's `language` fills missing reading-language fields, so
-every reading remains attributable to a language.
+language packs per locale. All 16 supported languages ship baseline packs
+covering digits 0–10, 100, currency (`$ € £ ¥ ₹`), math (`% + =`), and the
+core emoji set (`❤ ❤️ 🏠 💰 🔥`). A pack's `language` fills missing
+reading-language fields, so every reading remains attributable to a language.
+
+Chat abbreviations live in `resources/abbreviations/<language>.json`
+(schema version 1, same provenance fields) and are the only source of
+mappings such as `u → you` or `gr8 → great`: generic core logic holds no
+language-specific abbreviation table. Use
+`TextIntelligence::with_abbreviation_provider` (or
+`RebusDecoder::decode_with_abbreviations`) to override them per application.
 
 Language packs use schema version `1`:
 

@@ -15,7 +15,10 @@ pub use error::ResourceError;
 pub use index::{LanguageIndex, LexiconLookup, LexiconRecord, LookupStatus};
 pub use loader::{ResourceLimits, ResourceLoader};
 pub use order::{normalize_key, IndexKey};
-pub use pack::{LanguagePack, LexiconEntry, SymbolPack, SymbolResource, SUPPORTED_SCHEMA_VERSION};
+pub use pack::{
+    AbbreviationEntry, AbbreviationPack, AbbreviationReading, LanguagePack, LexiconEntry,
+    ResourcePackInfo, SymbolPack, SymbolResource, SUPPORTED_SCHEMA_VERSION,
+};
 pub use providers::{
     embedded as embedded_common, embedded as embedded_resources, DefaultLexiconProvider,
 };

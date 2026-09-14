@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use crate::core::capabilities::ProviderCapabilities;
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::error::ProviderError;
 use crate::core::providers::LanguageDetectionProvider;
 use crate::core::types::LanguageCandidate;
@@ -86,6 +86,7 @@ impl LanguageDetectionProvider for NgramLanguageDetector {
         ProviderCapabilities::new("local_char_ngram_language_v1")
             .with_version("resource-profile-1")
             .with_languages(self.languages())
+            .with_quality(CapabilityLevel::Basic)
     }
 }
 

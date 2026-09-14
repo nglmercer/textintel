@@ -6,7 +6,10 @@ use sha2::{Digest, Sha256};
 
 use super::error::ResourceError;
 use super::index::{LanguageIndex, LexiconLookup, LexiconRecord, SymbolIndex};
-use super::pack::{LanguagePack, SymbolPack, SUPPORTED_SCHEMA_VERSION};
+use super::pack::{
+    AbbreviationPack, LanguagePack, ResourcePackInfo, SymbolPack, SUPPORTED_SCHEMA_VERSION,
+};
+use crate::core::types::SymbolReading;
 
 include!(concat!(env!("OUT_DIR"), "/embedded_resources.rs"));
 
@@ -41,6 +44,8 @@ impl Default for ResourceLimits {
 pub struct ResourceLoader {
     pub(crate) language_index: LanguageIndex,
     pub(crate) symbol_index: SymbolIndex,
+    pub(crate) abbreviation_index: std::collections::BTreeMap<String, Vec<SymbolReading>>,
+    pub(crate) manifest: Vec<ResourcePackInfo>,
     pub(crate) limits: ResourceLimits,
 }
 
@@ -55,6 +60,9 @@ impl ResourceLoader {
         }
         for (name, source) in SYMBOL_PACKS {
             loader.load_symbol_json(source, PathBuf::from(format!("<embedded:{name}>")))?;
+        }
+        for (name, source) in ABBREVIATION_PACKS {
+            loader.load_abbreviation_json(source, PathBuf::from(format!("<embedded:{name}>")))?;
         }
         Ok(loader)
     }
@@ -82,11 +90,13 @@ impl ResourceLoader {
         Ok(loader)
     }
 
-    /// Load `languages/` and, when present, `symbols/` below a resource root.
+    /// Load `languages/` and, when present, `symbols/` and `abbreviations/`
+    /// below a resource root.
     pub fn from_resource_root(path: impl AsRef<Path>) -> Result<Self, ResourceError> {
         let root = path.as_ref();
         let language_dir = root.join("languages");
         let symbol_dir = root.join("symbols");
+        let abbreviation_dir = root.join("abbreviations");
         let mut loader = Self::default();
         if language_dir.is_dir() {
             loader.load_language_directory(&language_dir)?;
@@ -95,6 +105,9 @@ impl ResourceLoader {
         }
         if symbol_dir.is_dir() {
             loader.load_symbol_directory(symbol_dir)?;
+        }
+        if abbreviation_dir.is_dir() {
+            loader.load_abbreviation_directory(abbreviation_dir)?;
         }
         Ok(loader)
     }
@@ -159,6 +172,16 @@ impl ResourceLoader {
                 ),
             });
         }
+        self.manifest.push(ResourcePackInfo {
+            kind: "language".to_string(),
+            language: Some(canonical_language(&pack.language)),
+            name: pack.name.clone(),
+            source: pack.source.clone(),
+            license: pack.license.clone(),
+            revision: pack.revision.clone(),
+            sha256: pack.sha256.clone(),
+            origin: source_path.as_ref().display().to_string(),
+        });
         self.language_index.add_pack(pack, source_path.as_ref());
         Ok(())
     }
@@ -230,6 +253,16 @@ impl ResourceLoader {
                 ),
             });
         }
+        self.manifest.push(ResourcePackInfo {
+            kind: "symbol".to_string(),
+            language: pack.language.clone(),
+            name: pack.name.clone(),
+            source: pack.source.clone(),
+            license: pack.license.clone(),
+            revision: pack.revision.clone(),
+            sha256: pack.sha256.clone(),
+            origin: source_path.as_ref().display().to_string(),
+        });
         for symbol in pack.symbols {
             self.symbol_index.merge(symbol);
         }
@@ -286,6 +319,155 @@ impl ResourceLoader {
             })?;
         validate_declared_hash(pack.sha256.as_deref(), source, &path)?;
         self.add_symbol_pack(pack, path)
+    }
+
+    pub fn load_abbreviation_directory(
+        &mut self,
+        path: impl AsRef<Path>,
+    ) -> Result<(), ResourceError> {
+        let path = path.as_ref();
+        let files = json_files(path)?;
+        if files.is_empty() {
+            return Err(ResourceError::Validation {
+                path: path.to_path_buf(),
+                message: "no JSON abbreviation packs found".to_string(),
+            });
+        }
+        for file in files {
+            self.load_abbreviation_file(file)?;
+        }
+        Ok(())
+    }
+
+    pub fn load_abbreviation_file(&mut self, path: impl AsRef<Path>) -> Result<(), ResourceError> {
+        let path = path.as_ref().to_path_buf();
+        validate_file_size(&path, self.limits.max_resource_bytes)?;
+        let source = fs::read_to_string(&path).map_err(|error| ResourceError::Io {
+            path: path.clone(),
+            message: error.to_string(),
+        })?;
+        self.load_abbreviation_json(&source, path)
+    }
+
+    pub fn load_abbreviation_json(
+        &mut self,
+        source: &str,
+        path: impl Into<PathBuf>,
+    ) -> Result<(), ResourceError> {
+        let path = path.into();
+        if source.len() > self.limits.max_resource_bytes {
+            return Err(ResourceError::Validation {
+                path,
+                message: format!(
+                    "resource is {} bytes; maximum is {}",
+                    source.len(),
+                    self.limits.max_resource_bytes
+                ),
+            });
+        }
+        let parse_path = path.clone();
+        let pack: AbbreviationPack =
+            serde_json::from_str(source).map_err(|error| ResourceError::Parse {
+                path: parse_path,
+                message: error.to_string(),
+            })?;
+        validate_declared_hash(pack.sha256.as_deref(), source, &path)?;
+        self.add_abbreviation_pack(pack, path)
+    }
+
+    pub fn add_abbreviation_pack(
+        &mut self,
+        pack: AbbreviationPack,
+        source_path: impl AsRef<Path>,
+    ) -> Result<(), ResourceError> {
+        validate_abbreviation_pack(&pack, source_path.as_ref())?;
+        if pack.entries.len() > self.limits.max_pack_entries {
+            return Err(ResourceError::Validation {
+                path: source_path.as_ref().to_path_buf(),
+                message: format!(
+                    "abbreviation pack contains {} entries; maximum is {}",
+                    pack.entries.len(),
+                    self.limits.max_pack_entries
+                ),
+            });
+        }
+        let language = canonical_language(&pack.language);
+        self.manifest.push(ResourcePackInfo {
+            kind: "abbreviation".to_string(),
+            language: Some(language.clone()),
+            name: pack.name.clone(),
+            source: pack.source.clone(),
+            license: pack.license.clone(),
+            revision: pack.revision.clone(),
+            sha256: pack.sha256.clone(),
+            origin: source_path.as_ref().display().to_string(),
+        });
+        for entry in pack.entries {
+            let key = entry.token.to_ascii_lowercase();
+            let slot = self.abbreviation_index.entry(key).or_default();
+            for reading in entry.readings {
+                slot.push(SymbolReading::new(
+                    reading.text,
+                    Some(language.clone()),
+                    reading.probability,
+                    reading.kind,
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    /// Chat-abbreviation expansions for `token` (case-insensitive), sorted by
+    /// descending probability and filtered by `languages` when non-empty.
+    pub fn abbreviation_readings(
+        &self,
+        token: &str,
+        languages: Option<&[String]>,
+        max_readings: usize,
+    ) -> Vec<SymbolReading> {
+        let mut readings = self
+            .abbreviation_index
+            .get(&token.to_ascii_lowercase())
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|reading| abbreviation_language_allowed(reading.language.as_deref(), languages))
+            .collect::<Vec<_>>();
+        readings.sort_by(|left, right| {
+            right
+                .probability
+                .total_cmp(&left.probability)
+                .then_with(|| left.text.cmp(&right.text))
+        });
+        readings.truncate(max_readings.max(1));
+        readings
+    }
+
+    /// Provenance for every loaded pack: source, license, revision, and hash
+    /// when the pack declares them.
+    pub fn manifest(&self) -> &[ResourcePackInfo] {
+        &self.manifest
+    }
+
+    /// Languages with at least one symbol pack (neutral concept packs excluded).
+    pub fn symbol_pack_languages(&self) -> Vec<String> {
+        self.manifest
+            .iter()
+            .filter(|info| info.kind == "symbol")
+            .filter_map(|info| info.language.clone())
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
+            .collect()
+    }
+
+    pub fn abbreviation_languages(&self) -> Vec<String> {
+        let languages = self
+            .abbreviation_index
+            .values()
+            .flat_map(|readings| readings.iter())
+            .filter_map(|reading| reading.language.clone())
+            .collect::<std::collections::BTreeSet<_>>();
+        languages.into_iter().collect()
     }
 
     pub fn languages(&self) -> Vec<String> {
@@ -473,6 +655,57 @@ fn validate_language_pack(pack: &LanguagePack, path: &Path) -> Result<(), Resour
                 path: path.to_path_buf(),
                 message: "lexicon words cannot be empty".to_string(),
             });
+        }
+    }
+    Ok(())
+}
+
+fn abbreviation_language_allowed(language: Option<&str>, languages: Option<&[String]>) -> bool {
+    let Some(languages) = languages.filter(|values| !values.is_empty()) else {
+        return true;
+    };
+    let Some(language) = language else {
+        return true;
+    };
+    language == "und"
+        || languages.iter().any(|candidate| {
+            candidate.eq_ignore_ascii_case(language)
+                || candidate.eq_ignore_ascii_case("unknown")
+                || candidate.eq_ignore_ascii_case("und")
+        })
+}
+
+fn validate_abbreviation_pack(pack: &AbbreviationPack, path: &Path) -> Result<(), ResourceError> {
+    if pack.schema_version != SUPPORTED_SCHEMA_VERSION {
+        return Err(ResourceError::Validation {
+            path: path.to_path_buf(),
+            message: format!("unsupported schema_version={}", pack.schema_version),
+        });
+    }
+    if canonical_language(&pack.language).is_empty() {
+        return Err(ResourceError::Validation {
+            path: path.to_path_buf(),
+            message: "abbreviation pack language cannot be empty".to_string(),
+        });
+    }
+    for entry in &pack.entries {
+        if entry.token.trim().is_empty() {
+            return Err(ResourceError::Validation {
+                path: path.to_path_buf(),
+                message: "abbreviation tokens cannot be empty".to_string(),
+            });
+        }
+        for reading in &entry.readings {
+            if reading.text.trim().is_empty()
+                || reading.kind.trim().is_empty()
+                || !reading.probability.is_finite()
+                || !(0.0..=1.0).contains(&reading.probability)
+            {
+                return Err(ResourceError::Validation {
+                    path: path.to_path_buf(),
+                    message: format!("invalid reading for abbreviation {:?}", entry.token),
+                });
+            }
         }
     }
     Ok(())

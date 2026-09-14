@@ -60,6 +60,47 @@ Optional production backends (off by default, no automatic network access):
   guarantees as the JSON store.
 - `semantic-http`: explicit remote embedding adapter (only when configured).
 
+## Modes: default, production-local, remote
+
+```text
+Default:
+fast, deterministic, local, model-free.
+
+Production local:
+embedded resource packs + trained models + espeak-ng G2P when installed
++ local embedding baseline. Graceful fallback with degradation notes.
+
+Remote:
+explicit HTTP providers only, never automatic.
+```
+
+```rust
+use textintel::TextIntelligence;
+
+// Lightweight and deterministic (unchanged default).
+let engine = TextIntelligence::default();
+
+// Local production preset: never touches the network, never panics when an
+// optional dependency (espeak-ng, model files) is missing. Check
+// `engine.diagnostics().degraded` to see what fell back.
+let engine = TextIntelligence::production_local()?;
+
+// Ergonomic builder with the same preset plus explicit configuration.
+let engine = TextIntelligence::builder()
+    .production_local()
+    .trained_similarity_model("models/similarity-v1.json")
+    .trained_spam_model("models/spam-v1.json")
+    .build()?;
+# Ok::<(), textintel::TextIntelError>(())
+```
+
+Providers report quality tiers through `engine.provider_capabilities()`:
+`RuleBasedG2PProvider` and feature-hash embeddings are `Basic`,
+`EspeakNgG2PProvider` and transformer/HTTP embeddings are `Production`,
+and unconfigured backends report `Unavailable` instead of pretending to
+work. `engine.diagnostics()` adds API/schema versions, the loaded resource
+manifest (source, license, revision per pack), and the degraded list.
+
 ## Providers and configuration
 
 Expensive or remote functionality is explicit. Implement one of the provider
@@ -82,7 +123,7 @@ are bounded by `EngineConfig`.
 Optional feature names are available for packaging integrations:
 `lang-profile`, `semantic-local`, `semantic-candle`, `semantic-http`,
 `phonetic-ipa`, `phonetic-espeak`, `ann-hnsw`, `persist`, `persist-redb`,
-`semantic`, `phonetic`, `ml`, and `all`. The default build stays local and
+`semantic`, `phonetic`, `ml`, `production-local`, and `all`. The default build stays local and
 lightweight; `semantic-http` is the explicit remote-provider adapter and
 `semantic-local` provides the deterministic feature-hash embedding baseline.
 
@@ -137,6 +178,7 @@ cargo run -- search store.json "similar message" 5
 
 ```text
 cargo run --example basic
+cargo run --example production_local
 cargo run --example persistent_store
 cargo run --example patterns_spam
 ```

@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use crate::core::capabilities::ProviderCapabilities;
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::providers::VectorStore;
 use crate::core::types::{MessageFingerprint, SearchCandidateSet};
 use crate::lexical::minhash::minhash_similarity;
@@ -335,7 +335,7 @@ impl VectorStore for MemoryStore {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("memory_store")
+        ProviderCapabilities::new("memory_store").with_quality(CapabilityLevel::Basic)
     }
 }
 

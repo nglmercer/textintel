@@ -1,5 +1,7 @@
 use crate::core::config::EngineConfig;
-use crate::core::providers::{G2PProvider, LexiconProvider, SymbolKnowledgeProvider};
+use crate::core::providers::{
+    AbbreviationProvider, G2PProvider, LexiconProvider, SymbolKnowledgeProvider,
+};
 use crate::core::types::{DecodedCandidate, Transformation};
 use crate::normalization::confusables::skeleton;
 use crate::normalization::leetspeak::apply_leet;
@@ -7,7 +9,7 @@ use crate::normalization::repetition::collapse_repetition;
 use crate::normalization::unicode::casefold_text;
 use crate::normalization::whitespace::normalize_whitespace;
 use crate::phonetic::g2p::RuleBasedG2PProvider;
-use crate::rebus::beam_search::beam_decode_with_provider_and_languages;
+use crate::rebus::beam_search::beam_decode_with_abbreviation_provider;
 use crate::rebus::scorer::{score_candidate_with_evidence, RebusEvidence};
 use crate::resources::DefaultLexiconProvider;
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
@@ -100,13 +102,41 @@ impl RebusDecoder {
         g2p_provider: &dyn G2PProvider,
         semantic: Option<&crate::rebus::SemanticEvidence>,
     ) -> Vec<DecodedCandidate> {
+        self.decode_with_abbreviations(
+            text,
+            languages,
+            max_candidates,
+            symbol_provider,
+            lexicon_provider,
+            g2p_provider,
+            semantic,
+            None,
+        )
+    }
+
+    /// Full pipeline with an explicit abbreviation source (`None` selects the
+    /// embedded versioned abbreviation packs). Applications with custom slang
+    /// packs pass their `AbbreviationProvider` here.
+    #[allow(clippy::too_many_arguments)]
+    pub fn decode_with_abbreviations(
+        &self,
+        text: &str,
+        languages: Option<&[String]>,
+        max_candidates: Option<usize>,
+        symbol_provider: &dyn SymbolKnowledgeProvider,
+        lexicon_provider: &dyn LexiconProvider,
+        g2p_provider: &dyn G2PProvider,
+        semantic: Option<&crate::rebus::SemanticEvidence>,
+        abbreviations: Option<&dyn AbbreviationProvider>,
+    ) -> Vec<DecodedCandidate> {
         let limit = max_candidates.unwrap_or(self.config.max_candidates).max(1);
-        let nodes = beam_decode_with_provider_and_languages(
+        let nodes = beam_decode_with_abbreviation_provider(
             text,
             self.config.beam_width,
             (limit * 3).max(self.config.beam_width),
             self.config.max_symbol_readings,
             symbol_provider,
+            abbreviations,
             languages,
             self.config.max_decoded_branches,
         );

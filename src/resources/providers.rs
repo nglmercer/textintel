@@ -1,8 +1,10 @@
 use std::sync::OnceLock;
 
-use crate::core::capabilities::ProviderCapabilities;
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::error::ProviderError;
-use crate::core::providers::{LanguageDetectionProvider, LexiconProvider, SymbolKnowledgeProvider};
+use crate::core::providers::{
+    AbbreviationProvider, LanguageDetectionProvider, LexiconProvider, SymbolKnowledgeProvider,
+};
 use crate::core::types::{LanguageCandidate, SymbolConcept, SymbolReading};
 
 use super::loader::ResourceLoader;
@@ -27,6 +29,12 @@ impl LexiconProvider for ResourceLoader {
     fn frequency(&self, word: &str, languages: Option<&[String]>) -> Option<f64> {
         self.language_index.frequency(word, languages)
     }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("resource_lexicon")
+            .with_languages(self.languages())
+            .with_quality(CapabilityLevel::Basic)
+    }
 }
 
 impl LanguageDetectionProvider for ResourceLoader {
@@ -35,7 +43,9 @@ impl LanguageDetectionProvider for ResourceLoader {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("resource_profile_detector").with_languages(self.languages())
+        ProviderCapabilities::new("resource_profile_detector")
+            .with_languages(self.languages())
+            .with_quality(CapabilityLevel::Basic)
     }
 }
 
@@ -108,6 +118,29 @@ impl SymbolKnowledgeProvider for ResourceLoader {
         self.symbol_index
             .get(token)
             .and_then(|symbol| symbol.unicode_name.clone())
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("resource_symbols")
+            .with_languages(self.symbol_pack_languages())
+            .with_quality(CapabilityLevel::Basic)
+    }
+}
+
+impl AbbreviationProvider for ResourceLoader {
+    fn abbreviation_readings(
+        &self,
+        token: &str,
+        languages: Option<&[String]>,
+        max_readings: usize,
+    ) -> Vec<SymbolReading> {
+        self.abbreviation_readings(token, languages, max_readings)
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("resource_abbreviations")
+            .with_languages(self.abbreviation_languages())
+            .with_quality(CapabilityLevel::Basic)
     }
 }
 

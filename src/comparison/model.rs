@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use crate::core::capabilities::ProviderCapabilities;
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::config::SimilarityWeights;
 use crate::core::providers::SimilarityScorer;
 use crate::core::types::{ComparisonResult, MessageFingerprint};
@@ -174,11 +174,17 @@ impl SimilarityScorer for LogisticSimilarityScorer {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("logistic_similarity_scorer").with_version(
-            self.revision
-                .clone()
-                .unwrap_or_else(|| "unversioned".to_string()),
-        )
+        let mut capabilities = ProviderCapabilities::new("logistic_similarity_scorer")
+            .with_version(
+                self.revision
+                    .clone()
+                    .unwrap_or_else(|| "unversioned".to_string()),
+            )
+            .with_quality(CapabilityLevel::Production);
+        if let Some(revision) = &self.revision {
+            capabilities = capabilities.with_model_revision(revision.clone());
+        }
+        capabilities
     }
 }
 

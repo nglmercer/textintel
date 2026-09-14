@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
-use crate::core::capabilities::{ModelMetadata, ProviderCapabilities};
+use crate::core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 use crate::core::error::ProviderError;
 use crate::core::providers::EmbeddingProvider as EmbeddingProviderTrait;
 use crate::lexical::ngrams::character_ngrams;
@@ -18,7 +18,10 @@ impl EmbeddingProviderTrait for NullEmbeddingProvider {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("null_embedding").with_dimensions(0)
+        ProviderCapabilities::new("null_embedding")
+            .with_dimensions(0)
+            .with_quality(CapabilityLevel::Unavailable)
+            .with_fallback("no embedding backend configured; semantic channel is skipped")
     }
 }
 
@@ -57,7 +60,7 @@ impl EmbeddingProviderTrait for StaticEmbeddingProvider {
         if let Some(dimensions) = dimensions {
             capabilities = capabilities.with_dimensions(dimensions);
         }
-        capabilities
+        capabilities.with_quality(CapabilityLevel::Basic)
     }
 
     fn model_metadata(&self) -> Option<ModelMetadata> {
@@ -128,7 +131,10 @@ impl EmbeddingProviderTrait for FeatureHashEmbeddingProvider {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new("feature_hash_embedding").with_dimensions(self.dimensions)
+        ProviderCapabilities::new("feature_hash_embedding")
+            .with_dimensions(self.dimensions)
+            .with_quality(CapabilityLevel::Basic)
+            .with_fallback("feature hashes are a fallback, not contextual multilingual embeddings")
     }
 
     fn model_metadata(&self) -> Option<ModelMetadata> {

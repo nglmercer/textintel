@@ -24,16 +24,17 @@ pub mod symbols;
 pub mod visual;
 
 pub use comparison::{
-    language_agreement, logistic_step, score_fingerprints_with_profile, sigmoid, training_features,
-    LogisticSimilarityScorer, SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURES,
-    TRAINING_FEATURE_SCHEMA_VERSION,
+    language_agreement, logistic_step, rerank_score, score_fingerprints_with_profile, sigmoid,
+    training_features, ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer,
+    SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURES, TRAINING_FEATURE_SCHEMA_VERSION,
 };
-pub use core::capabilities::{ModelMetadata, ProviderCapabilities};
+pub use core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 pub use core::config::{EngineConfig, SimilarityWeights};
 pub use core::error::{ProviderError, TextIntelError};
 pub use core::providers::{
-    EmbeddingProvider, G2PProvider, LanguageDetectionProvider, LemmatizerProvider, LexiconProvider,
-    RerankerProvider, SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, VectorStore,
+    AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
+    LemmatizerProvider, LexiconProvider, RerankerProvider, SharedAbbreviationProvider,
+    SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, VectorStore,
 };
 pub use core::types::*;
 pub use detection::{
@@ -41,16 +42,17 @@ pub use detection::{
     HeuristicSpamPredictor, SpamModelArtifact, TrainedSpamPredictor, SPAM_FEATURES,
     SPAM_FEATURE_SCHEMA_VERSION,
 };
+pub use engine::production::{DegradedCapability, EngineBuilder, EngineDiagnostics};
 pub use engine::TextIntelligence;
 pub use language::{NgramLanguageDetector, ProfileLanguageDetector};
 #[cfg(feature = "phonetic-espeak")]
 pub use phonetic::{parse_espeak_ipa, EspeakNgG2PProvider};
 pub use phonetic::{NullG2PProvider, RuleBasedG2PProvider};
 pub use resources::{
-    embedded_common, embedded_resources, normalize_key, DefaultLexiconProvider, IndexKey,
-    LanguageIndex, LanguagePack, LexiconEntry, LexiconLookup, LexiconRecord, LookupStatus,
-    ResourceError, ResourceLimits, ResourceLoader, SymbolPack, SymbolResource,
-    SUPPORTED_SCHEMA_VERSION,
+    embedded_common, embedded_resources, normalize_key, AbbreviationEntry, AbbreviationPack,
+    AbbreviationReading, DefaultLexiconProvider, IndexKey, LanguageIndex, LanguagePack,
+    LexiconEntry, LexiconLookup, LexiconRecord, LookupStatus, ResourceError, ResourceLimits,
+    ResourceLoader, ResourcePackInfo, SymbolPack, SymbolResource, SUPPORTED_SCHEMA_VERSION,
 };
 #[cfg(feature = "semantic-candle")]
 pub use semantic::CandleEmbeddingProvider;

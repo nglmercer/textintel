@@ -1,4 +1,4 @@
-use crate::core::capabilities::ProviderCapabilities;
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::error::ProviderError;
 use crate::core::providers::LanguageDetectionProvider;
 use crate::core::types::LanguageCandidate;
@@ -21,5 +21,6 @@ impl LanguageDetectionProvider for DefaultLanguageDetector {
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::new("embedded_profile_detector")
             .with_languages(embedded_resources().languages())
+            .with_quality(CapabilityLevel::Basic)
     }
 }

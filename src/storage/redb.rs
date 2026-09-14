@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 
 use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
 
-use crate::core::capabilities::ProviderCapabilities;
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::providers::VectorStore;
 use crate::core::types::{MessageFingerprint, SearchCandidateSet, FINGERPRINT_SCHEMA_VERSION};
 
@@ -262,7 +262,7 @@ impl VectorStore for RedbStore {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new(PROVIDER)
+        ProviderCapabilities::new(PROVIDER).with_quality(CapabilityLevel::Production)
     }
 }
 

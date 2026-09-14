@@ -12,7 +12,7 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::core::capabilities::ProviderCapabilities;
+use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::error::ProviderError;
 use crate::core::providers::G2PProvider as G2PProviderTrait;
 use crate::core::types::PhoneticCandidate;
@@ -147,6 +147,29 @@ impl EspeakNgG2PProvider {
         self
     }
 
+    /// Detect an `espeak-ng` binary on `PATH` without executing anything.
+    /// Use this for the production preset; when it fails, fall back to
+    /// [`RuleBasedG2PProvider`](crate::phonetic::RuleBasedG2PProvider) and
+    /// report degraded phonetic quality instead of failing the analysis.
+    pub fn auto_detect() -> Result<Self, ProviderError> {
+        match find_binary(DEFAULT_BINARY) {
+            Some(binary) => Ok(Self {
+                binary,
+                default_voice: DEFAULT_VOICE.to_string(),
+            }),
+            None => Err(ProviderError::new(
+                PROVIDER,
+                "espeak-ng not found on PATH (install espeak-ng for production G2P; \
+                 falling back to the rule-based provider with Basic quality)",
+            )),
+        }
+    }
+
+    /// True when [`Self::auto_detect`] would succeed.
+    pub fn is_available() -> bool {
+        find_binary(DEFAULT_BINARY).is_some()
+    }
+
     /// Languages covered by the curated default voice mapping.
     pub fn supported_languages() -> Vec<String> {
         let mut languages: Vec<String> = VOICES
@@ -197,6 +220,37 @@ impl EspeakNgG2PProvider {
             ProviderError::new(PROVIDER, format!("espeak-ng output is not UTF-8: {error}"))
         })
     }
+}
+
+/// Locate an executable `name` on `PATH` without running it, so detection is
+/// bounded and side-effect free.
+fn find_binary(name: &str) -> Option<PathBuf> {
+    let paths = std::env::var_os("PATH")?;
+    for directory in std::env::split_paths(&paths) {
+        let candidate = directory.join(name);
+        if is_executable(&candidate) {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+#[cfg(unix)]
+fn is_executable(path: &Path) -> bool {
+    path.is_file() && check_exec_bit(path)
+}
+
+#[cfg(unix)]
+fn check_exec_bit(path: &Path) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::metadata(path)
+        .map(|metadata| metadata.permissions().mode() & 0o111 != 0)
+        .unwrap_or(false)
+}
+
+#[cfg(not(unix))]
+fn is_executable(path: &Path) -> bool {
+    path.is_file()
 }
 
 /// Parse raw `--ipa` stdout into display IPA, phoneme tokens, and a syllable
@@ -258,7 +312,9 @@ impl G2PProviderTrait for EspeakNgG2PProvider {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
-        ProviderCapabilities::new(PROVIDER).with_languages(Self::supported_languages())
+        ProviderCapabilities::new(PROVIDER)
+            .with_languages(Self::supported_languages())
+            .with_quality(CapabilityLevel::Production)
     }
 }
 

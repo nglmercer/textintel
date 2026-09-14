@@ -93,7 +93,23 @@ fn mvp_examples_preserve_raw_and_decode_rebus_candidates() {
             .count()
             > 1
     );
-    assert!(e.decode("🔥").unwrap().len() > 1);
+    // A bare 🔥 is genuinely ambiguous across 16 symbol languages, so the
+    // decoder abstains (§19) instead of guessing. With a language scope the
+    // reading resolves to a strong candidate.
+    assert!(e.decode("🔥").unwrap().is_empty());
+    let fuego = e
+        .decode_with_languages("🔥", Some(&["es".to_string()]), None)
+        .unwrap();
+    assert!(
+        fuego
+            .iter()
+            .any(|candidate| candidate.text == "fuego" && candidate.strong),
+        "es-scoped 🔥 should decode to strong 'fuego': {:?}",
+        fuego
+            .iter()
+            .map(|candidate| &candidate.text)
+            .collect::<Vec<_>>()
+    );
 }
 
 #[test]
@@ -324,7 +340,10 @@ fn resource_loader_indexes_seed_languages_and_supports_custom_packs() {
 #[test]
 fn symbol_resources_are_split_by_language() {
     let loader = ResourceLoader::common().unwrap();
-    let expected_languages = ["de", "en", "es", "fr", "it", "pt"];
+    let expected_languages = [
+        "ar", "de", "en", "es", "fr", "hi", "id", "it", "ja", "ko", "nl", "pl", "pt", "ru", "tr",
+        "zh",
+    ];
     let expected_tokens = vec![
         "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "100", "$", "%", "+", "=", "£",
         "¥", "€", "₹", "❤", "❤️", "🏠", "💰", "🔥",
@@ -341,9 +360,14 @@ fn symbol_resources_are_split_by_language() {
             "token={token} languages={languages:?}"
         );
     }
-    assert_eq!(
-        loader.symbol_languages("🔥").last().map(String::as_str),
-        Some("und")
+    // The neutral fallback reading stays visible alongside every language.
+    assert!(
+        loader
+            .symbol_languages("🔥")
+            .iter()
+            .any(|language| language == "und"),
+        "neutral 🔥 reading missing: {:?}",
+        loader.symbol_languages("🔥")
     );
 }
 
