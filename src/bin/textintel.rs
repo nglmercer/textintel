@@ -5,7 +5,7 @@ use textintel::evaluation::{EvaluateOptions, EvaluationDataset, EvaluationReport
 use textintel::{EngineConfig, ResourceLoader, TextIntelligence};
 
 fn usage() -> &'static str {
-    "Usage:\n  textintel analyze <text> [--json]\n  textintel explain <text> [--json]\n  textintel decode <text> [--languages <es,en>] [--json]\n  textintel compare <message-a> <message-b> [--json]\n  textintel spam <text> [--json]\n  textintel batch <input.jsonl> [--json]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <evaluation.json> [--split train|validation|test] [--profile <name>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel evaluate <evaluation.json> [--split train|validation|test] [--profile <name>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel index <store.json> <id> <text>\n  textintel search <store.json> <text> <limit> [--json]"
+    "Usage:\n  textintel analyze <text> [--json]\n  textintel explain <text> [--json]\n  textintel decode <text> [--languages <es,en>] [--json]\n  textintel compare <message-a> <message-b> [--json]\n  textintel spam <text> [--json]\n  textintel batch <input.jsonl> [--json]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel evaluate <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel index <store.json> <id> <text>\n  textintel search <store.json> <text> <limit> [--json]"
 }
 
 fn print_json<T: serde::Serialize>(value: &T) -> Result<(), Box<dyn std::error::Error>> {
@@ -142,6 +142,12 @@ fn run_eval(args: &[String], json: bool) -> Result<i32, Box<dyn std::error::Erro
     if let Some(name) = &profile_name {
         let profile = profile_named(name).ok_or_else(|| format!("unknown profile '{name}'"))?;
         engine = engine.with_similarity_profile(profile);
+    }
+    if let Some(path) = flag_value(args, "--scorer") {
+        let source = std::fs::read_to_string(&path)?;
+        let artifact = textintel::SimilarityModelArtifact::from_json(&source)
+            .map_err(|error| format!("invalid scorer artifact {path}: {error}"))?;
+        engine = engine.with_similarity_scorer(artifact.to_scorer());
     }
     let options = EvaluateOptions {
         split: split.clone(),
@@ -422,7 +428,11 @@ fn positional_args(args: &[String]) -> Vec<String> {
             continue;
         }
         if index > 0
-            && (arg == "--split" || arg == "--profile" || arg == "--gates" || arg == "--languages")
+            && (arg == "--split"
+                || arg == "--profile"
+                || arg == "--gates"
+                || arg == "--languages"
+                || arg == "--scorer")
         {
             skip_next = true;
             continue;

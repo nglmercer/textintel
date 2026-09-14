@@ -16,6 +16,10 @@ path = "src/lib.rs"
 name = "textintel"
 path = "src/bin/textintel.rs"
 
+[[bin]]
+name = "textintel-train"
+path = "tools/train_similarity.rs"
+
 [features]
 default = []
 lang-profile = []

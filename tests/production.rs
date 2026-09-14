@@ -180,6 +180,33 @@ fn evaluation_chunks_batches_larger_than_max_batch_size() {
 }
 
 #[test]
+fn trained_similarity_artifact_loads_and_separates_pairs() {
+    use textintel::SimilarityModelArtifact;
+    use textintel::SimilarityScorer;
+
+    let source = include_str!("../models/similarity-v1.json");
+    let artifact = SimilarityModelArtifact::from_json(source).unwrap();
+    assert_eq!(artifact.kind, "logistic_similarity");
+    assert_eq!(
+        artifact.feature_schema_version,
+        textintel::TRAINING_FEATURE_SCHEMA_VERSION
+    );
+    assert!(artifact.metrics["test_roc_auc"] >= 0.9);
+    let engine = TextIntelligence::default();
+    let scorer = artifact.to_scorer();
+    let same_left = engine.analyze("compra ahora").unwrap();
+    let same_right = engine.analyze("compra ahora").unwrap();
+    let other = engine.analyze("see you tomorrow").unwrap();
+    let same = scorer.score(&same_left, &same_right).score;
+    let different = scorer.score(&same_left, &other).score;
+    assert!(
+        same > different,
+        "trained scorer must rank identical pairs first"
+    );
+    assert!(same > 0.5);
+}
+
+#[test]
 fn evaluation_reports_ranking_and_calibration_metrics() {
     let source = include_str!("../data/evaluation.json");
     let dataset = EvaluationDataset::from_json(source).unwrap();

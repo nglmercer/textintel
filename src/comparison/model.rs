@@ -181,3 +181,289 @@ impl SimilarityScorer for LogisticSimilarityScorer {
         )
     }
 }
+
+/// Schema version of the interpretable training feature vector. Bump when
+/// [`training_features`] gains, drops, or reorders features.
+pub const TRAINING_FEATURE_SCHEMA_VERSION: u32 = 1;
+
+/// Interpretable features in fixed order: the eight evidence channels
+/// (missing channels read as 0.0, exactly as the scorer treats them),
+/// mean channel confidence, and top-language agreement.
+pub const TRAINING_FEATURES: &[&str] = &[
+    "semantic",
+    "lexical",
+    "character",
+    "visual",
+    "phonetic",
+    "symbolic",
+    "decoded",
+    "obfuscation",
+    "channel_confidence",
+    "language_agreement",
+];
+
+/// Extract the training feature vector for one comparison. `language_agreement`
+/// is 1.0 when both fingerprints agree on the top language, else 0.0.
+pub fn training_features(
+    result: &ComparisonResult,
+    language_agreement: f64,
+) -> BTreeMap<String, f64> {
+    let channels = [
+        ("semantic", result.semantic),
+        ("lexical", result.lexical),
+        ("character", result.character),
+        ("visual", result.visual),
+        ("phonetic", result.phonetic),
+        ("symbolic", result.symbolic),
+        ("decoded", result.decoded_similarity),
+        ("obfuscation", result.obfuscation_similarity),
+    ];
+    let mut features = BTreeMap::new();
+    for (name, value) in channels {
+        features.insert(name.to_string(), value.unwrap_or(0.0));
+    }
+    let confidence = if result.channel_confidence.is_empty() {
+        0.0
+    } else {
+        result.channel_confidence.values().sum::<f64>() / result.channel_confidence.len() as f64
+    };
+    features.insert("channel_confidence".to_string(), confidence.clamp(0.0, 1.0));
+    features.insert(
+        "language_agreement".to_string(),
+        language_agreement.clamp(0.0, 1.0),
+    );
+    features
+}
+
+/// Top-language agreement between two fingerprints: 1.0 when the first
+/// language candidates match (or both are empty), else 0.0.
+pub fn language_agreement(left: &MessageFingerprint, right: &MessageFingerprint) -> f64 {
+    let top = |fingerprint: &MessageFingerprint| {
+        fingerprint
+            .language_candidates
+            .first()
+            .map(|candidate| candidate.language.clone())
+            .unwrap_or_else(|| "unknown".to_string())
+    };
+    if top(left) == top(right) {
+        1.0
+    } else {
+        0.0
+    }
+}
+
+pub fn sigmoid(logit: f64) -> f64 {
+    (1.0 / (1.0 + (-logit.clamp(-60.0, 60.0)).exp())).clamp(0.0, 1.0)
+}
+
+/// One full-batch gradient step for L2-regularized logistic loss. Returns
+/// the mean loss. Deterministic: fixed order, no sampling.
+pub fn logistic_step(
+    features: &[Vec<f64>],
+    labels: &[bool],
+    weights: &mut [f64],
+    bias: &mut f64,
+    learning_rate: f64,
+    l2: f64,
+) -> f64 {
+    let total = features.len().max(1) as f64;
+    let mut loss = 0.0;
+    let mut gradient = vec![0.0; weights.len()];
+    let mut bias_gradient = 0.0;
+    for (row, label) in features.iter().zip(labels.iter()) {
+        let logit = row
+            .iter()
+            .zip(weights.iter())
+            .map(|(value, weight)| value * weight)
+            .sum::<f64>()
+            + *bias;
+        let predicted = sigmoid(logit).clamp(1e-12, 1.0 - 1e-12);
+        let target = if *label { 1.0 } else { 0.0 };
+        loss += -(target * predicted.ln() + (1.0 - target) * (1.0 - predicted).ln());
+        let error = predicted - target;
+        for (index, value) in row.iter().enumerate() {
+            gradient[index] += error * value;
+        }
+        bias_gradient += error;
+    }
+    for (index, weight) in weights.iter_mut().enumerate() {
+        *weight -= learning_rate * (gradient[index] / total + l2 * *weight);
+    }
+    *bias -= learning_rate * bias_gradient / total;
+    loss / total
+}
+
+/// Versioned trained-similarity artifact written by `tools/train_similarity.rs`.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+pub struct SimilarityModelArtifact {
+    pub artifact_version: u32,
+    pub kind: String,
+    pub feature_schema_version: u32,
+    pub dataset_version: String,
+    pub weights: BTreeMap<String, f64>,
+    pub bias: f64,
+    #[serde(default)]
+    pub revision: Option<String>,
+    #[serde(default)]
+    pub metrics: BTreeMap<String, f64>,
+}
+
+impl SimilarityModelArtifact {
+    pub fn new(
+        dataset_version: impl Into<String>,
+        weights: BTreeMap<String, f64>,
+        bias: f64,
+    ) -> Self {
+        Self {
+            artifact_version: 1,
+            kind: "logistic_similarity".to_string(),
+            feature_schema_version: TRAINING_FEATURE_SCHEMA_VERSION,
+            dataset_version: dataset_version.into(),
+            weights,
+            bias,
+            revision: None,
+            metrics: BTreeMap::new(),
+        }
+    }
+
+    pub fn with_revision(mut self, revision: impl Into<String>) -> Self {
+        self.revision = Some(revision.into());
+        self
+    }
+
+    pub fn with_metrics(mut self, metrics: BTreeMap<String, f64>) -> Self {
+        self.metrics = metrics;
+        self
+    }
+
+    /// Deserialize and validate: kind, feature schema, and weight names must
+    /// match this build, otherwise the artifact is rejected, never guessed.
+    pub fn from_json(source: &str) -> Result<Self, String> {
+        let artifact: Self =
+            serde_json::from_str(source).map_err(|error| format!("invalid artifact: {error}"))?;
+        if artifact.kind != "logistic_similarity" {
+            return Err(format!("unsupported artifact kind {:?}", artifact.kind));
+        }
+        if artifact.feature_schema_version != TRAINING_FEATURE_SCHEMA_VERSION {
+            return Err(format!(
+                "feature schema {} is not supported (build expects {})",
+                artifact.feature_schema_version, TRAINING_FEATURE_SCHEMA_VERSION
+            ));
+        }
+        let expected: Vec<&str> = TRAINING_FEATURES.to_vec();
+        let mut names: Vec<&str> = artifact.weights.keys().map(String::as_str).collect();
+        names.sort_unstable();
+        let mut sorted = expected.clone();
+        sorted.sort_unstable();
+        if names != sorted {
+            return Err(format!(
+                "artifact weights {names:?} do not match training features {sorted:?}"
+            ));
+        }
+        if !artifact.bias.is_finite() || artifact.weights.values().any(|weight| !weight.is_finite())
+        {
+            return Err("artifact contains non-finite parameters".to_string());
+        }
+        Ok(artifact)
+    }
+
+    pub fn to_json(&self) -> Result<String, String> {
+        serde_json::to_string_pretty(self).map_err(|error| error.to_string())
+    }
+
+    /// Ordered weight vector matching [`TRAINING_FEATURES`].
+    pub fn ordered_weights(&self) -> Vec<f64> {
+        TRAINING_FEATURES
+            .iter()
+            .map(|name| self.weights.get(*name).copied().unwrap_or(0.0))
+            .collect()
+    }
+
+    pub fn to_scorer(&self) -> LogisticSimilarityScorer {
+        let mut scorer = LogisticSimilarityScorer::new(self.weights.clone(), self.bias);
+        if let Some(revision) = &self.revision {
+            scorer = scorer.with_revision(revision.clone());
+        }
+        scorer
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gradient_steps_reduce_separable_loss() {
+        // Two clusters on one feature: repeated steps must drive loss down
+        // and orient the weight positively.
+        let features = vec![
+            vec![0.9, 0.1],
+            vec![0.8, 0.2],
+            vec![0.2, 0.8],
+            vec![0.1, 0.9],
+        ];
+        let labels = vec![true, true, false, false];
+        let mut weights = vec![0.0, 0.0];
+        let mut bias = 0.0;
+        let mut previous = f64::INFINITY;
+        for _ in 0..200 {
+            let loss = logistic_step(&features, &labels, &mut weights, &mut bias, 0.5, 1e-4);
+            assert!(loss <= previous + 1e-12, "loss must not increase");
+            previous = loss;
+        }
+        assert!(previous < 0.5);
+        assert!(weights[0] > 0.0);
+        assert!(weights[1] < 0.0);
+    }
+
+    #[test]
+    fn artifact_round_trip_preserves_parameters() {
+        let weights: BTreeMap<String, f64> = TRAINING_FEATURES
+            .iter()
+            .map(|name| ((*name).to_string(), 0.1))
+            .collect();
+        let artifact = SimilarityModelArtifact::new("test-0.0", weights, -0.5)
+            .with_revision("r1")
+            .with_metrics(BTreeMap::from([("test_accuracy".to_string(), 0.9)]));
+        let loaded = SimilarityModelArtifact::from_json(&artifact.to_json().unwrap()).unwrap();
+        assert_eq!(loaded, artifact);
+        assert_eq!(loaded.ordered_weights(), vec![0.1; TRAINING_FEATURES.len()]);
+        let scorer = loaded.to_scorer();
+        assert_eq!(scorer.bias, -0.5);
+    }
+
+    #[test]
+    fn artifact_rejects_mismatched_schema_and_weights() {
+        let weights: BTreeMap<String, f64> = TRAINING_FEATURES
+            .iter()
+            .map(|name| ((*name).to_string(), 0.1))
+            .collect();
+        let valid = SimilarityModelArtifact::new("test-0.0", weights, 0.0);
+        let mut source = serde_json::to_value(&valid).unwrap();
+
+        source["kind"] = serde_json::Value::String("other".to_string());
+        assert!(SimilarityModelArtifact::from_json(&source.to_string()).is_err());
+
+        let mut source = serde_json::to_value(&valid).unwrap();
+        source["feature_schema_version"] = serde_json::json!(999);
+        assert!(SimilarityModelArtifact::from_json(&source.to_string()).is_err());
+
+        let mut source = serde_json::to_value(&valid).unwrap();
+        source["weights"].as_object_mut().unwrap().remove("lexical");
+        assert!(SimilarityModelArtifact::from_json(&source.to_string()).is_err());
+
+        let mut source = serde_json::to_value(&valid).unwrap();
+        source["bias"] = serde_json::Value::Null;
+        assert!(SimilarityModelArtifact::from_json(&source.to_string()).is_err());
+    }
+
+    #[test]
+    fn training_features_cover_schema_in_order() {
+        assert_eq!(TRAINING_FEATURES.len(), 10);
+        assert_eq!(TRAINING_FEATURE_SCHEMA_VERSION, 1);
+        let mut sorted = TRAINING_FEATURES.to_vec();
+        sorted.sort_unstable();
+        sorted.dedup();
+        assert_eq!(sorted.len(), TRAINING_FEATURES.len());
+    }
+}

@@ -24,7 +24,9 @@ pub mod symbols;
 pub mod visual;
 
 pub use comparison::{
-    score_fingerprints_with_profile, LogisticSimilarityScorer, SimilarityProfile,
+    language_agreement, logistic_step, score_fingerprints_with_profile, sigmoid, training_features,
+    LogisticSimilarityScorer, SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURES,
+    TRAINING_FEATURE_SCHEMA_VERSION,
 };
 pub use core::capabilities::{ModelMetadata, ProviderCapabilities};
 pub use core::config::{EngineConfig, SimilarityWeights};
