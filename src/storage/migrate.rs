@@ -70,9 +70,10 @@ fn migrate_older(value: serde_json::Value, version: u32) -> Result<MigratedFinge
         // default-filled deserialization is the complete step. The version
         // is then stamped explicitly rather than inherited from the default.
         1 => {
-            let mut fingerprint: MessageFingerprint = serde_json::from_value(value).map_err(
-                |error| format!("{PROVIDER}: v1 payload does not fit the v2 shape: {error}"),
-            )?;
+            let mut fingerprint: MessageFingerprint =
+                serde_json::from_value(value).map_err(|error| {
+                    format!("{PROVIDER}: v1 payload does not fit the v2 shape: {error}")
+                })?;
             fingerprint.schema_version = FINGERPRINT_SCHEMA_VERSION;
             Ok(MigratedFingerprint {
                 fingerprint,
@@ -129,8 +130,7 @@ mod tests {
     #[test]
     fn newer_and_ancient_versions_are_rejected() {
         let mut value = current_value();
-        value["schema_version"] =
-            serde_json::json!(FINGERPRINT_SCHEMA_VERSION + 1);
+        value["schema_version"] = serde_json::json!(FINGERPRINT_SCHEMA_VERSION + 1);
         let error = migrate_fingerprint_bytes(&serde_json::to_vec(&value).unwrap()).unwrap_err();
         assert!(error.contains("newer than supported"));
 

@@ -193,18 +193,13 @@ impl RedbStore {
     }
 }
 
-/// Deserialize one stored fingerprint. Phase 8 routes legacy payloads
-/// through migration here; today only the current schema is accepted.
+/// Deserialize one stored fingerprint through schema migration: current
+/// payloads pass through, supported older ones upgrade explicitly, and
+/// anything else is rejected with the record id attached.
 fn load_fingerprint(id: &str, bytes: &[u8]) -> Result<MessageFingerprint, String> {
-    let fingerprint: MessageFingerprint = serde_json::from_slice(bytes)
-        .map_err(|error| format!("{PROVIDER}: record {id:?} is not a fingerprint: {error}"))?;
-    if fingerprint.schema_version != FINGERPRINT_SCHEMA_VERSION {
-        return Err(format!(
-            "{PROVIDER}: record {id:?} has fingerprint schema_version={} (build supports {FINGERPRINT_SCHEMA_VERSION})",
-            fingerprint.schema_version
-        ));
-    }
-    Ok(fingerprint)
+    crate::storage::migrate::migrate_fingerprint_bytes(bytes)
+        .map(|migrated| migrated.fingerprint)
+        .map_err(|error| format!("{PROVIDER}: record {id:?}: {error}"))
 }
 
 impl VectorStore for RedbStore {

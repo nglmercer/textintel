@@ -19,6 +19,17 @@ struct PersistedStore {
     records: BTreeMap<String, MessageFingerprint>,
 }
 
+/// Raw envelope: records stay unparsed JSON so [`migrate`] can inspect each
+/// fingerprint version before deserializing.
+///
+/// [`migrate`]: crate::storage::migrate
+#[derive(Debug, Serialize, Deserialize)]
+struct RawPersistedStore {
+    schema_version: u32,
+    #[serde(default)]
+    records: BTreeMap<String, serde_json::Value>,
+}
+
 /// Local persistent store using a versioned JSON envelope and the same
 /// retrieval indexes as [`MemoryStore`]. It never fetches or interprets URLs.
 #[derive(Debug, Clone)]
@@ -48,17 +59,21 @@ impl JsonFileStore {
                 ));
             }
             let source = fs::read_to_string(&store.path).map_err(|error| error.to_string())?;
-            let persisted: PersistedStore = serde_json::from_str(&source).map_err(|error| {
+            let raw: RawPersistedStore = serde_json::from_str(&source).map_err(|error| {
                 format!("invalid persistent store {}: {error}", store.path.display())
             })?;
-            if persisted.schema_version != STORE_SCHEMA_VERSION {
+            if raw.schema_version != STORE_SCHEMA_VERSION {
                 return Err(format!(
                     "unsupported persistent store schema_version={}",
-                    persisted.schema_version
+                    raw.schema_version
                 ));
             }
-            for (id, fingerprint) in persisted.records {
-                store.inner.upsert(id, fingerprint)?;
+            for (id, record) in raw.records {
+                let bytes = serde_json::to_vec(&record)
+                    .map_err(|error| format!("record {id:?} is not JSON: {error}"))?;
+                let migrated = crate::storage::migrate::migrate_fingerprint_bytes(&bytes)
+                    .map_err(|error| format!("record {id:?}: {error}"))?;
+                store.inner.upsert(id, migrated.fingerprint)?;
             }
         }
         Ok(store)
@@ -152,5 +167,60 @@ impl VectorStore for JsonFileStore {
 
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::new("json_file_store")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{EngineConfig, TextIntelligence};
+
+    fn test_path(name: &str) -> PathBuf {
+        let path = std::env::temp_dir().join(format!(
+            "textintel-json-migrate-{name}-{}.json",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_file(&path);
+        path
+    }
+
+    fn write_envelope(path: &Path, record: serde_json::Value) {
+        let envelope = serde_json::json!({
+            "schema_version": STORE_SCHEMA_VERSION,
+            "records": {"doc": record},
+        });
+        std::fs::write(path, serde_json::to_string_pretty(&envelope).unwrap()).unwrap();
+    }
+
+    #[test]
+    fn versionless_records_migrate_on_load() {
+        let engine = TextIntelligence::new(EngineConfig::default());
+        let fingerprint = engine.analyze("compra ahora").unwrap();
+        let mut record = serde_json::to_value(&fingerprint).unwrap();
+        record.as_object_mut().unwrap().remove("schema_version");
+        let path = test_path("v1");
+        write_envelope(&path, record);
+        let store = JsonFileStore::open(&path).unwrap();
+        let records = store.records();
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].0, "doc");
+        assert_eq!(
+            records[0].1.schema_version,
+            crate::core::types::FINGERPRINT_SCHEMA_VERSION
+        );
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn newer_records_are_rejected_not_guessed() {
+        let engine = TextIntelligence::new(EngineConfig::default());
+        let fingerprint = engine.analyze("compra ahora").unwrap();
+        let mut record = serde_json::to_value(&fingerprint).unwrap();
+        record["schema_version"] =
+            serde_json::json!(crate::core::types::FINGERPRINT_SCHEMA_VERSION + 1);
+        let path = test_path("newer");
+        write_envelope(&path, record);
+        assert!(JsonFileStore::open(&path).is_err());
+        let _ = std::fs::remove_file(&path);
     }
 }

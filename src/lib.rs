@@ -64,5 +64,8 @@ pub use semantic::{
 pub use storage::HnswVectorIndex;
 #[cfg(feature = "persist-redb")]
 pub use storage::RedbStore;
-pub use storage::{JsonFileStore, MemoryStore};
+pub use storage::{
+    migrate_fingerprint_bytes, JsonFileStore, MemoryStore, MigratedFingerprint,
+    OLDEST_SUPPORTED_FINGERPRINT_VERSION,
+};
 pub use symbols::DefaultSymbolKnowledge;
