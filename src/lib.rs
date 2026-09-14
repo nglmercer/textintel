@@ -36,7 +36,11 @@ pub use core::providers::{
     RerankerProvider, SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, VectorStore,
 };
 pub use core::types::*;
-pub use detection::{duplicate_result, match_pattern, predict_spam, HeuristicSpamPredictor};
+pub use detection::{
+    duplicate_result, match_pattern, predict_spam, spam_feature_vector, spam_features,
+    HeuristicSpamPredictor, SpamModelArtifact, TrainedSpamPredictor, SPAM_FEATURES,
+    SPAM_FEATURE_SCHEMA_VERSION,
+};
 pub use engine::TextIntelligence;
 pub use language::{NgramLanguageDetector, ProfileLanguageDetector};
 #[cfg(feature = "phonetic-espeak")]

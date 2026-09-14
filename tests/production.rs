@@ -207,6 +207,43 @@ fn trained_similarity_artifact_loads_and_separates_pairs() {
 }
 
 #[test]
+fn trained_spam_artifact_loads_and_separates_messages() {
+    use textintel::SpamModelArtifact;
+    use textintel::SpamPredictor;
+
+    let source = include_str!("../models/spam-v1.json");
+    let artifact = SpamModelArtifact::from_json(source).unwrap();
+    assert_eq!(artifact.kind, "logistic_spam");
+    assert_eq!(
+        artifact.feature_schema_version,
+        textintel::SPAM_FEATURE_SCHEMA_VERSION
+    );
+    assert!(artifact.calibrated);
+    let engine = TextIntelligence::default();
+    let predictor = artifact.to_predictor();
+    let spam = engine
+        .analyze("LAST CHANCE!!! Your $500 bonus expires tonight, activate here: https://bonus-activate.example.com/go !!!")
+        .unwrap();
+    let ham = engine
+        .analyze("could you review the attached notes when you have a moment")
+        .unwrap();
+    let spam_result = predictor.predict(&spam, &[]).unwrap();
+    let ham_result = predictor.predict(&ham, &[]).unwrap();
+    assert!(
+        spam_result.probability > ham_result.probability,
+        "trained predictor must rank blatant spam above plain ham"
+    );
+    assert_eq!(spam_result.labels, vec!["spam".to_string()]);
+    assert!(spam_result.calibrated);
+    assert!(!spam_result.reasons.is_empty());
+    // Heuristic fallback stays the engine default.
+    let default = engine
+        .detect_spam("could you review the attached notes when you have a moment")
+        .unwrap();
+    assert!(!default.model.starts_with("trained-spam:"));
+}
+
+#[test]
 fn evaluation_reports_ranking_and_calibration_metrics() {
     let source = include_str!("../data/evaluation.json");
     let dataset = EvaluationDataset::from_json(source).unwrap();
