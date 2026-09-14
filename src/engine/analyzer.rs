@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
 use std::sync::{Arc, RwLock};
 
 use crate::comparison::model::{score_fingerprints_with_profile, SimilarityProfile};
@@ -775,6 +776,40 @@ impl TextIntelligence {
             .map_err(|_| TextIntelError::Storage("pattern lock poisoned".to_string()))?
             .remove(id)
             .is_some())
+    }
+
+    /// Snapshot the registered pattern definitions (without analyzed
+    /// fingerprints) for persistence or inspection.
+    pub fn pattern_definitions(&self) -> Result<Vec<Pattern>, TextIntelError> {
+        let patterns = self
+            .patterns
+            .read()
+            .map_err(|_| TextIntelError::Storage("pattern lock poisoned".to_string()))?;
+        Ok(patterns
+            .values()
+            .map(|registered| registered.pattern.clone())
+            .collect())
+    }
+
+    /// Persist registered pattern definitions to `path` in a versioned
+    /// envelope. Example fingerprints are re-analyzed on load, so the file
+    /// stays valid across fingerprint schema upgrades.
+    pub fn save_patterns_to(&self, path: impl AsRef<Path>) -> Result<(), TextIntelError> {
+        let patterns = self.pattern_definitions()?;
+        crate::storage::patterns::save_patterns_to(path.as_ref(), &patterns)
+            .map_err(TextIntelError::Storage)
+    }
+
+    /// Load pattern definitions from `path`, validating and re-analyzing
+    /// every record. Returns the number of patterns registered.
+    pub fn load_patterns_from(&self, path: impl AsRef<Path>) -> Result<usize, TextIntelError> {
+        let patterns = crate::storage::patterns::load_patterns_from(path.as_ref())
+            .map_err(TextIntelError::Storage)?;
+        let count = patterns.len();
+        for pattern in patterns {
+            self.add_pattern_with_options(pattern)?;
+        }
+        Ok(count)
     }
 
     pub fn match_patterns(&self, text: &str) -> Result<Vec<PatternMatch>, TextIntelError> {

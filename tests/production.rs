@@ -108,6 +108,26 @@ fn pattern_options_negatives_profiles_and_resource_limits_are_typed() {
         })
         .unwrap();
     assert!(engine.match_patterns("buy a prize").unwrap().is_empty());
+    let snapshot_path = std::env::temp_dir().join(format!(
+        "textintel-patterns-production-{}.json",
+        std::process::id()
+    ));
+    engine.save_patterns_to(&snapshot_path).unwrap();
+    let restored = TextIntelligence::default();
+    assert_eq!(restored.load_patterns_from(&snapshot_path).unwrap(), 1);
+    let definitions = restored.pattern_definitions().unwrap();
+    assert_eq!(definitions.len(), 1);
+    assert_eq!(definitions[0].id, "prize");
+    assert_eq!(definitions[0].tags, vec!["promotion".to_string()]);
+    // Reloaded patterns must behave exactly like the originals.
+    for query in ["win a prize", "buy a prize", "win a huge prize today"] {
+        assert_eq!(
+            restored.match_patterns(query).unwrap(),
+            engine.match_patterns(query).unwrap()
+        );
+    }
+    assert!(restored.load_patterns_from(&snapshot_path).is_ok());
+    let _ = std::fs::remove_file(&snapshot_path);
     let profile = SimilarityProfile::general_similarity().with_calibration(0.2, 1.0);
     let configured = TextIntelligence::default().with_similarity_profile(profile);
     assert!(configured.compare("same", "same").unwrap().score > 0.5);

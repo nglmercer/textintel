@@ -66,6 +66,6 @@ pub use storage::HnswVectorIndex;
 pub use storage::RedbStore;
 pub use storage::{
     migrate_fingerprint_bytes, JsonFileStore, MemoryStore, MigratedFingerprint,
-    OLDEST_SUPPORTED_FINGERPRINT_VERSION,
+    OLDEST_SUPPORTED_FINGERPRINT_VERSION, PATTERN_STORE_SCHEMA_VERSION,
 };
 pub use symbols::DefaultSymbolKnowledge;

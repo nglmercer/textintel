@@ -255,7 +255,7 @@ mod tests {
             })
             .collect();
         brute.sort_by(|left, right| left.1.total_cmp(&right.1));
-        let mut expected: Vec<String> = brute
+        let expected: Vec<String> = brute
             .iter()
             .take(10)
             .map(|(position, _)| format!("doc-{position}"))
