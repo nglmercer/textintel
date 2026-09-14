@@ -15,12 +15,16 @@ jobs:
       - run: cargo fmt --check
 
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test --all-features --all-targets
-      - run: cargo doc --no-deps
+      - run: cargo test --locked --all-features --all-targets
+      - run: cargo doc --no-deps --all-features
 
   quality:
     runs-on: ubuntu-latest
@@ -61,3 +65,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@1.71.1
       - run: cargo test --locked --all-targets --no-default-features
+
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo install cargo-fuzz --locked
+      - run: cd fuzz && cargo fuzz run unicode corpus/unicode -- -max_total_time=60
+      - run: cd fuzz && cargo fuzz run tokenization corpus/tokenization -- -max_total_time=60
+      - run: cd fuzz && cargo fuzz run rebus corpus/rebus -- -max_total_time=240
