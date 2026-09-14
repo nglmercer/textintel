@@ -1,0 +1,269 @@
+//! Optional HNSW semantic index for large-store retrieval.
+//!
+//! [`HnswVectorIndex`] stores whole-text (`default`) embedding vectors and
+//! answers top-k nearest-neighbour queries with cosine distance. It is a
+//! retrieval accelerator only: candidates still go through full fingerprint
+//! comparison, so approximate recall never becomes a false verdict.
+//!
+//! Removals are tombstones (HNSW graphs are append-only); callers filter
+//! results against live records. Re vectors from mixed-dimension stores are
+//! rejected at insert; fingerprints without a `default` embedding are
+//! skipped.
+
+use std::sync::RwLock;
+
+use hnsw_rs::prelude::*;
+
+const PROVIDER: &str = "hnsw_ann";
+const MAX_CONNECTIONS: usize = 16;
+const MAX_LAYER: usize = 16;
+const EF_CONSTRUCTION: usize = 200;
+
+/// Append-only HNSW index over whole-text embedding vectors.
+pub struct HnswVectorIndex {
+    index: Hnsw<'static, f32, DistCosine>,
+    dimensions: usize,
+    max_elements: usize,
+    next_id: RwLock<usize>,
+    ids: RwLock<Vec<Option<String>>>,
+}
+
+impl std::fmt::Debug for HnswVectorIndex {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("HnswVectorIndex")
+            .field("dimensions", &self.dimensions)
+            .field("max_elements", &self.max_elements)
+            .field("len", &self.len())
+            .finish()
+    }
+}
+
+impl HnswVectorIndex {
+    /// Create an index for `dimensions`-wide vectors holding up to
+    /// `max_elements` entries.
+    pub fn new(dimensions: usize, max_elements: usize) -> Result<Self, String> {
+        if dimensions == 0 {
+            return Err(format!("{PROVIDER}: dimensions must be positive"));
+        }
+        if max_elements == 0 {
+            return Err(format!("{PROVIDER}: max_elements must be positive"));
+        }
+        Ok(Self {
+            index: Hnsw::new(
+                MAX_CONNECTIONS,
+                max_elements,
+                MAX_LAYER,
+                EF_CONSTRUCTION,
+                DistCosine {},
+            ),
+            dimensions,
+            max_elements,
+            next_id: RwLock::new(0),
+            ids: RwLock::new(Vec::new()),
+        })
+    }
+
+    pub fn dimensions(&self) -> usize {
+        self.dimensions
+    }
+
+    pub fn max_elements(&self) -> usize {
+        self.max_elements
+    }
+
+    /// Live entries (tombstoned removals excluded).
+    pub fn len(&self) -> usize {
+        self.ids
+            .read()
+            .map(|ids| ids.iter().filter(|entry| entry.is_some()).count())
+            .unwrap_or(0)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Rough memory footprint in bytes: raw vectors plus a constant per-entry
+    /// graph overhead estimate. Documented as an estimate, not a measurement.
+    pub fn estimate_bytes(&self) -> usize {
+        self.len() * (self.dimensions * 4 + 64)
+    }
+
+    /// Insert `vector` under `id`. Rejects wrong dimensions and non-finite
+    /// values; re-inserting an `id` tombstones the old entry first.
+    pub fn insert(&self, id: &str, vector: &[f32]) -> Result<(), String> {
+        if vector.len() != self.dimensions {
+            return Err(format!(
+                "{PROVIDER}: dimension {} does not match index dimension {}",
+                vector.len(),
+                self.dimensions
+            ));
+        }
+        if vector.iter().any(|value| !value.is_finite()) {
+            return Err(format!("{PROVIDER}: vector for {id:?} is not finite"));
+        }
+        let mut ids = self
+            .ids
+            .write()
+            .map_err(|_| format!("{PROVIDER}: id lock poisoned"))?;
+        for entry in ids.iter_mut() {
+            if entry.as_deref() == Some(id) {
+                *entry = None;
+            }
+        }
+        let mut next = self
+            .next_id
+            .write()
+            .map_err(|_| format!("{PROVIDER}: id lock poisoned"))?;
+        if *next >= self.max_elements {
+            return Err(format!(
+                "{PROVIDER}: index is full ({max} elements)",
+                max = self.max_elements
+            ));
+        }
+        let point = *next;
+        *next += 1;
+        ids.push(Some(id.to_string()));
+        drop(ids);
+        drop(next);
+        let owned = vector.to_vec();
+        self.index.insert((&owned, point));
+        Ok(())
+    }
+
+    /// Tombstone `id`. Returns false when the id was never indexed.
+    pub fn remove(&self, id: &str) -> bool {
+        let Ok(mut ids) = self.ids.write() else {
+            return false;
+        };
+        let mut found = false;
+        for entry in ids.iter_mut() {
+            if entry.as_deref() == Some(id) {
+                *entry = None;
+                found = true;
+            }
+        }
+        found
+    }
+
+    /// Top-`k` nearest `(id, cosine_distance)` pairs, lower distance first.
+    /// Tombstones are filtered out.
+    pub fn search(&self, vector: &[f32], k: usize) -> Result<Vec<(String, f64)>, String> {
+        if vector.len() != self.dimensions {
+            return Err(format!(
+                "{PROVIDER}: query dimension {} does not match index dimension {}",
+                vector.len(),
+                self.dimensions
+            ));
+        }
+        if k == 0 {
+            return Ok(Vec::new());
+        }
+        let ef = (k * 4).clamp(50, 500);
+        let neighbours = self.index.search(vector, k, ef);
+        let ids = self
+            .ids
+            .read()
+            .map_err(|_| format!("{PROVIDER}: id lock poisoned"))?;
+        Ok(neighbours
+            .into_iter()
+            .filter_map(|neighbour| {
+                ids.get(neighbour.d_id)
+                    .and_then(|entry| entry.clone())
+                    .map(|id| (id, neighbour.distance as f64))
+            })
+            .collect())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Injective test vectors: the first three components encode the seed
+    /// in base 7, so distinct seeds give distinct directions.
+    fn unit_vector(seed: usize, dimensions: usize) -> Vec<f32> {
+        let mut vector = vec![0.0; dimensions];
+        vector[0] = (seed % 7 + 1) as f32;
+        if dimensions > 1 {
+            vector[1] = ((seed / 7) % 7 + 1) as f32;
+        }
+        if dimensions > 2 {
+            vector[2] = ((seed / 49) % 7 + 1) as f32;
+        }
+        let norm = vector.iter().map(|value| value * value).sum::<f32>().sqrt();
+        vector.iter().map(|value| value / norm).collect()
+    }
+
+    #[test]
+    fn rejects_invalid_construction_and_vectors() {
+        assert!(HnswVectorIndex::new(0, 10).is_err());
+        assert!(HnswVectorIndex::new(8, 0).is_err());
+        let index = HnswVectorIndex::new(8, 10).unwrap();
+        assert!(index.is_empty());
+        assert!(index.insert("a", &[0.0; 7]).is_err());
+        assert!(index.insert("a", &[f32::NAN; 8]).is_err());
+        assert!(index.search(&[0.0; 7], 3).is_err());
+        assert!(index.search(&[0.0; 8], 0).unwrap().is_empty());
+        assert!(!index.remove("missing"));
+    }
+
+    #[test]
+    fn finds_nearest_and_honors_removals() {
+        let index = HnswVectorIndex::new(8, 100).unwrap();
+        for point in 0..20 {
+            index
+                .insert(&format!("doc-{point}"), &unit_vector(point, 8))
+                .unwrap();
+        }
+        assert_eq!(index.len(), 20);
+        let query = unit_vector(3, 8);
+        let hits = index.search(&query, 3).unwrap();
+        assert_eq!(hits[0].0, "doc-3");
+        assert!(hits[0].1 <= hits[1].1);
+        assert!(index.remove("doc-3"));
+        assert_eq!(index.len(), 19);
+        let after = index.search(&query, 3).unwrap();
+        assert!(after.iter().all(|(id, _)| id != "doc-3"));
+        // Re-inserting replaces the tombstone without growing live count.
+        index.insert("doc-3", &unit_vector(3, 8)).unwrap();
+        assert_eq!(index.len(), 20);
+    }
+
+    #[test]
+    fn recall_is_perfect_on_small_exact_sets() {
+        // Sanity anchor for the benchmark methodology: brute-force top-10
+        // must match ANN top-10 on a tiny seeded set.
+        let dimensions = 16;
+        let index = HnswVectorIndex::new(dimensions, 500).unwrap();
+        let mut vectors = Vec::new();
+        for point in 0..200 {
+            let vector = unit_vector(point * 13 + 5, dimensions);
+            index.insert(&format!("doc-{point}"), &vector).unwrap();
+            vectors.push(vector);
+        }
+        let query = unit_vector(999, dimensions);
+        let mut brute: Vec<(usize, f32)> = vectors
+            .iter()
+            .enumerate()
+            .map(|(position, vector)| {
+                let dot: f32 = vector.iter().zip(query.iter()).map(|(a, b)| a * b).sum();
+                (position, 1.0 - dot)
+            })
+            .collect();
+        brute.sort_by(|left, right| left.1.total_cmp(&right.1));
+        let mut expected: Vec<String> = brute
+            .iter()
+            .take(10)
+            .map(|(position, _)| format!("doc-{position}"))
+            .collect();
+        let hits = index.search(&query, 10).unwrap();
+        let mut found: Vec<String> = hits.into_iter().map(|(id, _)| id).collect();
+        // HNSW is approximate: the set must match exactly on this tiny
+        // corpus, but near-tied neighbours may order differently.
+        expected.sort_unstable();
+        found.sort_unstable();
+        assert_eq!(found, expected);
+    }
+}

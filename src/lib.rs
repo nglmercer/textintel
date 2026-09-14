@@ -60,5 +60,7 @@ pub use semantic::{
     CachedEmbeddingProvider, FeatureHashEmbeddingProvider, NullEmbeddingProvider,
     StaticEmbeddingProvider,
 };
+#[cfg(feature = "ann-hnsw")]
+pub use storage::HnswVectorIndex;
 pub use storage::{JsonFileStore, MemoryStore};
 pub use symbols::DefaultSymbolKnowledge;

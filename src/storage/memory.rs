@@ -6,6 +6,8 @@ use crate::core::types::{MessageFingerprint, SearchCandidateSet};
 use crate::lexical::minhash::minhash_similarity;
 use crate::normalization::unicode::casefold_text;
 use std::collections::BTreeSet;
+#[cfg(feature = "ann-hnsw")]
+use std::sync::Arc;
 
 #[derive(Debug, Default, Clone)]
 pub struct MemoryStore {
@@ -16,11 +18,47 @@ pub struct MemoryStore {
     minhash_index: BTreeMap<String, BTreeSet<String>>,
     semantic_index: BTreeMap<String, BTreeSet<String>>,
     phonetic_index: BTreeMap<String, BTreeSet<String>>,
+    /// Optional HNSW accelerator over whole-text embeddings. Best-effort
+    /// retrieval only; ranking always uses full fingerprint comparison.
+    #[cfg(feature = "ann-hnsw")]
+    ann: Option<Arc<crate::storage::ann::HnswVectorIndex>>,
 }
 
 impl MemoryStore {
     pub fn get(&self, id: &str) -> Option<&MessageFingerprint> {
         self.records.get(id)
+    }
+
+    /// Build a store with an HNSW semantic accelerator for `dimensions`-wide
+    /// whole-text embeddings holding up to `max_elements` entries.
+    #[cfg(feature = "ann-hnsw")]
+    pub fn with_ann(dimensions: usize, max_elements: usize) -> Result<Self, String> {
+        Ok(Self {
+            ann: Some(Arc::new(crate::storage::ann::HnswVectorIndex::new(
+                dimensions,
+                max_elements,
+            )?)),
+            ..Self::default()
+        })
+    }
+
+    /// The HNSW accelerator, if configured.
+    #[cfg(feature = "ann-hnsw")]
+    pub fn ann_index(&self) -> Option<&crate::storage::ann::HnswVectorIndex> {
+        self.ann.as_deref()
+    }
+
+    #[cfg(feature = "ann-hnsw")]
+    fn index_ann(&self, id: &str, fingerprint: &MessageFingerprint) -> Result<(), String> {
+        let Some(ann) = self.ann.as_ref() else {
+            return Ok(());
+        };
+        // Fingerprints without embeddings (e.g. null backend) simply do not
+        // participate in ANN retrieval.
+        let Some(vector) = fingerprint.semantic_embeddings.get("default") else {
+            return Ok(());
+        };
+        ann.insert(id, vector)
     }
 
     fn index_record(&mut self, id: &str, fingerprint: &MessageFingerprint) {
@@ -166,6 +204,19 @@ impl MemoryStore {
                 }
             }
         }
+        #[cfg(feature = "ann-hnsw")]
+        if let (Some(ann), Some(query_vector)) =
+            (self.ann.as_ref(), query.semantic_embeddings.get("default"))
+        {
+            if let Ok(hits) = ann.search(query_vector, limit) {
+                for (id, _) in hits {
+                    if self.records.contains_key(&id) {
+                        candidate_ids.insert(id);
+                        channels.insert("semantic_ann".to_string());
+                    }
+                }
+            }
+        }
         for candidate in &query.phonetic_candidates {
             for phoneme in &candidate.phonemes {
                 if let Some(ids) = self
@@ -235,6 +286,8 @@ impl VectorStore for MemoryStore {
             self.deindex_record(&id, &previous);
         }
         self.index_record(&id, &fingerprint);
+        #[cfg(feature = "ann-hnsw")]
+        self.index_ann(&id, &fingerprint)?;
         self.records.insert(id, fingerprint);
         Ok(())
     }
@@ -242,6 +295,10 @@ impl VectorStore for MemoryStore {
     fn remove(&mut self, id: &str) -> Result<bool, String> {
         if let Some(previous) = self.records.remove(id) {
             self.deindex_record(id, &previous);
+            #[cfg(feature = "ann-hnsw")]
+            if let Some(ann) = self.ann.as_ref() {
+                ann.remove(id);
+            }
             Ok(true)
         } else {
             Ok(false)
