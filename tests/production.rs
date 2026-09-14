@@ -2,7 +2,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use sha2::{Digest, Sha256};
-use textintel::evaluation::{evaluate, EvaluationDataset};
+use textintel::evaluation::{
+    evaluate, evaluate_with_options, EvaluateOptions, EvaluationCase, EvaluationDataset,
+};
 use textintel::phonetic::{articulatory_distance, parse_ipa};
 use textintel::{
     EmbeddingProvider, EngineConfig, Pattern, ProviderCapabilities, ProviderError, ResourceLimits,
@@ -136,6 +138,45 @@ fn resource_hashes_are_self_contained_and_format_independent() {
     let mut loader = ResourceLoader::default();
     loader.load_language_json(&source, "<hashed-pack>").unwrap();
     assert!(loader.contains_in_language("example", "en"));
+}
+
+#[test]
+fn evaluation_chunks_batches_larger_than_max_batch_size() {
+    // Regression test: more pairs than `max_batch_size` (and more ranking
+    // documents than the batch limit) must be evaluated in chunks instead of
+    // failing with `batch size N exceeds max_batch_size`.
+    let mut cases = Vec::new();
+    for index in 0..300 {
+        let similar = index % 2 == 0;
+        cases.push(EvaluationCase {
+            id: format!("chunk_{index:03}"),
+            a: format!("case number {index} example text"),
+            b: if similar {
+                format!("case number {index} example text")
+            } else {
+                format!("entirely unrelated content {index} zzzqqq")
+            },
+            languages: Vec::new(),
+            split: "test".to_string(),
+            difficulty: "medium".to_string(),
+            labels: [(String::from("similar"), similar)].into_iter().collect(),
+            expected: Default::default(),
+            tags: Vec::new(),
+        });
+    }
+    let dataset = EvaluationDataset {
+        version: "chunk-test".to_string(),
+        cases,
+    };
+    let options = EvaluateOptions {
+        split: None,
+        ranking_queries: 5,
+        ranking_documents: 500,
+    };
+    let report = evaluate_with_options(&TextIntelligence::default(), &dataset, &options).unwrap();
+    assert_eq!(report.metrics.count, 300);
+    // `queries` counts relevant (similar-labelled) queries: indices 0, 2, 4.
+    assert_eq!(report.ranking.queries, 3);
 }
 
 #[test]
