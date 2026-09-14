@@ -39,6 +39,33 @@ impl LanguageDetectionProvider for ResourceLoader {
     }
 }
 
+fn sort_readings(readings: &mut [SymbolReading]) {
+    readings.sort_by(|left, right| {
+        right
+            .probability
+            .total_cmp(&left.probability)
+            .then_with(|| left.text.cmp(&right.text))
+            .then_with(|| left.language.cmp(&right.language))
+    });
+}
+
+/// Same semantics as the rebus decoding filter: empty constraints and
+/// `und`/`unknown` readings always pass so neutral packs stay visible.
+fn symbol_language_allowed(language: Option<&str>, languages: Option<&[String]>) -> bool {
+    let Some(languages) = languages.filter(|values| !values.is_empty()) else {
+        return true;
+    };
+    let Some(language) = language else {
+        return true;
+    };
+    language == "und"
+        || languages.iter().any(|candidate| {
+            candidate.eq_ignore_ascii_case(language)
+                || candidate.eq_ignore_ascii_case("unknown")
+                || candidate.eq_ignore_ascii_case("und")
+        })
+}
+
 impl SymbolKnowledgeProvider for ResourceLoader {
     fn readings(&self, token: &str, max_readings: usize) -> Vec<SymbolReading> {
         let mut readings = self
@@ -46,13 +73,26 @@ impl SymbolKnowledgeProvider for ResourceLoader {
             .get(token)
             .map(|symbol| symbol.readings.clone())
             .unwrap_or_default();
-        readings.sort_by(|left, right| {
-            right
-                .probability
-                .total_cmp(&left.probability)
-                .then_with(|| left.text.cmp(&right.text))
-                .then_with(|| left.language.cmp(&right.language))
-        });
+        sort_readings(&mut readings);
+        readings.truncate(max_readings);
+        readings
+    }
+
+    fn readings_in_languages(
+        &self,
+        token: &str,
+        max_readings: usize,
+        languages: Option<&[String]>,
+    ) -> Vec<SymbolReading> {
+        let mut readings = self
+            .symbol_index
+            .get(token)
+            .map(|symbol| symbol.readings.clone())
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|reading| symbol_language_allowed(reading.language.as_deref(), languages))
+            .collect::<Vec<_>>();
+        sort_readings(&mut readings);
         readings.truncate(max_readings);
         readings
     }

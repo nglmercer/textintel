@@ -77,6 +77,14 @@ fn mvp_examples_preserve_raw_and_decode_rebus_candidates() {
         .iter()
         .any(|candidate| candidate.text.eq_ignore_ascii_case("saludos")));
 
+    // Word-boundary variants: symbol readings also hypothesize spaced forms.
+    let spaced = e.decode("Fra🏠do").unwrap();
+    assert!(spaced
+        .iter()
+        .any(|candidate| candidate.text == "Fra casado"));
+    // Abstention: nothing readable, nothing returned.
+    assert!(e.decode("").unwrap().is_empty());
+
     let fire = e.analyze("🔥").unwrap();
     assert!(
         fire.symbols

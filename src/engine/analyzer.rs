@@ -679,13 +679,33 @@ impl TextIntelligence {
     ) -> Result<Vec<DecodedCandidate>, TextIntelError> {
         self.check_length(text)?;
         let decoder = RebusDecoder::new(self.config.clone());
-        Ok(decoder.decode_with_all_providers(
+        // Semantic rescoring only when an embedding backend is configured;
+        // the default null backend yields no vectors and stays free.
+        let semantic;
+        let semantic_ref: Option<&crate::rebus::SemanticEvidence> = if self.config.semantic {
+            let provider = self.embedding_provider.clone();
+            semantic = move |surface: &str, source: &str| -> Option<f64> {
+                let vectors = provider
+                    .embed(&[surface.to_string(), source.to_string()])
+                    .ok()?;
+                let (left, right) = (vectors.first()?, vectors.get(1)?);
+                if left.is_empty() || right.is_empty() {
+                    return None;
+                }
+                Some(crate::semantic::similarity::cosine(left, right))
+            };
+            Some(&semantic)
+        } else {
+            None
+        };
+        Ok(decoder.decode_with_semantic(
             text,
             languages,
             max_candidates,
             self.symbol_provider.as_ref(),
             self.lexicon_provider.as_ref(),
             self.g2p_provider.as_ref(),
+            semantic_ref,
         ))
     }
 

@@ -54,13 +54,14 @@ pub fn beam_decode_with_provider_and_languages(
         transforms: Vec::new(),
         language: None,
     }];
-    for token in tokens {
+    for (position, token) in tokens.iter().enumerate() {
         let readings = token_readings_with_provider_and_languages(
-            &token,
+            token,
             max_symbol_readings.max(1),
             provider,
             languages,
         );
+        let last = position + 1 >= tokens.len();
         let mut next = Vec::new();
         for node in &beam {
             for (surface, probability, language, transform_type) in &readings {
@@ -73,12 +74,48 @@ pub fn beam_decode_with_provider_and_languages(
                 } else {
                     node.language.clone()
                 };
+                let base_score = node.score * probability.max(0.05);
                 next.push(BeamNode {
                     text: format!("{}{}", node.text, surface),
-                    score: node.score * probability.max(0.05),
-                    transforms,
-                    language,
+                    score: base_score,
+                    transforms: transforms.clone(),
+                    language: language.clone(),
                 });
+                // Word-boundary variants: symbol readings usually stand for
+                // whole words, so also hypothesize explicit boundaries. The
+                // small penalty keeps the compact form preferred unless the
+                // spaced words score better downstream. Bounded to symbol
+                // (non-identity) readings; beam truncation caps the rest.
+                if transform_type != "identity" {
+                    let mut boundary = transforms;
+                    boundary.push((String::new(), " ".to_string(), "word_boundary".to_string()));
+                    let left = !node.text.is_empty() && !node.text.ends_with(' ');
+                    let right = !last && !surface.ends_with(' ');
+                    if left {
+                        next.push(BeamNode {
+                            text: format!("{} {}", node.text, surface),
+                            score: base_score * 0.97,
+                            transforms: boundary.clone(),
+                            language: language.clone(),
+                        });
+                    }
+                    if right {
+                        next.push(BeamNode {
+                            text: format!("{}{} ", node.text, surface),
+                            score: base_score * 0.97,
+                            transforms: boundary.clone(),
+                            language: language.clone(),
+                        });
+                    }
+                    if left && right {
+                        next.push(BeamNode {
+                            text: format!("{} {} ", node.text, surface),
+                            score: base_score * 0.94,
+                            transforms: boundary,
+                            language,
+                        });
+                    }
+                }
             }
         }
         next.sort_by(|left, right| right.score.total_cmp(&left.score));

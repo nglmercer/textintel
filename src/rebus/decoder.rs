@@ -8,7 +8,7 @@ use crate::normalization::unicode::casefold_text;
 use crate::normalization::whitespace::normalize_whitespace;
 use crate::phonetic::g2p::RuleBasedG2PProvider;
 use crate::rebus::beam_search::beam_decode_with_provider_and_languages;
-use crate::rebus::scorer::score_candidate_with_g2p;
+use crate::rebus::scorer::{score_candidate_with_evidence, RebusEvidence};
 use crate::resources::DefaultLexiconProvider;
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
@@ -74,6 +74,32 @@ impl RebusDecoder {
         lexicon_provider: &dyn LexiconProvider,
         g2p_provider: &dyn G2PProvider,
     ) -> Vec<DecodedCandidate> {
+        self.decode_with_semantic(
+            text,
+            languages,
+            max_candidates,
+            symbol_provider,
+            lexicon_provider,
+            g2p_provider,
+            None,
+        )
+    }
+
+    /// Full pipeline with optional whole-text semantic evidence. The
+    /// callback maps `(surface, source)` to a similarity in `[0.0, 1.0]`
+    /// and is invoked only for survivors of the score floor (at most 12),
+    /// keeping beam search bounded.
+    #[allow(clippy::too_many_arguments)]
+    pub fn decode_with_semantic(
+        &self,
+        text: &str,
+        languages: Option<&[String]>,
+        max_candidates: Option<usize>,
+        symbol_provider: &dyn SymbolKnowledgeProvider,
+        lexicon_provider: &dyn LexiconProvider,
+        g2p_provider: &dyn G2PProvider,
+        semantic: Option<&crate::rebus::SemanticEvidence>,
+    ) -> Vec<DecodedCandidate> {
         let limit = max_candidates.unwrap_or(self.config.max_candidates).max(1);
         let nodes = beam_decode_with_provider_and_languages(
             text,
@@ -102,7 +128,16 @@ impl RebusDecoder {
         ];
         let mut candidates = std::collections::BTreeMap::<String, DecodedCandidate>::new();
         for node in nodes {
-            let (score, lexical, phonetic, context) = score_candidate_with_g2p(
+            let evidence = RebusEvidence {
+                candidate_language: node.language.clone(),
+                semantic_similarity: None,
+                transformation_types: node
+                    .transforms
+                    .iter()
+                    .map(|(_, _, kind)| kind.clone())
+                    .collect(),
+            };
+            let (score, lexical, phonetic, context) = score_candidate_with_evidence(
                 &node.text,
                 text,
                 node.score,
@@ -110,6 +145,7 @@ impl RebusDecoder {
                 languages,
                 lexicon_provider,
                 g2p_provider,
+                &evidence,
             );
             if node.text.is_empty() {
                 continue;
@@ -149,7 +185,7 @@ impl RebusDecoder {
             if value.is_empty() {
                 continue;
             }
-            let (score, lexical, phonetic, context) = score_candidate_with_g2p(
+            let (score, lexical, phonetic, context) = score_candidate_with_evidence(
                 &value,
                 text,
                 0.4,
@@ -157,6 +193,7 @@ impl RebusDecoder {
                 languages,
                 lexicon_provider,
                 g2p_provider,
+                &RebusEvidence::default(),
             );
             let candidate = DecodedCandidate {
                 text: value.clone(),
@@ -183,6 +220,27 @@ impl RebusDecoder {
             .filter(|candidate| candidate.score >= 0.08)
             .collect();
         ranked.sort_by(|left, right| right.score.total_cmp(&left.score));
+        if let Some(similarity) = semantic {
+            // Bounded semantic rescoring: at most the top 12 survivors.
+            for candidate in ranked.iter_mut().take(12) {
+                if let Some(value) = similarity(&candidate.text, text) {
+                    candidate.score =
+                        (0.85 * candidate.score + 0.15 * value.clamp(0.0, 1.0)).clamp(0.0, 1.0);
+                }
+            }
+            ranked.sort_by(|left, right| right.score.total_cmp(&left.score));
+        }
+        // Abstention: no trustworthy reading (best below the floor), or
+        // an ambiguous one (weak best with no separation from the runner
+        // up). Returning nothing beats returning a junk ranking.
+        let ambiguous = match ranked.as_slice() {
+            [best, next, ..] => best.score < 0.4 && (best.score - next.score).max(0.0) < 0.02,
+            [best] => best.score < 0.15,
+            [] => true,
+        };
+        if ambiguous {
+            return Vec::new();
+        }
         let best_score = ranked
             .first()
             .map(|candidate| candidate.score)

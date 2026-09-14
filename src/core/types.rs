@@ -223,8 +223,11 @@ pub struct DecodedCandidate {
 }
 
 impl DecodedCandidate {
+    /// Rank-aware confidence: the raw score discounted by rank separation.
+    /// A lonely top candidate keeps its score; a contested one is downrated.
     pub fn confidence(&self) -> f64 {
-        self.score.clamp(0.0, 1.0)
+        let score = self.score.clamp(0.0, 1.0);
+        score * (0.5 + 0.5 * self.confidence_gap.clamp(0.0, 1.0))
     }
 }
 

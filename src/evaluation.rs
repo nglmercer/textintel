@@ -530,7 +530,15 @@ fn rebus_metrics(
             continue;
         }
         labelled += 1;
-        let candidates = engine.decode(&case.a)?;
+        // Decode with the case's language labels when present: this mirrors
+        // production callers, which know the expected language, and lets
+        // language-scoped symbol readings participate.
+        let languages = if case.languages.is_empty() {
+            None
+        } else {
+            Some(case.languages.as_slice())
+        };
+        let candidates = engine.decode_with_languages(&case.a, languages, None)?;
         let mut rank: Option<usize> = None;
         for (index, candidate) in candidates.iter().enumerate() {
             let matches_b = same_text(&candidate.text, &case.b);

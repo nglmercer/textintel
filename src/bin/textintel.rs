@@ -5,7 +5,7 @@ use textintel::evaluation::{EvaluateOptions, EvaluationDataset, EvaluationReport
 use textintel::{EngineConfig, ResourceLoader, TextIntelligence};
 
 fn usage() -> &'static str {
-    "Usage:\n  textintel analyze <text> [--json]\n  textintel explain <text> [--json]\n  textintel decode <text> [--json]\n  textintel compare <message-a> <message-b> [--json]\n  textintel spam <text> [--json]\n  textintel batch <input.jsonl> [--json]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <evaluation.json> [--split train|validation|test] [--profile <name>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel evaluate <evaluation.json> [--split train|validation|test] [--profile <name>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel index <store.json> <id> <text>\n  textintel search <store.json> <text> <limit> [--json]"
+    "Usage:\n  textintel analyze <text> [--json]\n  textintel explain <text> [--json]\n  textintel decode <text> [--languages <es,en>] [--json]\n  textintel compare <message-a> <message-b> [--json]\n  textintel spam <text> [--json]\n  textintel batch <input.jsonl> [--json]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <evaluation.json> [--split train|validation|test] [--profile <name>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel evaluate <evaluation.json> [--split train|validation|test] [--profile <name>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel index <store.json> <id> <text>\n  textintel search <store.json> <text> <limit> [--json]"
 }
 
 fn print_json<T: serde::Serialize>(value: &T) -> Result<(), Box<dyn std::error::Error>> {
@@ -210,7 +210,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         "decode" => {
             let text = positionals.get(1).ok_or("decode requires <text>")?;
-            let result = engine.decode(text)?;
+            let languages = flag_value(&args, "--languages")
+                .map(|value| {
+                    value
+                        .split(',')
+                        .map(|part| part.trim().to_string())
+                        .filter(|part| !part.is_empty())
+                        .collect::<Vec<_>>()
+                })
+                .filter(|values| !values.is_empty());
+            let result = engine.decode_with_languages(text, languages.as_deref(), None)?;
             if json {
                 print_json(&result)?;
             } else {
@@ -412,7 +421,9 @@ fn positional_args(args: &[String]) -> Vec<String> {
             skip_next = false;
             continue;
         }
-        if index > 0 && (arg == "--split" || arg == "--profile" || arg == "--gates") {
+        if index > 0
+            && (arg == "--split" || arg == "--profile" || arg == "--gates" || arg == "--languages")
+        {
             skip_next = true;
             continue;
         }

@@ -122,6 +122,19 @@ pub trait SimilarityScorer: Send + Sync {
 pub trait SymbolKnowledgeProvider: Send + Sync {
     fn readings(&self, token: &str, max_readings: usize) -> Vec<SymbolReading>;
 
+    /// Language-filtered readings. The default implementation truncates
+    /// before filtering (callers filter afterwards); providers with indexed
+    /// packs should filter first so language-specific readings survive.
+    fn readings_in_languages(
+        &self,
+        token: &str,
+        max_readings: usize,
+        languages: Option<&[String]>,
+    ) -> Vec<SymbolReading> {
+        let _ = languages;
+        self.readings(token, max_readings)
+    }
+
     fn concepts(&self, _token: &str) -> Vec<SymbolConcept> {
         Vec::new()
     }

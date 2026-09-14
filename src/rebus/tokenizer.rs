@@ -42,7 +42,7 @@ pub fn token_readings_with_provider_and_languages(
     provider: &dyn SymbolKnowledgeProvider,
     languages: Option<&[String]>,
 ) -> Vec<(String, f64, String, String)> {
-    let symbol_readings = provider.readings(token, max_readings);
+    let symbol_readings = provider.readings_in_languages(token, max_readings, languages);
     let filtered = symbol_readings
         .into_iter()
         .filter(|reading| language_allowed(reading.language.as_deref(), languages))

@@ -1,5 +1,4 @@
 use crate::core::providers::{G2PProvider, LexiconProvider};
-use crate::lexical::character::combined_character_similarity;
 use crate::normalization::repetition::collapse_repetition;
 use crate::resources::DefaultLexiconProvider;
 
@@ -104,17 +103,103 @@ pub fn score_candidate_with_g2p(
     provider: &dyn LexiconProvider,
     g2p_provider: &dyn G2PProvider,
 ) -> (f64, f64, f64, f64) {
+    score_candidate_with_evidence(
+        surface,
+        source,
+        prior,
+        max_recursion,
+        languages,
+        provider,
+        g2p_provider,
+        &RebusEvidence::default(),
+    )
+}
+
+/// Optional evidence beyond the surface string. Every field has a neutral
+/// default so legacy callers are unaffected.
+#[derive(Debug, Clone, Default)]
+pub struct RebusEvidence {
+    /// Language reported by the beam decoder for this candidate.
+    pub candidate_language: Option<String>,
+    /// Whole-text semantic similarity between surface and source, when an
+    /// embedding backend is available.
+    pub semantic_similarity: Option<f64>,
+    /// Transformation labels applied along the beam path (e.g. "leetspeak").
+    pub transformation_types: Vec<String>,
+}
+
+impl RebusEvidence {
+    /// Penalty in `[0.0, 0.35]`: cheap normalizations cost less than
+    /// symbol readings, so far-fetched derivations cannot outrank plain ones.
+    pub fn transformation_penalty(&self) -> f64 {
+        let mut penalty = 0.0f64;
+        for kind in &self.transformation_types {
+            let cost = if kind == "identity" {
+                0.0
+            } else if kind.contains("boundary") {
+                0.03
+            } else if kind.contains("leet") || kind.contains("case") || kind.contains("normal") {
+                0.05
+            } else if kind.contains("symbol") || kind.contains("emoji") || kind.contains("read") {
+                0.10
+            } else {
+                0.08
+            };
+            penalty += cost;
+        }
+        penalty.min(0.35)
+    }
+
+    /// Compatibility in `[0.0, 1.0]` between the candidate language and the
+    /// requested languages. Unknown on either side is neutral, never evidence.
+    pub fn language_score(&self, languages: Option<&[String]>) -> f64 {
+        match (&self.candidate_language, languages) {
+            (Some(candidate), Some(requested)) => {
+                if requested
+                    .iter()
+                    .any(|language| language.eq_ignore_ascii_case(candidate))
+                {
+                    1.0
+                } else {
+                    0.4
+                }
+            }
+            _ => 0.7,
+        }
+    }
+}
+
+/// Evidence-weighted candidate scoring. The phonetic channel uses real G2P
+/// similarity only: when no phonemes are available it is neutral (0.5),
+/// never character similarity masquerading as phonetic evidence.
+#[allow(clippy::too_many_arguments)]
+pub fn score_candidate_with_evidence(
+    surface: &str,
+    source: &str,
+    prior: f64,
+    max_recursion: usize,
+    languages: Option<&[String]>,
+    provider: &dyn LexiconProvider,
+    g2p_provider: &dyn G2PProvider,
+    evidence: &RebusEvidence,
+) -> (f64, f64, f64, f64) {
     let lexical = lexical_plausibility_with_provider(surface, max_recursion, languages, provider);
     let frequency = provider.frequency(surface, languages).unwrap_or(0.0);
     let frequency_bonus = (frequency.ln_1p() / 5.0).clamp(0.0, 0.25);
     let lexical = (lexical + frequency_bonus).min(1.0);
-    let phonetic = g2p_similarity(surface, source, languages, g2p_provider).unwrap_or_else(|| {
-        let collapsed = collapse_repetition(&surface.to_lowercase(), 1);
-        combined_character_similarity(&surface.to_lowercase(), &collapsed)
-    });
+    let phonetic = g2p_similarity(surface, source, languages, g2p_provider).unwrap_or(0.5);
     let context = context_score(surface, lexical, provider, languages);
+    let language = evidence.language_score(languages);
     let symbol = prior.clamp(0.0, 1.0);
-    let total = (0.42 * lexical + 0.25 * phonetic + 0.13 * context + 0.20 * symbol).clamp(0.0, 1.0);
+    let base =
+        (0.36 * lexical + 0.22 * phonetic + 0.12 * context + 0.18 * symbol + 0.12 * language)
+            .clamp(0.0, 1.0);
+    let penalized = base * (1.0 - evidence.transformation_penalty());
+    let total = match evidence.semantic_similarity {
+        Some(similarity) => 0.85 * penalized + 0.15 * similarity.clamp(0.0, 1.0),
+        None => penalized,
+    }
+    .clamp(0.0, 1.0);
     (total, lexical, phonetic, context)
 }
 
@@ -155,4 +240,95 @@ fn g2p_similarity(
     Some(crate::phonetic::similarity::phonetic_similarity(
         &candidate, &source,
     ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::phonetic::g2p::NullG2PProvider;
+
+    #[test]
+    fn empty_g2p_is_neutral_not_character_similarity() {
+        // NullG2P yields no phonemes: the phonetic channel must be exactly
+        // neutral instead of character similarity in disguise.
+        let (total, _, phonetic, _) = score_candidate_with_evidence(
+            "fracasado",
+            "fracasado",
+            0.5,
+            4,
+            None,
+            &DefaultLexiconProvider,
+            &NullG2PProvider,
+            &RebusEvidence::default(),
+        );
+        assert_eq!(phonetic, 0.5);
+        assert!(total > 0.0 && total <= 1.0);
+    }
+
+    #[test]
+    fn transformation_penalty_grows_with_derivation_cost() {
+        let plain = RebusEvidence::default();
+        assert_eq!(plain.transformation_penalty(), 0.0);
+        let leet = RebusEvidence {
+            transformation_types: vec!["leetspeak".to_string()],
+            ..RebusEvidence::default()
+        };
+        let symbols = RebusEvidence {
+            transformation_types: vec!["symbol".to_string(), "emoji".to_string()],
+            ..RebusEvidence::default()
+        };
+        assert!(leet.transformation_penalty() > 0.0);
+        assert!(symbols.transformation_penalty() > leet.transformation_penalty());
+        assert!(symbols.transformation_penalty() <= 0.35);
+    }
+
+    #[test]
+    fn language_score_rewards_matches_and_ignores_unknowns() {
+        let requested = vec!["es".to_string()];
+        let matched = RebusEvidence {
+            candidate_language: Some("es".to_string()),
+            ..RebusEvidence::default()
+        };
+        assert_eq!(matched.language_score(Some(&requested)), 1.0);
+        let mismatched = RebusEvidence {
+            candidate_language: Some("fr".to_string()),
+            ..RebusEvidence::default()
+        };
+        assert!(mismatched.language_score(Some(&requested)) < 0.7);
+        assert_eq!(
+            RebusEvidence::default().language_score(Some(&requested)),
+            0.7
+        );
+        assert_eq!(matched.language_score(None), 0.7);
+    }
+
+    #[test]
+    fn semantic_evidence_blends_into_total() {
+        let base = RebusEvidence::default();
+        let (plain, _, _, _) = score_candidate_with_evidence(
+            "fracasado",
+            "Fra🏠do",
+            0.5,
+            4,
+            None,
+            &DefaultLexiconProvider,
+            &crate::phonetic::g2p::RuleBasedG2PProvider,
+            &base,
+        );
+        let semantic = RebusEvidence {
+            semantic_similarity: Some(1.0),
+            ..RebusEvidence::default()
+        };
+        let (boosted, _, _, _) = score_candidate_with_evidence(
+            "fracasado",
+            "Fra🏠do",
+            0.5,
+            4,
+            None,
+            &DefaultLexiconProvider,
+            &crate::phonetic::g2p::RuleBasedG2PProvider,
+            &semantic,
+        );
+        assert!(boosted >= plain);
+    }
 }
