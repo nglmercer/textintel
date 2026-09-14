@@ -111,6 +111,9 @@ impl Default for EngineConfig {
             max_decoded_branches: 20_000,
             strong_confidence_gap: 0.15,
             similarity_weights: SimilarityWeights::default(),
+            // Semantic scoring stays opt-in: it only takes effect with an
+            // injected embedding provider (e.g. the local feature-hash
+            // baseline or a model). The default provider is a null backend.
             semantic: false,
             phonetic: false,
         }

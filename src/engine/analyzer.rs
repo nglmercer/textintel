@@ -90,6 +90,9 @@ impl TextIntelligence {
         let language_detector = NgramLanguageDetector::from_resources(&resources);
         Ok(Self {
             config,
+            // `NullEmbeddingProvider` keeps the default engine dependency-free;
+            // inject `FeatureHashEmbeddingProvider` (or a model) for local
+            // semantic evidence. See `with_embedding_provider`.
             embedding_provider: Arc::new(NullEmbeddingProvider),
             g2p_provider: Arc::new(RuleBasedG2PProvider),
             language_provider: Arc::new(language_detector),

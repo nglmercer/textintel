@@ -55,16 +55,16 @@ fn obfuscation_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f64
 }
 
 fn semantic_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> Option<f64> {
-    let mut best: Option<f64> = None;
-    for left in a.semantic_embeddings.values() {
-        for right in b.semantic_embeddings.values() {
-            best = Some(best.map_or_else(
-                || cosine(left, right),
-                |value| value.max(cosine(left, right)),
-            ));
-        }
+    // Whole-text evidence only. Segment and decoded embeddings are indexed
+    // for retrieval explainability, but max-pooling over them would let a
+    // single shared stop-word segment report any two messages as identical.
+    match (
+        a.semantic_embeddings.get("default"),
+        b.semantic_embeddings.get("default"),
+    ) {
+        (Some(left), Some(right)) => Some(cosine(left, right)),
+        _ => None,
     }
-    best
 }
 
 fn phonetic_channel(a: &MessageFingerprint, b: &MessageFingerprint) -> Option<f64> {

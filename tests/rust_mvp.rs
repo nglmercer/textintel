@@ -180,6 +180,42 @@ fn semantic_and_phonetic_providers_are_optional_channels() {
 }
 
 #[test]
+fn semantic_channel_compares_whole_texts_not_shared_segments() {
+    // Both messages share the word "shared", so their segment embeddings
+    // match exactly. The semantic channel must still report the whole-text
+    // cosine (0.0 for orthogonal vectors), not the max over segment pairs.
+    let mut values = BTreeMap::new();
+    values.insert("alpha shared".to_string(), vec![1.0, 0.0]);
+    values.insert("beta shared".to_string(), vec![0.0, 1.0]);
+    values.insert("alpha".to_string(), vec![1.0, 0.0]);
+    values.insert("beta".to_string(), vec![0.0, 1.0]);
+    values.insert("shared".to_string(), vec![0.0, 1.0]);
+    // Whitespace-stripped decoded variants are also embedded.
+    values.insert("alphashared".to_string(), vec![1.0, 0.0]);
+    values.insert("betashared".to_string(), vec![0.0, 1.0]);
+    let config = EngineConfig {
+        semantic: true,
+        ..EngineConfig::default()
+    };
+    let e =
+        TextIntelligence::new(config).with_embedding_provider(StaticEmbeddingProvider::new(values));
+    let left = e.analyze("alpha shared").unwrap();
+    let right = e.analyze("beta shared").unwrap();
+    assert!(left.semantic_embeddings.contains_key("default"));
+    assert!(left.semantic_embeddings.contains_key("segment:1"));
+    assert_eq!(
+        left.semantic_embeddings.get("default"),
+        Some(&vec![1.0, 0.0])
+    );
+    assert_eq!(
+        right.semantic_embeddings.get("default"),
+        Some(&vec![0.0, 1.0])
+    );
+    let comparison = e.compare("alpha shared", "beta shared").unwrap();
+    assert_eq!(comparison.semantic, Some(0.0));
+}
+
+#[test]
 fn patterns_spam_duplicates_and_search_use_fingerprints() {
     let e = engine();
     e.add_pattern(
