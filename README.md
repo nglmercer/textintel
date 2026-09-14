@@ -40,6 +40,25 @@ The default engine requires no model download and provides:
 - Pattern registration, calibrated feature-based spam signals, selectable
   duplicate modes, an indexed in-memory store, versioned JSON persistence, and
   a `VectorStore` boundary for larger backends.
+- Versioned pattern persistence: registered patterns snapshot to a schemaed
+  file and reload with re-analyzed examples (`save_patterns_to` /
+  `load_patterns_from`). Stored fingerprints migrate across schema versions
+  through an explicit version-checked path instead of failing or guessing.
+- Trained artifacts: an interpretable logistic similarity scorer
+  (`models/similarity-v1.json`, see `tools/train_similarity.rs`) and a
+  calibrated spam predictor (`models/spam-v1.json`).
+
+Optional production backends (off by default, no automatic network access):
+
+- `semantic-candle`: real local multilingual embeddings via the Candle
+  runtime (explicit local model path).
+- `phonetic-espeak`: production G2P backed by a local `espeak-ng` binary,
+  with the rule-based provider as deterministic fallback.
+- `ann-hnsw`: approximate nearest-neighbor retrieval over embedding indexes
+  plus `benches/ann.rs` recall/latency benchmarks.
+- `persist-redb`: embedded persistent storage with the same migration
+  guarantees as the JSON store.
+- `semantic-http`: explicit remote embedding adapter (only when configured).
 
 ## Providers and configuration
 
@@ -61,7 +80,8 @@ beam width, candidate count, symbol readings, recursion, and document count
 are bounded by `EngineConfig`.
 
 Optional feature names are available for packaging integrations:
-`lang-profile`, `semantic-local`, `semantic-http`, `phonetic-ipa`, `persist`,
+`lang-profile`, `semantic-local`, `semantic-candle`, `semantic-http`,
+`phonetic-ipa`, `phonetic-espeak`, `ann-hnsw`, `persist`, `persist-redb`,
 `semantic`, `phonetic`, `ml`, and `all`. The default build stays local and
 lightweight; `semantic-http` is the explicit remote-provider adapter and
 `semantic-local` provides the deterministic feature-hash embedding baseline.
@@ -113,18 +133,37 @@ cargo run -- index store.json id-1 "a message"
 cargo run -- search store.json "similar message" 5
 ```
 
-## Verification
+## Examples
 
 ```text
-cargo fmt --all -- --check
+cargo run --example basic
+cargo run --example persistent_store
+cargo run --example patterns_spam
+```
+
+## Verification
+
+Before every commit run:
+
+```text
+cargo fmt --check
+cargo test --locked --no-default-features --all-targets
 cargo test --locked --all-features --all-targets
-cargo clippy --locked --all-targets --all-features -- -D warnings
-cargo doc --locked --no-deps
+cargo clippy --all-targets --all-features -- -D warnings
+cargo doc --no-deps
+cargo bench --locked --no-run --all-features
+cargo run --locked --no-default-features --bin textintel -- eval data/evaluation.json --split test --gates data/quality-gates.json
 ```
 
 The integration suite covers the plan's MVP examples plus provider injection,
 batch APIs, persistence, multilingual segmentation, IPA features, patterns,
 spam, duplicate detection, and indexed search behavior. A versioned seed
 evaluation set with ranking and calibration metrics is available at
-`data/evaluation.json`; the repository also includes fuzz targets for Unicode,
-tokenization, and rebus parsing under `fuzz/`.
+`data/evaluation.json`.
+
+CI runs fmt, tests on Ubuntu/Windows/macOS, quality gates, coverage, clippy,
+MSRV, and a nightly fuzz job. The repository includes fuzz targets for
+Unicode, tokenization, and rebus parsing under `fuzz/` with a curated seed
+corpus in `fuzz/corpus/`; run them locally with
+`cd fuzz && cargo +nightly fuzz run <target> corpus/<target> -- -max_total_time=60`
+(requires a nightly toolchain plus `cargo install cargo-fuzz`).
