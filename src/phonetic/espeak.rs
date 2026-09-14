@@ -112,18 +112,36 @@ const VOICES: &[(&str, &str)] = &[
 /// articulatory feature classifier).
 const VOWELS: &str = "aeiouəɛɪɔʊɑɒɨʉɯyøœæʌäɵɞɘɜɐɨ";
 
+/// One voice reported by `espeak-ng --voices`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EspeakVoice {
+    /// BCP-style language code from the voices table (e.g. `"es"`, `"en-US"`).
+    pub language: String,
+    /// Voice name (e.g. `"spanish"`, `"english"`).
+    pub name: String,
+    /// Gender marker from the table (`"M"`, `"F"`, or `"-"`).
+    pub gender: String,
+    /// Voice file backing this voice.
+    pub file: String,
+}
+
 /// Production G2P provider delegating to a local `espeak-ng` binary.
 #[derive(Debug, Clone)]
 pub struct EspeakNgG2PProvider {
     binary: PathBuf,
     default_voice: String,
+    timeout: std::time::Duration,
 }
+
+/// Subprocess bound for a single espeak-ng invocation.
+pub const DEFAULT_ESPEAK_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
 
 impl Default for EspeakNgG2PProvider {
     fn default() -> Self {
         Self {
             binary: PathBuf::from(DEFAULT_BINARY),
             default_voice: DEFAULT_VOICE.to_string(),
+            timeout: DEFAULT_ESPEAK_TIMEOUT,
         }
     }
 }
@@ -147,6 +165,17 @@ impl EspeakNgG2PProvider {
         self
     }
 
+    /// Bound for a single espeak-ng subprocess call. Exceeding it kills the
+    /// child and reports a timeout error instead of hanging the analysis.
+    pub fn with_timeout(mut self, timeout: std::time::Duration) -> Self {
+        self.timeout = timeout;
+        self
+    }
+
+    pub fn timeout(&self) -> std::time::Duration {
+        self.timeout
+    }
+
     /// Detect an `espeak-ng` binary on `PATH` without executing anything.
     /// Use this for the production preset; when it fails, fall back to
     /// [`RuleBasedG2PProvider`](crate::phonetic::RuleBasedG2PProvider) and
@@ -156,6 +185,7 @@ impl EspeakNgG2PProvider {
             Some(binary) => Ok(Self {
                 binary,
                 default_voice: DEFAULT_VOICE.to_string(),
+                timeout: DEFAULT_ESPEAK_TIMEOUT,
             }),
             None => Err(ProviderError::new(
                 PROVIDER,
@@ -192,10 +222,33 @@ impl EspeakNgG2PProvider {
         &self.default_voice
     }
 
+    /// True when `language` has a curated voice mapping. Anything else falls
+    /// back to the default voice at reduced confidence (see
+    /// [`G2PProviderTrait::phonemize`]) instead of pretending full coverage.
+    pub fn is_supported_language(language: &str) -> bool {
+        let requested = language.to_lowercase();
+        VOICES.iter().any(|(code, _)| *code == requested)
+    }
+
+    /// Voices installed with this espeak-ng binary (`espeak-ng --voices`).
+    /// Returns an error when the binary is missing or the table is unreadable.
+    pub fn installed_voices(&self) -> Result<Vec<EspeakVoice>, ProviderError> {
+        let stdout = self.run_command(&["--voices"])?;
+        Ok(parse_voices_table(&stdout))
+    }
+
     fn run(&self, text: &str, voice: &str) -> Result<String, ProviderError> {
-        let output = Command::new(&self.binary)
-            .args(["-q", "--ipa=3", "-v", voice, text])
-            .output()
+        // Text travels as one argv element; no shell is ever involved.
+        self.run_command(&["-q", "--ipa=3", "-v", voice, text])
+    }
+
+    /// Run the binary with argv (no shell) under the configured timeout.
+    fn run_command(&self, args: &[&str]) -> Result<String, ProviderError> {
+        let mut child = Command::new(&self.binary)
+            .args(args)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
             .map_err(|error| {
                 ProviderError::new(
                     PROVIDER,
@@ -205,21 +258,79 @@ impl EspeakNgG2PProvider {
                     ),
                 )
             })?;
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let clipped: String = stderr.chars().take(300).collect();
-            return Err(ProviderError::new(
-                PROVIDER,
-                format!(
-                    "espeak-ng exited with {status}: {clipped}",
-                    status = output.status
-                ),
-            ));
+        let deadline = std::time::Instant::now() + self.timeout;
+        loop {
+            match child.try_wait().map_err(|error| {
+                ProviderError::new(PROVIDER, format!("cannot poll espeak-ng: {error}"))
+            })? {
+                Some(status) => {
+                    let mut stdout = Vec::new();
+                    let mut stderr = Vec::new();
+                    if let Some(mut pipe) = child.stdout.take() {
+                        use std::io::Read;
+                        let _ = pipe.read_to_end(&mut stdout);
+                    }
+                    if let Some(mut pipe) = child.stderr.take() {
+                        use std::io::Read;
+                        let _ = pipe.read_to_end(&mut stderr);
+                    }
+                    if !status.success() {
+                        let clipped: String =
+                            String::from_utf8_lossy(&stderr).chars().take(300).collect();
+                        return Err(ProviderError::new(
+                            PROVIDER,
+                            format!("espeak-ng exited with {status}: {clipped}"),
+                        ));
+                    }
+                    return String::from_utf8(stdout).map_err(|error| {
+                        ProviderError::new(
+                            PROVIDER,
+                            format!("espeak-ng output is not UTF-8: {error}"),
+                        )
+                    });
+                }
+                None => {
+                    if std::time::Instant::now() >= deadline {
+                        let _ = child.kill();
+                        let _ = child.wait();
+                        return Err(ProviderError::new(
+                            PROVIDER,
+                            format!(
+                                "espeak-ng timed out after {}ms; increase with with_timeout()",
+                                self.timeout.as_millis()
+                            ),
+                        ));
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(5));
+                }
+            }
         }
-        String::from_utf8(output.stdout).map_err(|error| {
-            ProviderError::new(PROVIDER, format!("espeak-ng output is not UTF-8: {error}"))
-        })
     }
+}
+
+/// Parse `espeak-ng --voices` table output. The header line and malformed
+/// rows are skipped; parsing never fails the whole call.
+pub fn parse_voices_table(stdout: &str) -> Vec<EspeakVoice> {
+    let mut voices = Vec::new();
+    for line in stdout.lines() {
+        let fields: Vec<&str> = line.split_whitespace().collect();
+        if fields.len() < 6 {
+            continue;
+        }
+        if fields[0].eq_ignore_ascii_case("pty") {
+            continue;
+        }
+        if fields[0].parse::<u32>().is_err() {
+            continue;
+        }
+        voices.push(EspeakVoice {
+            language: fields[1].to_string(),
+            gender: fields[3].to_string(),
+            name: fields[4].to_string(),
+            file: fields[5..].join(" "),
+        });
+    }
+    voices
 }
 
 /// Locate an executable `name` on `PATH` without running it, so detection is
@@ -277,24 +388,68 @@ fn syllable_nuclei(phonemes: &[String]) -> usize {
     nuclei.max(1)
 }
 
+/// Recover 0-based indices of primary-stressed syllables from raw espeak-ng
+/// IPA output. `ˈ` marks the onset of the stressed syllable; `ˌ` (secondary)
+/// is ignored. Returns an empty vector when no primary marker is present.
+pub fn primary_stress_syllables(ipa: &str) -> Vec<usize> {
+    let mut stressed = Vec::new();
+    let mut offset = 0;
+    for chunk in ipa.split_whitespace() {
+        let mut groups_before = 0;
+        let mut in_vowel = false;
+        let mut marker = None;
+        for ch in chunk.chars() {
+            if ch == 'ˈ' {
+                marker = Some(groups_before);
+                in_vowel = false;
+            } else if VOWELS.contains(ch) {
+                if !in_vowel {
+                    groups_before += 1;
+                }
+                in_vowel = true;
+            } else {
+                in_vowel = false;
+            }
+        }
+        if let Some(local) = marker {
+            stressed.push(offset + local);
+        }
+        offset += groups_before;
+    }
+    stressed
+}
+
 impl G2PProviderTrait for EspeakNgG2PProvider {
     fn phonemize(&self, text: &str, language: &str) -> Result<PhoneticCandidate, ProviderError> {
+        let exact = Self::is_supported_language(language);
         let voice = self.voice_for(language).to_string();
         let stdout = self.run(text, &voice)?;
         let (ipa, phonemes, syllables) = parse_espeak_ipa(&stdout);
+        let stress = primary_stress_syllables(&ipa);
         Ok(PhoneticCandidate {
             source: text.to_string(),
             language: language.to_string(),
             dialect: Some(voice),
             ipa: Some(ipa),
+            articulatory_features: phonemes
+                .iter()
+                .map(|phoneme| crate::phonetic::features::feature_label(phoneme).to_string())
+                .collect(),
             phonemes,
-            stress: None,
+            stress: if stress.is_empty() {
+                None
+            } else {
+                Some(stress)
+            },
             syllables,
-            articulatory_features: Vec::new(),
             confidence: if text.is_empty() {
                 0.0
-            } else {
+            } else if exact {
                 TOOL_CONFIDENCE
+            } else {
+                // Default-voice fallback for an unmapped language: usable but
+                // explicitly discounted, never presented as full coverage.
+                0.5
             },
         })
     }
@@ -349,6 +504,39 @@ mod tests {
     }
 
     #[test]
+    fn parses_voices_table_output() {
+        let table = "Pty Language Age Gender VoiceName File\n\
+             5  af       --  M      afrikaans          af\n\
+             5  en       --  M      english            default\n\
+             2  es       --  M      spanish            es\n\
+             garbage line\n";
+        let voices = parse_voices_table(table);
+        assert_eq!(voices.len(), 3);
+        assert_eq!(
+            voices[1],
+            EspeakVoice {
+                language: "en".to_string(),
+                name: "english".to_string(),
+                gender: "M".to_string(),
+                file: "default".to_string(),
+            }
+        );
+        assert!(parse_voices_table("").is_empty());
+        assert!(parse_voices_table("Pty Language Age Gender VoiceName File\n").is_empty());
+    }
+
+    #[test]
+    fn recovers_primary_stress_positions() {
+        assert_eq!(primary_stress_syllables("olˈa"), vec![1]);
+        assert_eq!(primary_stress_syllables("ˈola"), vec![0]);
+        assert_eq!(primary_stress_syllables("kafe"), Vec::<usize>::new());
+        assert_eq!(primary_stress_syllables(""), Vec::<usize>::new());
+        // Secondary stress is ignored; offsets accumulate across words.
+        assert_eq!(primary_stress_syllables("ˈola kaˌfe"), vec![0]);
+        assert_eq!(primary_stress_syllables("ˈola kaˈfe"), vec![0, 3]);
+    }
+
+    #[test]
     fn reports_missing_binary() {
         let provider = EspeakNgG2PProvider::new().with_binary("/nonexistent-espeak-ng-binary-xyz");
         let error = provider.phonemize("hola", "es").unwrap_err();
@@ -360,8 +548,11 @@ mod tests {
     fn phonemizes_through_mock_binary() {
         use std::os::unix::fs::PermissionsExt;
 
-        let directory =
-            std::env::temp_dir().join(format!("textintel-espeak-{}", std::process::id()));
+        let directory = std::env::temp_dir().join(format!(
+            "textintel-espeak-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
         let _ = std::fs::remove_dir_all(&directory);
         std::fs::create_dir_all(&directory).unwrap();
         let script = directory.join("espeak-ng");

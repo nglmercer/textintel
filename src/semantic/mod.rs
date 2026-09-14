@@ -4,6 +4,8 @@ pub mod embeddings;
 #[cfg(feature = "semantic-http")]
 pub mod http;
 pub mod similarity;
+#[cfg(feature = "semantic-transformer")]
+pub mod transformer;
 
 #[cfg(feature = "semantic-candle")]
 pub use candle::CandleEmbeddingProvider;
@@ -14,3 +16,5 @@ pub use embeddings::{
 #[cfg(feature = "semantic-http")]
 pub use http::HttpEmbeddingProvider;
 pub use similarity::cosine;
+#[cfg(feature = "semantic-transformer")]
+pub use transformer::{EncodedBatch, TransformerEmbeddingProvider, TransformerPooling};

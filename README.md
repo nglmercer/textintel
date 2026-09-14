@@ -52,8 +52,15 @@ Optional production backends (off by default, no automatic network access):
 
 - `semantic-candle`: real local multilingual embeddings via the Candle
   runtime (explicit local model path).
+- `semantic-transformer`: contextual BERT-family sentence embeddings on the
+  CPU from explicit local files (`config.json`, `vocab.txt`,
+  `model.safetensors`), with batching, dimension validation, normalization,
+  and truncation reporting. No new dependencies beyond Candle.
 - `phonetic-espeak`: production G2P backed by a local `espeak-ng` binary,
-  with the rule-based provider as deterministic fallback.
+  with the rule-based provider as deterministic fallback. Supports voice
+  detection (`installed_voices`), per-call timeouts, syllables, recovered
+  primary stress, articulatory features, and discounted confidence for
+  unmapped languages.
 - `ann-hnsw`: approximate nearest-neighbor retrieval over embedding indexes
   plus `benches/ann.rs` recall/latency benchmarks.
 - `persist-redb`: embedded persistent storage with the same migration
@@ -123,7 +130,8 @@ are bounded by `EngineConfig`.
 Optional feature names are available for packaging integrations:
 `lang-profile`, `semantic-local`, `semantic-candle`, `semantic-http`,
 `phonetic-ipa`, `phonetic-espeak`, `ann-hnsw`, `persist`, `persist-redb`,
-`semantic`, `phonetic`, `ml`, `production-local`, and `all`. The default build stays local and
+`semantic`, `phonetic`, `ml`, `production-local`, `semantic-transformer`,
+and `all`. The default build stays local and
 lightweight; `semantic-http` is the explicit remote-provider adapter and
 `semantic-local` provides the deterministic feature-hash embedding baseline.
 
@@ -180,6 +188,8 @@ cargo run -- search store.json "similar message" 5
 cargo run --example basic
 cargo run --example production_local
 cargo run --example persistent_store
+cargo run --features semantic-transformer --example transformer_embeddings
+cargo run --features phonetic-espeak --example espeak
 cargo run --example patterns_spam
 ```
 

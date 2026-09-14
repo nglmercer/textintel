@@ -292,6 +292,23 @@ Fingerprint has `normalization_views` map — reuse, do not replace `raw`.
    channel evidence; sorts head, carries tail, never drops). Already wired
    into `find_similar`. Tests: `tests/reranker.rs` (4, incl. correcting an
    inverted retrieval order with real weights).
+5. **Phase 16 — DONE (provider + mechanics)** — `TransformerEmbeddingProvider`
+   (§10): BERT-family contextual encoder in pure `candle-core` (zero new
+   dependencies, MSRV-safe), `open(dir)` over `config.json`/`vocab.txt`/
+   `model.safetensors`, batching, metadata, eager dimension/dtype/shape
+   validation, L2 normalization, max-length truncation reporting,
+   `semantic-transformer` feature. Rejects SentencePiece checkpoints
+   (multilingual-e5, BGE-M3) with a clear error — their tokenizer is a
+   different format, documented as future work. Tests: 5 in-module math
+   tests + `tests/optional_transformer.rs` (8, incl. mask-invariance and
+   order-sensitivity probes); fixture via `tools/generate_mini_transformer.py`.
+   Paraphrase *quality* (§11) still needs a real checkpoint (optional/local).
+6. **Phase 17 — DONE** — production phonetics (§13): `installed_voices()`
+   voice detection, configurable subprocess timeouts (default 10 s),
+   articulatory features on the espeak path, primary-stress recovery,
+   discounted confidence (0.5) for unmapped languages. Tests: in-module
+   table/stress tests + `tests/optional_espeak.rs` (+4: timeout, fallback,
+   stress/articulatory, voices); `examples/espeak.rs` added.
 
 Deferred (tracked, not dropped): transformer encoder (§10/§16),
 transliteration (§23), namespaced concepts (§9), eval-corpus scale-up

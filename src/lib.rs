@@ -46,7 +46,10 @@ pub use engine::production::{DegradedCapability, EngineBuilder, EngineDiagnostic
 pub use engine::TextIntelligence;
 pub use language::{NgramLanguageDetector, ProfileLanguageDetector};
 #[cfg(feature = "phonetic-espeak")]
-pub use phonetic::{parse_espeak_ipa, EspeakNgG2PProvider};
+pub use phonetic::{
+    parse_espeak_ipa, parse_voices_table, primary_stress_syllables, EspeakNgG2PProvider,
+    EspeakVoice, DEFAULT_ESPEAK_TIMEOUT,
+};
 pub use phonetic::{NullG2PProvider, RuleBasedG2PProvider};
 pub use resources::{
     embedded_common, embedded_resources, normalize_key, AbbreviationEntry, AbbreviationPack,
@@ -62,6 +65,8 @@ pub use semantic::{
     CachedEmbeddingProvider, FeatureHashEmbeddingProvider, NullEmbeddingProvider,
     StaticEmbeddingProvider,
 };
+#[cfg(feature = "semantic-transformer")]
+pub use semantic::{EncodedBatch, TransformerEmbeddingProvider, TransformerPooling};
 #[cfg(feature = "ann-hnsw")]
 pub use storage::HnswVectorIndex;
 #[cfg(feature = "persist-redb")]
