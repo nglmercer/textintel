@@ -37,6 +37,8 @@ pub use core::types::*;
 pub use detection::{duplicate_result, match_pattern, predict_spam, HeuristicSpamPredictor};
 pub use engine::TextIntelligence;
 pub use language::{NgramLanguageDetector, ProfileLanguageDetector};
+#[cfg(feature = "phonetic-espeak")]
+pub use phonetic::{parse_espeak_ipa, EspeakNgG2PProvider};
 pub use phonetic::{NullG2PProvider, RuleBasedG2PProvider};
 pub use resources::{
     embedded_common, embedded_resources, normalize_key, DefaultLexiconProvider, IndexKey,
