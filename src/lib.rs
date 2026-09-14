@@ -44,6 +44,8 @@ pub use resources::{
     ResourceError, ResourceLimits, ResourceLoader, SymbolPack, SymbolResource,
     SUPPORTED_SCHEMA_VERSION,
 };
+#[cfg(feature = "semantic-candle")]
+pub use semantic::CandleEmbeddingProvider;
 #[cfg(feature = "semantic-http")]
 pub use semantic::HttpEmbeddingProvider;
 pub use semantic::{

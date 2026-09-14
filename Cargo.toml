@@ -21,12 +21,13 @@ default = []
 lang-profile = []
 semantic = ["semantic-local"]
 semantic-local = []
+semantic-candle = ["dep:candle-core"]
 semantic-http = ["dep:ureq"]
 phonetic = ["phonetic-ipa"]
 phonetic-ipa = []
 persist = []
 ml = ["lang-profile", "semantic-local", "phonetic-ipa"]
-all = ["lang-profile", "semantic-local", "semantic-http", "phonetic-ipa", "persist", "ml"]
+all = ["lang-profile", "semantic-local", "semantic-candle", "semantic-http", "phonetic-ipa", "persist", "ml"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -37,6 +38,7 @@ unicode-segmentation = "1.12"
 unicode-properties = { version = "0.1.4", features = ["emoji", "general-category"] }
 unicode-script = "0.5"
 ureq = { version = "2.12.1", optional = true, default-features = false, features = ["json", "tls"] }
+candle-core = { version = "0.11", optional = true, default-features = false }
 
 [dev-dependencies]
 criterion = "=0.5.1"
