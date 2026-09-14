@@ -1,5 +1,6 @@
 use std::sync::OnceLock;
 
+use crate::core::capabilities::ProviderCapabilities;
 use crate::core::error::ProviderError;
 use crate::core::providers::{LanguageDetectionProvider, LexiconProvider, SymbolKnowledgeProvider};
 use crate::core::types::{LanguageCandidate, SymbolConcept, SymbolReading};
@@ -22,11 +23,19 @@ impl LexiconProvider for ResourceLoader {
     fn lemma(&self, word: &str, languages: Option<&[String]>) -> Option<String> {
         self.language_index.lemma(word, languages)
     }
+
+    fn frequency(&self, word: &str, languages: Option<&[String]>) -> Option<f64> {
+        self.language_index.frequency(word, languages)
+    }
 }
 
 impl LanguageDetectionProvider for ResourceLoader {
     fn detect(&self, text: &str) -> Result<Vec<LanguageCandidate>, ProviderError> {
         Ok(self.detect_languages(text))
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("resource_profile_detector").with_languages(self.languages())
     }
 }
 
@@ -86,5 +95,9 @@ impl LexiconProvider for DefaultLexiconProvider {
 
     fn lemma(&self, word: &str, languages: Option<&[String]>) -> Option<String> {
         embedded().lemma(word, languages)
+    }
+
+    fn frequency(&self, word: &str, languages: Option<&[String]>) -> Option<f64> {
+        embedded().frequency(word, languages)
     }
 }

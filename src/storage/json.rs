@@ -1,0 +1,156 @@
+use std::collections::BTreeMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+use serde::{Deserialize, Serialize};
+
+use crate::core::capabilities::ProviderCapabilities;
+use crate::core::providers::VectorStore;
+use crate::core::types::{MessageFingerprint, SearchCandidateSet};
+
+use super::MemoryStore;
+
+const STORE_SCHEMA_VERSION: u32 = 1;
+const DEFAULT_MAX_FILE_BYTES: u64 = 128 * 1024 * 1024;
+
+#[derive(Debug, Serialize, Deserialize)]
+struct PersistedStore {
+    schema_version: u32,
+    records: BTreeMap<String, MessageFingerprint>,
+}
+
+/// Local persistent store using a versioned JSON envelope and the same
+/// retrieval indexes as [`MemoryStore`]. It never fetches or interprets URLs.
+#[derive(Debug, Clone)]
+pub struct JsonFileStore {
+    path: PathBuf,
+    max_file_bytes: u64,
+    inner: MemoryStore,
+}
+
+impl JsonFileStore {
+    pub fn open(path: impl AsRef<Path>) -> Result<Self, String> {
+        Self::open_with_limit(path, DEFAULT_MAX_FILE_BYTES)
+    }
+
+    pub fn open_with_limit(path: impl AsRef<Path>, max_file_bytes: u64) -> Result<Self, String> {
+        let path = path.as_ref().to_path_buf();
+        let mut store = Self {
+            path,
+            max_file_bytes,
+            inner: MemoryStore::default(),
+        };
+        if store.path.exists() {
+            let metadata = fs::metadata(&store.path).map_err(|error| error.to_string())?;
+            if metadata.len() > max_file_bytes {
+                return Err(format!(
+                    "persistent store exceeds max_file_bytes={max_file_bytes}"
+                ));
+            }
+            let source = fs::read_to_string(&store.path).map_err(|error| error.to_string())?;
+            let persisted: PersistedStore = serde_json::from_str(&source).map_err(|error| {
+                format!("invalid persistent store {}: {error}", store.path.display())
+            })?;
+            if persisted.schema_version != STORE_SCHEMA_VERSION {
+                return Err(format!(
+                    "unsupported persistent store schema_version={}",
+                    persisted.schema_version
+                ));
+            }
+            for (id, fingerprint) in persisted.records {
+                store.inner.upsert(id, fingerprint)?;
+            }
+        }
+        Ok(store)
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn flush(&self) -> Result<(), String> {
+        let persisted = PersistedStore {
+            schema_version: STORE_SCHEMA_VERSION,
+            records: self.inner.records().into_iter().collect::<BTreeMap<_, _>>(),
+        };
+        let bytes = serde_json::to_vec_pretty(&persisted).map_err(|error| error.to_string())?;
+        if bytes.len() as u64 > self.max_file_bytes {
+            return Err(format!(
+                "serialized store exceeds max_file_bytes={}",
+                self.max_file_bytes
+            ));
+        }
+        if let Some(parent) = self
+            .path
+            .parent()
+            .filter(|path| !path.as_os_str().is_empty())
+        {
+            fs::create_dir_all(parent).map_err(|error| error.to_string())?;
+        }
+        let temporary = self.path.with_extension("json.tmp");
+        fs::write(&temporary, &bytes).map_err(|error| error.to_string())?;
+        if let Err(error) = fs::rename(&temporary, &self.path) {
+            let _ = fs::remove_file(&self.path);
+            fs::rename(&temporary, &self.path).map_err(|_| error.to_string())?;
+        }
+        Ok(())
+    }
+}
+
+impl VectorStore for JsonFileStore {
+    fn upsert(&mut self, id: String, fingerprint: MessageFingerprint) -> Result<(), String> {
+        let previous = self.inner.get(&id).cloned();
+        self.inner.upsert(id.clone(), fingerprint)?;
+        if let Err(error) = self.flush() {
+            if let Some(previous) = previous {
+                self.inner.upsert(id, previous)?;
+            } else {
+                self.inner.remove(&id)?;
+            }
+            return Err(error);
+        }
+        Ok(())
+    }
+
+    fn remove(&mut self, id: &str) -> Result<bool, String> {
+        let previous = self.inner.get(id).cloned();
+        let removed = self.inner.remove(id)?;
+        if removed {
+            if let Err(error) = self.flush() {
+                if let Some(previous) = previous {
+                    self.inner.upsert(id.to_string(), previous)?;
+                }
+                return Err(error);
+            }
+        }
+        Ok(removed)
+    }
+
+    fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    fn records(&self) -> Vec<(String, MessageFingerprint)> {
+        self.inner.records()
+    }
+
+    fn search_candidates(
+        &self,
+        query: &MessageFingerprint,
+        limit: usize,
+    ) -> Result<Vec<(String, MessageFingerprint)>, String> {
+        Ok(self.inner.search_candidates(query, limit))
+    }
+
+    fn search_candidates_with_metadata(
+        &self,
+        query: &MessageFingerprint,
+        limit: usize,
+    ) -> Result<SearchCandidateSet, String> {
+        Ok(self.inner.search_candidates_with_metadata(query, limit))
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("json_file_store")
+    }
+}

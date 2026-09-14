@@ -1,9 +1,10 @@
 use std::env;
 
-use textintel::{EngineConfig, TextIntelligence};
+use textintel::evaluation::EvaluationDataset;
+use textintel::{EngineConfig, ResourceLoader, TextIntelligence};
 
 fn usage() -> &'static str {
-    "Usage:\n  textintel analyze <text> [--json]\n  textintel decode <text> [--json]\n  textintel compare <message-a> <message-b> [--json]\n  textintel spam <text> [--json]"
+    "Usage:\n  textintel analyze <text> [--json]\n  textintel explain <text> [--json]\n  textintel decode <text> [--json]\n  textintel compare <message-a> <message-b> [--json]\n  textintel spam <text> [--json]\n  textintel batch <input.jsonl> [--json]\n  textintel resources [resource-root] [--json]\n  textintel diagnostics [--json]\n  textintel evaluate [evaluation.json] [--json]\n  textintel index <store.json> <id> <text>\n  textintel search <store.json> <text> <limit> [--json]"
 }
 
 fn print_json<T: serde::Serialize>(value: &T) -> Result<(), Box<dyn std::error::Error>> {
@@ -21,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let engine = TextIntelligence::new(EngineConfig::default());
     match command {
-        "analyze" => {
+        "analyze" | "explain" => {
             let text = args.get(1).ok_or("analyze requires <text>")?;
             let result = engine.analyze(text)?;
             if json {
@@ -82,6 +83,110 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("labels: {:?}", result.labels);
                 for reason in result.reasons {
                     println!("- {}", reason);
+                }
+            }
+        }
+        "batch" => {
+            let path = args.get(1).ok_or("batch requires <input.jsonl>")?;
+            let source = std::fs::read_to_string(path)?;
+            let texts = source
+                .lines()
+                .filter(|line| !line.trim().is_empty())
+                .map(|line| line.to_string())
+                .collect::<Vec<_>>();
+            let results = engine.analyze_batch(&texts)?;
+            if json {
+                print_json(&results)?;
+            } else {
+                for result in results {
+                    println!(
+                        "{}\t{}",
+                        result.top_language().unwrap_or("unknown"),
+                        result.raw
+                    );
+                }
+            }
+        }
+        "resources" => {
+            let root = args.get(1).map(String::as_str).unwrap_or("resources");
+            let resources = ResourceLoader::from_resource_root(root)?;
+            let report = serde_json::json!({
+                "languages": resources.languages(),
+                "language_count": resources.language_count(),
+                "word_count": resources.word_count(),
+                "symbol_count": resources.symbol_count(),
+                "symbol_tokens": resources.symbol_tokens(),
+            });
+            if json {
+                print_json(&report)?;
+            } else {
+                println!("languages: {:?}", resources.languages());
+                println!("words: {}", resources.word_count());
+                println!("symbols: {}", resources.symbol_count());
+            }
+        }
+        "diagnostics" => {
+            let report = serde_json::json!({
+                "api_version": textintel::API_VERSION,
+                "fingerprint_schema_version": textintel::FINGERPRINT_SCHEMA_VERSION,
+                "providers": engine.provider_capabilities(),
+            });
+            if json {
+                print_json(&report)?;
+            } else {
+                println!("api: {}", textintel::API_VERSION);
+                println!("providers: {:?}", engine.provider_capabilities());
+            }
+        }
+        "evaluate" => {
+            let path = args
+                .get(1)
+                .map(String::as_str)
+                .unwrap_or("data/evaluation.json");
+            let source = std::fs::read_to_string(path)?;
+            let dataset = EvaluationDataset::from_json(&source)?;
+            let report = textintel::evaluation::evaluate(&engine, &dataset)?;
+            if json {
+                print_json(&report)?;
+            } else {
+                println!("ROC-AUC: {:.3}", report.metrics.roc_auc);
+                println!("F1: {:.3}", report.metrics.f1);
+                println!("rebus top-1: {:.3}", report.rebus.top1_accuracy);
+            }
+        }
+        "index" => {
+            let store = args
+                .get(1)
+                .ok_or("index requires <store.json> <id> <text>")?;
+            let id = args
+                .get(2)
+                .ok_or("index requires <store.json> <id> <text>")?;
+            let text = args
+                .get(3..)
+                .ok_or("index requires <store.json> <id> <text>")?
+                .join(" ");
+            let indexed = TextIntelligence::new(EngineConfig::default()).with_json_store(store)?;
+            indexed.add_document(id, &text)?;
+            println!("indexed {}", id);
+        }
+        "search" => {
+            let store = args
+                .get(1)
+                .ok_or("search requires <store.json> <text> <limit>")?;
+            let text = args
+                .get(2)
+                .ok_or("search requires <store.json> <text> <limit>")?;
+            let limit = args
+                .get(3)
+                .ok_or("search requires <store.json> <text> <limit>")?
+                .parse::<usize>()?;
+            let indexed = TextIntelligence::new(EngineConfig::default()).with_json_store(store)?;
+            let results = indexed.find_similar(text, limit)?;
+            if json {
+                print_json(&results)?;
+            } else {
+                for result in results {
+                    println!("{:.3}\t{}", result.score, result.id);
                 }
             }
         }

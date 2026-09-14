@@ -1,13 +1,14 @@
 use crate::core::config::EngineConfig;
-use crate::core::providers::{LexiconProvider, SymbolKnowledgeProvider};
+use crate::core::providers::{G2PProvider, LexiconProvider, SymbolKnowledgeProvider};
 use crate::core::types::{DecodedCandidate, Transformation};
 use crate::normalization::confusables::skeleton;
 use crate::normalization::leetspeak::apply_leet;
 use crate::normalization::repetition::collapse_repetition;
 use crate::normalization::unicode::casefold_text;
 use crate::normalization::whitespace::normalize_whitespace;
-use crate::rebus::beam_search::beam_decode_with_provider;
-use crate::rebus::scorer::score_candidate_with_provider;
+use crate::phonetic::g2p::RuleBasedG2PProvider;
+use crate::rebus::beam_search::beam_decode_with_provider_and_languages;
+use crate::rebus::scorer::score_candidate_with_g2p;
 use crate::resources::DefaultLexiconProvider;
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
@@ -54,13 +55,34 @@ impl RebusDecoder {
         symbol_provider: &dyn SymbolKnowledgeProvider,
         lexicon_provider: &dyn LexiconProvider,
     ) -> Vec<DecodedCandidate> {
+        self.decode_with_all_providers(
+            text,
+            languages,
+            max_candidates,
+            symbol_provider,
+            lexicon_provider,
+            &RuleBasedG2PProvider,
+        )
+    }
+
+    pub fn decode_with_all_providers(
+        &self,
+        text: &str,
+        languages: Option<&[String]>,
+        max_candidates: Option<usize>,
+        symbol_provider: &dyn SymbolKnowledgeProvider,
+        lexicon_provider: &dyn LexiconProvider,
+        g2p_provider: &dyn G2PProvider,
+    ) -> Vec<DecodedCandidate> {
         let limit = max_candidates.unwrap_or(self.config.max_candidates).max(1);
-        let nodes = beam_decode_with_provider(
+        let nodes = beam_decode_with_provider_and_languages(
             text,
             self.config.beam_width,
             (limit * 3).max(self.config.beam_width),
             self.config.max_symbol_readings,
             symbol_provider,
+            languages,
+            self.config.max_decoded_branches,
         );
         let language = languages.and_then(|values| values.first()).cloned();
         let compact = |value: String| {
@@ -80,12 +102,14 @@ impl RebusDecoder {
         ];
         let mut candidates = std::collections::BTreeMap::<String, DecodedCandidate>::new();
         for node in nodes {
-            let (score, lexical, phonetic, context) = score_candidate_with_provider(
+            let (score, lexical, phonetic, context) = score_candidate_with_g2p(
                 &node.text,
+                text,
                 node.score,
                 self.config.max_recursion,
                 languages,
                 lexicon_provider,
+                g2p_provider,
             );
             if node.text.is_empty() {
                 continue;
@@ -110,6 +134,8 @@ impl RebusDecoder {
                 phonetic_score: phonetic,
                 context_score: context,
                 symbol_score: node.score.min(1.0),
+                confidence_gap: 0.0,
+                strong: false,
             };
             if candidates
                 .get(&key)
@@ -123,12 +149,14 @@ impl RebusDecoder {
             if value.is_empty() {
                 continue;
             }
-            let (score, lexical, phonetic, context) = score_candidate_with_provider(
+            let (score, lexical, phonetic, context) = score_candidate_with_g2p(
                 &value,
+                text,
                 0.4,
                 self.config.max_recursion,
                 languages,
                 lexicon_provider,
+                g2p_provider,
             );
             let candidate = DecodedCandidate {
                 text: value.clone(),
@@ -139,6 +167,8 @@ impl RebusDecoder {
                 phonetic_score: phonetic,
                 context_score: context,
                 symbol_score: 0.3,
+                confidence_gap: 0.0,
+                strong: false,
             };
             let key = casefold_text(&value);
             if candidates
@@ -153,6 +183,27 @@ impl RebusDecoder {
             .filter(|candidate| candidate.score >= 0.08)
             .collect();
         ranked.sort_by(|left, right| right.score.total_cmp(&left.score));
+        let best_score = ranked
+            .first()
+            .map(|candidate| candidate.score)
+            .unwrap_or(0.0);
+        let next_scores = ranked
+            .iter()
+            .skip(1)
+            .map(|candidate| candidate.score)
+            .chain(std::iter::once(0.0))
+            .collect::<Vec<_>>();
+        for (index, candidate) in ranked.iter_mut().enumerate() {
+            let next_score = next_scores[index];
+            candidate.confidence_gap = if index == 0 {
+                (best_score - next_score).max(0.0)
+            } else {
+                0.0
+            };
+            candidate.strong = index == 0
+                && candidate.score >= 0.5
+                && candidate.confidence_gap >= self.config.strong_confidence_gap;
+        }
         ranked.truncate(limit);
         ranked
     }

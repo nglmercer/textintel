@@ -227,8 +227,14 @@ fn urls_and_stop_words_keep_their_own_evidence() {
 #[test]
 fn resource_loader_indexes_seed_languages_and_supports_custom_packs() {
     let loader = ResourceLoader::common().unwrap();
-    assert_eq!(loader.languages(), vec!["de", "en", "es", "fr", "it", "pt"]);
-    assert!(loader.language_count() == 6);
+    assert_eq!(
+        loader.languages(),
+        vec![
+            "ar", "de", "en", "es", "fr", "hi", "id", "it", "ja", "ko", "nl", "pl", "pt", "ru",
+            "tr", "zh"
+        ]
+    );
+    assert!(loader.language_count() == 16);
     assert!(loader.word_count() > 100);
     assert!(loader.contains_in_language("A", "en"));
     assert!(loader.contains_in_language("ejemplo", "es"));
@@ -276,10 +282,11 @@ fn symbol_resources_are_split_by_language() {
     let loader = ResourceLoader::common().unwrap();
     let expected_languages = ["de", "en", "es", "fr", "it", "pt"];
     let expected_tokens = vec![
-        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "100", "❤", "❤️", "🏠", "💰", "🔥",
+        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "100", "$", "%", "+", "=", "£",
+        "¥", "€", "₹", "❤", "❤️", "🏠", "💰", "🔥",
     ];
 
-    assert_eq!(loader.symbol_count(), 17);
+    assert_eq!(loader.symbol_count(), 25);
     assert_eq!(loader.symbol_tokens(), expected_tokens);
     for token in &expected_tokens {
         let languages = loader.symbol_languages(token);

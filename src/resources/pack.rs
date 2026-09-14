@@ -47,6 +47,10 @@ pub struct LanguagePack {
     pub source: Option<String>,
     #[serde(default)]
     pub license: Option<String>,
+    #[serde(default)]
+    pub revision: Option<String>,
+    #[serde(default)]
+    pub sha256: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -76,4 +80,8 @@ pub struct SymbolPack {
     pub source: Option<String>,
     #[serde(default)]
     pub license: Option<String>,
+    #[serde(default)]
+    pub revision: Option<String>,
+    #[serde(default)]
+    pub sha256: Option<String>,
 }

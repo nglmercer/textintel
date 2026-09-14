@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "language": "ko",
+  "name": "한국어",
+  "entries": [
+    {"word": "안녕하세요", "lemma": "안녕하세요"},
+    {"word": "예", "lemma": "예"},
+    {"word": "좋은", "lemma": "좋다"},
+    {"word": "지금", "lemma": "지금"},
+    {"word": "구매", "lemma": "구매"},
+    {"word": "돈", "lemma": "돈"},
+    {"word": "세계", "lemma": "세계"},
+    {"word": "이", "lemma": "이", "stop_word": true},
+    {"word": "는", "lemma": "는", "stop_word": true}
+  ],
+  "examples": ["좋은 예입니다", "안녕하세요 세계"]
+}

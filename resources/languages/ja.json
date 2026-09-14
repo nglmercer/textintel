@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "language": "ja",
+  "name": "日本語",
+  "entries": [
+    {"word": "こんにちは", "lemma": "こんにちは"},
+    {"word": "例", "lemma": "例"},
+    {"word": "良い", "lemma": "良い"},
+    {"word": "今", "lemma": "今"},
+    {"word": "買う", "lemma": "買う"},
+    {"word": "お金", "lemma": "お金"},
+    {"word": "世界", "lemma": "世界"},
+    {"word": "これ", "lemma": "これ", "stop_word": true},
+    {"word": "です", "lemma": "です", "stop_word": true}
+  ],
+  "examples": ["これは良い例です", "こんにちは世界"]
+}

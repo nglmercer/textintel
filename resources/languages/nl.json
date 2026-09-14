@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "language": "nl",
+  "name": "Nederlands",
+  "entries": [
+    {"word": "hallo", "lemma": "hallo"},
+    {"word": "voorbeeld", "lemma": "voorbeeld"},
+    {"word": "goed", "lemma": "goed"},
+    {"word": "koop", "lemma": "kopen"},
+    {"word": "nu", "lemma": "nu"},
+    {"word": "geld", "lemma": "geld"},
+    {"word": "de", "lemma": "de", "stop_word": true},
+    {"word": "een", "lemma": "een", "stop_word": true},
+    {"word": "en", "lemma": "en", "stop_word": true}
+  ],
+  "examples": ["dit is een goed voorbeeld", "hallo wereld"]
+}

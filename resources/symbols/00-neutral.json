@@ -18,6 +18,14 @@
     {"token": "8", "concepts": [{"id": "number", "probability": 0.80}]},
     {"token": "9", "concepts": [{"id": "number", "probability": 0.80}]},
     {"token": "10", "concepts": [{"id": "number", "probability": 0.80}]},
-    {"token": "100", "concepts": [{"id": "number", "probability": 0.80}]}
+    {"token": "100", "concepts": [{"id": "number", "probability": 0.80}]},
+    {"token": "$", "unicode_name": "DOLLAR SIGN", "concepts": [{"id": "money", "probability": 0.85}], "readings": [{"text": "money", "language": "und", "probability": 0.55, "reading_type": "currency"}, {"text": "dollar", "language": "und", "probability": 0.45, "reading_type": "currency"}]},
+    {"token": "€", "unicode_name": "EURO SIGN", "concepts": [{"id": "money", "probability": 0.85}], "readings": [{"text": "money", "language": "und", "probability": 0.55, "reading_type": "currency"}, {"text": "euro", "language": "und", "probability": 0.45, "reading_type": "currency"}]},
+    {"token": "£", "unicode_name": "POUND SIGN", "concepts": [{"id": "money", "probability": 0.85}], "readings": [{"text": "money", "language": "und", "probability": 0.55, "reading_type": "currency"}, {"text": "pound", "language": "und", "probability": 0.45, "reading_type": "currency"}]},
+    {"token": "¥", "unicode_name": "YEN SIGN", "concepts": [{"id": "money", "probability": 0.85}], "readings": [{"text": "money", "language": "und", "probability": 0.55, "reading_type": "currency"}, {"text": "yen", "language": "und", "probability": 0.45, "reading_type": "currency"}]},
+    {"token": "₹", "unicode_name": "INDIAN RUPEE SIGN", "concepts": [{"id": "money", "probability": 0.85}], "readings": [{"text": "money", "language": "und", "probability": 0.55, "reading_type": "currency"}, {"text": "rupee", "language": "und", "probability": 0.45, "reading_type": "currency"}]},
+    {"token": "+", "unicode_name": "PLUS SIGN", "concepts": [{"id": "addition", "probability": 0.8}], "readings": [{"text": "plus", "language": "und", "probability": 0.7, "reading_type": "math"}]},
+    {"token": "=", "unicode_name": "EQUALS SIGN", "concepts": [{"id": "equality", "probability": 0.8}], "readings": [{"text": "equals", "language": "und", "probability": 0.7, "reading_type": "math"}]},
+    {"token": "%", "unicode_name": "PERCENT SIGN", "concepts": [{"id": "percentage", "probability": 0.8}], "readings": [{"text": "percent", "language": "und", "probability": 0.7, "reading_type": "math"}]}
   ]
 }

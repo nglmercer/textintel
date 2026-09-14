@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "language": "pl",
+  "name": "Polski",
+  "entries": [
+    {"word": "cześć", "lemma": "cześć"},
+    {"word": "przykład", "lemma": "przykład"},
+    {"word": "dobry", "lemma": "dobry"},
+    {"word": "kup", "lemma": "kupić"},
+    {"word": "teraz", "lemma": "teraz"},
+    {"word": "pieniądze", "lemma": "pieniądze"},
+    {"word": "świat", "lemma": "świat"},
+    {"word": "i", "lemma": "i", "stop_word": true},
+    {"word": "to", "lemma": "to", "stop_word": true},
+    {"word": "jest", "lemma": "być", "stop_word": true}
+  ],
+  "examples": ["to jest dobry przykład", "cześć świecie"]
+}

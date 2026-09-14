@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "language": "ru",
+  "name": "Русский",
+  "entries": [
+    {"word": "привет", "lemma": "привет"},
+    {"word": "пример", "lemma": "пример"},
+    {"word": "хороший", "lemma": "хороший"},
+    {"word": "покупка", "lemma": "покупка"},
+    {"word": "сейчас", "lemma": "сейчас"},
+    {"word": "деньги", "lemma": "деньги"},
+    {"word": "мир", "lemma": "мир"},
+    {"word": "и", "lemma": "и", "stop_word": true},
+    {"word": "это", "lemma": "это", "stop_word": true},
+    {"word": "в", "lemma": "в", "stop_word": true}
+  ],
+  "examples": ["это хороший пример", "привет мир"]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "language": "tr",
+  "name": "Türkçe",
+  "entries": [
+    {"word": "merhaba", "lemma": "merhaba"},
+    {"word": "örnek", "lemma": "örnek"},
+    {"word": "iyi", "lemma": "iyi"},
+    {"word": "satın", "lemma": "satın"},
+    {"word": "şimdi", "lemma": "şimdi"},
+    {"word": "para", "lemma": "para"},
+    {"word": "dünya", "lemma": "dünya"},
+    {"word": "ve", "lemma": "ve", "stop_word": true},
+    {"word": "bir", "lemma": "bir", "stop_word": true},
+    {"word": "bu", "lemma": "bu", "stop_word": true}
+  ],
+  "examples": ["bu iyi bir örnek", "merhaba dünya"]
+}

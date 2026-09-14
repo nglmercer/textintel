@@ -1,5 +1,5 @@
 use crate::core::providers::SymbolKnowledgeProvider;
-use crate::rebus::tokenizer::{rebus_tokens, token_readings_with_provider};
+use crate::rebus::tokenizer::{rebus_tokens, token_readings_with_provider_and_languages};
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
 #[derive(Debug, Clone)]
@@ -17,6 +17,26 @@ pub fn beam_decode_with_provider(
     max_symbol_readings: usize,
     provider: &dyn SymbolKnowledgeProvider,
 ) -> Vec<BeamNode> {
+    beam_decode_with_provider_and_languages(
+        text,
+        beam_width,
+        max_candidates,
+        max_symbol_readings,
+        provider,
+        None,
+        usize::MAX,
+    )
+}
+
+pub fn beam_decode_with_provider_and_languages(
+    text: &str,
+    beam_width: usize,
+    max_candidates: usize,
+    max_symbol_readings: usize,
+    provider: &dyn SymbolKnowledgeProvider,
+    languages: Option<&[String]>,
+    max_branches: usize,
+) -> Vec<BeamNode> {
     let tokens = rebus_tokens(text);
     if tokens.is_empty() {
         return vec![BeamNode {
@@ -27,6 +47,7 @@ pub fn beam_decode_with_provider(
         }];
     }
     let width = beam_width.max(1);
+    let branch_limit = max_branches.max(width);
     let mut beam = vec![BeamNode {
         text: String::new(),
         score: 1.0,
@@ -34,7 +55,12 @@ pub fn beam_decode_with_provider(
         language: None,
     }];
     for token in tokens {
-        let readings = token_readings_with_provider(&token, max_symbol_readings.max(1), provider);
+        let readings = token_readings_with_provider_and_languages(
+            &token,
+            max_symbol_readings.max(1),
+            provider,
+            languages,
+        );
         let mut next = Vec::new();
         for node in &beam {
             for (surface, probability, language, transform_type) in &readings {
@@ -56,11 +82,11 @@ pub fn beam_decode_with_provider(
             }
         }
         next.sort_by(|left, right| right.score.total_cmp(&left.score));
-        next.truncate(width);
+        next.truncate(width.min(branch_limit));
         beam = next;
     }
     beam.sort_by(|left, right| right.score.total_cmp(&left.score));
-    beam.truncate(max_candidates.max(width));
+    beam.truncate(max_candidates.max(width).min(branch_limit));
     beam
 }
 

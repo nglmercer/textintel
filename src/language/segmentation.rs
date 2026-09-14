@@ -8,7 +8,8 @@ use crate::lexical::tokenizer::is_emoji;
 use crate::visual::scripts::script_name;
 
 fn classify(piece: &str) -> &'static str {
-    if piece.starts_with("http://") || piece.starts_with("https://") {
+    let lower = piece.to_ascii_lowercase();
+    if lower.starts_with("http://") || lower.starts_with("https://") {
         "url"
     } else if piece.contains('@') && piece.contains('.') {
         "email"
@@ -20,10 +21,9 @@ fn classify(piece: &str) -> &'static str {
         "number"
     } else if piece.chars().any(is_emoji) {
         "emoji"
-    } else if piece
-        .chars()
-        .all(|ch| ch.is_alphabetic() || ch == '\'' || ch == '_')
-    {
+    } else if is_named_entity(piece) {
+        "named_entity"
+    } else if piece.chars().all(is_word_character) {
         "text"
     } else if piece
         .chars()
@@ -33,6 +33,47 @@ fn classify(piece: &str) -> &'static str {
     } else {
         "unknown"
     }
+}
+
+fn is_combining_mark(ch: char) -> bool {
+    let code = ch as u32;
+    (0x0300..=0x036f).contains(&code)
+        || (0x1ab0..=0x1aff).contains(&code)
+        || (0x1dc0..=0x1dff).contains(&code)
+        || (0x20d0..=0x20ff).contains(&code)
+        || (0xfe20..=0xfe2f).contains(&code)
+}
+
+fn is_word_character(ch: char) -> bool {
+    ch.is_alphabetic()
+        || is_combining_mark(ch)
+        || matches!(ch, '\'' | '_' | '\u{200c}' | '\u{200d}')
+}
+
+fn is_no_space_script(piece: &str) -> bool {
+    piece.chars().next().is_some_and(|ch| {
+        matches!(
+            script_name(ch),
+            Some("Han")
+                | Some("Hiragana")
+                | Some("Katakana")
+                | Some("Thai")
+                | Some("Lao")
+                | Some("Khmer")
+                | Some("Myanmar")
+        )
+    })
+}
+
+fn is_named_entity(piece: &str) -> bool {
+    let mut chars = piece.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    first.is_lowercase() && chars.clone().any(char::is_uppercase)
+        || first.is_uppercase()
+            && chars.clone().any(char::is_lowercase)
+            && chars.any(|ch| ch.is_uppercase())
 }
 
 fn push_piece(pieces: &mut Vec<(String, usize, usize)>, text: &str, start: usize, end: usize) {
@@ -52,8 +93,9 @@ fn process_chunk(
     }
     let chunk_end = chunk_start + chunk.len();
     // Keep network identifiers intact for spam and privacy-aware inspection.
-    if chunk.starts_with("http://")
-        || chunk.starts_with("https://")
+    let lower = chunk.to_ascii_lowercase();
+    if lower.starts_with("http://")
+        || lower.starts_with("https://")
         || (chunk.contains('@') && chunk.contains('.'))
         || (chunk.starts_with('@') && chunk.len() > 1)
         || (chunk.starts_with('#') && chunk.len() > 1)
@@ -61,23 +103,23 @@ fn process_chunk(
         push_piece(pieces, chunk, chunk_start, chunk_end);
         return;
     }
+    if is_no_space_script(chunk) {
+        process_no_space_chunk(chunk, chunk_start, pieces, max_segments);
+        return;
+    }
     let graphemes: Vec<(usize, &str)> = chunk.grapheme_indices(true).collect();
     let mut index = 0;
     while index < graphemes.len() && pieces.len() < max_segments {
         let (relative_start, grapheme) = graphemes[index];
         let start = chunk_start + relative_start;
-        let alphabetic = grapheme
-            .chars()
-            .all(|ch| ch.is_alphabetic() || ch == '\'' || ch == '_');
+        let alphabetic = grapheme.chars().all(is_word_character);
         let numeric = grapheme.chars().all(char::is_numeric);
-        if alphabetic {
+        if alphabetic && !is_no_space_script(grapheme) {
             let first = index;
             index += 1;
             while index < graphemes.len()
-                && graphemes[index]
-                    .1
-                    .chars()
-                    .all(|ch| ch.is_alphabetic() || ch == '\'' || ch == '_')
+                && graphemes[index].1.chars().all(is_word_character)
+                && !is_no_space_script(graphemes[index].1)
             {
                 index += 1;
             }
@@ -92,6 +134,9 @@ fn process_chunk(
                 .map(|(_, part)| *part)
                 .collect();
             push_piece(pieces, &word, start, end);
+        } else if alphabetic {
+            push_piece(pieces, grapheme, start, start + grapheme.len());
+            index += 1;
         } else if numeric {
             let first = index;
             index += 1;
@@ -112,6 +157,52 @@ fn process_chunk(
         } else {
             let end = start + grapheme.len();
             push_piece(pieces, grapheme, start, end);
+            index += 1;
+        }
+    }
+}
+
+fn process_no_space_chunk(
+    chunk: &str,
+    chunk_start: usize,
+    pieces: &mut Vec<(String, usize, usize)>,
+    max_segments: usize,
+) {
+    let graphemes: Vec<(usize, &str)> = chunk.grapheme_indices(true).collect();
+    let mut index = 0;
+    while index < graphemes.len() && pieces.len() < max_segments {
+        let (relative_start, grapheme) = graphemes[index];
+        let start = chunk_start + relative_start;
+        let word = grapheme.chars().all(is_word_character);
+        let number = grapheme.chars().all(char::is_numeric);
+        if word || number {
+            let first = index;
+            index += 1;
+            while index < graphemes.len() {
+                let next = graphemes[index].1;
+                let same_kind = if word {
+                    next.chars().all(is_word_character)
+                } else {
+                    next.chars().all(char::is_numeric)
+                };
+                if !same_kind {
+                    break;
+                }
+                index += 1;
+            }
+            let end = chunk_start
+                + if index < graphemes.len() {
+                    graphemes[index].0
+                } else {
+                    chunk.len()
+                };
+            let value: String = graphemes[first..index]
+                .iter()
+                .map(|(_, part)| *part)
+                .collect();
+            push_piece(pieces, &value, start, end);
+        } else {
+            push_piece(pieces, grapheme, start, start + grapheme.len());
             index += 1;
         }
     }

@@ -1,0 +1,35 @@
+[package]
+name = "textintel-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.textintel]
+path = ".."
+
+[[bin]]
+name = "unicode"
+path = "fuzz_targets/unicode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tokenization"
+path = "fuzz_targets/tokenization.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rebus"
+path = "fuzz_targets/rebus.rs"
+test = false
+doc = false
+bench = false

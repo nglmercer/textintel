@@ -1,24 +1,65 @@
 use std::sync::Arc;
 
+use super::capabilities::{ModelMetadata, ProviderCapabilities};
 use super::error::ProviderError;
 use super::types::{
-    LanguageCandidate, MessageFingerprint, PhoneticCandidate, SymbolConcept, SymbolReading,
+    ComparisonResult, LanguageCandidate, MessageFingerprint, PatternMatch, PhoneticCandidate,
+    SearchCandidateSet, SpamResult, SymbolConcept, SymbolReading,
 };
 
 /// Provider boundary for multilingual embeddings.  Providers may be local or
 /// remote; the core never chooses a vendor or sends data implicitly.
 pub trait EmbeddingProvider: Send + Sync {
     fn embed(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError>;
+
+    fn embed_batch(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
+        self.embed(texts)
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("embedding")
+    }
+
+    fn model_metadata(&self) -> Option<ModelMetadata> {
+        None
+    }
+
+    fn health_check(&self) -> Result<(), ProviderError> {
+        Ok(())
+    }
 }
 
 /// Provider boundary for grapheme-to-phoneme conversion.
 pub trait G2PProvider: Send + Sync {
     fn phonemize(&self, text: &str, language: &str) -> Result<PhoneticCandidate, ProviderError>;
+
+    fn phonemize_batch(
+        &self,
+        texts: &[String],
+        language: &str,
+    ) -> Result<Vec<PhoneticCandidate>, ProviderError> {
+        texts
+            .iter()
+            .map(|text| self.phonemize(text, language))
+            .collect()
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("g2p")
+    }
 }
 
 /// Provider boundary for probabilistic language detection.
 pub trait LanguageDetectionProvider: Send + Sync {
     fn detect(&self, text: &str) -> Result<Vec<LanguageCandidate>, ProviderError>;
+
+    fn detect_batch(&self, texts: &[String]) -> Result<Vec<Vec<LanguageCandidate>>, ProviderError> {
+        texts.iter().map(|text| self.detect(text)).collect()
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("language")
+    }
 }
 
 /// Optional language-aware lemmatization.  The built-in light stemmer remains
@@ -29,6 +70,10 @@ pub trait LemmatizerProvider: Send + Sync {
         tokens: &[String],
         language: Option<&str>,
     ) -> Result<Vec<String>, ProviderError>;
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("lemmatizer")
+    }
 }
 
 /// Language-independent boundary for word, lemma, and stop-word resources.
@@ -39,6 +84,38 @@ pub trait LexiconProvider: Send + Sync {
     fn starts_with(&self, prefix: &str, languages: Option<&[String]>) -> bool;
     fn is_stop_word(&self, word: &str, languages: Option<&[String]>) -> bool;
     fn lemma(&self, word: &str, languages: Option<&[String]>) -> Option<String>;
+
+    fn frequency(&self, _word: &str, _languages: Option<&[String]>) -> Option<f64> {
+        None
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("lexicon")
+    }
+}
+
+/// Provider boundary for calibrated spam or abuse classification. The
+/// deterministic feature extractor remains usable without this provider.
+pub trait SpamPredictor: Send + Sync {
+    fn predict(
+        &self,
+        fingerprint: &MessageFingerprint,
+        patterns: &[PatternMatch],
+    ) -> Result<SpamResult, ProviderError>;
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("spam_predictor")
+    }
+}
+
+/// Provider boundary for learned or calibrated similarity scoring. The
+/// weighted scorer is the deterministic default used by the engine.
+pub trait SimilarityScorer: Send + Sync {
+    fn score(&self, left: &MessageFingerprint, right: &MessageFingerprint) -> ComparisonResult;
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("similarity_scorer")
+    }
 }
 
 /// Optional knowledge source for symbols, emoji, and number readings.
@@ -52,6 +129,10 @@ pub trait SymbolKnowledgeProvider: Send + Sync {
     fn unicode_name(&self, _token: &str) -> Option<String> {
         None
     }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("symbols")
+    }
 }
 
 /// Optional reranker for a retrieved candidate set.  Returning the input is a
@@ -62,6 +143,10 @@ pub trait RerankerProvider: Send + Sync {
         query: &MessageFingerprint,
         candidates: Vec<(String, MessageFingerprint, f64)>,
     ) -> Result<Vec<(String, MessageFingerprint, f64)>, ProviderError>;
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("reranker")
+    }
 }
 
 /// Storage abstraction for searchable fingerprints.  The in-memory store is
@@ -75,6 +160,31 @@ pub trait VectorStore: Send + Sync {
         self.len() == 0
     }
     fn records(&self) -> Vec<(String, MessageFingerprint)>;
+
+    fn search_candidates(
+        &self,
+        _query: &MessageFingerprint,
+        limit: usize,
+    ) -> Result<Vec<(String, MessageFingerprint)>, String> {
+        let mut records = self.records();
+        records.truncate(limit);
+        Ok(records)
+    }
+
+    fn search_candidates_with_metadata(
+        &self,
+        query: &MessageFingerprint,
+        limit: usize,
+    ) -> Result<SearchCandidateSet, String> {
+        Ok(SearchCandidateSet {
+            records: self.search_candidates(query, limit)?,
+            channels: vec!["document_scan_fallback".to_string()],
+        })
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("vector_store")
+    }
 }
 
 pub type SharedEmbeddingProvider = Arc<dyn EmbeddingProvider>;
@@ -84,3 +194,5 @@ pub type SharedLemmatizerProvider = Arc<dyn LemmatizerProvider>;
 pub type SharedLexiconProvider = Arc<dyn LexiconProvider>;
 pub type SharedSymbolProvider = Arc<dyn SymbolKnowledgeProvider>;
 pub type SharedRerankerProvider = Arc<dyn RerankerProvider>;
+pub type SharedSpamPredictor = Arc<dyn SpamPredictor>;
+pub type SharedSimilarityScorer = Arc<dyn SimilarityScorer>;

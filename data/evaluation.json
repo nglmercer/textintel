@@ -1,4 +1,6 @@
-[
+{
+  "version": "0.2.0-seed",
+  "cases": [
   {
     "a": "Fra🏠do",
     "b": "fracasado",
@@ -47,5 +49,5 @@
     "languages": ["es"],
     "labels": {"similar": false}
   }
-]
-
+  ]
+}

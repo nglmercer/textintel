@@ -33,9 +33,22 @@ pub fn token_readings_with_provider(
     max_readings: usize,
     provider: &dyn SymbolKnowledgeProvider,
 ) -> Vec<(String, f64, String, String)> {
+    token_readings_with_provider_and_languages(token, max_readings, provider, None)
+}
+
+pub fn token_readings_with_provider_and_languages(
+    token: &str,
+    max_readings: usize,
+    provider: &dyn SymbolKnowledgeProvider,
+    languages: Option<&[String]>,
+) -> Vec<(String, f64, String, String)> {
     let symbol_readings = provider.readings(token, max_readings);
-    if !symbol_readings.is_empty() {
-        return symbol_readings
+    let filtered = symbol_readings
+        .into_iter()
+        .filter(|reading| language_allowed(reading.language.as_deref(), languages))
+        .collect::<Vec<_>>();
+    if !filtered.is_empty() {
+        return filtered
             .into_iter()
             .map(|reading| {
                 (
@@ -87,6 +100,8 @@ pub fn token_readings_with_provider(
                 "leetspeak".to_string(),
             ),
         ]
+    } else if let Some(readings) = chat_readings(token, max_readings) {
+        readings
     } else {
         vec![
             (
@@ -103,6 +118,48 @@ pub fn token_readings_with_provider(
             ),
         ]
     }
+}
+
+fn language_allowed(language: Option<&str>, languages: Option<&[String]>) -> bool {
+    let Some(languages) = languages.filter(|values| !values.is_empty()) else {
+        return true;
+    };
+    let Some(language) = language else {
+        return true;
+    };
+    language == "und"
+        || languages.iter().any(|candidate| {
+            candidate.eq_ignore_ascii_case(language)
+                || candidate.eq_ignore_ascii_case("unknown")
+                || candidate.eq_ignore_ascii_case("und")
+        })
+}
+
+fn chat_readings(token: &str, max_readings: usize) -> Option<Vec<(String, f64, String, String)>> {
+    let folded = token.to_ascii_lowercase();
+    let values: &[(&str, &str, f64)] = match folded.as_str() {
+        "u" => &[("you", "en", 0.55), ("tu", "es", 0.35)],
+        "r" => &[("are", "en", 0.55)],
+        "ur" => &[("your", "en", 0.55), ("you're", "en", 0.40)],
+        "b4" => &[("before", "en", 0.60)],
+        "gr8" => &[("great", "en", 0.65)],
+        "l8r" => &[("later", "en", 0.65)],
+        _ => return None,
+    };
+    Some(
+        values
+            .iter()
+            .take(max_readings.max(1))
+            .map(|(text, language, probability)| {
+                (
+                    (*text).to_string(),
+                    *probability,
+                    (*language).to_string(),
+                    "chat_abbreviation".to_string(),
+                )
+            })
+            .collect(),
+    )
 }
 
 pub fn token_readings(token: &str, max_readings: usize) -> Vec<(String, f64, String, String)> {

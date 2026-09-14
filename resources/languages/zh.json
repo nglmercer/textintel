@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "language": "zh",
+  "name": "中文",
+  "entries": [
+    {"word": "你好", "lemma": "你好"},
+    {"word": "例子", "lemma": "例子"},
+    {"word": "好", "lemma": "好"},
+    {"word": "现在", "lemma": "现在"},
+    {"word": "购买", "lemma": "购买"},
+    {"word": "钱", "lemma": "钱"},
+    {"word": "世界", "lemma": "世界"},
+    {"word": "这", "lemma": "这", "stop_word": true},
+    {"word": "是", "lemma": "是", "stop_word": true}
+  ],
+  "examples": ["这是一个好例子", "你好世界"]
+}

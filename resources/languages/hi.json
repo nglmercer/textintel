@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "language": "hi",
+  "name": "हिन्दी",
+  "entries": [
+    {"word": "नमस्ते", "lemma": "नमस्ते"},
+    {"word": "शुभकामना", "lemma": "शुभकामना"},
+    {"word": "उदाहरण", "lemma": "उदाहरण"},
+    {"word": "अच्छा", "lemma": "अच्छा"},
+    {"word": "अभी", "lemma": "अभी"},
+    {"word": "पैसा", "lemma": "पैसा"},
+    {"word": "और", "lemma": "और", "stop_word": true},
+    {"word": "यह", "lemma": "यह", "stop_word": true},
+    {"word": "है", "lemma": "है", "stop_word": true}
+  ],
+  "examples": ["यह एक अच्छा उदाहरण है", "नमस्ते दुनिया"]
+}

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::core::types::LanguageCandidate;
 use crate::normalization::unicode::casefold_text;
+use crate::visual::scripts::scripts_in;
 
 use super::order::{normalize_key, IndexKey};
 use super::pack::{LanguagePack, SymbolResource};
@@ -28,6 +29,7 @@ pub struct LexiconRecord {
     pub provenance: Option<String>,
     pub license: Option<String>,
     pub origin: String,
+    pub revision: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -98,6 +100,19 @@ impl LanguageIndex {
             .get(&canonical_language(language))
             .map(|packs| packs.iter().map(|loaded| &loaded.pack).collect())
             .unwrap_or_default()
+    }
+
+    pub fn profile_texts(&self) -> BTreeMap<String, Vec<String>> {
+        let mut profiles = BTreeMap::new();
+        for (language, packs) in &self.packs {
+            let samples = profiles.entry(language.clone()).or_insert_with(Vec::new);
+            for loaded in packs {
+                samples.extend(loaded.pack.entries.iter().map(|entry| entry.word.clone()));
+                samples.extend(loaded.pack.words.iter().cloned());
+                samples.extend(loaded.pack.examples.iter().cloned());
+            }
+        }
+        profiles
     }
 
     pub fn lookup(&self, query: &str) -> LexiconLookup {
@@ -199,37 +214,77 @@ impl LanguageIndex {
         records.first().map(|record| record.lemma.clone())
     }
 
+    pub fn frequency(&self, word: &str, languages: Option<&[String]>) -> Option<f64> {
+        let records = self.records.get(&IndexKey::new(word))?;
+        records
+            .iter()
+            .filter(|record| language_allowed(&record.language, languages))
+            .map(|record| record.weight)
+            .max_by(|left, right| left.total_cmp(right))
+    }
+
     pub fn detect_languages(&self, text: &str) -> Vec<LanguageCandidate> {
+        self.detect_languages_with_limit(text, 8)
+    }
+
+    pub fn detect_languages_with_limit(
+        &self,
+        text: &str,
+        max_candidates: usize,
+    ) -> Vec<LanguageCandidate> {
         let words = lexical_words(text);
         if words.is_empty() {
-            return vec![LanguageCandidate::new("unknown", 1.0)];
+            let mut candidates = script_hint_scores(text)
+                .into_iter()
+                .map(|(language, score)| LanguageCandidate::new(language, score))
+                .collect::<Vec<_>>();
+            if candidates.is_empty() {
+                return vec![LanguageCandidate::new("unknown", 1.0)];
+            }
+            candidates.push(LanguageCandidate::new("unknown", 0.15));
+            return normalize_candidates(candidates, max_candidates);
         }
         let mut scores = BTreeMap::<String, f64>::new();
+        let mut matched_words = 0usize;
+        let word_count = words.len();
         for word in words {
             let Some(records) = self.records.get(&IndexKey::new(&word)) else {
                 continue;
             };
+            matched_words += 1;
             let mut word_scores = BTreeMap::<String, f64>::new();
             for record in records {
                 word_scores
                     .entry(record.language.clone())
-                    .and_modify(|score| *score = score.max(record.weight))
-                    .or_insert(record.weight);
+                    .and_modify(|score| *score = score.max(record.weight.max(0.01)))
+                    .or_insert(record.weight.max(0.01));
             }
             for (language, score) in word_scores {
-                *scores.entry(language).or_default() += score;
+                *scores.entry(language).or_default() += 1.0 + score.ln_1p();
             }
         }
+
+        let script_hints = script_hint_scores(text);
+        for (language, score) in script_hints {
+            *scores.entry(language).or_default() += if matched_words == 0 {
+                score
+            } else {
+                score * 0.15
+            };
+        }
+
         if scores.is_empty() {
             return vec![LanguageCandidate::new("unknown", 1.0)];
         }
-        let total = scores.values().sum::<f64>().max(f64::EPSILON);
-        let mut candidates = scores
+        if matched_words < word_count {
+            let unknown_ratio = 1.0 - matched_words as f64 / word_count.max(1) as f64;
+            scores.insert("unknown".to_string(), unknown_ratio * 0.35);
+        }
+        let candidates = scores
             .into_iter()
-            .map(|(language, score)| LanguageCandidate::new(language, score / total))
+            .map(|(language, score)| LanguageCandidate::new(language, score))
             .collect::<Vec<_>>();
-        candidates.sort_by(|left, right| right.probability.total_cmp(&left.probability));
-        candidates
+        normalize_candidates(candidates, max_candidates)
     }
 
     fn rebuild(&mut self) {
@@ -250,6 +305,7 @@ impl LanguageIndex {
                             provenance: entry.source.clone().or_else(|| loaded.pack.source.clone()),
                             license: loaded.pack.license.clone(),
                             origin: "entry".to_string(),
+                            revision: loaded.pack.revision.clone(),
                         },
                     );
                 }
@@ -283,6 +339,53 @@ impl LanguageIndex {
         }
         self.records = records;
     }
+}
+
+fn normalize_candidates(
+    mut candidates: Vec<LanguageCandidate>,
+    max_candidates: usize,
+) -> Vec<LanguageCandidate> {
+    for candidate in &mut candidates {
+        candidate.probability = candidate.probability.max(0.0);
+    }
+    candidates.sort_by(|left, right| {
+        right
+            .probability
+            .total_cmp(&left.probability)
+            .then_with(|| left.language.cmp(&right.language))
+    });
+    candidates.truncate(max_candidates.max(1));
+    let total = candidates
+        .iter()
+        .map(|candidate| candidate.probability)
+        .sum::<f64>()
+        .max(f64::EPSILON);
+    for candidate in &mut candidates {
+        candidate.probability /= total;
+    }
+    candidates
+}
+
+fn script_hint_scores(text: &str) -> Vec<(String, f64)> {
+    let scripts = scripts_in(text);
+    let mut scores = BTreeMap::<String, f64>::new();
+    for script in scripts {
+        let hints: &[(&str, f64)] = match script.as_str() {
+            "Arabic" => &[("ar", 0.60), ("fa", 0.25), ("ur", 0.15)],
+            "Cyrillic" => &[("ru", 0.55), ("uk", 0.20), ("bg", 0.15), ("sr", 0.10)],
+            "Devanagari" => &[("hi", 0.85), ("mr", 0.15)],
+            "Han" => &[("zh", 0.60), ("ja", 0.40)],
+            "Hiragana" | "Katakana" => &[("ja", 1.0)],
+            "Hangul" => &[("ko", 1.0)],
+            "Hebrew" => &[("he", 1.0)],
+            "Thai" => &[("th", 1.0)],
+            _ => &[],
+        };
+        for (language, score) in hints {
+            *scores.entry((*language).to_string()).or_default() += score;
+        }
+    }
+    scores.into_iter().collect()
 }
 
 #[derive(Debug, Clone, Default)]
@@ -351,6 +454,7 @@ fn compact_record(
         provenance: pack.source.clone(),
         license: pack.license.clone(),
         origin: origin.to_string(),
+        revision: pack.revision.clone(),
     }
 }
 

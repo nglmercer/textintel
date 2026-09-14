@@ -10,6 +10,7 @@ pub mod comparison;
 pub mod core;
 pub mod detection;
 pub mod engine;
+pub mod evaluation;
 pub mod language;
 pub mod lexical;
 pub mod normalization;
@@ -22,20 +23,32 @@ pub mod storage;
 pub mod symbols;
 pub mod visual;
 
+pub use comparison::{
+    score_fingerprints_with_profile, LogisticSimilarityScorer, SimilarityProfile,
+};
+pub use core::capabilities::{ModelMetadata, ProviderCapabilities};
 pub use core::config::{EngineConfig, SimilarityWeights};
 pub use core::error::{ProviderError, TextIntelError};
 pub use core::providers::{
     EmbeddingProvider, G2PProvider, LanguageDetectionProvider, LemmatizerProvider, LexiconProvider,
-    RerankerProvider, SymbolKnowledgeProvider, VectorStore,
+    RerankerProvider, SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, VectorStore,
 };
 pub use core::types::*;
+pub use detection::{duplicate_result, match_pattern, predict_spam, HeuristicSpamPredictor};
 pub use engine::TextIntelligence;
+pub use language::{NgramLanguageDetector, ProfileLanguageDetector};
 pub use phonetic::{NullG2PProvider, RuleBasedG2PProvider};
 pub use resources::{
     embedded_common, embedded_resources, normalize_key, DefaultLexiconProvider, IndexKey,
     LanguageIndex, LanguagePack, LexiconEntry, LexiconLookup, LexiconRecord, LookupStatus,
-    ResourceError, ResourceLoader, SymbolPack, SymbolResource, SUPPORTED_SCHEMA_VERSION,
+    ResourceError, ResourceLimits, ResourceLoader, SymbolPack, SymbolResource,
+    SUPPORTED_SCHEMA_VERSION,
 };
-pub use semantic::{NullEmbeddingProvider, StaticEmbeddingProvider};
-pub use storage::MemoryStore;
+#[cfg(feature = "semantic-http")]
+pub use semantic::HttpEmbeddingProvider;
+pub use semantic::{
+    CachedEmbeddingProvider, FeatureHashEmbeddingProvider, NullEmbeddingProvider,
+    StaticEmbeddingProvider,
+};
+pub use storage::{JsonFileStore, MemoryStore};
 pub use symbols::DefaultSymbolKnowledge;

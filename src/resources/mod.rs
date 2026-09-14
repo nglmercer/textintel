@@ -13,7 +13,7 @@ mod providers;
 
 pub use error::ResourceError;
 pub use index::{LanguageIndex, LexiconLookup, LexiconRecord, LookupStatus};
-pub use loader::ResourceLoader;
+pub use loader::{ResourceLimits, ResourceLoader};
 pub use order::{normalize_key, IndexKey};
 pub use pack::{LanguagePack, LexiconEntry, SymbolPack, SymbolResource, SUPPORTED_SCHEMA_VERSION};
 pub use providers::{

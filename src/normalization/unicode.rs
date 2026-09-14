@@ -8,9 +8,18 @@ pub fn nfkc(text: &str) -> String {
     text.nfkc().collect()
 }
 
-/// Rust has no standard-library Unicode case-fold API.  Lowercasing after NFC
-/// gives a deterministic, Unicode-aware approximation suitable for matching;
-/// the original input and NFC/NFKC views remain available separately.
+/// Rust has no standard-library Unicode case-fold API. NFKC followed by
+/// lowercase plus the small set of multi-scalar folds below gives a stable
+/// Unicode-aware matching view; raw/NFC/NFKC views remain available too.
 pub fn casefold_text(text: &str) -> String {
-    nfc(text).chars().flat_map(char::to_lowercase).collect()
+    nfkc(text)
+        .chars()
+        .flat_map(|character| match character {
+            'ß' | 'ẞ' => "ss".chars().collect::<Vec<_>>(),
+            'ς' => vec!['σ'],
+            'ſ' => vec!['s'],
+            'İ' => vec!['i', '\u{307}'],
+            character => character.to_lowercase().collect(),
+        })
+        .collect()
 }

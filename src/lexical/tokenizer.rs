@@ -1,5 +1,6 @@
 use crate::core::providers::LexiconProvider;
 use crate::resources::DefaultLexiconProvider;
+use unicode_properties::UnicodeEmoji;
 
 /// Tokenize without losing emoji, Unicode words, URLs, or punctuation.
 /// Segmentation is shared so byte offsets and token boundaries agree across
@@ -67,8 +68,5 @@ pub fn stop_words_with_provider(
 }
 
 pub fn is_emoji(ch: char) -> bool {
-    let code = ch as u32;
-    (0x1f000..=0x1faff).contains(&code)
-        || (0x2600..=0x27bf).contains(&code)
-        || matches!(ch, '❤' | '⭐')
+    ch.is_emoji_char_or_emoji_component()
 }

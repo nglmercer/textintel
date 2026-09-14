@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::core::types::PhoneticCandidate;
+use crate::phonetic::features::articulatory_distance;
 
 pub fn phoneme_edit_distance(a: &[String], b: &[String]) -> usize {
     if a.is_empty() {
@@ -22,16 +23,7 @@ pub fn phoneme_edit_distance(a: &[String], b: &[String]) -> usize {
 }
 
 fn feature_distance(left: &str, right: &str) -> f64 {
-    if left == right {
-        return 0.0;
-    }
-    let vowels = |value: &str| value.chars().any(|ch| "aeiouɪ".contains(ch));
-    let voiced = |value: &str| value.chars().any(|ch| "bdgvzʝmnrl".contains(ch));
-    if vowels(left) == vowels(right) && voiced(left) == voiced(right) {
-        0.35
-    } else {
-        1.0
-    }
+    articulatory_distance(left, right)
 }
 
 pub fn weighted_phoneme_distance(a: &[String], b: &[String]) -> f64 {

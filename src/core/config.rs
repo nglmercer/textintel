@@ -85,6 +85,11 @@ pub struct EngineConfig {
     pub max_symbol_readings: usize,
     pub max_recursion: usize,
     pub max_documents: usize,
+    pub repetition_keep: usize,
+    pub max_batch_size: usize,
+    pub max_search_candidates: usize,
+    pub max_decoded_branches: usize,
+    pub strong_confidence_gap: f64,
     pub similarity_weights: SimilarityWeights,
     pub semantic: bool,
     pub phonetic: bool,
@@ -100,6 +105,11 @@ impl Default for EngineConfig {
             max_symbol_readings: 8,
             max_recursion: 8,
             max_documents: 100_000,
+            repetition_keep: 1,
+            max_batch_size: 256,
+            max_search_candidates: 500,
+            max_decoded_branches: 20_000,
+            strong_confidence_gap: 0.15,
             similarity_weights: SimilarityWeights::default(),
             semantic: false,
             phonetic: false,
@@ -119,10 +129,19 @@ impl EngineConfig {
             ("max_symbol_readings", self.max_symbol_readings),
             ("max_recursion", self.max_recursion),
             ("max_documents", self.max_documents),
+            ("repetition_keep", self.repetition_keep),
+            ("max_batch_size", self.max_batch_size),
+            ("max_search_candidates", self.max_search_candidates),
+            ("max_decoded_branches", self.max_decoded_branches),
         ] {
             if value == 0 {
                 return Err(format!("{name} must be positive"));
             }
+        }
+        if !self.strong_confidence_gap.is_finite()
+            || !(0.0..=1.0).contains(&self.strong_confidence_gap)
+        {
+            return Err("strong_confidence_gap must be between 0 and 1".to_string());
         }
         self.similarity_weights.validate()
     }

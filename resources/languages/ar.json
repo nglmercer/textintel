@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "language": "ar",
+  "name": "العربية",
+  "entries": [
+    {"word": "مرحبا", "lemma": "مرحبا"},
+    {"word": "سلام", "lemma": "سلام"},
+    {"word": "مثال", "lemma": "مثال"},
+    {"word": "جيد", "lemma": "جيد"},
+    {"word": "شراء", "lemma": "شراء"},
+    {"word": "الآن", "lemma": "الآن"},
+    {"word": "مال", "lemma": "مال"},
+    {"word": "نقود", "lemma": "نقود"},
+    {"word": "و", "lemma": "و", "stop_word": true},
+    {"word": "من", "lemma": "من", "stop_word": true},
+    {"word": "في", "lemma": "في", "stop_word": true}
+  ],
+  "examples": ["مرحبا بالعالم", "هذا مثال جيد"]
+}

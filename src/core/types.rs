@@ -1,6 +1,13 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
+pub const FINGERPRINT_SCHEMA_VERSION: u32 = 2;
+pub const API_VERSION: &str = "0.2.0";
+
+fn default_fingerprint_schema_version() -> u32 {
+    FINGERPRINT_SCHEMA_VERSION
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct LanguageCandidate {
     pub language: String,
@@ -39,11 +46,21 @@ pub struct ConfusableCharacter {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct UnicodeFeatures {
     pub scripts: Vec<String>,
+    #[serde(default)]
+    pub script_extensions: Vec<String>,
     pub mixed_scripts: bool,
     pub invisible_characters: Vec<String>,
     pub unusual_whitespace: Vec<String>,
     pub combining_characters: Vec<String>,
     pub bidirectional_controls: Vec<String>,
+    #[serde(default)]
+    pub variation_selectors: Vec<String>,
+    #[serde(default)]
+    pub joiner_characters: Vec<String>,
+    #[serde(default)]
+    pub full_width_characters: Vec<String>,
+    #[serde(default)]
+    pub malformed_graphemes: Vec<String>,
     pub confusable_characters: Vec<ConfusableCharacter>,
     pub confusable_skeleton: Option<String>,
     pub suspicious_unicode_score: f64,
@@ -144,8 +161,16 @@ pub struct SpokenCandidate {
 pub struct PhoneticCandidate {
     pub source: String,
     pub language: String,
+    #[serde(default)]
+    pub dialect: Option<String>,
     pub ipa: Option<String>,
     pub phonemes: Vec<String>,
+    #[serde(default)]
+    pub stress: Option<Vec<usize>>,
+    #[serde(default)]
+    pub syllables: usize,
+    #[serde(default)]
+    pub articulatory_features: Vec<String>,
     pub confidence: f64,
 }
 
@@ -154,6 +179,31 @@ pub struct Transformation {
     pub source: String,
     pub replacement: String,
     pub transformation_type: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ChannelAvailability {
+    pub available: bool,
+    pub confidence: f64,
+    pub source: String,
+}
+
+impl ChannelAvailability {
+    pub fn available(source: impl Into<String>, confidence: f64) -> Self {
+        Self {
+            available: true,
+            confidence: confidence.clamp(0.0, 1.0),
+            source: source.into(),
+        }
+    }
+
+    pub fn unavailable(source: impl Into<String>) -> Self {
+        Self {
+            available: false,
+            confidence: 0.0,
+            source: source.into(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -166,6 +216,10 @@ pub struct DecodedCandidate {
     pub phonetic_score: f64,
     pub context_score: f64,
     pub symbol_score: f64,
+    #[serde(default)]
+    pub confidence_gap: f64,
+    #[serde(default)]
+    pub strong: bool,
 }
 
 impl DecodedCandidate {
@@ -194,8 +248,14 @@ pub struct ObfuscationFeatures {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MessageFingerprint {
+    #[serde(default = "default_fingerprint_schema_version")]
+    pub schema_version: u32,
     pub raw: String,
     pub normalized: Option<String>,
+    #[serde(default)]
+    pub normalization_views: BTreeMap<String, String>,
+    #[serde(default)]
+    pub transformations: Vec<Transformation>,
     pub language_candidates: Vec<LanguageCandidate>,
     pub segments: Vec<MessageSegment>,
     pub tokens: Vec<String>,
@@ -209,6 +269,8 @@ pub struct MessageFingerprint {
     pub phonetic_candidates: Vec<PhoneticCandidate>,
     pub rebus_candidates: Vec<DecodedCandidate>,
     pub obfuscation_features: ObfuscationFeatures,
+    #[serde(default)]
+    pub channel_availability: BTreeMap<String, ChannelAvailability>,
     pub metadata: BTreeMap<String, String>,
 }
 
@@ -242,6 +304,10 @@ pub struct ComparisonResult {
     pub explanations: Vec<String>,
     pub evidence: Vec<String>,
     pub weights_used: BTreeMap<String, f64>,
+    #[serde(default)]
+    pub channel_confidence: BTreeMap<String, f64>,
+    #[serde(default)]
+    pub channel_available: BTreeMap<String, bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -249,12 +315,51 @@ pub struct SpamResult {
     pub probability: f64,
     pub labels: Vec<String>,
     pub reasons: Vec<String>,
+    #[serde(default)]
+    pub features: SpamFeatures,
+    #[serde(default)]
+    pub calibrated: bool,
+    #[serde(default)]
+    pub model: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct SpamFeatures {
+    pub url_count: usize,
+    pub email_count: usize,
+    pub emoji_count: usize,
+    pub number_ratio: f64,
+    pub emoji_ratio: f64,
+    pub uppercase_ratio: f64,
+    pub punctuation_ratio: f64,
+    pub entropy: f64,
+    pub repetition_score: f64,
+    pub obfuscation_score: f64,
+    pub pattern_score: f64,
+    pub decoded_similarity: f64,
+    pub semantic_pattern_similarity: f64,
+    pub mixed_scripts: bool,
+    pub confusable_count: usize,
+}
+
+fn default_pattern_threshold() -> f64 {
+    0.75
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Pattern {
     pub id: String,
     pub examples: Vec<String>,
+    #[serde(default)]
+    pub negative_examples: Vec<String>,
+    #[serde(default = "default_pattern_threshold")]
+    pub threshold: f64,
+    #[serde(default)]
+    pub languages: Vec<String>,
+    #[serde(default)]
+    pub tags: Vec<String>,
+    #[serde(default)]
+    pub enabled_channels: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -263,6 +368,8 @@ pub struct PatternMatch {
     pub score: f64,
     pub matched_example: String,
     pub explanations: Vec<String>,
+    #[serde(default)]
+    pub negative_score: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -270,6 +377,29 @@ pub struct SearchResult {
     pub id: String,
     pub score: f64,
     pub comparison: ComparisonResult,
+    #[serde(default)]
+    pub candidate_count: usize,
+    #[serde(default)]
+    pub retrieval_channels: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SearchCandidateSet {
+    pub records: Vec<(String, MessageFingerprint)>,
+    #[serde(default)]
+    pub channels: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub enum DuplicateMode {
+    #[default]
+    Combined,
+    NearExact,
+    Lexical,
+    Semantic,
+    Phonetic,
+    Decoded,
+    Visual,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -277,4 +407,6 @@ pub struct DuplicateResult {
     pub duplicate: bool,
     pub score: f64,
     pub reason: String,
+    #[serde(default)]
+    pub mode: DuplicateMode,
 }

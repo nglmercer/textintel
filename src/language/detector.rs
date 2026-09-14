@@ -1,3 +1,4 @@
+use crate::core::capabilities::ProviderCapabilities;
 use crate::core::error::ProviderError;
 use crate::core::providers::LanguageDetectionProvider;
 use crate::core::types::LanguageCandidate;
@@ -15,5 +16,10 @@ pub struct DefaultLanguageDetector;
 impl LanguageDetectionProvider for DefaultLanguageDetector {
     fn detect(&self, text: &str) -> Result<Vec<LanguageCandidate>, ProviderError> {
         Ok(detect_languages(text))
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("embedded_profile_detector")
+            .with_languages(embedded_resources().languages())
     }
 }

@@ -1,12 +1,12 @@
 [package]
 name = "textintel"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 build = "build.rs"
 description = "Multilingual text intelligence with independent, explainable analysis channels"
 license = "MIT"
 readme = "README.md"
-rust-version = "1.70"
+rust-version = "1.71"
 
 [lib]
 name = "textintel"
@@ -18,19 +18,34 @@ path = "src/bin/textintel.rs"
 
 [features]
 default = []
-semantic = []
-phonetic = []
-ml = []
-all = ["semantic", "phonetic", "ml"]
+lang-profile = []
+semantic = ["semantic-local"]
+semantic-local = []
+semantic-http = ["dep:ureq"]
+phonetic = ["phonetic-ipa"]
+phonetic-ipa = []
+persist = []
+ml = ["lang-profile", "semantic-local", "phonetic-ipa"]
+all = ["lang-profile", "semantic-local", "semantic-http", "phonetic-ipa", "persist", "ml"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.10"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.12"
+unicode-properties = { version = "0.1.4", features = ["emoji", "general-category"] }
+unicode-script = "0.5"
+ureq = { version = "2.12.1", optional = true, default-features = false, features = ["json", "tls"] }
 
 [dev-dependencies]
+criterion = "=0.5.1"
 pretty_assertions = "1"
+proptest = "=1.6.0"
+
+[[bench]]
+name = "core"
+harness = false
 
 [profile.release]
 lto = true

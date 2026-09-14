@@ -13,8 +13,12 @@ impl G2PProviderTrait for NullG2PProvider {
         Ok(PhoneticCandidate {
             source: text.to_string(),
             language: language.to_string(),
+            dialect: None,
             ipa: None,
             phonemes: Vec::new(),
+            stress: None,
+            syllables: 0,
+            articulatory_features: Vec::new(),
             confidence: 0.0,
         })
     }
@@ -106,7 +110,17 @@ impl G2PProviderTrait for RuleBasedG2PProvider {
         Ok(PhoneticCandidate {
             source: text.to_string(),
             language: language.to_string(),
+            dialect: None,
             ipa,
+            syllables: phonemes
+                .iter()
+                .filter(|phoneme| phoneme.chars().any(|ch| "aeiouəɛɪɔʊ".contains(ch)))
+                .count(),
+            stress: None,
+            articulatory_features: phonemes
+                .iter()
+                .map(|phoneme| crate::phonetic::features::feature_label(phoneme).to_string())
+                .collect(),
             phonemes,
             confidence: if text.is_empty() { 0.0 } else { 0.65 },
         })

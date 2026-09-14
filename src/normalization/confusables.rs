@@ -1,8 +1,11 @@
 use std::collections::BTreeMap;
 
-/// A deliberately small, auditable confusable table.  It focuses on common
-/// cross-script spoofing and full-width forms; providers can add larger UTS-39
-/// data without changing the visual API.
+use crate::normalization::unicode::casefold_text;
+
+/// Auditable high-frequency UTS #39-style confusables. NFKC is applied before
+/// this table so compatibility forms (full-width and mathematical alphabets)
+/// are handled by Unicode data rather than a second hand-maintained table.
+/// A complete UTS #39 data pack can be layered on without changing this API.
 pub fn confusable_map() -> BTreeMap<char, char> {
     [
         ('а', 'a'),
@@ -16,6 +19,29 @@ pub fn confusable_map() -> BTreeMap<char, char> {
         ('ј', 'j'),
         ('ѕ', 's'),
         ('һ', 'h'),
+        ('ԁ', 'd'),
+        ('ԃ', 'd'),
+        ('ԍ', 'n'),
+        ('ԛ', 'q'),
+        ('ԝ', 'w'),
+        ('ԟ', 'p'),
+        ('ԡ', 'l'),
+        ('ԣ', 'h'),
+        ('ԧ', 'h'),
+        ('ԩ', 'h'),
+        ('ԫ', 'h'),
+        ('ԭ', 'o'),
+        ('ԯ', 't'),
+        ('ґ', 'r'),
+        ('қ', 'q'),
+        ('ң', 'n'),
+        ('ғ', 'f'),
+        ('ҷ', 'j'),
+        ('ү', 'y'),
+        ('ұ', 'y'),
+        ('ҳ', 'h'),
+        ('ӯ', 'y'),
+        ('ӏ', 'l'),
         ('Α', 'A'),
         ('Β', 'B'),
         ('Ε', 'E'),
@@ -34,6 +60,17 @@ pub fn confusable_map() -> BTreeMap<char, char> {
         ('ν', 'v'),
         ('τ', 't'),
         ('υ', 'u'),
+        ('ϲ', 'c'),
+        ('ϳ', 'j'),
+        ('ϵ', 'e'),
+        ('ϱ', 'p'),
+        ('ϰ', 'k'),
+        ('ϴ', 'O'),
+        ('Ϲ', 'C'),
+        ('Ϻ', 'M'),
+        ('ϻ', 'm'),
+        ('Ͻ', 'C'),
+        ('Ͽ', 'C'),
         ('Ⅰ', 'I'),
         ('А', 'A'),
         ('В', 'B'),
@@ -46,6 +83,24 @@ pub fn confusable_map() -> BTreeMap<char, char> {
         ('С', 'C'),
         ('Т', 'T'),
         ('Х', 'X'),
+        ('Ѐ', 'E'),
+        ('Ѕ', 'S'),
+        ('І', 'I'),
+        ('Ј', 'J'),
+        ('Љ', 'L'),
+        ('Њ', 'N'),
+        ('Ќ', 'K'),
+        ('Ў', 'Y'),
+        ('Џ', 'D'),
+        ('ѓ', 'r'),
+        ('ѕ', 's'),
+        ('і', 'i'),
+        ('ј', 'j'),
+        ('љ', 'l'),
+        ('њ', 'n'),
+        ('ќ', 'k'),
+        ('ў', 'y'),
+        ('џ', 'd'),
         ('０', '0'),
         ('１', '1'),
         ('２', '2'),
@@ -67,8 +122,8 @@ pub fn confusable_map() -> BTreeMap<char, char> {
 
 pub fn skeleton(text: &str) -> String {
     let map = confusable_map();
-    text.chars()
-        .flat_map(char::to_lowercase)
+    casefold_text(text)
+        .chars()
         .map(|ch| map.get(&ch).copied().unwrap_or(ch))
         .collect()
 }

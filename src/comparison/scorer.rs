@@ -122,7 +122,11 @@ pub fn score_fingerprints(
     let visual = visual_similarity(&a.raw, &b.raw);
     let decoded = best_decoded_overlap(a, b);
     let obfuscation = obfuscation_similarity(a, b);
-    let symbolic = symbolic_similarity(a, b);
+    let symbolic = if a.symbols.is_empty() && b.symbols.is_empty() {
+        None
+    } else {
+        Some(symbolic_similarity(a, b))
+    };
     let semantic = semantic_similarity(a, b);
     let phonetic = phonetic_channel(a, b);
     let channels = [
@@ -131,18 +135,46 @@ pub fn score_fingerprints(
         ("character".to_string(), Some(character)),
         ("visual".to_string(), Some(visual)),
         ("phonetic".to_string(), phonetic),
-        ("symbolic".to_string(), Some(symbolic)),
+        ("symbolic".to_string(), symbolic),
         ("decoded".to_string(), Some(decoded)),
         ("obfuscation".to_string(), Some(obfuscation)),
     ]
     .into_iter()
     .collect::<BTreeMap<_, _>>();
     let (score, weights_used) = combine_scores(&channels, weights);
+    let channel_available = channels
+        .iter()
+        .map(|(name, value)| (name.clone(), value.is_some()))
+        .collect::<BTreeMap<_, _>>();
+    let channel_confidence = channels
+        .iter()
+        .map(|(name, value)| {
+            let confidence = if value.is_none() {
+                0.0
+            } else {
+                let left = a
+                    .channel_availability
+                    .get(name)
+                    .map(|state| state.confidence)
+                    .unwrap_or(1.0);
+                let right = b
+                    .channel_availability
+                    .get(name)
+                    .map(|state| state.confidence)
+                    .unwrap_or(1.0);
+                left.min(right).clamp(0.0, 1.0)
+            };
+            (name.clone(), confidence)
+        })
+        .collect::<BTreeMap<_, _>>();
     let mut evidence = vec![
         format!("character={character:.3}"),
         format!("lexical={lexical:.3}"),
         format!("visual={visual:.3}"),
-        format!("symbolic={symbolic:.3}"),
+        format!(
+            "symbolic={}",
+            symbolic.map_or_else(|| "absent".to_string(), |value| format!("{value:.3}"))
+        ),
         format!("decoded={decoded:.3}"),
         format!("obfuscation_norm={obfuscation:.3}"),
     ];
@@ -179,12 +211,14 @@ pub fn score_fingerprints(
         character: Some(character),
         visual: Some(visual),
         phonetic,
-        symbolic: Some(symbolic),
+        symbolic,
         decoded_similarity: Some(decoded),
         obfuscation_similarity: Some(obfuscation),
         obfuscation: Some(obfuscation),
         explanations,
         evidence,
         weights_used,
+        channel_confidence,
+        channel_available,
     }
 }

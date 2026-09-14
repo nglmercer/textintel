@@ -2,6 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde_json;
+use sha2::{Digest, Sha256};
 
 use super::error::ResourceError;
 use super::index::{LanguageIndex, LexiconLookup, LexiconRecord, SymbolIndex};
@@ -9,11 +10,38 @@ use super::pack::{LanguagePack, SymbolPack, SUPPORTED_SCHEMA_VERSION};
 
 include!(concat!(env!("OUT_DIR"), "/embedded_resources.rs"));
 
+pub const DEFAULT_MAX_RESOURCE_BYTES: usize = 64 * 1024 * 1024;
+pub const DEFAULT_MAX_PACK_ENTRIES: usize = 1_000_000;
+pub const DEFAULT_MAX_SYMBOLS: usize = 100_000;
+pub const DEFAULT_MAX_READINGS_PER_SYMBOL: usize = 256;
+
+/// Bounds applied before a pack is parsed or indexed. They are intentionally
+/// explicit so applications can tighten them for untrusted downloads.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResourceLimits {
+    pub max_resource_bytes: usize,
+    pub max_pack_entries: usize,
+    pub max_symbols: usize,
+    pub max_readings_per_symbol: usize,
+}
+
+impl Default for ResourceLimits {
+    fn default() -> Self {
+        Self {
+            max_resource_bytes: DEFAULT_MAX_RESOURCE_BYTES,
+            max_pack_entries: DEFAULT_MAX_PACK_ENTRIES,
+            max_symbols: DEFAULT_MAX_SYMBOLS,
+            max_readings_per_symbol: DEFAULT_MAX_READINGS_PER_SYMBOL,
+        }
+    }
+}
+
 /// Data-driven loader and index for all language and symbol resources.
 #[derive(Debug, Clone, Default)]
 pub struct ResourceLoader {
     pub(crate) language_index: LanguageIndex,
     pub(crate) symbol_index: SymbolIndex,
+    pub(crate) limits: ResourceLimits,
 }
 
 impl ResourceLoader {
@@ -34,6 +62,17 @@ impl ResourceLoader {
     /// Backward-compatible alias for the embedded seed set.
     pub fn common() -> Result<Self, ResourceError> {
         Self::embedded()
+    }
+
+    pub fn with_limits(limits: ResourceLimits) -> Self {
+        Self {
+            limits,
+            ..Self::default()
+        }
+    }
+
+    pub fn limits(&self) -> &ResourceLimits {
+        &self.limits
     }
 
     /// Load all JSON language packs below `path` recursively.
@@ -85,6 +124,7 @@ impl ResourceLoader {
 
     pub fn load_language_file(&mut self, path: impl AsRef<Path>) -> Result<(), ResourceError> {
         let path = path.as_ref().to_path_buf();
+        validate_file_size(&path, self.limits.max_resource_bytes)?;
         let source = fs::read_to_string(&path).map_err(|error| ResourceError::Io {
             path: path.clone(),
             message: error.to_string(),
@@ -94,6 +134,7 @@ impl ResourceLoader {
 
     pub fn load_symbol_file(&mut self, path: impl AsRef<Path>) -> Result<(), ResourceError> {
         let path = path.as_ref().to_path_buf();
+        validate_file_size(&path, self.limits.max_resource_bytes)?;
         let source = fs::read_to_string(&path).map_err(|error| ResourceError::Io {
             path: path.clone(),
             message: error.to_string(),
@@ -107,6 +148,17 @@ impl ResourceLoader {
         source_path: impl AsRef<Path>,
     ) -> Result<(), ResourceError> {
         validate_language_pack(&pack, source_path.as_ref())?;
+        let entry_count =
+            pack.entries.len() + pack.words.len() + pack.stop_words.len() + pack.examples.len();
+        if entry_count > self.limits.max_pack_entries {
+            return Err(ResourceError::Validation {
+                path: source_path.as_ref().to_path_buf(),
+                message: format!(
+                    "language pack contains {entry_count} entries; maximum is {}",
+                    self.limits.max_pack_entries
+                ),
+            });
+        }
         self.language_index.add_pack(pack, source_path.as_ref());
         Ok(())
     }
@@ -155,6 +207,29 @@ impl ResourceLoader {
             }
         }
         validate_symbol_pack(&pack, source_path.as_ref())?;
+        if pack.symbols.len() > self.limits.max_symbols {
+            return Err(ResourceError::Validation {
+                path: source_path.as_ref().to_path_buf(),
+                message: format!(
+                    "symbol pack contains {}; maximum is {}",
+                    pack.symbols.len(),
+                    self.limits.max_symbols
+                ),
+            });
+        }
+        if pack
+            .symbols
+            .iter()
+            .any(|symbol| symbol.readings.len() > self.limits.max_readings_per_symbol)
+        {
+            return Err(ResourceError::Validation {
+                path: source_path.as_ref().to_path_buf(),
+                message: format!(
+                    "symbol readings exceed maximum {}",
+                    self.limits.max_readings_per_symbol
+                ),
+            });
+        }
         for symbol in pack.symbols {
             self.symbol_index.merge(symbol);
         }
@@ -167,11 +242,23 @@ impl ResourceLoader {
         path: impl Into<PathBuf>,
     ) -> Result<(), ResourceError> {
         let path = path.into();
+        if source.len() > self.limits.max_resource_bytes {
+            return Err(ResourceError::Validation {
+                path,
+                message: format!(
+                    "resource is {} bytes; maximum is {}",
+                    source.len(),
+                    self.limits.max_resource_bytes
+                ),
+            });
+        }
+        let parse_path = path.clone();
         let pack: LanguagePack =
             serde_json::from_str(source).map_err(|error| ResourceError::Parse {
-                path: path.clone(),
+                path: parse_path,
                 message: error.to_string(),
             })?;
+        validate_declared_hash(pack.sha256.as_deref(), source, &path)?;
         self.add_language_pack(pack, path)
     }
 
@@ -181,11 +268,23 @@ impl ResourceLoader {
         path: impl Into<PathBuf>,
     ) -> Result<(), ResourceError> {
         let path = path.into();
+        if source.len() > self.limits.max_resource_bytes {
+            return Err(ResourceError::Validation {
+                path,
+                message: format!(
+                    "resource is {} bytes; maximum is {}",
+                    source.len(),
+                    self.limits.max_resource_bytes
+                ),
+            });
+        }
+        let parse_path = path.clone();
         let pack: SymbolPack =
             serde_json::from_str(source).map_err(|error| ResourceError::Parse {
-                path: path.clone(),
+                path: parse_path,
                 message: error.to_string(),
             })?;
+        validate_declared_hash(pack.sha256.as_deref(), source, &path)?;
         self.add_symbol_pack(pack, path)
     }
 
@@ -236,6 +335,10 @@ impl ResourceLoader {
         self.language_index.language_packs(language)
     }
 
+    pub fn profile_texts(&self) -> std::collections::BTreeMap<String, Vec<String>> {
+        self.language_index.profile_texts()
+    }
+
     pub fn lookup(&self, query: &str) -> LexiconLookup {
         self.language_index.lookup(query)
     }
@@ -259,10 +362,82 @@ impl ResourceLoader {
     pub fn detect_languages(&self, text: &str) -> Vec<crate::core::types::LanguageCandidate> {
         self.language_index.detect_languages(text)
     }
+
+    pub fn detect_languages_with_limit(
+        &self,
+        text: &str,
+        max_candidates: usize,
+    ) -> Vec<crate::core::types::LanguageCandidate> {
+        self.language_index
+            .detect_languages_with_limit(text, max_candidates)
+    }
 }
 
 fn canonical_language(language: &str) -> String {
     language.trim().to_lowercase().replace('_', "-")
+}
+
+fn validate_file_size(path: &Path, maximum: usize) -> Result<(), ResourceError> {
+    let metadata = fs::metadata(path).map_err(|error| ResourceError::Io {
+        path: path.to_path_buf(),
+        message: error.to_string(),
+    })?;
+    if metadata.len() > maximum as u64 {
+        return Err(ResourceError::Validation {
+            path: path.to_path_buf(),
+            message: format!("resource is {} bytes; maximum is {maximum}", metadata.len()),
+        });
+    }
+    Ok(())
+}
+
+fn validate_declared_hash(
+    expected: Option<&str>,
+    source: &str,
+    path: &Path,
+) -> Result<(), ResourceError> {
+    let Some(expected) = expected else {
+        return Ok(());
+    };
+    let expected = expected.trim().to_ascii_lowercase();
+    if expected.len() != 64
+        || !expected
+            .chars()
+            .all(|character| character.is_ascii_hexdigit())
+    {
+        return Err(ResourceError::Validation {
+            path: path.to_path_buf(),
+            message: "sha256 must be a 64-character hexadecimal string".to_string(),
+        });
+    }
+    // The declaration is part of the JSON document, so hashing the raw bytes
+    // would be self-referential. Hash canonical JSON with the declaration
+    // removed instead; this also makes formatting and object-key order stable.
+    let mut document: serde_json::Value =
+        serde_json::from_str(source).map_err(|error| ResourceError::Parse {
+            path: path.to_path_buf(),
+            message: error.to_string(),
+        })?;
+    let Some(object) = document.as_object_mut() else {
+        return Err(ResourceError::Validation {
+            path: path.to_path_buf(),
+            message: "resource root must be a JSON object".to_string(),
+        });
+    };
+    object.remove("sha256");
+    let canonical = serde_json::to_vec(&document).map_err(|error| ResourceError::Parse {
+        path: path.to_path_buf(),
+        message: error.to_string(),
+    })?;
+    let digest = Sha256::digest(canonical);
+    let actual = format!("{digest:x}");
+    if actual != expected {
+        return Err(ResourceError::Validation {
+            path: path.to_path_buf(),
+            message: format!("sha256 mismatch: expected {expected}, got {actual}"),
+        });
+    }
+    Ok(())
 }
 
 fn validate_language_pack(pack: &LanguagePack, path: &Path) -> Result<(), ResourceError> {
