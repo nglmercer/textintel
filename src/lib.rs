@@ -62,5 +62,7 @@ pub use semantic::{
 };
 #[cfg(feature = "ann-hnsw")]
 pub use storage::HnswVectorIndex;
+#[cfg(feature = "persist-redb")]
+pub use storage::RedbStore;
 pub use storage::{JsonFileStore, MemoryStore};
 pub use symbols::DefaultSymbolKnowledge;

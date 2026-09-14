@@ -28,12 +28,13 @@ semantic-local = []
 semantic-candle = ["dep:candle-core"]
 phonetic-espeak = []
 ann-hnsw = ["dep:hnsw_rs"]
+persist-redb = ["dep:redb"]
 semantic-http = ["dep:ureq"]
 phonetic = ["phonetic-ipa"]
 phonetic-ipa = []
 persist = []
 ml = ["lang-profile", "semantic-local", "phonetic-ipa"]
-all = ["lang-profile", "semantic-local", "semantic-candle", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "ml"]
+all = ["lang-profile", "semantic-local", "semantic-candle", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb", "ml"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -46,6 +47,7 @@ unicode-script = "0.5"
 ureq = { version = "2.12.1", optional = true, default-features = false, features = ["json", "tls"] }
 candle-core = { version = "0.11", optional = true, default-features = false }
 hnsw_rs = { version = "0.3", optional = true }
+redb = { version = "4", optional = true }
 
 [dev-dependencies]
 criterion = "=0.5.1"

@@ -3,6 +3,12 @@
 //! Recall, memory, and candidate-reduction statistics are asserted in
 //! `tests/ann_search.rs`, which runs in CI; criterion here measures latency
 //! distributions only. Requires the `ann-hnsw` feature, otherwise empty.
+//!
+//! Scale selection: `cargo test --all-targets` executes bench binaries bare
+//! (no harness arguments), and 100K debug inserts take tens of minutes, so
+//! bare runs use smoke sizes that finish in seconds. Full scales run when
+//! harness arguments are present (`cargo bench` always passes `--bench`) or
+//! when `ANN_BENCH_FULL` is set.
 
 #[cfg(feature = "ann-hnsw")]
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
@@ -53,10 +59,22 @@ fn build_index(count: usize) -> HnswVectorIndex {
     index
 }
 
+/// See the module documentation: full scales only with harness arguments
+/// or `ANN_BENCH_FULL`, smoke sizes otherwise.
+#[cfg(feature = "ann-hnsw")]
+fn scales() -> Vec<usize> {
+    let harness = std::env::args().len() > 1 || std::env::var("ANN_BENCH_FULL").is_ok();
+    if harness {
+        vec![1_000, 10_000, 100_000]
+    } else {
+        vec![200, 1_000]
+    }
+}
+
 #[cfg(feature = "ann-hnsw")]
 fn bench_build(c: &mut Criterion) {
     let mut group = c.benchmark_group("ann_build");
-    for size in [1_000usize, 10_000, 100_000] {
+    for size in scales() {
         // Large builds are slow: fewer samples, longer budget.
         group.sample_size(if size >= 100_000 { 10 } else { 30 });
         group.bench_function(BenchmarkId::from_parameter(size), |bench| {
@@ -69,7 +87,7 @@ fn bench_build(c: &mut Criterion) {
 #[cfg(feature = "ann-hnsw")]
 fn bench_query(c: &mut Criterion) {
     let mut group = c.benchmark_group("ann_query");
-    for size in [1_000usize, 10_000, 100_000] {
+    for size in scales() {
         let index = build_index(size);
         let queries = seeded_vectors(64, 0xBEEF);
         let mut round = 0usize;
