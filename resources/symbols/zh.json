@@ -29,6 +29,7 @@
     {"token": "₹", "readings": [{"text": "卢比", "probability": 0.7, "reading_type": "currency"}]},
     {"token": "%", "readings": [{"text": "百分之", "probability": 0.7, "reading_type": "math"}]},
     {"token": "+", "readings": [{"text": "加", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "等于", "probability": 0.7, "reading_type": "math"}]}
+    {"token": "=", "readings": [{"text": "等于", "probability": 0.7, "reading_type": "math"}]},
+    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "咖啡", "probability": 0.80, "reading_type": "symbol_reading"}]}
   ]
 }

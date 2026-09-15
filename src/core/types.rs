@@ -110,6 +110,9 @@ pub struct SymbolReading {
     pub language: Option<String>,
     pub probability: f64,
     pub reading_type: String,
+    /// Provenance of this reading (pack name, `lexicon:…`, `rule:…`).
+    #[serde(default)]
+    pub source: Option<String>,
 }
 
 impl SymbolReading {
@@ -124,14 +127,41 @@ impl SymbolReading {
             language: language.map(|value| value.into()),
             probability,
             reading_type: reading_type.into(),
+            source: None,
         }
+    }
+
+    pub fn with_source(mut self, source: impl Into<String>) -> Self {
+        self.source = Some(source.into());
+        self
     }
 }
 
+/// Stable namespaced concept identifier (e.g. `concept:building.house`).
+/// Bare legacy ids (`house`, `money`, `love`) are normalized on load; see
+/// [`crate::resources::canonical_concept_id`].
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SymbolConcept {
     pub id: String,
     pub probability: f64,
+    /// Provenance of this concept (pack name or `builtin:…`).
+    #[serde(default)]
+    pub source: Option<String>,
+}
+
+impl SymbolConcept {
+    pub fn new(id: impl Into<String>, probability: f64) -> Self {
+        Self {
+            id: id.into(),
+            probability,
+            source: None,
+        }
+    }
+
+    pub fn with_source(mut self, source: impl Into<String>) -> Self {
+        self.source = Some(source.into());
+        self
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -174,11 +204,97 @@ pub struct PhoneticCandidate {
     pub confidence: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+/// One explainable rewrite step. Old payloads with only
+/// `source`/`replacement`/`transformation_type` still deserialize; every new
+/// field is optional provenance. (`Eq` is intentionally absent: `confidence`
+/// is a float.)
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Transformation {
     pub source: String,
     pub replacement: String,
     pub transformation_type: String,
+    /// UTF-8 byte offset of the rewritten span in the original message.
+    #[serde(default)]
+    pub start: Option<usize>,
+    /// UTF-8 byte offset just after the rewritten span.
+    #[serde(default)]
+    pub end: Option<usize>,
+    /// Original UTF-8 slice that was rewritten (`message[start..end]`).
+    #[serde(default)]
+    pub span: Option<String>,
+    /// Provider-estimated confidence in `[0.0, 1.0]` when known.
+    #[serde(default)]
+    pub confidence: Option<f64>,
+    /// Which subsystem produced this step (`rebus`, `normalization`, …).
+    #[serde(default)]
+    pub provider: Option<String>,
+    /// Language of the replacement when known.
+    #[serde(default)]
+    pub language: Option<String>,
+}
+
+impl Transformation {
+    pub fn new(
+        source: impl Into<String>,
+        replacement: impl Into<String>,
+        transformation_type: impl Into<String>,
+    ) -> Self {
+        Self {
+            source: source.into(),
+            replacement: replacement.into(),
+            transformation_type: transformation_type.into(),
+            start: None,
+            end: None,
+            span: None,
+            confidence: None,
+            provider: None,
+            language: None,
+        }
+    }
+
+    /// Attach the original UTF-8 span (`start..end` byte offsets plus the
+    /// sliced text). Callers must pass char-boundary offsets.
+    pub fn with_span(mut self, start: usize, end: usize, span: impl Into<String>) -> Self {
+        self.start = Some(start);
+        self.end = Some(end);
+        self.span = Some(span.into());
+        self
+    }
+
+    pub fn with_confidence(mut self, confidence: f64) -> Self {
+        self.confidence = Some(confidence.clamp(0.0, 1.0));
+        self
+    }
+
+    pub fn with_provider(mut self, provider: impl Into<String>) -> Self {
+        self.provider = Some(provider.into());
+        self
+    }
+
+    pub fn with_language(mut self, language: impl Into<String>) -> Self {
+        self.language = Some(language.into());
+        self
+    }
+
+    /// One-line human explanation (`4 = a (leetspeak)`), used by the CLI.
+    pub fn explain(&self) -> String {
+        match (&self.span, &self.language) {
+            (Some(span), Some(language)) => format!(
+                "{} = {} ({}; {})",
+                span, self.replacement, self.transformation_type, language
+            ),
+            (Some(span), None) => {
+                format!(
+                    "{} = {} ({})",
+                    span, self.replacement, self.transformation_type
+                )
+            }
+            (None, _) => format!(
+                "{} = {} ({})",
+                self.source, self.replacement, self.transformation_type
+            ),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -391,6 +507,54 @@ pub struct SearchCandidateSet {
     pub records: Vec<(String, MessageFingerprint)>,
     #[serde(default)]
     pub channels: Vec<String>,
+}
+
+/// Per-stage timing diagnostics in microseconds. Carries durations only —
+/// never input text, embeddings, or other user data.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(default)]
+pub struct StageTimings {
+    pub normalization_micros: f64,
+    pub language_micros: f64,
+    pub symbols_micros: f64,
+    pub rebus_micros: f64,
+    pub semantic_micros: f64,
+    pub phonetic_micros: f64,
+    pub comparison_micros: f64,
+    pub total_micros: f64,
+}
+
+impl StageTimings {
+    /// Stage name → microseconds, in pipeline order.
+    pub fn as_map(&self) -> BTreeMap<String, f64> {
+        [
+            ("normalization", self.normalization_micros),
+            ("language", self.language_micros),
+            ("symbols", self.symbols_micros),
+            ("rebus", self.rebus_micros),
+            ("semantic", self.semantic_micros),
+            ("phonetic", self.phonetic_micros),
+            ("comparison", self.comparison_micros),
+            ("total", self.total_micros),
+        ]
+        .into_iter()
+        .map(|(name, value)| (name.to_string(), value))
+        .collect()
+    }
+
+    /// Stage names in pipeline order.
+    pub fn stage_names() -> &'static [&'static str] {
+        &[
+            "normalization",
+            "language",
+            "symbols",
+            "rebus",
+            "semantic",
+            "phonetic",
+            "comparison",
+            "total",
+        ]
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]

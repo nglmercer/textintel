@@ -43,7 +43,15 @@
     {"word": "prize", "lemma": "prize"},
     {"word": "unknown", "lemma": "unknown"},
     {"word": "ok", "lemma": "ok"},
-    {"word": "lol", "lemma": "lol"}
+    {"word": "lol", "lemma": "lol"},
+    {"word": "before", "lemma": "before"},
+    {"word": "great", "lemma": "great"},
+    {"word": "later", "lemma": "later"},
+    {"word": "mate", "lemma": "mate"},
+    {"word": "tomorrow", "lemma": "tomorrow"},
+    {"word": "coffee", "lemma": "coffee"},
+    {"word": "break", "lemma": "break"},
+    {"word": "night", "lemma": "night"}
   ],
   "examples": [
     "this is a example",

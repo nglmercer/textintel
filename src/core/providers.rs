@@ -29,6 +29,47 @@ pub trait EmbeddingProvider: Send + Sync {
     }
 }
 
+/// One script conversion of a message, preserved as an additional
+/// fingerprint view. Transliteration never replaces [`MessageFingerprint::raw`](super::types::MessageFingerprint).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Transliteration {
+    /// Converted text.
+    pub text: String,
+    /// ISO 15924 script of `text` (`Latn`, `Cyrl`, `Arab`, `Hans`).
+    pub target_script: String,
+    /// Most likely language of the conversion, when the script implies one.
+    pub language: Option<String>,
+    /// Provider confidence in `[0.0, 1.0]`.
+    pub confidence: f64,
+}
+
+impl Transliteration {
+    pub fn new(
+        text: impl Into<String>,
+        target_script: impl Into<String>,
+        language: Option<String>,
+        confidence: f64,
+    ) -> Self {
+        Self {
+            text: text.into(),
+            target_script: target_script.into(),
+            language,
+            confidence: confidence.clamp(0.0, 1.0),
+        }
+    }
+}
+
+/// Provider boundary for script transliteration (e.g. `привет ↔ privet`).
+/// Providers return zero or more converted views; the engine stores each as
+/// a `transliteration:<script>` fingerprint view.
+pub trait TransliterationProvider: Send + Sync {
+    fn transliterate(&self, text: &str) -> Vec<Transliteration>;
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("transliteration").with_quality(CapabilityLevel::Basic)
+    }
+}
+
 /// Provider boundary for grapheme-to-phoneme conversion.
 pub trait G2PProvider: Send + Sync {
     fn phonemize(&self, text: &str, language: &str) -> Result<PhoneticCandidate, ProviderError>;

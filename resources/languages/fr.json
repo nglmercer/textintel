@@ -22,7 +22,8 @@
     {"word": "exemple", "lemma": "exemple"},
     {"word": "bon", "lemma": "bon"},
     {"word": "ceci", "lemma": "ceci"},
-    {"word": "amour", "lemma": "amour"}
+    {"word": "amour", "lemma": "amour"},
+    {"word": "salut", "lemma": "salut"}
   ],
   "examples": [
     "c'est un exemple",

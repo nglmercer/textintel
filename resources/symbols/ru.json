@@ -29,6 +29,7 @@
     {"token": "₹", "readings": [{"text": "рупия", "probability": 0.7, "reading_type": "currency"}]},
     {"token": "%", "readings": [{"text": "процент", "probability": 0.7, "reading_type": "math"}]},
     {"token": "+", "readings": [{"text": "плюс", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "равно", "probability": 0.7, "reading_type": "math"}]}
+    {"token": "=", "readings": [{"text": "равно", "probability": 0.7, "reading_type": "math"}]},
+    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "кофе", "probability": 0.80, "reading_type": "symbol_reading"}]}
   ]
 }

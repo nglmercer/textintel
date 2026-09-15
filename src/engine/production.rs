@@ -20,7 +20,7 @@ use crate::core::error::TextIntelError;
 use crate::core::providers::{
     AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
     LemmatizerProvider, LexiconProvider, RerankerProvider, SimilarityScorer, SpamPredictor,
-    SymbolKnowledgeProvider,
+    SymbolKnowledgeProvider, TransliterationProvider,
 };
 use crate::resources::{ResourceLoader, ResourcePackInfo};
 
@@ -75,7 +75,13 @@ pub struct EngineBuilder {
     pub(crate) lemmatizer: Option<Arc<dyn LemmatizerProvider>>,
     pub(crate) symbols: Option<Arc<dyn SymbolKnowledgeProvider>>,
     pub(crate) abbreviations: Option<Arc<dyn AbbreviationProvider>>,
+    pub(crate) transliteration: Option<Arc<dyn TransliterationProvider>>,
     pub(crate) reranker: Option<Arc<dyn RerankerProvider>>,
+    /// Explicit local transformer directory for [`Self::production_local`].
+    pub(crate) transformer_model_path: Option<PathBuf>,
+    /// Fallback notes recorded while assembling the preset (surfaced via
+    /// [`EngineDiagnostics::degraded`]).
+    pub(crate) preset_fallbacks: Vec<DegradedCapability>,
     pub(crate) spam: Option<Arc<dyn SpamPredictor>>,
     pub(crate) similarity_scorer: Option<Arc<dyn SimilarityScorer>>,
     pub(crate) similarity_profile: Option<crate::comparison::SimilarityProfile>,
@@ -140,6 +146,23 @@ impl EngineBuilder {
         self
     }
 
+    pub fn transliteration_provider<P: TransliterationProvider + 'static>(
+        mut self,
+        provider: P,
+    ) -> Self {
+        self.transliteration = Some(Arc::new(provider));
+        self
+    }
+
+    /// Pin the local transformer directory used by [`Self::production_local`].
+    /// The directory must already exist (no download); when it cannot be
+    /// opened the preset falls back to the feature-hash baseline and records
+    /// the failure in diagnostics.
+    pub fn transformer_model(mut self, path: impl Into<PathBuf>) -> Self {
+        self.transformer_model_path = Some(path.into());
+        self
+    }
+
     pub fn reranker_provider<P: RerankerProvider + 'static>(mut self, provider: P) -> Self {
         self.reranker = Some(Arc::new(provider));
         self
@@ -185,8 +208,10 @@ impl EngineBuilder {
 
     /// Attempt the local production stack: embedded resource packs, trained
     /// models from `./models` when present, espeak-ng G2P with a rule-based
-    /// fallback, and a local feature-hash embedding baseline. Anything
-    /// unavailable is reported through [`EngineDiagnostics::degraded`];
+    /// fallback, and transformer embeddings when a local model is configured
+    /// (explicit [`Self::transformer_model`], `TEXTINTEL_TRANSFORMER_MODEL`,
+    /// or `./models/transformer`), falling back to the feature-hash baseline.
+    /// Anything unavailable is reported through [`EngineDiagnostics::degraded`];
     /// nothing panics and nothing touches the network.
     pub fn production_local(mut self) -> Self {
         self.config.semantic = true;
@@ -200,8 +225,70 @@ impl EngineBuilder {
             }
         }
         if self.embedding.is_none() {
-            if let Ok(provider) = crate::semantic::FeatureHashEmbeddingProvider::new(256) {
-                self.embedding = Some(Arc::new(provider));
+            // Only the transformer branch below can set this; without the
+            // feature the fallback always runs.
+            #[cfg_attr(not(feature = "semantic-transformer"), allow(unused_mut))]
+            let mut used_transformer = false;
+            let configured = self.transformer_model_path.clone().or_else(|| {
+                std::env::var("TEXTINTEL_TRANSFORMER_MODEL")
+                    .ok()
+                    .map(PathBuf::from)
+            });
+            // `models/transformer` is a conventional best-effort location; an
+            // explicit path or env var counts as "configured" and its failure
+            // is reported, while a missing conventional directory is not.
+            let (candidate, explicit) = match configured {
+                Some(path) => (Some(path), true),
+                None => {
+                    let conventional = PathBuf::from("models/transformer");
+                    if conventional.join("config.json").is_file() {
+                        (Some(conventional), false)
+                    } else {
+                        (None, false)
+                    }
+                }
+            };
+            #[cfg(feature = "semantic-transformer")]
+            {
+                if let Some(directory) = candidate {
+                    match crate::semantic::TransformerEmbeddingProvider::open(&directory) {
+                        Ok(provider) => {
+                            self.embedding = Some(Arc::new(provider));
+                            used_transformer = true;
+                        }
+                        Err(error) if explicit => {
+                            self.preset_fallbacks.push(DegradedCapability {
+                                capability: "semantic".to_string(),
+                                configured: "feature_hash_embedding".to_string(),
+                                wanted: "transformer_embedding".to_string(),
+                                detail: format!(
+                                    "configured transformer model at {} failed to open ({error}); serving the feature-hash fallback",
+                                    directory.display()
+                                ),
+                            });
+                        }
+                        Err(_) => {}
+                    }
+                }
+            }
+            #[cfg(not(feature = "semantic-transformer"))]
+            {
+                if let Some(directory) = candidate.filter(|_| explicit) {
+                    self.preset_fallbacks.push(DegradedCapability {
+                        capability: "semantic".to_string(),
+                        configured: "feature_hash_embedding".to_string(),
+                        wanted: "transformer_embedding".to_string(),
+                        detail: format!(
+                            "transformer model configured at {} but this build lacks the semantic-transformer feature; serving the feature-hash fallback",
+                            directory.display()
+                        ),
+                    });
+                }
+            }
+            if !used_transformer {
+                if let Ok(provider) = crate::semantic::FeatureHashEmbeddingProvider::new(256) {
+                    self.embedding = Some(Arc::new(provider));
+                }
             }
         }
         if self.similarity_model_path.is_none() {

@@ -44,7 +44,7 @@ fn is_combining_mark(ch: char) -> bool {
         || (0xfe20..=0xfe2f).contains(&code)
 }
 
-fn is_word_character(ch: char) -> bool {
+pub(crate) fn is_word_character(ch: char) -> bool {
     ch.is_alphabetic()
         || is_combining_mark(ch)
         || matches!(ch, '\'' | '_' | '\u{200c}' | '\u{200d}')

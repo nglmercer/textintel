@@ -1,5 +1,5 @@
 {
- "version": "0.3.0",
+ "version": "0.4.0",
  "cases": [
   {
    "id": "es_rebus_001",
@@ -21324,6 +21324,1687 @@
    "tags": [
     "emoji",
     "spanish"
+   ]
+  },
+  {
+   "id": "semantic_001",
+   "a": "buy cheap watches now",
+   "b": "buy cheap watches today",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_002",
+   "a": "claim your free prize now",
+   "b": "claim your free prize today",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_003",
+   "a": "the quick brown fox",
+   "b": "quick brown fox",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_004",
+   "a": "meeting at noon tomorrow",
+   "b": "meeting at noon today",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_005",
+   "a": "buy cheap watches now",
+   "b": "sell expensive cars today",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_006",
+   "a": "the cat sat down",
+   "b": "quantum physics lecture",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_007",
+   "a": "I love apples",
+   "b": "I love oranges",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_008",
+   "a": "open the door",
+   "b": "close the window",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "xlang_001",
+   "a": "information",
+   "b": "información",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_002",
+   "a": "Paris",
+   "b": "París",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_003",
+   "a": "taxi",
+   "b": "taxi",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_004",
+   "a": "internet",
+   "b": "internet",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_005",
+   "a": "good morning",
+   "b": "adiós amigo",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_006",
+   "a": "see you later",
+   "b": "guten Morgen allerseits",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_007",
+   "a": "I love programming",
+   "b": "j'adore la peinture",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_008",
+   "a": "thank you very much",
+   "b": "gracias por nada",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "translit_001",
+   "a": "privet",
+   "b": "привет",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_002",
+   "a": "ni hao",
+   "b": "你好",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_003",
+   "a": "salam",
+   "b": "سلام",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_004",
+   "a": "Moskva",
+   "b": "Москва",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_005",
+   "a": "privet",
+   "b": "пока",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_006",
+   "a": "ni hao",
+   "b": "再见",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_007",
+   "a": "salam",
+   "b": "salami",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_008",
+   "a": "hello",
+   "b": "привет",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "rebus_sim_001",
+   "a": "gr8",
+   "b": "great",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_002",
+   "a": "b4",
+   "b": "before",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_003",
+   "a": "I ❤ you",
+   "b": "I love you",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_004",
+   "a": "☕ break",
+   "b": "coffee break",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_005",
+   "a": "gr8",
+   "b": "grate",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "rebus",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_006",
+   "a": "b4",
+   "b": "after",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_007",
+   "a": "I ❤ you",
+   "b": "I hate you",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "rebus",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_008",
+   "a": "Fra🏠do",
+   "b": "ferrocarril",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "rebus",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_001",
+   "a": "m8",
+   "b": "mate",
+   "languages": [
+    "en"
+   ],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "mate"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_002",
+   "a": "gr8",
+   "b": "great",
+   "languages": [
+    "en"
+   ],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "great"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_003",
+   "a": "☕ break",
+   "b": "coffee break",
+   "languages": [
+    "en"
+   ],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "coffee break"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_004",
+   "a": "b4",
+   "b": "before",
+   "languages": [
+    "en"
+   ],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "before"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_005",
+   "a": "2morrow",
+   "b": "tomorrow",
+   "languages": [
+    "en"
+   ],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "tomorrow"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_006",
+   "a": "I ❤️ casa",
+   "b": "I love casa",
+   "languages": [
+    "en",
+    "es"
+   ],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "I love casa"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "phon_001",
+   "a": "night",
+   "b": "nite",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_002",
+   "a": "love",
+   "b": "luv",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_003",
+   "a": "house",
+   "b": "haus",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_004",
+   "a": "phone",
+   "b": "fone",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_005",
+   "a": "night",
+   "b": "morning",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_006",
+   "a": "love",
+   "b": "quantum",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_007",
+   "a": "cat",
+   "b": "bat",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_008",
+   "a": "hello",
+   "b": "yellow",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "leet_001",
+   "a": "h3llo",
+   "b": "hello",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_002",
+   "a": "c0mpr4",
+   "b": "compra",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_003",
+   "a": "l33t",
+   "b": "leet",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_004",
+   "a": "Fr4nc3",
+   "b": "France",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_005",
+   "a": "h3llo",
+   "b": "hollow",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_006",
+   "a": "fr33",
+   "b": "flee",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_007",
+   "a": "c0mpr4",
+   "b": "compara",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_008",
+   "a": "w1n",
+   "b": "wine",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "homo_001",
+   "a": "pаypal",
+   "b": "paypal",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_002",
+   "a": "аpple",
+   "b": "apple",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_003",
+   "a": "gооgle",
+   "b": "google",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_004",
+   "a": "microsоft",
+   "b": "microsoft",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_005",
+   "a": "аpple",
+   "b": "apply",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_006",
+   "a": "gооgle",
+   "b": "goggle",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_007",
+   "a": "bаnk",
+   "b": "bonk",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_008",
+   "a": "аpple",
+   "b": "maple",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "uni_001",
+   "a": "café",
+   "b": "café",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_002",
+   "a": "ｈｅｌｌｏ",
+   "b": "hello",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_003",
+   "a": "hello​world",
+   "b": "helloworld",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_004",
+   "a": "ﬁsh",
+   "b": "fish",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_005",
+   "a": "ﬁsh",
+   "b": "dish",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_006",
+   "a": "ｐａｙ",
+   "b": "play",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_007",
+   "a": "co​de",
+   "b": "coda",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_008",
+   "a": "night",
+   "b": "light",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "cs_001",
+   "a": "hello amigo",
+   "b": "hello amigo!",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_002",
+   "a": "I love mi casa",
+   "b": "I love my casa",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_003",
+   "a": "bonjour World",
+   "b": "bonjour world",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_004",
+   "a": "I ❤️ casa",
+   "b": "I love casa",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_005",
+   "a": "I ❤️ casa",
+   "b": "I hate casa",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_006",
+   "a": "hello amigo",
+   "b": "goodbye friend",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_007",
+   "a": "bonjour world",
+   "b": "au revoir lune",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_008",
+   "a": "Spanglish amigo test",
+   "b": "English friend exam",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "short_001",
+   "a": "ok",
+   "b": "ok",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_002",
+   "a": "yes",
+   "b": "yes!",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_003",
+   "a": "no",
+   "b": "no.",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_004",
+   "a": "hi",
+   "b": "Hi",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_005",
+   "a": "ok",
+   "b": "no",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_006",
+   "a": "yes",
+   "b": "no",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_007",
+   "a": "en",
+   "b": "an",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_008",
+   "a": "up",
+   "b": "us",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "spam_001",
+   "a": "WIN FREE PRIZE claim now",
+   "b": "WIN FREE PRIZE claim today",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_002",
+   "a": "cheap meds online buy now",
+   "b": "cheap meds online order now",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_003",
+   "a": "URGENT wire transfer needed",
+   "b": "URGENT wire transfer required",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_004",
+   "a": "congratulations you won lottery",
+   "b": "congratulations you have won lottery",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_005",
+   "a": "WIN FREE PRIZE claim now",
+   "b": "meeting notes from today",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_006",
+   "a": "cheap meds online",
+   "b": "cheap flights online",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_007",
+   "a": "you won lottery",
+   "b": "you lost keys",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_008",
+   "a": "free prize",
+   "b": "free coffee",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "hn_001",
+   "a": "Fra🏠do",
+   "b": "ferrocarril",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_002",
+   "a": "privet",
+   "b": "private",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_003",
+   "a": "salam",
+   "b": "salami",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_004",
+   "a": "gr8",
+   "b": "grate",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_005",
+   "a": "compra ahora",
+   "b": "compra hora",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_006",
+   "a": "4 you",
+   "b": "4 me",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_007",
+   "a": "m8",
+   "b": "made",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_008",
+   "a": "slt",
+   "b": "salt",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
    ]
   }
  ]

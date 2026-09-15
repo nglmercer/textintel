@@ -20,5 +20,12 @@ pub fn cosine(a: &[f32], b: &[f32]) -> f64 {
     if left_norm == 0.0 || right_norm == 0.0 {
         return 0.0;
     }
-    dot / (left_norm * right_norm)
+    let similarity = dot / (left_norm * right_norm);
+    // Total function: hostile vectors (NaN/Inf) score 0 instead of
+    // poisoning downstream scoring with NaN.
+    if similarity.is_finite() {
+        similarity
+    } else {
+        0.0
+    }
 }

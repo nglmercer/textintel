@@ -19,6 +19,7 @@
     {"token": "8", "readings": [{"text": "oito", "probability": 0.75, "reading_type": "number_reading"}]},
     {"token": "9", "readings": [{"text": "nove", "probability": 0.75, "reading_type": "number_reading"}]},
     {"token": "10", "readings": [{"text": "dez", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "100", "readings": [{"text": "cem", "probability": 0.80, "reading_type": "number_reading"}]}
+    {"token": "100", "readings": [{"text": "cem", "probability": 0.80, "reading_type": "number_reading"}]},
+    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "café", "probability": 0.80, "reading_type": "symbol_reading"}]}
   ]
 }

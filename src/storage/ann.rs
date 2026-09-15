@@ -6,9 +6,24 @@
 //! comparison, so approximate recall never becomes a false verdict.
 //!
 //! Removals are tombstones (HNSW graphs are append-only); callers filter
-//! results against live records. Re vectors from mixed-dimension stores are
+//! results against live records. Vectors from mixed-dimension stores are
 //! rejected at insert; fingerprints without a `default` embedding are
 //! skipped.
+//!
+//! # Persistence strategy: deterministic rebuild on startup
+//!
+//! The HNSW graph itself is **never persisted**. Only `(document id, whole-text
+//! vector)` pairs persist, inside the fingerprint store (JSON/redb). On
+//! startup the index is rebuilt deterministically by re-inserting those pairs
+//! in id-sorted order ([`HnswVectorIndex::rebuild`],
+//! [`MemoryStore::rebuild_ann`](crate::storage::MemoryStore::rebuild_ann)).
+//! There is no background persister, no WAL, and no version skew to migrate:
+//! a restart always converges to the same graph for the same records.
+//!
+//! Rationale: HNSW graphs are append-only with tombstoned removals, so a
+//! persisted graph would accumulate dead entries and hinge on an exact
+//! `hnsw_rs` version. Rebuilds compact tombstones for free and keep one
+//! source of truth (the fingerprint store).
 
 use std::sync::RwLock;
 
@@ -132,6 +147,47 @@ impl HnswVectorIndex {
         Ok(())
     }
 
+    /// Deterministic rebuild from `(id, vector)` pairs: entries are
+    /// inserted in id-sorted order so the same records always produce the
+    /// same graph. Pairs with the wrong dimension or non-finite values are
+    /// skipped (mixed-dimension stores stay loadable); everything else that
+    /// fails to insert aborts the rebuild with an error.
+    pub fn rebuild(
+        dimensions: usize,
+        max_elements: usize,
+        documents: &[(String, Vec<f32>)],
+    ) -> Result<Self, String> {
+        let mut sorted: Vec<&(String, Vec<f32>)> = documents.iter().collect();
+        sorted.sort_by(|left, right| left.0.cmp(&right.0));
+        let index = Self::new(dimensions, max_elements)?;
+        for (id, vector) in sorted {
+            if vector.len() != dimensions || vector.iter().any(|value| !value.is_finite()) {
+                continue;
+            }
+            index.insert(id, vector)?;
+        }
+        Ok(index)
+    }
+
+    /// Snapshot the indexable pairs of any [`VectorStore`](crate::core::providers::VectorStore):
+    /// `(id, default-embedding)` for records that carry one, in store order.
+    /// Feed the result to [`Self::rebuild`] after a restart.
+    pub fn snapshot_store(
+        store: &dyn crate::core::providers::VectorStore,
+    ) -> Vec<(String, Vec<f32>)> {
+        store
+            .records()
+            .into_iter()
+            .filter_map(|(id, fingerprint)| {
+                fingerprint
+                    .semantic_embeddings
+                    .get("default")
+                    .cloned()
+                    .map(|vector| (id, vector))
+            })
+            .collect()
+    }
+
     /// Tombstone `id`. Returns false when the id was never indexed.
     pub fn remove(&self, id: &str) -> bool {
         let Ok(mut ids) = self.ids.write() else {
@@ -229,6 +285,31 @@ mod tests {
         // Re-inserting replaces the tombstone without growing live count.
         index.insert("doc-3", &unit_vector(3, 8)).unwrap();
         assert_eq!(index.len(), 20);
+    }
+
+    #[test]
+    fn rebuild_is_deterministic_and_compacts_removals() {
+        let documents: Vec<(String, Vec<f32>)> = (0..20)
+            .map(|point| (format!("doc-{point:02}"), unit_vector(point * 7 + 1, 8)))
+            .collect();
+        // Insertion order must not matter: rebuild sorts by id.
+        let mut shuffled = documents.clone();
+        shuffled.reverse();
+        let first = HnswVectorIndex::rebuild(8, 100, &documents).unwrap();
+        let second = HnswVectorIndex::rebuild(8, 100, &shuffled).unwrap();
+        assert_eq!(first.len(), 20);
+        assert_eq!(second.len(), 20);
+        let query = unit_vector(3 * 7 + 1, 8);
+        let hits_first = first.search(&query, 5).unwrap();
+        let hits_second = second.search(&query, 5).unwrap();
+        assert_eq!(hits_first, hits_second);
+        assert_eq!(hits_first[0].0, "doc-03");
+        // Wrong-dimension and non-finite pairs are skipped, never fatal.
+        let mut mixed = documents;
+        mixed.push(("bad-dim".to_string(), vec![0.0; 4]));
+        mixed.push(("bad-finite".to_string(), vec![f32::NAN; 8]));
+        let rebuilt = HnswVectorIndex::rebuild(8, 100, &mixed).unwrap();
+        assert_eq!(rebuilt.len(), 20);
     }
 
     #[test]

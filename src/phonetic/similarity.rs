@@ -95,6 +95,22 @@ pub fn phonetic_similarity(a: &PhoneticCandidate, b: &PhoneticCandidate) -> f64 
     let exact = 1.0 - phoneme_edit_distance(&a.phonemes, &b.phonemes) as f64 / max_len;
     let grams = 0.5 * phoneme_ngram_similarity(&a.phonemes, &b.phonemes, 2)
         + 0.5 * phoneme_ngram_similarity(&a.phonemes, &b.phonemes, 3);
-    (0.45 * edit + 0.25 * exact + 0.20 * grams + 0.10 * a.confidence.min(b.confidence))
-        .clamp(0.0, 1.0)
+    // Hostile fingerprints can carry non-finite confidences; sanitize so
+    // the channel stays total.
+    let confidence_a = if a.confidence.is_finite() {
+        a.confidence
+    } else {
+        0.0
+    };
+    let confidence_b = if b.confidence.is_finite() {
+        b.confidence
+    } else {
+        0.0
+    };
+    let score = 0.45 * edit + 0.25 * exact + 0.20 * grams + 0.10 * confidence_a.min(confidence_b);
+    if score.is_finite() {
+        score.clamp(0.0, 1.0)
+    } else {
+        0.0
+    }
 }

@@ -119,8 +119,11 @@ pub fn score_candidate_with_g2p(
 /// default so legacy callers are unaffected.
 #[derive(Debug, Clone, Default)]
 pub struct RebusEvidence {
-    /// Language reported by the beam decoder for this candidate.
+    /// Primary language reported by the beam decoder for this candidate.
     pub candidate_language: Option<String>,
+    /// Every language observed along the beam path (enables mixed-language
+    /// scoring; empty falls back to `candidate_language`).
+    pub candidate_languages: Vec<String>,
     /// Whole-text semantic similarity between surface and source, when an
     /// embedding backend is available.
     pub semantic_similarity: Option<f64>,
@@ -129,37 +132,71 @@ pub struct RebusEvidence {
 }
 
 impl RebusEvidence {
-    /// Penalty in `[0.0, 0.35]`: cheap normalizations cost less than
+    /// Penalty capped by the weights: cheap normalizations cost less than
     /// symbol readings, so far-fetched derivations cannot outrank plain ones.
     pub fn transformation_penalty(&self) -> f64 {
+        self.transformation_penalty_with_weights(&crate::core::config::RebusWeights::default())
+    }
+
+    pub fn transformation_penalty_with_weights(
+        &self,
+        weights: &crate::core::config::RebusWeights,
+    ) -> f64 {
         let mut penalty = 0.0f64;
         for kind in &self.transformation_types {
             let cost = if kind == "identity" {
-                0.0
+                weights.cost_identity
             } else if kind.contains("boundary") {
-                0.03
+                weights.cost_boundary
             } else if kind.contains("leet") || kind.contains("case") || kind.contains("normal") {
-                0.05
+                weights.cost_leet
             } else if kind.contains("symbol") || kind.contains("emoji") || kind.contains("read") {
-                0.10
+                weights.cost_symbol
             } else {
-                0.08
+                weights.cost_other
             };
             penalty += cost;
         }
-        penalty.min(0.35)
+        penalty.min(weights.transformation_penalty_cap)
     }
 
     /// Compatibility in `[0.0, 1.0]` between the candidate language and the
     /// requested languages. Unknown on either side is neutral, never evidence.
+    /// Languages observed along the beam path behind this candidate.
+    /// Empty means "unknown" and stays neutral; a non-empty set that is
+    /// covered by the requested languages scores 1.0, partial overlap 0.8,
+    /// and disjoint sets 0.4. Mixed-language derivations are valid by
+    /// design: covering *more* requested languages never scores below a
+    /// single-language mismatch.
     pub fn language_score(&self, languages: Option<&[String]>) -> f64 {
-        match (&self.candidate_language, languages) {
-            (Some(candidate), Some(requested)) => {
-                if requested
+        let requested = languages.filter(|values| !values.is_empty());
+        let mut observed: Vec<&str> = self
+            .candidate_languages
+            .iter()
+            .map(String::as_str)
+            .collect();
+        if observed.is_empty() {
+            if let Some(single) = self.candidate_language.as_deref() {
+                observed.push(single);
+            }
+        }
+        observed.retain(|language| {
+            !language.eq_ignore_ascii_case("und") && !language.eq_ignore_ascii_case("unknown")
+        });
+        match (requested, observed.is_empty()) {
+            (Some(requested), false) => {
+                let covered = observed
                     .iter()
-                    .any(|language| language.eq_ignore_ascii_case(candidate))
-                {
+                    .filter(|candidate| {
+                        requested
+                            .iter()
+                            .any(|language| language.eq_ignore_ascii_case(candidate))
+                    })
+                    .count();
+                if covered == observed.len() {
                     1.0
+                } else if covered > 0 {
+                    0.8
                 } else {
                     0.4
                 }
@@ -183,20 +220,56 @@ pub fn score_candidate_with_evidence(
     g2p_provider: &dyn G2PProvider,
     evidence: &RebusEvidence,
 ) -> (f64, f64, f64, f64) {
+    score_candidate_with_evidence_and_weights(
+        surface,
+        source,
+        prior,
+        max_recursion,
+        languages,
+        provider,
+        g2p_provider,
+        evidence,
+        &crate::core::config::RebusWeights::default(),
+    )
+}
+
+/// [`score_candidate_with_evidence`] with an explicit weight vector from
+/// [`EngineConfig::rebus_weights`](crate::core::config::EngineConfig).
+/// Channel weights are renormalized, so tuned or trained vectors only need
+/// correct relative magnitudes.
+#[allow(clippy::too_many_arguments)]
+pub fn score_candidate_with_evidence_and_weights(
+    surface: &str,
+    source: &str,
+    prior: f64,
+    max_recursion: usize,
+    languages: Option<&[String]>,
+    provider: &dyn LexiconProvider,
+    g2p_provider: &dyn G2PProvider,
+    evidence: &RebusEvidence,
+    weights: &crate::core::config::RebusWeights,
+) -> (f64, f64, f64, f64) {
     let lexical = lexical_plausibility_with_provider(surface, max_recursion, languages, provider);
     let frequency = provider.frequency(surface, languages).unwrap_or(0.0);
-    let frequency_bonus = (frequency.ln_1p() / 5.0).clamp(0.0, 0.25);
+    let frequency_bonus =
+        (frequency.ln_1p() / weights.frequency_scale).clamp(0.0, weights.frequency_cap);
     let lexical = (lexical + frequency_bonus).min(1.0);
     let phonetic = g2p_similarity(surface, source, languages, g2p_provider).unwrap_or(0.5);
     let context = context_score(surface, lexical, provider, languages);
     let language = evidence.language_score(languages);
     let symbol = prior.clamp(0.0, 1.0);
-    let base =
-        (0.36 * lexical + 0.22 * phonetic + 0.12 * context + 0.18 * symbol + 0.12 * language)
-            .clamp(0.0, 1.0);
-    let penalized = base * (1.0 - evidence.transformation_penalty());
+    let base = ((weights.lexical * lexical
+        + weights.phonetic * phonetic
+        + weights.context * context
+        + weights.symbol * symbol
+        + weights.language * language)
+        / weights.channel_sum())
+    .clamp(0.0, 1.0);
+    let penalized = base * (1.0 - evidence.transformation_penalty_with_weights(weights));
     let total = match evidence.semantic_similarity {
-        Some(similarity) => 0.85 * penalized + 0.15 * similarity.clamp(0.0, 1.0),
+        Some(similarity) => {
+            (1.0 - weights.semantic) * penalized + weights.semantic * similarity.clamp(0.0, 1.0)
+        }
         None => penalized,
     }
     .clamp(0.0, 1.0);

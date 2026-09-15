@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::sync::{Arc, RwLock};
+use std::time::Instant;
 
 use crate::comparison::model::{score_fingerprints_with_profile, SimilarityProfile};
 use crate::comparison::scorer::score_fingerprints as weighted_score_fingerprints;
@@ -10,12 +11,12 @@ use crate::core::error::{ProviderError, TextIntelError};
 use crate::core::providers::{
     AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
     LemmatizerProvider, LexiconProvider, RerankerProvider, SimilarityScorer, SpamPredictor,
-    SymbolKnowledgeProvider, VectorStore,
+    SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
 };
 use crate::core::types::{
     ChannelAvailability, ComparisonResult, DecodedCandidate, DuplicateMode, DuplicateResult,
     LexicalFeatures, MessageFingerprint, Pattern, PatternMatch, PhoneticCandidate, SearchResult,
-    SpokenCandidate, Transformation,
+    SpokenCandidate, StageTimings, Transformation,
 };
 use crate::detection::duplicates::{duplicate_result, duplicate_result_with_mode};
 use crate::detection::patterns::match_pattern_fingerprint;
@@ -38,6 +39,7 @@ use crate::resources::ResourceLoader;
 use crate::semantic::embeddings::NullEmbeddingProvider;
 use crate::storage::{JsonFileStore, MemoryStore};
 use crate::symbols::resolver::resolve_symbols_with_provider;
+use crate::transliteration::RuleBasedTransliterationProvider;
 use crate::visual::unicode_features::analyze_unicode;
 
 struct RegisteredPattern {
@@ -63,10 +65,12 @@ pub struct TextIntelligence {
     lemmatizer_provider: Option<Arc<dyn LemmatizerProvider>>,
     symbol_provider: Arc<dyn SymbolKnowledgeProvider>,
     abbreviation_provider: Option<Arc<dyn AbbreviationProvider>>,
+    transliteration_provider: Option<Arc<dyn TransliterationProvider>>,
     reranker_provider: Option<Arc<dyn RerankerProvider>>,
     spam_predictor: Arc<dyn SpamPredictor>,
     similarity_scorer: Option<Arc<dyn SimilarityScorer>>,
     similarity_profile: Option<SimilarityProfile>,
+    preset_fallbacks: Vec<DegradedCapability>,
     store: RwLock<Box<dyn VectorStore>>,
     patterns: RwLock<BTreeMap<String, RegisteredPattern>>,
 }
@@ -110,10 +114,12 @@ impl TextIntelligence {
             lemmatizer_provider: None,
             symbol_provider: resources.clone(),
             abbreviation_provider: Some(resources),
+            transliteration_provider: Some(Arc::new(RuleBasedTransliterationProvider)),
             reranker_provider: None,
             spam_predictor: Arc::new(HeuristicSpamPredictor),
             similarity_scorer: None,
             similarity_profile: None,
+            preset_fallbacks: Vec::new(),
             store: RwLock::new(Box::new(MemoryStore::default())),
             patterns: RwLock::new(BTreeMap::new()),
         }
@@ -164,6 +170,9 @@ impl TextIntelligence {
         if let Some(provider) = builder.abbreviations {
             engine.abbreviation_provider = Some(provider);
         }
+        if let Some(provider) = builder.transliteration {
+            engine.transliteration_provider = Some(provider);
+        }
         if let Some(provider) = builder.reranker {
             engine.reranker_provider = Some(provider);
         }
@@ -176,6 +185,7 @@ impl TextIntelligence {
         if let Some(profile) = builder.similarity_profile {
             engine.similarity_profile = Some(profile);
         }
+        engine.preset_fallbacks = builder.preset_fallbacks;
         if let Some(path) = builder.similarity_model_path {
             if let Some(scorer) = crate::engine::production::load_similarity_scorer(
                 &path,
@@ -219,6 +229,12 @@ impl TextIntelligence {
         capabilities.insert("symbols".to_string(), self.symbol_provider.capabilities());
         if let Some(abbreviations) = &self.abbreviation_provider {
             capabilities.insert("abbreviations".to_string(), abbreviations.capabilities());
+        }
+        if let Some(transliteration) = &self.transliteration_provider {
+            capabilities.insert(
+                "transliteration".to_string(),
+                transliteration.capabilities(),
+            );
         }
         capabilities.insert("spam".to_string(), self.spam_predictor.capabilities());
         capabilities.insert(
@@ -375,6 +391,7 @@ impl TextIntelligence {
                 "large stores compare exhaustively; enable the ANN index for sublinear retrieval",
             );
         }
+        degraded.extend(self.preset_fallbacks.clone());
         degraded
     }
 
@@ -435,6 +452,20 @@ impl TextIntelligence {
         provider: P,
     ) -> Self {
         self.symbol_provider = Arc::new(provider);
+        self
+    }
+
+    pub fn with_transliteration_provider<P: TransliterationProvider + 'static>(
+        mut self,
+        provider: P,
+    ) -> Self {
+        self.transliteration_provider = Some(Arc::new(provider));
+        self
+    }
+
+    /// Disable transliteration views (fingerprint keeps all other channels).
+    pub fn without_transliteration(mut self) -> Self {
+        self.transliteration_provider = None;
         self
     }
 
@@ -516,12 +547,23 @@ impl TextIntelligence {
         }
         let mut values = Vec::new();
         let mut seen = BTreeSet::new();
-        let language_list: Vec<String> = languages
+        // Configured hints win over detection for G2P voice selection, then
+        // detected languages fill the remaining slots.
+        let mut language_list: Vec<String> = self
+            .config
+            .language_hints
             .iter()
-            .filter(|candidate| candidate.language != "unknown")
-            .take(3)
-            .map(|candidate| candidate.language.clone())
+            .filter(|hint| hint.as_str() != "unknown")
+            .cloned()
             .collect();
+        language_list.extend(
+            languages
+                .iter()
+                .filter(|candidate| candidate.language != "unknown")
+                .map(|candidate| candidate.language.clone()),
+        );
+        language_list.dedup();
+        language_list.truncate(3);
         let language_list = if language_list.is_empty() {
             vec!["und".to_string()]
         } else {
@@ -547,8 +589,26 @@ impl TextIntelligence {
         &self,
         text: &str,
     ) -> Result<(MessageFingerprint, Vec<EmbeddingInput>), TextIntelError> {
+        let (fingerprint, inputs, _) = self.analyze_stages(text)?;
+        Ok((fingerprint, inputs))
+    }
+
+    /// [`analyze_base`](Self::analyze) plus per-stage timings. Durations only;
+    /// no text or vectors ever enter [`StageTimings`].
+    fn analyze_stages(
+        &self,
+        text: &str,
+    ) -> Result<(MessageFingerprint, Vec<EmbeddingInput>, StageTimings), TextIntelError> {
         self.check_length(text)?;
+        let total_started = Instant::now();
+        let mut timings = StageTimings::default();
+        let elapsed = |started: Instant| started.elapsed().as_secs_f64() * 1_000_000.0;
+
+        let started = Instant::now();
         let unicode = analyze_unicode(text);
+        timings.normalization_micros += elapsed(started);
+
+        let started = Instant::now();
         let languages = self.detect(text)?;
         let language_names: Vec<String> = languages
             .iter()
@@ -585,17 +645,33 @@ impl TextIntelligence {
             simhash: simhash(&lemmas, 64),
             minhash: minhash_signature(&lemmas, 32),
         };
+        timings.language_micros += elapsed(started);
+
+        let started = Instant::now();
         let symbols = resolve_symbols_with_provider(
             text,
             self.config.max_symbol_readings,
             self.symbol_provider.as_ref(),
         );
+        timings.symbols_micros += elapsed(started);
+
+        let started = Instant::now();
         let obfuscation = obfuscation_features(text, &unicode);
+        timings.normalization_micros += elapsed(started);
+
+        // Configured hints override detected languages for decoding; hints
+        // never change detection itself.
+        let decode_languages: Vec<String> = if self.config.language_hints.is_empty() {
+            language_names.clone()
+        } else {
+            self.config.language_hints.clone()
+        };
+        let started = Instant::now();
         let decoder = RebusDecoder::new(self.config.clone());
         let abbreviations = self.abbreviation_provider.as_deref();
         let rebus = decoder.decode_with_abbreviations(
             text,
-            Some(&language_names),
+            Some(&decode_languages),
             Some(self.config.max_candidates),
             self.symbol_provider.as_ref(),
             self.lexicon_provider.as_ref(),
@@ -613,10 +689,15 @@ impl TextIntelligence {
                 confidence: candidate.score,
                 source: "rebus".to_string(),
             })
-            .collect();
+            .collect::<Vec<_>>();
+        timings.rebus_micros += elapsed(started);
 
         let semantic_embeddings = BTreeMap::new();
+        let started = Instant::now();
         let phonetic_candidates = self.build_phonetic_candidates(text, &languages, &rebus)?;
+        timings.phonetic_micros += elapsed(started);
+
+        let started = Instant::now();
         let normalized = normalize_whitespace(&collapse_repetition(
             &apply_leet(&casefold_text(&nfkc(text))),
             self.config.repetition_keep,
@@ -631,15 +712,31 @@ impl TextIntelligence {
             collapse_repetition(&unicode.casefolded, self.config.repetition_keep),
         );
         normalization_views.insert("normalized".to_string(), normalized.clone());
+        // Transliteration views are additive: `raw` is never replaced.
+        if let Some(provider) = &self.transliteration_provider {
+            for view in provider.transliterate(text) {
+                normalization_views.insert(
+                    format!("transliteration:{}", view.target_script.to_lowercase()),
+                    view.text,
+                );
+            }
+        }
         let transformations = normalization_views
             .iter()
             .filter(|(name, value)| value.as_str() != text && name.as_str() != "normalized")
-            .map(|(name, value)| Transformation {
-                source: text.to_string(),
-                replacement: value.clone(),
-                transformation_type: format!("normalization:{name}"),
+            .map(|(name, value)| {
+                let mut step =
+                    Transformation::new(text, value.clone(), format!("normalization:{name}"))
+                        .with_span(0, text.len(), text);
+                if name.starts_with("transliteration:") {
+                    step = step.with_provider("transliteration");
+                } else {
+                    step = step.with_provider("normalization");
+                }
+                step
             })
             .collect();
+        timings.normalization_micros += elapsed(started);
         let mut channel_availability = BTreeMap::new();
         channel_availability.insert(
             "lexical".to_string(),
@@ -747,7 +844,8 @@ impl TextIntelligence {
             channel_availability,
             metadata,
         };
-        Ok((fingerprint, embedding_inputs))
+        timings.total_micros = total_started.elapsed().as_secs_f64() * 1_000_000.0;
+        Ok((fingerprint, embedding_inputs, timings))
     }
 
     fn attach_embeddings(
@@ -813,8 +911,20 @@ impl TextIntelligence {
     }
 
     pub fn analyze(&self, text: &str) -> Result<MessageFingerprint, TextIntelError> {
-        let (mut fingerprint, embedding_inputs) = self.analyze_base(text)?;
+        Ok(self.analyze_with_timing(text)?.0)
+    }
+
+    /// [`analyze`](Self::analyze) plus per-stage timings. The timings carry
+    /// durations only — no input text, embeddings, or user data — so they are
+    /// safe to log and export by default.
+    pub fn analyze_with_timing(
+        &self,
+        text: &str,
+    ) -> Result<(MessageFingerprint, StageTimings), TextIntelError> {
+        let total_started = Instant::now();
+        let (mut fingerprint, embedding_inputs, mut timings) = self.analyze_stages(text)?;
         if self.config.semantic {
+            let started = Instant::now();
             let values = self
                 .embedding_provider
                 .embed_batch(
@@ -825,8 +935,10 @@ impl TextIntelligence {
                 )
                 .map_err(TextIntelError::from)?;
             self.attach_embeddings(&mut fingerprint, &embedding_inputs, values)?;
+            timings.semantic_micros = started.elapsed().as_secs_f64() * 1_000_000.0;
         }
-        Ok(fingerprint)
+        timings.total_micros = total_started.elapsed().as_secs_f64() * 1_000_000.0;
+        Ok((fingerprint, timings))
     }
 
     pub fn analyze_batch(
@@ -940,9 +1052,16 @@ impl TextIntelligence {
         } else {
             None
         };
+        // Explicit languages win; configured hints fill in when the caller
+        // passes none; otherwise the decoder runs language-neutral.
+        let effective = languages.or(if self.config.language_hints.is_empty() {
+            None
+        } else {
+            Some(self.config.language_hints.as_slice())
+        });
         Ok(decoder.decode_with_abbreviations(
             text,
-            languages,
+            effective,
             max_candidates,
             self.symbol_provider.as_ref(),
             self.lexicon_provider.as_ref(),
@@ -953,9 +1072,35 @@ impl TextIntelligence {
     }
 
     pub fn compare(&self, left: &str, right: &str) -> Result<ComparisonResult, TextIntelError> {
-        let left = self.analyze(left)?;
-        let right = self.analyze(right)?;
-        Ok(self.score_pair(&left, &right))
+        Ok(self.compare_with_timing(left, right)?.0)
+    }
+
+    /// [`compare`](Self::compare) plus per-stage timings. The two `analyze`
+    /// stages are summed per stage; `comparison` holds the scoring step and
+    /// `total` the whole call. Timings never contain user text.
+    pub fn compare_with_timing(
+        &self,
+        left: &str,
+        right: &str,
+    ) -> Result<(ComparisonResult, StageTimings), TextIntelError> {
+        let total_started = Instant::now();
+        let (left_fp, left_timings) = self.analyze_with_timing(left)?;
+        let (right_fp, right_timings) = self.analyze_with_timing(right)?;
+        let started = Instant::now();
+        let result = self.score_pair(&left_fp, &right_fp);
+        let mut timings = StageTimings {
+            normalization_micros: left_timings.normalization_micros
+                + right_timings.normalization_micros,
+            language_micros: left_timings.language_micros + right_timings.language_micros,
+            symbols_micros: left_timings.symbols_micros + right_timings.symbols_micros,
+            rebus_micros: left_timings.rebus_micros + right_timings.rebus_micros,
+            semantic_micros: left_timings.semantic_micros + right_timings.semantic_micros,
+            phonetic_micros: left_timings.phonetic_micros + right_timings.phonetic_micros,
+            comparison_micros: started.elapsed().as_secs_f64() * 1_000_000.0,
+            total_micros: 0.0,
+        };
+        timings.total_micros = total_started.elapsed().as_secs_f64() * 1_000_000.0;
+        Ok((result, timings))
     }
 
     pub fn compare_fingerprints(

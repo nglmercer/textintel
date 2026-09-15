@@ -179,6 +179,7 @@ fn evaluation_chunks_batches_larger_than_max_batch_size() {
             languages: Vec::new(),
             split: "test".to_string(),
             difficulty: "medium".to_string(),
+            category: String::new(),
             labels: [(String::from("similar"), similar)].into_iter().collect(),
             expected: Default::default(),
             tags: Vec::new(),

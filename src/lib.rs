@@ -6,6 +6,7 @@
 //! obfuscation views.  Providers for expensive or remote capabilities are
 //! optional and can be replaced without changing the engine API.
 
+pub mod cache;
 pub mod comparison;
 pub mod core;
 pub mod detection;
@@ -21,20 +22,25 @@ pub mod resources;
 pub mod semantic;
 pub mod storage;
 pub mod symbols;
+pub mod transliteration;
 pub mod visual;
 
+pub use cache::{
+    CachedG2PProvider, CachedLanguageDetectionProvider, CachedRebusDecoder, RevisionCache,
+};
 pub use comparison::{
     language_agreement, logistic_step, rerank_score, score_fingerprints_with_profile, sigmoid,
     training_features, ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer,
     SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURES, TRAINING_FEATURE_SCHEMA_VERSION,
 };
 pub use core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
-pub use core::config::{EngineConfig, SimilarityWeights};
+pub use core::config::{EngineConfig, RebusWeights, SimilarityWeights};
 pub use core::error::{ProviderError, TextIntelError};
 pub use core::providers::{
     AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
     LemmatizerProvider, LexiconProvider, RerankerProvider, SharedAbbreviationProvider,
-    SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, VectorStore,
+    SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, Transliteration,
+    TransliterationProvider, VectorStore,
 };
 pub use core::types::*;
 pub use detection::{
@@ -76,3 +82,4 @@ pub use storage::{
     OLDEST_SUPPORTED_FINGERPRINT_VERSION, PATTERN_STORE_SCHEMA_VERSION,
 };
 pub use symbols::DefaultSymbolKnowledge;
+pub use transliteration::{transliteration_similarity, RuleBasedTransliterationProvider};

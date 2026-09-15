@@ -29,6 +29,7 @@
     {"token": "₹", "readings": [{"text": "रुपया", "probability": 0.7, "reading_type": "currency"}]},
     {"token": "%", "readings": [{"text": "प्रतिशत", "probability": 0.7, "reading_type": "math"}]},
     {"token": "+", "readings": [{"text": "प्लस", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "बराबर", "probability": 0.7, "reading_type": "math"}]}
+    {"token": "=", "readings": [{"text": "बराबर", "probability": 0.7, "reading_type": "math"}]},
+    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "कॉफ़ी", "probability": 0.80, "reading_type": "symbol_reading"}]}
   ]
 }

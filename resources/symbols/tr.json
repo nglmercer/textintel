@@ -29,6 +29,7 @@
     {"token": "₹", "readings": [{"text": "rupi", "probability": 0.7, "reading_type": "currency"}]},
     {"token": "%", "readings": [{"text": "yüzde", "probability": 0.7, "reading_type": "math"}]},
     {"token": "+", "readings": [{"text": "artı", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "eşittir", "probability": 0.7, "reading_type": "math"}]}
+    {"token": "=", "readings": [{"text": "eşittir", "probability": 0.7, "reading_type": "math"}]},
+    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "kahve", "probability": 0.80, "reading_type": "symbol_reading"}]}
   ]
 }

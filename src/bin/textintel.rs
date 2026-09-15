@@ -5,7 +5,7 @@ use textintel::evaluation::{EvaluateOptions, EvaluationDataset, EvaluationReport
 use textintel::{EngineConfig, ResourceLoader, TextIntelligence};
 
 fn usage() -> &'static str {
-    "Usage:\n  textintel analyze <text> [--json] [--production]\n  textintel explain <text> [--json]\n  textintel decode <text> [--languages <es,en>] [--json]\n  textintel compare <message-a> <message-b> [--json]\n  textintel spam <text> [--json]\n  textintel batch <input.jsonl> [--json]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel evaluate <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json]\n  textintel index <store.json> <id> <text>\n  textintel search <store.json> <text> <limit> [--json]"
+    "Usage:\n  textintel analyze <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel explain <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel decode <text> [--languages <es,en>] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel compare <message-a> <message-b> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel duplicate <message-a> <message-b> [--threshold <0..1>] [--mode combined|near_exact|lexical|semantic|phonetic|decoded|visual] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel spam <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel batch <input.jsonl> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json] [--production]\n  textintel evaluate <evaluation.json> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--no-ranking] [--json] [--production]\n  textintel index <store.json> <id> <text>\n  textintel search <store.json> <text> <limit> [--json]\n\nJSON output contract: every --json payload follows API_VERSION (see\nschema-version); payloads evolve additively only — fields are added, never\nrenamed or removed, within a major version."
 }
 
 fn print_json<T: serde::Serialize>(value: &T) -> Result<(), Box<dyn std::error::Error>> {
@@ -73,6 +73,18 @@ fn print_eval_human(report: &EvaluationReport) {
         report.ranking.ndcg_at_10,
         report.ranking.queries
     );
+    if !report.categories.is_empty() {
+        println!("categories:");
+        let mut names: Vec<&String> = report.categories.keys().collect();
+        names.sort();
+        for name in names {
+            let metrics = &report.categories[name];
+            println!(
+                "  {name}: n={} f1={:.3} acc={:.3} roc_auc={:.3} pr_auc={:.3}",
+                metrics.count, metrics.f1, metrics.accuracy, metrics.roc_auc, metrics.pr_auc
+            );
+        }
+    }
     println!(
         "latency: compare_mean={:.0}us p50={:.0} p95={:.0} p99={:.0}",
         report.compare_latency.mean_micros,
@@ -124,10 +136,114 @@ fn check_gates(report: &EvaluationReport, gates: &serde_json::Value) -> Vec<Stri
             }
         }
     }
+    // Per-category gates: `{ "categories": { "<name>": { "<metric>_min": f64,
+    // "count_min": n } } }`. Missing categories fail only when `count_min`
+    // is positive, so gates can require coverage without pinning metrics.
+    if let Some(categories) = sections
+        .get("categories")
+        .and_then(|value| value.as_object())
+    {
+        for (name, thresholds) in categories {
+            let Some(thresholds) = thresholds.as_object() else {
+                continue;
+            };
+            let observed = report.categories.get(name);
+            if let Some(count_min) = thresholds.get("count_min").and_then(|v| v.as_u64()) {
+                let count = observed.map(|metrics| metrics.count as u64).unwrap_or(0);
+                if count < count_min {
+                    failures.push(format!(
+                        "categories.{name}.count={count} below minimum {count_min}"
+                    ));
+                    continue;
+                }
+            }
+            let Some(metrics) = observed else { continue };
+            for (metric, value) in [
+                ("accuracy", metrics.accuracy),
+                ("f1", metrics.f1),
+                ("roc_auc", metrics.roc_auc),
+                ("pr_auc", metrics.pr_auc),
+            ] {
+                let key = format!("{metric}_min");
+                if let Some(minimum) = thresholds.get(&key).and_then(|v| v.as_f64()) {
+                    if value < minimum {
+                        failures.push(format!(
+                            "categories.{name}.{metric}={value:.3} below minimum {minimum:.3}"
+                        ));
+                    }
+                }
+            }
+        }
+    }
     failures
 }
 
-fn run_eval(args: &[String], json: bool) -> Result<i32, Box<dyn std::error::Error>> {
+/// Language hints from `--language <code>` or `--languages <a,b>`.
+fn language_hints(args: &[String]) -> Option<Vec<String>> {
+    flag_value(args, "--languages")
+        .or_else(|| flag_value(args, "--language"))
+        .map(|value| {
+            value
+                .split(',')
+                .map(|part| part.trim().to_string())
+                .filter(|part| !part.is_empty())
+                .collect::<Vec<_>>()
+        })
+        .filter(|values| !values.is_empty())
+}
+
+/// Shared engine construction: default or `--production` preset, then
+/// `--language` hints (decode/G2P preference), `--resource-root` (custom
+/// packs), and `--model-path` (directory holding `similarity-v1.json` /
+/// `spam-v1.json`; present-but-invalid artifacts fail loudly).
+fn build_engine(
+    args: &[String],
+    production: bool,
+) -> Result<TextIntelligence, Box<dyn std::error::Error>> {
+    let mut config = EngineConfig::default();
+    if let Some(hints) = language_hints(args) {
+        config.language_hints = hints;
+    }
+    let mut engine = if production {
+        TextIntelligence::builder()
+            .config(config)
+            .production_local()
+            .build()
+            .map_err(|error| error.to_string())?
+    } else {
+        TextIntelligence::new(config)
+    };
+    if let Some(root) = flag_value(args, "--resource-root") {
+        engine = engine.with_resources(
+            ResourceLoader::from_resource_root(&root).map_err(|error| error.to_string())?,
+        );
+    }
+    if let Some(dir) = flag_value(args, "--model-path") {
+        let similarity = std::path::Path::new(&dir).join("similarity-v1.json");
+        if similarity.is_file() {
+            let source = std::fs::read_to_string(&similarity)?;
+            let artifact =
+                textintel::SimilarityModelArtifact::from_json(&source).map_err(|error| {
+                    format!("invalid scorer artifact {}: {error}", similarity.display())
+                })?;
+            engine = engine.with_similarity_scorer(artifact.to_scorer());
+        }
+        let spam = std::path::Path::new(&dir).join("spam-v1.json");
+        if spam.is_file() {
+            let source = std::fs::read_to_string(&spam)?;
+            let artifact = textintel::SpamModelArtifact::from_json(&source)
+                .map_err(|error| format!("invalid spam artifact {}: {error}", spam.display()))?;
+            engine = engine.with_spam_predictor(artifact.to_predictor());
+        }
+    }
+    Ok(engine)
+}
+
+fn run_eval(
+    args: &[String],
+    json: bool,
+    production: bool,
+) -> Result<i32, Box<dyn std::error::Error>> {
     let path = args
         .get(1)
         .map(String::as_str)
@@ -138,7 +254,7 @@ fn run_eval(args: &[String], json: bool) -> Result<i32, Box<dyn std::error::Erro
     let no_ranking = args.iter().any(|arg| arg == "--no-ranking");
     let source = std::fs::read_to_string(path)?;
     let dataset = EvaluationDataset::from_json(&source)?;
-    let mut engine = TextIntelligence::new(EngineConfig::default());
+    let mut engine = build_engine(args, production)?;
     if let Some(name) = &profile_name {
         let profile = profile_named(name).ok_or_else(|| format!("unknown profile '{name}'"))?;
         engine = engine.with_similarity_profile(profile);
@@ -193,13 +309,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     // Flags with values must not be mistaken for positional arguments.
     let positionals = positional_args(&args);
-    let engine = if production {
-        TextIntelligence::production_local()?
-    } else {
-        TextIntelligence::new(EngineConfig::default())
-    };
+    let engine = build_engine(&args, production)?;
     let exit_code = match command {
-        "analyze" | "explain" => {
+        "analyze" => {
             let text = positionals.get(1).ok_or("analyze requires <text>")?;
             let result = engine.analyze(text)?;
             if json {
@@ -220,6 +332,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "obfuscation: {:.3} {:?}",
                     result.obfuscation_features.score, result.obfuscation_features.flags
                 );
+            }
+            0
+        }
+        "explain" => {
+            let text = positionals.get(1).ok_or("explain requires <text>")?;
+            let result = engine.analyze(text)?;
+            if json {
+                print_json(&result)?;
+            } else {
+                println!("raw: {}", result.raw);
+                for candidate in result.rebus_candidates.iter().take(3) {
+                    println!("decode {:.3}\t{}", candidate.score, candidate.text);
+                    for step in &candidate.transformations {
+                        println!("  → {}", step.explain());
+                    }
+                }
+                for (name, view) in &result.normalization_views {
+                    if name.starts_with("transliteration:") {
+                        println!("view {name}: {view}");
+                    }
+                }
             }
             0
         }
@@ -259,6 +392,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 for explanation in result.explanations {
                     println!("- {}", explanation);
                 }
+            }
+            0
+        }
+        "duplicate" => {
+            let left = positionals
+                .get(1)
+                .ok_or("duplicate requires <message-a> <message-b>")?;
+            let right = positionals
+                .get(2)
+                .ok_or("duplicate requires <message-a> <message-b>")?;
+            let threshold = flag_value(&args, "--threshold")
+                .map(|value| value.parse::<f64>())
+                .transpose()?
+                .unwrap_or(0.85);
+            let mode = match flag_value(&args, "--mode").as_deref() {
+                None | Some("combined") => textintel::DuplicateMode::Combined,
+                Some("near_exact") | Some("near-exact") => textintel::DuplicateMode::NearExact,
+                Some("lexical") => textintel::DuplicateMode::Lexical,
+                Some("semantic") => textintel::DuplicateMode::Semantic,
+                Some("phonetic") => textintel::DuplicateMode::Phonetic,
+                Some("decoded") => textintel::DuplicateMode::Decoded,
+                Some("visual") => textintel::DuplicateMode::Visual,
+                Some(other) => return Err(format!("unknown duplicate mode '{other}'").into()),
+            };
+            let result = engine.duplicate_with_mode(left, right, threshold, mode)?;
+            if json {
+                print_json(&result)?;
+            } else {
+                println!(
+                    "duplicate: {} score: {:.3} reason: {}",
+                    result.duplicate, result.score, result.reason
+                );
             }
             0
         }
@@ -386,7 +551,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             0
         }
-        "evaluate" | "eval" => run_eval(&args, json)?,
+        "evaluate" | "eval" => run_eval(&args, json, production)?,
         "index" => {
             let store = positionals
                 .get(1)
@@ -451,7 +616,12 @@ fn positional_args(args: &[String]) -> Vec<String> {
                 || arg == "--profile"
                 || arg == "--gates"
                 || arg == "--languages"
-                || arg == "--scorer")
+                || arg == "--language"
+                || arg == "--scorer"
+                || arg == "--threshold"
+                || arg == "--mode"
+                || arg == "--model-path"
+                || arg == "--resource-root")
         {
             skip_next = true;
             continue;

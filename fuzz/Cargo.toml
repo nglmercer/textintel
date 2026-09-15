@@ -9,6 +9,7 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
+serde_json = "1"
 
 [dependencies.textintel]
 path = ".."
@@ -30,6 +31,34 @@ bench = false
 [[bin]]
 name = "rebus"
 path = "fuzz_targets/rebus.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "resource_parser"
+path = "fuzz_targets/resource_parser.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "ipa"
+path = "fuzz_targets/ipa.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "scorer"
+path = "fuzz_targets/scorer.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "migration"
+path = "fuzz_targets/migration.rs"
 test = false
 doc = false
 bench = false

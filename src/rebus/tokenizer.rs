@@ -8,9 +8,40 @@ use crate::symbols::knowledge::DefaultSymbolKnowledge;
 /// Tokenize a rebus into text, number, emoji, and punctuation pieces.  The
 /// language segmenter already preserves byte positions and grapheme clusters.
 pub fn rebus_tokens(text: &str) -> Vec<String> {
-    segment_message(text, 4096)
+    rebus_tokens_with_spans(text)
         .into_iter()
-        .map(|segment| segment.text)
+        .map(|(token, _, _)| token)
+        .collect()
+}
+
+/// [`rebus_tokens`] plus UTF-8 byte offsets (`start..end`) into `text`, so
+/// transformation provenance can point at the original span.
+///
+/// Unlike the language segmenter (which drops whitespace), inter-segment
+/// gaps are preserved as literal space tokens: an input space is faithful
+/// structure, and its preservation must not pay the hypothesized-boundary
+/// penalty.
+pub fn rebus_tokens_with_spans(text: &str) -> Vec<(String, usize, usize)> {
+    let segments = segment_message(text, 4096);
+    let mut tokens = Vec::with_capacity(segments.len() + 2);
+    let mut cursor = 0usize;
+    for segment in &segments {
+        if cursor < segment.start {
+            tokens.push((
+                text[cursor..segment.start].to_string(),
+                cursor,
+                segment.start,
+            ));
+        }
+        tokens.push((segment.text.clone(), segment.start, segment.end));
+        cursor = segment.end;
+    }
+    if cursor < text.len() {
+        tokens.push((text[cursor..].to_string(), cursor, text.len()));
+    }
+    tokens
+        .into_iter()
+        .filter(|(token, _, _)| !token.is_empty())
         .collect()
 }
 
@@ -25,7 +56,10 @@ fn fallback_leet_readings(token: &str, max_readings: usize) -> Vec<SymbolReading
         .into_iter()
         .flat_map(|values| values.iter())
         .take(max_readings)
-        .map(|value| SymbolReading::new(*value, Some("und"), 0.55, "leetspeak"))
+        .map(|value| {
+            SymbolReading::new(*value, Some("und"), 0.55, "leetspeak")
+                .with_source("builtin:leet-map")
+        })
         .collect()
 }
 
@@ -56,6 +90,16 @@ pub fn token_readings_with_abbreviation_provider(
     abbreviations: Option<&dyn AbbreviationProvider>,
     languages: Option<&[String]>,
 ) -> Vec<(String, f64, String, String)> {
+    // Literal whitespace (preserved input gaps) passes through with a single
+    // identity reading: no casefold duplicate, no boundary penalty.
+    if !token.is_empty() && token.chars().all(char::is_whitespace) {
+        return vec![(
+            token.to_string(),
+            1.0,
+            "und".to_string(),
+            "identity".to_string(),
+        )];
+    }
     let symbol_readings = provider.readings_in_languages(token, max_readings, languages);
     let filtered = symbol_readings
         .into_iter()

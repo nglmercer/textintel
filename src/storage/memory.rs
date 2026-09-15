@@ -48,6 +48,27 @@ impl MemoryStore {
         self.ann.as_deref()
     }
 
+    /// Deterministic ANN rebuild from this store's live records (the
+    /// documented persistence strategy: the graph is never persisted, only
+    /// rebuilt on startup). Keeps the configured dimensions/capacity,
+    /// compacts tombstoned removals, and returns the live entries indexed.
+    /// Fails when no ANN accelerator is configured.
+    #[cfg(feature = "ann-hnsw")]
+    pub fn rebuild_ann(&mut self) -> Result<usize, String> {
+        let Some(ann) = self.ann.as_ref() else {
+            return Err("hnsw_ann: no ANN accelerator configured".to_string());
+        };
+        let snapshot = crate::storage::ann::HnswVectorIndex::snapshot_store(self);
+        let rebuilt = crate::storage::ann::HnswVectorIndex::rebuild(
+            ann.dimensions(),
+            ann.max_elements(),
+            &snapshot,
+        )?;
+        let live = rebuilt.len();
+        self.ann = Some(Arc::new(rebuilt));
+        Ok(live)
+    }
+
     #[cfg(feature = "ann-hnsw")]
     fn index_ann(&self, id: &str, fingerprint: &MessageFingerprint) -> Result<(), String> {
         let Some(ann) = self.ann.as_ref() else {

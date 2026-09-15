@@ -166,12 +166,15 @@ fn stable_hash(bytes: &[u8]) -> u64 {
     hash
 }
 
-/// Bounded, deterministic embedding cache keyed by model identity and folded
-/// text. Missing values are fetched in one batch from the wrapped provider.
+/// Bounded, deterministic embedding cache keyed by model identity, model
+/// revision, and folded text. Missing values are fetched in one batch from
+/// the wrapped provider. An observed revision change invalidates the cache
+/// instead of serving stale vectors.
 pub struct CachedEmbeddingProvider<P> {
     inner: P,
     max_entries: usize,
-    cache: Mutex<BTreeMap<(String, String), Vec<f32>>>,
+    cache: Mutex<BTreeMap<(String, String, String), Vec<f32>>>,
+    revision: Mutex<String>,
 }
 
 impl<P> std::fmt::Debug for CachedEmbeddingProvider<P>
@@ -196,16 +199,48 @@ where
     P: EmbeddingProviderTrait,
 {
     pub fn new(inner: P, max_entries: usize) -> Self {
+        let revision = current_revision(&inner);
         Self {
             inner,
             max_entries: max_entries.max(1),
             cache: Mutex::new(BTreeMap::new()),
+            revision: Mutex::new(revision),
         }
     }
 
     pub fn inner(&self) -> &P {
         &self.inner
     }
+
+    /// Drop all cached vectors (e.g. after a model swap outside the provider).
+    pub fn invalidate(&self) {
+        if let Ok(mut cache) = self.cache.lock() {
+            cache.clear();
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.cache.lock().map(|cache| cache.len()).unwrap_or(0)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+fn current_revision<P: EmbeddingProviderTrait>(inner: &P) -> String {
+    if let Some(metadata) = inner.model_metadata() {
+        if let Some(revision) = metadata.revision {
+            return format!("{}@{revision}", metadata.model_id);
+        }
+        return metadata.model_id;
+    }
+    let capabilities = inner.capabilities();
+    format!(
+        "{}@{}",
+        capabilities.provider,
+        capabilities.model_revision.unwrap_or_default()
+    )
 }
 
 impl<P> EmbeddingProviderTrait for CachedEmbeddingProvider<P>
@@ -218,9 +253,20 @@ where
             .model_metadata()
             .map(|metadata| metadata.model_id)
             .unwrap_or_else(|| self.inner.capabilities().provider);
+        let revision = current_revision(&self.inner);
+        // Revision changes invalidate before any read: stale vectors across
+        // model revisions are a correctness bug.
+        if let Ok(mut known) = self.revision.lock() {
+            if *known != revision {
+                *known = revision.clone();
+                if let Ok(mut cache) = self.cache.lock() {
+                    cache.clear();
+                }
+            }
+        }
         let keys = texts
             .iter()
-            .map(|text| (model.clone(), casefold_text(text)))
+            .map(|text| (model.clone(), revision.clone(), casefold_text(text)))
             .collect::<Vec<_>>();
         let mut output = vec![None; texts.len()];
         let mut missing = Vec::new();

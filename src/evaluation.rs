@@ -34,6 +34,24 @@ pub struct ExpectedOutput {
     pub min_similarity: Option<f64>,
 }
 
+/// Primary evaluation categories. Cases predate the field and are inferred
+/// from labels (see [`EvaluationCase::primary_category`]); new cases should
+/// set `category` explicitly.
+pub const EVALUATION_CATEGORIES: &[&str] = &[
+    "semantic",
+    "cross_language",
+    "transliteration",
+    "rebus",
+    "phonetic",
+    "leetspeak",
+    "homoglyph",
+    "unicode",
+    "code_switching",
+    "short_text",
+    "spam",
+    "hard_negatives",
+];
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct EvaluationCase {
     #[serde(default)]
@@ -46,6 +64,10 @@ pub struct EvaluationCase {
     pub split: String,
     #[serde(default = "default_difficulty")]
     pub difficulty: String,
+    /// Primary category (one of [`EVALUATION_CATEGORIES`] or `general`).
+    /// Empty on legacy cases, which are inferred from labels.
+    #[serde(default)]
+    pub category: String,
     #[serde(default)]
     pub labels: BTreeMap<String, bool>,
     #[serde(default)]
@@ -66,6 +88,31 @@ impl EvaluationCase {
 
     pub fn is_similar(&self) -> bool {
         self.labels.get("similar").copied().unwrap_or(false)
+    }
+
+    /// Primary category for per-category metrics. Explicit `category` wins;
+    /// legacy cases without one are inferred from labels so old datasets
+    /// still slice meaningfully.
+    pub fn primary_category(&self) -> &str {
+        if !self.category.is_empty() {
+            return &self.category;
+        }
+        for (label, category) in [
+            ("rebus", "rebus"),
+            ("homoglyph", "homoglyph"),
+            ("phonetic", "phonetic"),
+            ("semantic", "semantic"),
+            ("short", "short_text"),
+            ("spam", "spam"),
+            ("visual", "unicode"),
+            ("symbolic", "rebus"),
+            ("obfuscated", "leetspeak"),
+        ] {
+            if self.labels.get(label).copied().unwrap_or(false) {
+                return category;
+            }
+        }
+        "general"
     }
 }
 
@@ -219,6 +266,11 @@ pub struct EvaluationReport {
     pub expectations_total: usize,
     #[serde(default)]
     pub expectations_met: usize,
+    /// Per-category binary metrics keyed by [`EvaluationCase::primary_category`].
+    /// Global `metrics` alone can hide a failing slice; gates should pin
+    /// the categories that matter (see `data/quality-gates.json`).
+    #[serde(default)]
+    pub categories: BTreeMap<String, BinaryMetrics>,
 }
 
 impl EvaluationDataset {
@@ -315,6 +367,7 @@ pub fn evaluate_with_options(
             analyze_latency: LatencyStats::default(),
             expectations_total: 0,
             expectations_met: 0,
+            categories: BTreeMap::new(),
         });
     }
 
@@ -352,6 +405,17 @@ pub fn evaluate_with_options(
         .map(|(case, score)| (*score, case.is_similar()))
         .collect::<Vec<_>>();
     let metrics = binary_metrics(&samples);
+    let mut grouped: BTreeMap<String, Vec<(f64, bool)>> = BTreeMap::new();
+    for (case, score) in cases.iter().zip(scores.iter()) {
+        grouped
+            .entry(case.primary_category().to_string())
+            .or_default()
+            .push((*score, case.is_similar()));
+    }
+    let categories = grouped
+        .into_iter()
+        .map(|(name, group)| (name, binary_metrics(&group)))
+        .collect::<BTreeMap<_, _>>();
 
     let (expectations_total, expectations_met) =
         cases
@@ -388,6 +452,7 @@ pub fn evaluate_with_options(
         analyze_latency,
         expectations_total,
         expectations_met,
+        categories,
     })
 }
 

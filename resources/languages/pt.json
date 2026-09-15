@@ -27,7 +27,8 @@
     {"word": "uma", "lemma": "um", "stop_word": true},
     {"word": "olá", "lemma": "olá"},
     {"word": "fogo", "lemma": "fogo"},
-    {"word": "amor", "lemma": "amor"}
+    {"word": "amor", "lemma": "amor"},
+    {"word": "beijo", "lemma": "beijo"}
   ],
   "examples": [
     "isto é um exemplo",

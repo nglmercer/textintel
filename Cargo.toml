@@ -35,8 +35,8 @@ phonetic = ["phonetic-ipa"]
 phonetic-ipa = []
 persist = []
 ml = ["lang-profile", "semantic-local", "phonetic-ipa"]
-production-local = []
-all = ["lang-profile", "semantic-local", "semantic-candle", "semantic-transformer", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb", "ml"]
+production-local = ["lang-profile", "semantic-local", "phonetic-ipa"]
+all = ["lang-profile", "semantic-local", "semantic-candle", "semantic-transformer", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb", "ml", "production-local"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }

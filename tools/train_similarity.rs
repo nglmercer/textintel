@@ -179,8 +179,61 @@ fn report(samples: &[(f64, bool)]) -> BTreeMap<String, f64> {
     report.insert("f1".to_string(), f1);
     report.insert("brier".to_string(), brier);
     report.insert("roc_auc".to_string(), roc_auc(samples));
+    report.insert("pr_auc".to_string(), pr_auc(samples));
+    report.insert("ece".to_string(), expected_calibration_error(samples));
     report.insert("best_threshold".to_string(), best_threshold);
     report
+}
+
+fn pr_auc(samples: &[(f64, bool)]) -> f64 {
+    let positives = samples.iter().filter(|(_, label)| *label).count();
+    if positives == 0 || samples.is_empty() {
+        return 0.0;
+    }
+    let mut ranked = samples.to_vec();
+    ranked.sort_by(|left, right| right.0.total_cmp(&left.0));
+    let mut area = 0.0;
+    let mut hits = 0;
+    let mut previous_recall = 0.0;
+    for (index, (_, label)) in ranked.iter().enumerate() {
+        let seen = index + 1;
+        if *label {
+            hits += 1;
+        }
+        let precision = hits as f64 / seen as f64;
+        let recall = hits as f64 / positives as f64;
+        area += precision * (recall - previous_recall);
+        previous_recall = recall;
+    }
+    area.clamp(0.0, 1.0)
+}
+
+fn expected_calibration_error(samples: &[(f64, bool)]) -> f64 {
+    if samples.is_empty() {
+        return 0.0;
+    }
+    let bins = 10;
+    let mut totals = vec![0u32; bins];
+    let mut hits = vec![0u32; bins];
+    let mut confidence = vec![0.0; bins];
+    for (score, label) in samples {
+        let bin = ((score.clamp(0.0, 1.0) * bins as f64) as usize).min(bins - 1);
+        totals[bin] += 1;
+        confidence[bin] += score.clamp(0.0, 1.0);
+        if *label {
+            hits[bin] += 1;
+        }
+    }
+    let mut error = 0.0;
+    for bin in 0..bins {
+        if totals[bin] == 0 {
+            continue;
+        }
+        let accuracy = hits[bin] as f64 / totals[bin] as f64;
+        let mean_confidence = confidence[bin] / totals[bin] as f64;
+        error += totals[bin] as f64 / samples.len() as f64 * (accuracy - mean_confidence).abs();
+    }
+    error.clamp(0.0, 1.0)
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -272,11 +325,13 @@ fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     for split in ["train", "validation", "test"] {
         let split_metrics = metrics_at(&scorer, &engine, &dataset, split)?;
         println!(
-            "{split}: accuracy={:.3} f1={:.3} brier={:.3} roc_auc={:.3} best_threshold={:.3}",
+            "{split}: accuracy={:.3} f1={:.3} brier={:.3} roc_auc={:.3} pr_auc={:.3} ece={:.3} best_threshold={:.3}",
             split_metrics["accuracy"],
             split_metrics["f1"],
             split_metrics["brier"],
             split_metrics["roc_auc"],
+            split_metrics["pr_auc"],
+            split_metrics["ece"],
             split_metrics["best_threshold"],
         );
         for (key, value) in split_metrics {
@@ -512,6 +567,10 @@ fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         );
     }
     println!("train loss: {loss:.4}");
+    // Calibration on validation: freeze weights, fit the bias only (same
+    // pattern as the similarity trainer). The scratch copy absorbs the
+    // weight update and is discarded. Only artifacts produced by this step
+    // may carry `calibrated: true`.
     for _ in 0..500 {
         let mut scratch = weights.clone();
         logistic_step(
@@ -536,11 +595,13 @@ fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     ] {
         let split_metrics = logistic_report(&weights, bias, features, labels);
         println!(
-            "{split_name}: accuracy={:.3} f1={:.3} brier={:.3} roc_auc={:.3}",
+            "{split_name}: accuracy={:.3} f1={:.3} brier={:.3} roc_auc={:.3} pr_auc={:.3} ece={:.3}",
             split_metrics["accuracy"],
             split_metrics["f1"],
             split_metrics["brier"],
             split_metrics["roc_auc"],
+            split_metrics["pr_auc"],
+            split_metrics["ece"],
         );
         for (key, value) in split_metrics {
             metrics.insert(format!("{split_name}_{key}"), value);
@@ -577,11 +638,13 @@ fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         &pair_rows.iter().map(|row| row.1).collect::<Vec<_>>(),
     );
     println!(
-        "heldout-eval: accuracy={:.3} f1={:.3} brier={:.3} roc_auc={:.3} (n={})",
+        "heldout-eval: accuracy={:.3} f1={:.3} brier={:.3} roc_auc={:.3} pr_auc={:.3} ece={:.3} (n={})",
         eval_metrics["accuracy"],
         eval_metrics["f1"],
         eval_metrics["brier"],
         eval_metrics["roc_auc"],
+        eval_metrics["pr_auc"],
+        eval_metrics["ece"],
         pair_rows.len(),
     );
     for (key, value) in eval_metrics {

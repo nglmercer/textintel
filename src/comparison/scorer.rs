@@ -17,6 +17,15 @@ fn compact(text: &str) -> String {
     text.chars().filter(|ch| !ch.is_whitespace()).collect()
 }
 
+fn transliteration_views(fingerprint: &MessageFingerprint) -> Vec<&str> {
+    fingerprint
+        .normalization_views
+        .iter()
+        .filter(|(name, _)| name.starts_with("transliteration:"))
+        .map(|(_, value)| value.as_str())
+        .collect()
+}
+
 fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
     let mut left = BTreeSet::new();
     let mut right = BTreeSet::new();
@@ -32,16 +41,64 @@ fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
     for candidate in &b.rebus_candidates {
         right.insert(compact(&casefold_text(&candidate.text)));
     }
+    // Transliteration views join the overlap set so cross-script pairs
+    // (`privet` ↔ `привет`) match through the converted view. Only
+    // transliteration views participate — other normalization views stay out
+    // so leet/casefold variants cannot inflate decoded similarity.
+    let views_left: BTreeSet<String> = transliteration_views(a)
+        .into_iter()
+        .map(|view| compact(&casefold_text(view)))
+        .collect();
+    let views_right: BTreeSet<String> = transliteration_views(b)
+        .into_iter()
+        .map(|view| compact(&casefold_text(view)))
+        .collect();
+    // Phase 1: exact matches (cheap string equality, views included)
+    // short-circuit before any edit-distance work.
+    for left_value in left.iter().chain(views_left.iter()) {
+        if !left_value.is_empty()
+            && (right.contains(left_value) || views_right.contains(left_value))
+        {
+            return 1.0;
+        }
+    }
+    // Phase 2: fuzzy overlap over the base sets (no views).
     let mut best: f64 = 0.0;
     for left_value in &left {
         if left_value.is_empty() {
             continue;
         }
         for right_value in &right {
-            if left_value == right_value {
-                return 1.0;
-            }
             best = best.max(combined_character_similarity(left_value, right_value));
+        }
+    }
+    // Phase 3: view↔raw rescue pairs run only when the base overlap is
+    // below near-exact. Transliteration views exist to rescue cross-script
+    // pairs; restricting the extra work to view↔raw/normalized pairs (a
+    // handful per comparison) keeps same-script cost flat while still
+    // matching `privet` against the `привет` → `privet` view. Pairs are
+    // strictly cross-side: a view matching its own raw text proves nothing.
+    if best < 0.9 && (!views_left.is_empty() || !views_right.is_empty()) {
+        let anchors_left = [
+            compact(&casefold_text(&a.raw)),
+            compact(&casefold_text(a.normalized.as_deref().unwrap_or(""))),
+        ];
+        let anchors_right = [
+            compact(&casefold_text(&b.raw)),
+            compact(&casefold_text(b.normalized.as_deref().unwrap_or(""))),
+        ];
+        for (views, anchors) in [(&views_left, &anchors_right), (&views_right, &anchors_left)] {
+            for view in views.iter() {
+                if view.is_empty() {
+                    continue;
+                }
+                for anchor in anchors.iter() {
+                    if anchor.is_empty() {
+                        continue;
+                    }
+                    best = best.max(combined_character_similarity(view, anchor));
+                }
+            }
         }
     }
     best
@@ -96,9 +153,12 @@ pub fn combine_scores(
         let Some(weight) = weight_map.get(name) else {
             continue;
         };
-        if *weight <= 0.0 {
+        // Non-finite and non-positive weights are skipped: hostile configs
+        // must not NaN the final score.
+        if !weight.is_finite() || *weight <= 0.0 {
             continue;
         }
+        let value = if value.is_finite() { *value } else { 0.0 };
         score += value.clamp(0.0, 1.0) * weight;
         total_weight += weight;
         used.insert(name.clone(), *weight);
@@ -109,7 +169,23 @@ pub fn combine_scores(
     for value in used.values_mut() {
         *value /= total_weight;
     }
-    (score / total_weight, used)
+    let score = score / total_weight;
+    (if score.is_finite() { score } else { 0.0 }, used)
+}
+
+/// Defense in depth: every channel is sanitized so hostile fingerprints
+/// (non-finite confidences, NaN vectors) yield 0/absent instead of NaN.
+/// Engine-built inputs are unaffected.
+fn finite_or_zero(value: f64) -> f64 {
+    if value.is_finite() {
+        value
+    } else {
+        0.0
+    }
+}
+
+fn finite_or_absent(value: Option<f64>) -> Option<f64> {
+    value.filter(|inner| inner.is_finite())
 }
 
 pub fn score_fingerprints(
@@ -117,18 +193,18 @@ pub fn score_fingerprints(
     b: &MessageFingerprint,
     weights: &SimilarityWeights,
 ) -> ComparisonResult {
-    let character = combined_character_similarity(&a.raw, &b.raw);
-    let lexical = lexical_similarity(&a.raw, &b.raw);
-    let visual = visual_similarity(&a.raw, &b.raw);
-    let decoded = best_decoded_overlap(a, b);
-    let obfuscation = obfuscation_similarity(a, b);
+    let character = finite_or_zero(combined_character_similarity(&a.raw, &b.raw));
+    let lexical = finite_or_zero(lexical_similarity(&a.raw, &b.raw));
+    let visual = finite_or_zero(visual_similarity(&a.raw, &b.raw));
+    let decoded = finite_or_zero(best_decoded_overlap(a, b));
+    let obfuscation = finite_or_zero(obfuscation_similarity(a, b));
     let symbolic = if a.symbols.is_empty() && b.symbols.is_empty() {
         None
     } else {
-        Some(symbolic_similarity(a, b))
+        finite_or_absent(Some(symbolic_similarity(a, b)))
     };
-    let semantic = semantic_similarity(a, b);
-    let phonetic = phonetic_channel(a, b);
+    let semantic = finite_or_absent(semantic_similarity(a, b));
+    let phonetic = finite_or_absent(phonetic_channel(a, b));
     let channels = [
         ("semantic".to_string(), semantic),
         ("lexical".to_string(), Some(lexical)),
@@ -186,6 +262,12 @@ pub fn score_fingerprints(
         Some(value) => format!("phonetic={value:.3}"),
         None => "phonetic=absent".to_string(),
     });
+    evidence.push(
+        match crate::transliteration::transliteration_similarity(a, b) {
+            Some(value) => format!("transliteration={value:.3}"),
+            None => "transliteration=absent".to_string(),
+        },
+    );
     if a.obfuscation_features.detected {
         evidence.push(format!(
             "obfuscation_flags_a={:?}",

@@ -201,8 +201,24 @@ impl ResourceLoader {
             }
         }
         let default_language = pack.language.clone();
+        // Provenance stamped onto readings/concepts that do not declare
+        // their own: pack name when set, otherwise the load origin.
+        let provenance = if pack.name.trim().is_empty() {
+            source_path.as_ref().display().to_string()
+        } else {
+            pack.name.clone()
+        };
         for symbol in &mut pack.symbols {
+            for concept in &mut symbol.concepts {
+                concept.id = super::pack::canonical_concept_id(&concept.id);
+                if concept.source.is_none() {
+                    concept.source = Some(provenance.clone());
+                }
+            }
             for reading in &mut symbol.readings {
+                if reading.source.is_none() {
+                    reading.source = Some(provenance.clone());
+                }
                 if let Some(language) = &mut reading.language {
                     *language = canonical_language(language);
                     if language.is_empty() {
@@ -402,16 +418,24 @@ impl ResourceLoader {
             sha256: pack.sha256.clone(),
             origin: source_path.as_ref().display().to_string(),
         });
+        let provenance = if pack.name.trim().is_empty() {
+            format!("abbreviations:{language}")
+        } else {
+            pack.name.clone()
+        };
         for entry in pack.entries {
             let key = entry.token.to_ascii_lowercase();
             let slot = self.abbreviation_index.entry(key).or_default();
             for reading in entry.readings {
-                slot.push(SymbolReading::new(
-                    reading.text,
-                    Some(language.clone()),
-                    reading.probability,
-                    reading.kind,
-                ));
+                slot.push(
+                    SymbolReading::new(
+                        reading.text,
+                        Some(language.clone()),
+                        reading.probability,
+                        reading.kind,
+                    )
+                    .with_source(provenance.clone()),
+                );
             }
         }
         Ok(())

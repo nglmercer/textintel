@@ -10,8 +10,8 @@ use crate::normalization::unicode::casefold_text;
 use crate::normalization::whitespace::normalize_whitespace;
 use crate::phonetic::g2p::RuleBasedG2PProvider;
 use crate::rebus::beam_search::beam_decode_with_abbreviation_provider;
-use crate::rebus::scorer::{score_candidate_with_evidence, RebusEvidence};
-use crate::resources::DefaultLexiconProvider;
+use crate::rebus::scorer::{score_candidate_with_evidence_and_weights, RebusEvidence};
+use crate::resources::{embedded_resources, DefaultLexiconProvider};
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
 #[derive(Debug, Clone, Default)]
@@ -130,6 +130,7 @@ impl RebusDecoder {
         abbreviations: Option<&dyn AbbreviationProvider>,
     ) -> Vec<DecodedCandidate> {
         let limit = max_candidates.unwrap_or(self.config.max_candidates).max(1);
+        let weights = &self.config.rebus_weights;
         let nodes = beam_decode_with_abbreviation_provider(
             text,
             self.config.beam_width,
@@ -139,6 +140,8 @@ impl RebusDecoder {
             abbreviations,
             languages,
             self.config.max_decoded_branches,
+            weights.language_switch_penalty,
+            weights.in_word_digit_discount,
         );
         let language = languages.and_then(|values| values.first()).cloned();
         let compact = |value: String| {
@@ -160,14 +163,15 @@ impl RebusDecoder {
         for node in nodes {
             let evidence = RebusEvidence {
                 candidate_language: node.language.clone(),
+                candidate_languages: node.languages.clone(),
                 semantic_similarity: None,
                 transformation_types: node
                     .transforms
                     .iter()
-                    .map(|(_, _, kind)| kind.clone())
+                    .map(|step| step.transformation_type.clone())
                     .collect(),
             };
-            let (score, lexical, phonetic, context) = score_candidate_with_evidence(
+            let (score, lexical, phonetic, context) = score_candidate_with_evidence_and_weights(
                 &node.text,
                 text,
                 node.score,
@@ -176,6 +180,7 @@ impl RebusDecoder {
                 lexicon_provider,
                 g2p_provider,
                 &evidence,
+                weights,
             );
             if node.text.is_empty() {
                 continue;
@@ -184,17 +189,7 @@ impl RebusDecoder {
             let candidate = DecodedCandidate {
                 text: node.text,
                 score,
-                transformations: node
-                    .transforms
-                    .into_iter()
-                    .map(
-                        |(source, replacement, transformation_type)| Transformation {
-                            source,
-                            replacement,
-                            transformation_type,
-                        },
-                    )
-                    .collect(),
+                transformations: node.transforms,
                 language: node.language.or_else(|| language.clone()),
                 lexical_score: lexical,
                 phonetic_score: phonetic,
@@ -210,12 +205,101 @@ impl RebusDecoder {
                 candidates.insert(key, candidate);
             }
         }
-        for view in extra_views {
-            let value = compact(view);
-            if value.is_empty() {
-                continue;
+        // Word-level abbreviation expansion. Segmentation splits digit/letter
+        // boundaries (`gr8` → `gr` + `8`), so multi-class slang tokens never
+        // consult the abbreviation packs token-by-token. Each whitespace word
+        // gets one provider lookup; hits are scored like any other candidate.
+        // Bounded (one lookup per word, provider-capped readings) and fully
+        // resource-driven: removing a pack removes the expansion.
+        {
+            let mut search_from = 0usize;
+            for word in text.split_whitespace().take(self.config.max_segments) {
+                let readings = match abbreviations {
+                    Some(provider) => provider.abbreviation_readings(word, languages, 4),
+                    None => embedded_resources().abbreviation_readings(word, languages, 4),
+                };
+                let span = text[search_from..].find(word).map(|relative| {
+                    let start = search_from + relative;
+                    search_from = start + word.len();
+                    (start, search_from)
+                });
+                for reading in readings {
+                    if reading.text.eq_ignore_ascii_case(word) {
+                        continue;
+                    }
+                    let evidence = RebusEvidence {
+                        candidate_language: reading.language.clone(),
+                        candidate_languages: reading.language.clone().into_iter().collect(),
+                        semantic_similarity: None,
+                        transformation_types: vec![reading.reading_type.clone()],
+                    };
+                    let (score, lexical, phonetic, context) =
+                        score_candidate_with_evidence_and_weights(
+                            &reading.text,
+                            text,
+                            reading.probability,
+                            self.config.max_recursion,
+                            languages,
+                            lexicon_provider,
+                            g2p_provider,
+                            &evidence,
+                            weights,
+                        );
+                    let mut step = Transformation::new(
+                        word,
+                        reading.text.clone(),
+                        reading.reading_type.clone(),
+                    )
+                    .with_provider("rebus")
+                    .with_confidence(reading.probability);
+                    if let Some((start, end)) = span {
+                        step = step.with_span(start, end, word);
+                    }
+                    if let Some(language) = reading.language.clone() {
+                        if language != "und" {
+                            step = step.with_language(language);
+                        }
+                    }
+                    let candidate = DecodedCandidate {
+                        text: reading.text.clone(),
+                        score,
+                        transformations: vec![step],
+                        language: reading.language.clone().or_else(|| language.clone()),
+                        lexical_score: lexical,
+                        phonetic_score: phonetic,
+                        context_score: context,
+                        symbol_score: reading.probability.min(1.0),
+                        confidence_gap: 0.0,
+                        strong: false,
+                    };
+                    let key = casefold_text(&reading.text);
+                    if candidates
+                        .get(&key)
+                        .map_or(true, |old| candidate.score > old.score)
+                    {
+                        candidates.insert(key, candidate);
+                    }
+                }
             }
-            let (score, lexical, phonetic, context) = score_candidate_with_evidence(
+        }
+        // Normalization-ladder views: each ladder rung contributes its compact
+        // form plus, when the input carries spacing, the spaced form. The
+        // spaced form preserves faithful input structure (`c0mpr4 ah0r4` →
+        // `compra ahora`); both are discounted equally and lose to any
+        // higher-scoring beam derivation.
+        let mut ladder = Vec::with_capacity(extra_views.len() * 2);
+        for view in &extra_views {
+            let spaced = normalize_whitespace(view);
+            let flat = compact(view.clone());
+            if !flat.is_empty() {
+                ladder.push(flat);
+            }
+            if !spaced.is_empty() && spaced != compact(spaced.clone()) {
+                ladder.push(spaced);
+            }
+        }
+        for value in ladder {
+            let (score, lexical, phonetic, context) = score_candidate_with_evidence_and_weights(
                 &value,
                 text,
                 0.4,
@@ -224,6 +308,7 @@ impl RebusDecoder {
                 lexicon_provider,
                 g2p_provider,
                 &RebusEvidence::default(),
+                weights,
             );
             let candidate = DecodedCandidate {
                 text: value.clone(),
@@ -251,11 +336,14 @@ impl RebusDecoder {
             .collect();
         ranked.sort_by(|left, right| right.score.total_cmp(&left.score));
         if let Some(similarity) = semantic {
-            // Bounded semantic rescoring: at most the top 12 survivors.
+            // Bounded semantic rescoring: at most the top 12 survivors, with
+            // the configured blend (0.0 disables without removing survivors).
+            let blend = weights.semantic.clamp(0.0, 1.0);
             for candidate in ranked.iter_mut().take(12) {
                 if let Some(value) = similarity(&candidate.text, text) {
-                    candidate.score =
-                        (0.85 * candidate.score + 0.15 * value.clamp(0.0, 1.0)).clamp(0.0, 1.0);
+                    candidate.score = ((1.0 - blend) * candidate.score
+                        + blend * value.clamp(0.0, 1.0))
+                    .clamp(0.0, 1.0);
                 }
             }
             ranked.sort_by(|left, right| right.score.total_cmp(&left.score));

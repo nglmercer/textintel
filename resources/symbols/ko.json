@@ -29,6 +29,7 @@
     {"token": "₹", "readings": [{"text": "루피", "probability": 0.7, "reading_type": "currency"}]},
     {"token": "%", "readings": [{"text": "퍼센트", "probability": 0.7, "reading_type": "math"}]},
     {"token": "+", "readings": [{"text": "플러스", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "같다", "probability": 0.7, "reading_type": "math"}]}
+    {"token": "=", "readings": [{"text": "같다", "probability": 0.7, "reading_type": "math"}]},
+    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "커피", "probability": 0.80, "reading_type": "symbol_reading"}]}
   ]
 }

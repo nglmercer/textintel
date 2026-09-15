@@ -149,3 +149,52 @@ pub struct SymbolPack {
     #[serde(default)]
     pub sha256: Option<String>,
 }
+
+/// Normalize a symbol concept id to its stable namespaced form
+/// (`concept:<domain>.<name>`). Already-namespaced ids pass through
+/// unchanged; bare legacy ids map through a fixed table; unknown bare ids
+/// land under `concept:legacy.*` so every served id is namespaced.
+pub fn canonical_concept_id(id: &str) -> String {
+    let trimmed = id.trim();
+    if trimmed.starts_with("concept:") {
+        return trimmed.to_string();
+    }
+    let namespaced = match trimmed.to_ascii_lowercase().as_str() {
+        "house" => "concept:building.house",
+        "money" => "concept:money.currency",
+        "love" => "concept:emotion.love",
+        "fire" => "concept:nature.fire",
+        "hotness" | "heat" => "concept:nature.heat",
+        "number" | "digit" => "concept:math.number",
+        "percentage" | "percent" => "concept:math.percentage",
+        "addition" | "plus" => "concept:math.addition",
+        "equality" | "equals" => "concept:math.equality",
+        _ => return format!("concept:legacy.{trimmed}"),
+    };
+    namespaced.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn legacy_ids_map_to_stable_namespaces() {
+        assert_eq!(canonical_concept_id("house"), "concept:building.house");
+        assert_eq!(canonical_concept_id("money"), "concept:money.currency");
+        assert_eq!(canonical_concept_id("love"), "concept:emotion.love");
+        assert_eq!(canonical_concept_id(" number "), "concept:math.number");
+    }
+
+    #[test]
+    fn namespaced_and_unknown_ids_stay_stable() {
+        assert_eq!(
+            canonical_concept_id("concept:building.house"),
+            "concept:building.house"
+        );
+        assert_eq!(
+            canonical_concept_id("something-new"),
+            "concept:legacy.something-new"
+        );
+    }
+}

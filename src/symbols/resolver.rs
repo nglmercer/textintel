@@ -15,20 +15,21 @@ pub fn resolve_symbols_with_provider(
         .map(|segment| {
             let mut readings = provider.readings(&segment.text, max_readings);
             if readings.is_empty() && segment.segment_type == "emoji" {
-                readings.push(crate::core::types::SymbolReading::new(
-                    "unknown",
-                    Some("und"),
-                    0.3,
-                    "unknown",
-                ));
+                readings.push(
+                    crate::core::types::SymbolReading::new("unknown", Some("und"), 0.3, "unknown")
+                        .with_source("builtin:symbol-fallback"),
+                );
             }
             if readings.is_empty() {
-                readings.push(crate::core::types::SymbolReading::new(
-                    &segment.text,
-                    Some("und"),
-                    1.0,
-                    "identity",
-                ));
+                readings.push(
+                    crate::core::types::SymbolReading::new(
+                        &segment.text,
+                        Some("und"),
+                        1.0,
+                        "identity",
+                    )
+                    .with_source("builtin:symbol-fallback"),
+                );
             }
             SymbolInstance {
                 raw: segment.text.clone(),

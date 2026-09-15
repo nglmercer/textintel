@@ -29,6 +29,7 @@
     {"token": "₹", "readings": [{"text": "روبية", "probability": 0.7, "reading_type": "currency"}]},
     {"token": "%", "readings": [{"text": "في المئة", "probability": 0.7, "reading_type": "math"}]},
     {"token": "+", "readings": [{"text": "زائد", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "يساوي", "probability": 0.7, "reading_type": "math"}]}
+    {"token": "=", "readings": [{"text": "يساوي", "probability": 0.7, "reading_type": "math"}]},
+    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "قهوة", "probability": 0.80, "reading_type": "symbol_reading"}]}
   ]
 }
