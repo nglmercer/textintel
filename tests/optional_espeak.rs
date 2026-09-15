@@ -42,6 +42,27 @@ fn unique_tag(tag: &str) -> String {
 }
 
 #[cfg(unix)]
+fn retry_on_text_file_busy<T>(
+    mut attempt: impl FnMut() -> Result<T, textintel::core::error::ProviderError>,
+) -> Result<T, textintel::core::error::ProviderError> {
+    // The kernel can report ETXTBSY when a freshly written stub is executed
+    // before its close has fully propagated; retry briefly, then surface the
+    // last error so genuine failures still fail loudly.
+    let mut last_error = None;
+    for _ in 0..20 {
+        match attempt() {
+            Ok(value) => return Ok(value),
+            Err(error) if error.to_string().contains("Text file busy") => {
+                last_error = Some(error);
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+            Err(error) => return Err(error),
+        }
+    }
+    Err(last_error.expect("retry loop always attempts at least once"))
+}
+
+#[cfg(unix)]
 fn stub_binary(tag: &str, output: &str) -> std::path::PathBuf {
     use std::io::Write;
     let path = std::env::temp_dir().join(format!("textintel-stub-espeak-{}", unique_tag(tag)));
@@ -50,6 +71,7 @@ fn stub_binary(tag: &str, output: &str) -> std::path::PathBuf {
         let mut file = std::fs::File::create(&path).expect("stub write");
         writeln!(file, "#!/bin/sh").expect("stub write");
         writeln!(file, "printf '%s\\n' '{output}'").expect("stub write");
+        file.sync_all().expect("stub sync");
     }
     {
         use std::os::unix::fs::PermissionsExt;
@@ -67,7 +89,8 @@ fn stub_binary_reports_stress_articulatory_and_fallback_confidence() {
     let supported = EspeakNgG2PProvider::new()
         .with_binary(&path)
         .for_voice("es");
-    let candidate = supported.phonemize("hola", "es").expect("stub phonemize");
+    let candidate =
+        retry_on_text_file_busy(|| supported.phonemize("hola", "es")).expect("stub phonemize");
     assert_eq!(candidate.confidence, 0.8);
     assert_eq!(candidate.stress, Some(vec![1]));
     assert_eq!(
@@ -77,8 +100,7 @@ fn stub_binary_reports_stress_articulatory_and_fallback_confidence() {
     assert!(!candidate.articulatory_features.is_empty());
 
     // Unmapped language falls back to the default voice at half confidence.
-    let fallback = supported
-        .phonemize("hola", "xx-unknown")
+    let fallback = retry_on_text_file_busy(|| supported.phonemize("hola", "xx-unknown"))
         .expect("stub phonemize");
     assert_eq!(fallback.confidence, 0.5);
     assert_eq!(fallback.dialect.as_deref(), Some("es"));
@@ -95,6 +117,7 @@ fn subprocess_timeout_kills_hung_binaries() {
         let mut file = std::fs::File::create(&path).expect("stub write");
         writeln!(file, "#!/bin/sh").expect("stub write");
         writeln!(file, "sleep 30").expect("stub write");
+        file.sync_all().expect("stub sync");
     }
     {
         use std::os::unix::fs::PermissionsExt;
@@ -105,7 +128,8 @@ fn subprocess_timeout_kills_hung_binaries() {
     let provider = EspeakNgG2PProvider::new()
         .with_binary(&path)
         .with_timeout(std::time::Duration::from_millis(200));
-    let error = provider.phonemize("hola", "es").expect_err("must time out");
+    let error =
+        retry_on_text_file_busy(|| provider.phonemize("hola", "es")).expect_err("must time out");
     assert!(
         error.to_string().contains("timed out"),
         "unexpected: {error}"
@@ -128,6 +152,7 @@ fn installed_voices_come_from_the_binary_table() {
             "printf 'Pty Language Age Gender VoiceName File\\n5  es -- M spanish es\\n'"
         )
         .expect("stub write");
+        file.sync_all().expect("stub sync");
     }
     {
         use std::os::unix::fs::PermissionsExt;
@@ -136,7 +161,7 @@ fn installed_voices_come_from_the_binary_table() {
         std::fs::set_permissions(&path, permissions).expect("stub chmod");
     }
     let provider = EspeakNgG2PProvider::new().with_binary(&path);
-    let voices = provider.installed_voices().expect("voices");
+    let voices = retry_on_text_file_busy(|| provider.installed_voices()).expect("voices");
     assert_eq!(voices.len(), 1);
     assert_eq!(voices[0].language, "es");
     assert_eq!(voices[0].name, "spanish");
@@ -153,6 +178,7 @@ fn stub_binary_drives_multilingual_mechanics() {
         let mut file = std::fs::File::create(&path).expect("stub write");
         writeln!(file, "#!/bin/sh").expect("stub write");
         writeln!(file, "printf 'olˈa\\n'").expect("stub write");
+        file.sync_all().expect("stub sync");
     }
     #[cfg(unix)]
     {
@@ -164,7 +190,8 @@ fn stub_binary_drives_multilingual_mechanics() {
     let provider = EspeakNgG2PProvider::new()
         .with_binary(&path)
         .for_voice("es");
-    let candidate = provider.phonemize("hola", "es").expect("stub phonemize");
+    let candidate =
+        retry_on_text_file_busy(|| provider.phonemize("hola", "es")).expect("stub phonemize");
     assert_eq!(candidate.ipa.as_deref(), Some("olˈa"));
     assert_eq!(candidate.phonemes, textintel::phonetic::parse_ipa("olˈa"));
     assert_eq!(candidate.syllables, 2);
