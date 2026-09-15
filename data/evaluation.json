@@ -1,5 +1,5 @@
 {
- "version": "0.4.0",
+ "version": "0.5.0",
  "cases": [
   {
    "id": "es_rebus_001",
@@ -1046,7 +1046,7 @@
    "languages": [
     "de"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -2716,7 +2716,7 @@
    "languages": [
     "en"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -4135,7 +4135,7 @@
    "languages": [
     "es"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -4426,7 +4426,7 @@
    "languages": [
     "es"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -4968,7 +4968,7 @@
    "languages": [
     "es"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -5259,7 +5259,7 @@
    "languages": [
     "es"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -5594,7 +5594,7 @@
    "languages": [
     "fr"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -5885,7 +5885,7 @@
    "languages": [
     "fr"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -5905,7 +5905,7 @@
    "languages": [
     "fr"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -6427,7 +6427,7 @@
    "languages": [
     "fr"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -7337,7 +7337,7 @@
    "languages": [
     "hi"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -7499,7 +7499,7 @@
    "languages": [
     "hi"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -7705,7 +7705,7 @@
    "languages": [
     "id"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -8789,7 +8789,7 @@
    "languages": [
     "id"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -9375,7 +9375,7 @@
    "languages": [
     "it"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -9395,7 +9395,7 @@
    "languages": [
     "it"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -10665,7 +10665,7 @@
    "languages": [
     "ja"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -10685,7 +10685,7 @@
    "languages": [
     "ja"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -10827,7 +10827,7 @@
    "languages": [
     "ja"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -10847,7 +10847,7 @@
    "languages": [
     "ja"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -10989,7 +10989,7 @@
    "languages": [
     "ja"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -11009,7 +11009,7 @@
    "languages": [
     "ja"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -11195,7 +11195,7 @@
    "languages": [
     "ko"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -11459,7 +11459,7 @@
    "languages": [
     "ko"
    ],
-   "split": "test",
+   "split": "train",
    "difficulty": "medium",
    "labels": {
     "similar": true
@@ -11681,7 +11681,7 @@
    "languages": [
     "ko"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -11783,7 +11783,7 @@
    "languages": [
     "ko"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "medium",
    "labels": {
     "similar": true
@@ -11887,7 +11887,7 @@
    "languages": [
     "nl"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -12429,7 +12429,7 @@
    "languages": [
     "nl"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -13557,7 +13557,7 @@
    "languages": [
     "pl"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -14139,7 +14139,7 @@
    "languages": [
     "pl"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -14725,7 +14725,7 @@
    "languages": [
     "pt"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -15016,7 +15016,7 @@
    "languages": [
     "pt"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -15118,7 +15118,7 @@
    "languages": [
     "pt"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "medium",
    "labels": {
     "similar": true
@@ -15558,7 +15558,7 @@
    "languages": [
     "pt"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -18084,7 +18084,7 @@
    "languages": [
     "zh"
    ],
-   "split": "test",
+   "split": "validation",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -18166,7 +18166,7 @@
    "languages": [
     "zh"
    ],
-   "split": "train",
+   "split": "validation",
    "difficulty": "medium",
    "labels": {
     "similar": true
@@ -18246,7 +18246,7 @@
    "languages": [
     "zh"
    ],
-   "split": "validation",
+   "split": "train",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -18732,7 +18732,7 @@
    "languages": [
     "zh"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "easy",
    "labels": {
     "similar": true
@@ -19444,7 +19444,7 @@
    "languages": [
     "es"
    ],
-   "split": "train",
+   "split": "test",
    "difficulty": "hard",
    "labels": {
     "similar": true,
@@ -21827,7 +21827,7 @@
    "a": "Fra🏠do",
    "b": "ferrocarril",
    "languages": [],
-   "split": "test",
+   "split": "validation",
    "difficulty": "hard",
    "category": "rebus",
    "labels": {
@@ -22884,7 +22884,7 @@
    "a": "Fra🏠do",
    "b": "ferrocarril",
    "languages": [],
-   "split": "test",
+   "split": "validation",
    "difficulty": "hard",
    "category": "hard_negatives",
    "labels": {
@@ -22997,6 +22997,3135 @@
    "b": "salt",
    "languages": [],
    "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "semantic_009",
+   "a": "the package arrived yesterday",
+   "b": "the parcel was delivered yesterday",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_010",
+   "a": "she enjoys reading novels",
+   "b": "she loves reading books",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_011",
+   "a": "meeting cancelled due to rain",
+   "b": "rain forced them to cancel the meeting",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_012",
+   "a": "he missed the morning train",
+   "b": "he failed to catch the morning train",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_013",
+   "a": "children play in the garden",
+   "b": "kids are playing outside in the yard",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_014",
+   "a": "the doctor advised complete rest",
+   "b": "the physician recommended full rest",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_015",
+   "a": "we booked flights for june",
+   "b": "we reserved plane tickets for june",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_016",
+   "a": "rain flooded the subway entrance",
+   "b": "the metro entrance flooded after rain",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "semantic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_017",
+   "a": "fresh bread from the bakery",
+   "b": "satellite launch delayed again",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_018",
+   "a": "my dog barks at strangers",
+   "b": "calculus exam moved to friday",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_019",
+   "a": "warm soup on cold evenings",
+   "b": "stock market plunges overnight",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_020",
+   "a": "airport security lines grow longer",
+   "b": "grandma knits woolen scarves",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "easy",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_021",
+   "a": "birthday cake with strawberries",
+   "b": "diesel engine maintenance manual",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_022",
+   "a": "piano lessons every tuesday",
+   "b": "volcano eruption disrupts flights",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "semantic_023",
+   "a": "library closes at midnight",
+   "b": "shark spotted near the harbor",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "semantic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "semantic"
+   ]
+  },
+  {
+   "id": "xlang_009",
+   "a": "person",
+   "b": "persona",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_010",
+   "a": "telephone",
+   "b": "teléfono",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_011",
+   "a": "music",
+   "b": "musica",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_012",
+   "a": "hospital",
+   "b": "hôpital",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_013",
+   "a": "chocolate",
+   "b": "chocolat",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_014",
+   "a": "museum",
+   "b": "museo",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_015",
+   "a": "guitar",
+   "b": "guitarra",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_016",
+   "a": "hotel",
+   "b": "hôtel",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "cross_language",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_017",
+   "a": "apple pie recipe",
+   "b": "le chat dort paisiblement",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_018",
+   "a": "monday morning traffic",
+   "b": "il ristorante è chiuso",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_019",
+   "a": "my keys are missing",
+   "b": "der Zug hat Verspätung",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_020",
+   "a": "broken window upstairs",
+   "b": "il caffè è pronto",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "easy",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_021",
+   "a": "tennis court reservation",
+   "b": "o cachorro late alto",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_022",
+   "a": "spare tire in the trunk",
+   "b": "de bibliotheek is open",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "xlang_023",
+   "a": "candlelight dinner date",
+   "b": "a reunião foi adiada",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "cross_language",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "cross_language"
+   ]
+  },
+  {
+   "id": "translit_009",
+   "a": "nyet",
+   "b": "нет",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_010",
+   "a": "mir",
+   "b": "мир",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_011",
+   "a": "islam",
+   "b": "إسلام",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_012",
+   "a": "tovarisch",
+   "b": "товарищ",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_013",
+   "a": "allah",
+   "b": "الله",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_014",
+   "a": "babushka",
+   "b": "бабушка",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_015",
+   "a": "da",
+   "b": "да",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_016",
+   "a": "muhammad",
+   "b": "محمد",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_017",
+   "a": "nyet",
+   "b": "книга",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_018",
+   "a": "mir",
+   "b": "谢谢",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_019",
+   "a": "vodka",
+   "b": "молоко",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_020",
+   "a": "allah",
+   "b": "достоевский",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "easy",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_021",
+   "a": "babushka",
+   "b": "до свидания",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_022",
+   "a": "da",
+   "b": "дом",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "translit_023",
+   "a": "karl",
+   "b": "москва",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "transliteration",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "transliteration"
+   ]
+  },
+  {
+   "id": "phon_009",
+   "a": "flight",
+   "b": "flite",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_010",
+   "a": "through",
+   "b": "thru",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_011",
+   "a": "tonight",
+   "b": "tonite",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_012",
+   "a": "doughnut",
+   "b": "donut",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_013",
+   "a": "centre",
+   "b": "center",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_014",
+   "a": "cheque",
+   "b": "check",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_015",
+   "a": "grey",
+   "b": "gray",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_016",
+   "a": "rumour",
+   "b": "rumor",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "phonetic",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_017",
+   "a": "bright",
+   "b": "frog",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_018",
+   "a": "candle",
+   "b": "zebra",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_019",
+   "a": "planet",
+   "b": "tiger",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_020",
+   "a": "wrote",
+   "b": "rote",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_021",
+   "a": "peace",
+   "b": "piece",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_022",
+   "a": "cell",
+   "b": "sell",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "phon_023",
+   "a": "allowed",
+   "b": "aloud",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "phonetic",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "phonetic"
+   ]
+  },
+  {
+   "id": "leet_009",
+   "a": "h4ck3r",
+   "b": "hacker",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_010",
+   "a": "k3yb04rd",
+   "b": "keyboard",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_011",
+   "a": "h4x0r",
+   "b": "haxor",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_012",
+   "a": "w1nn3r",
+   "b": "winner",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_013",
+   "a": "fr13nd",
+   "b": "friend",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_014",
+   "a": "5p4m",
+   "b": "spam",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_015",
+   "a": "7r4ck",
+   "b": "track",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_016",
+   "a": "c4sh",
+   "b": "cash",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "leetspeak",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_017",
+   "a": "m0nk3y",
+   "b": "money",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_018",
+   "a": "gr33n",
+   "b": "greet",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_019",
+   "a": "c00l",
+   "b": "school",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_020",
+   "a": "b4d",
+   "b": "bed",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_021",
+   "a": "5p4m",
+   "b": "spain",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_022",
+   "a": "d0g",
+   "b": "dig",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "leet_023",
+   "a": "c4t",
+   "b": "cut",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "leetspeak",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "leetspeak"
+   ]
+  },
+  {
+   "id": "homo_009",
+   "a": "sаmsung",
+   "b": "samsung",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_010",
+   "a": "nіke",
+   "b": "nike",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_011",
+   "a": "аdidas",
+   "b": "adidas",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_012",
+   "a": "fаcebook",
+   "b": "facebook",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_013",
+   "a": "аmazon",
+   "b": "amazon",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_014",
+   "a": "twіtter",
+   "b": "twitter",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_015",
+   "a": "netflіx",
+   "b": "netflix",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_016",
+   "a": "pаssword",
+   "b": "password",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_017",
+   "a": "sаmsung",
+   "b": "orange",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_018",
+   "a": "аdidas",
+   "b": "abacus",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_019",
+   "a": "nіke",
+   "b": "spike",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_020",
+   "a": "аmazon",
+   "b": "amazing",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_021",
+   "a": "twіtter",
+   "b": "twitch",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_022",
+   "a": "netflіx",
+   "b": "necklace",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "homo_023",
+   "a": "pаssword",
+   "b": "passphrase",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "homoglyph",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "homoglyph"
+   ]
+  },
+  {
+   "id": "uni_009",
+   "a": "ｗｏｒｌｄ",
+   "b": "world",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_010",
+   "a": "naïve",
+   "b": "naïve",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_011",
+   "a": "user​name",
+   "b": "username",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_012",
+   "a": "ＡＢＣ",
+   "b": "ABC",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_013",
+   "a": "école",
+   "b": "école",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_014",
+   "a": "ｐａｓｓｗｏｒｄ",
+   "b": "password",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_015",
+   "a": "Zürich",
+   "b": "Zürich",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_016",
+   "a": "now⁠",
+   "b": "now",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "unicode",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_017",
+   "a": "ｗｏｒｌｄ",
+   "b": "goodbye",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_018",
+   "a": "ﬁle",
+   "b": "mile",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_019",
+   "a": "ｔａｂｌｅ",
+   "b": "chair",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_020",
+   "a": "hello‌world",
+   "b": "hello there",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_021",
+   "a": "sun",
+   "b": "ｍｏｏｎ",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_022",
+   "a": "ﬂower",
+   "b": "floor",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "uni_023",
+   "a": "resume",
+   "b": "presume",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "unicode",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "unicode"
+   ]
+  },
+  {
+   "id": "cs_009",
+   "a": "voy a la store later",
+   "b": "voy a la store later!",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_010",
+   "a": "c'est la vida loca",
+   "b": "c'est la vida loca!!",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_011",
+   "a": "ich bin tired today",
+   "b": "ich bin tired today.",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_012",
+   "a": "danke schön, my friend",
+   "b": "danke schön my friend",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_013",
+   "a": "buenos días everyone",
+   "b": "buenos días, everyone!",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_014",
+   "a": "merci beaucoup mate",
+   "b": "merci beaucoup, mate!",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_015",
+   "a": "ciao bella, how are you",
+   "b": "ciao bella how are you?",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_016",
+   "a": "hola, comment ça va",
+   "b": "hola comment ça va!",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_017",
+   "a": "voy a la store later",
+   "b": "le rapport est fini",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_018",
+   "a": "bonjour mon friend",
+   "b": "guten Morgen Welt",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_019",
+   "a": "gracias my dude",
+   "b": "numbers station seven",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_020",
+   "a": "hasta luego amigo",
+   "b": "quantum entanglement theory",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_021",
+   "a": "feliz navidad y'all",
+   "b": "tax return deadline",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_022",
+   "a": "dobry den friends",
+   "b": "lunar eclipse tonight",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "cs_023",
+   "a": "salam my brother",
+   "b": "engine failure warning",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "code_switching",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "code_switching"
+   ]
+  },
+  {
+   "id": "short_009",
+   "a": "yo",
+   "b": "yo!",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_010",
+   "a": "thx",
+   "b": "thx!",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_011",
+   "a": "np",
+   "b": "np!",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_012",
+   "a": "pls",
+   "b": "pls!",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_013",
+   "a": "k",
+   "b": "k.",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_014",
+   "a": "no",
+   "b": "no!",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_015",
+   "a": "brb",
+   "b": "brb.",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_016",
+   "a": "gg",
+   "b": "gg!",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_017",
+   "a": "yo",
+   "b": "oy",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_018",
+   "a": "me",
+   "b": "we",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_019",
+   "a": "ah",
+   "b": "oh",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_020",
+   "a": "on",
+   "b": "off",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_021",
+   "a": "yes",
+   "b": "yet",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_022",
+   "a": "in",
+   "b": "it",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "short_023",
+   "a": "go",
+   "b": "stop",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "short_text",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "short_text"
+   ]
+  },
+  {
+   "id": "spam_009",
+   "a": "GRAB your FREE reward NOW",
+   "b": "GRAB your FREE reward TODAY",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true,
+    "spam": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_010",
+   "a": "immediate wire payment needed",
+   "b": "immediate wire payment required",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true,
+    "spam": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_011",
+   "a": "you won the lottery jackpot",
+   "b": "you won a lottery jackpot prize",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true,
+    "spam": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_012",
+   "a": "act now limited offer expires",
+   "b": "act fast limited deal expires",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true,
+    "spam": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_013",
+   "a": "congratulations selected winner",
+   "b": "congratulations chosen winner",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true,
+    "spam": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_014",
+   "a": "risk free income guaranteed",
+   "b": "risk free earnings guaranteed",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true,
+    "spam": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_015",
+   "a": "your account is suspended",
+   "b": "your account has been suspended",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true,
+    "spam": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_016",
+   "a": "hot deal just for you",
+   "b": "exclusive deal only for you",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "spam",
+   "labels": {
+    "similar": true,
+    "spam": true
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_017",
+   "a": "GRAB your FREE reward NOW",
+   "b": "can we reschedule lunch",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_018",
+   "a": "cheap meds online pharmacy",
+   "b": "pharmacy closes at nine",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_019",
+   "a": "double your bitcoin today",
+   "b": "bitcoin whitepaper summary",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_020",
+   "a": "free vacation giveaway",
+   "b": "family vacation photos",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_021",
+   "a": "risk free income guaranteed",
+   "b": "quarterly income report",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_022",
+   "a": "meet singles tonight",
+   "b": "meet the team tonight",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "spam_023",
+   "a": "password reset required",
+   "b": "password manager setup guide",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "spam",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "spam"
+   ]
+  },
+  {
+   "id": "hn_009",
+   "a": "their",
+   "b": "there",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_010",
+   "a": "accept",
+   "b": "except",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_011",
+   "a": "brake",
+   "b": "break",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_012",
+   "a": "lose",
+   "b": "loose",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_013",
+   "a": "desert",
+   "b": "dessert",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_014",
+   "a": "right",
+   "b": "rite",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_015",
+   "a": "affect",
+   "b": "effect",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_016",
+   "a": "weather",
+   "b": "whether",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_017",
+   "a": "complement",
+   "b": "compliment",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_018",
+   "a": "principal",
+   "b": "principle",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_019",
+   "a": "stationary",
+   "b": "stationery",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_020",
+   "a": "elicit",
+   "b": "illicit",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_021",
+   "a": "ensure",
+   "b": "insure",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_022",
+   "a": "council",
+   "b": "counsel",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_023",
+   "a": "allusion",
+   "b": "illusion",
+   "languages": [],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "rebus_sim_009",
+   "a": "s0rry",
+   "b": "sorry",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_010",
+   "a": "th4nks",
+   "b": "thanks",
+   "languages": [],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_011",
+   "a": "l8r",
+   "b": "later",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_012",
+   "a": "h4te",
+   "b": "hate",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_013",
+   "a": "n1ght",
+   "b": "night",
+   "languages": [],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_014",
+   "a": "cul8r",
+   "b": "calculator",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "rebus",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_015",
+   "a": "2nite",
+   "b": "dinner",
+   "languages": [],
+   "split": "train",
+   "difficulty": "easy",
+   "category": "rebus",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_016",
+   "a": "every1",
+   "b": "nobody",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "easy",
+   "category": "rebus",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_sim_017",
+   "a": "d4y",
+   "b": "supper",
+   "languages": [],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "rebus",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_007",
+   "a": "c0ffee",
+   "b": "coffee",
+   "languages": [
+    "en"
+   ],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "coffee"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_008",
+   "a": "h3ll0 w0rld",
+   "b": "hello world",
+   "languages": [
+    "en"
+   ],
+   "split": "train",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "hello world"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_009",
+   "a": "☕ time",
+   "b": "coffee time",
+   "languages": [
+    "en"
+   ],
+   "split": "validation",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "coffee time"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_010",
+   "a": "I ❤ NY",
+   "b": "I love NY",
+   "languages": [
+    "en"
+   ],
+   "split": "test",
+   "difficulty": "medium",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "I love NY"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_011",
+   "a": "mi 🏠",
+   "b": "mi casa",
+   "languages": [
+    "es"
+   ],
+   "split": "test",
+   "difficulty": "hard",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "mi casa",
+     "mi vivienda"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "rebus_dec_012",
+   "a": "g00d",
+   "b": "good",
+   "languages": [
+    "en"
+   ],
+   "split": "test",
+   "difficulty": "easy",
+   "category": "rebus",
+   "labels": {
+    "similar": true,
+    "rebus": true,
+    "obfuscated": true
+   },
+   "expected": {
+    "decoded_contains": [
+     "good"
+    ]
+   },
+   "tags": [
+    "rebus"
+   ]
+  },
+  {
+   "id": "hn_024",
+   "a": "fair",
+   "b": "fare",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_025",
+   "a": "bare",
+   "b": "bear",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_026",
+   "a": "stair",
+   "b": "stare",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_027",
+   "a": "pair",
+   "b": "pear",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_028",
+   "a": "berry",
+   "b": "bury",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_029",
+   "a": "capital",
+   "b": "capitol",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_030",
+   "a": "waist",
+   "b": "waste",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_031",
+   "a": "vain",
+   "b": "vein",
+   "languages": [],
+   "split": "train",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_032",
+   "a": "medal",
+   "b": "meddle",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_033",
+   "a": "discrete",
+   "b": "discreet",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_034",
+   "a": "prophecy",
+   "b": "prophesy",
+   "languages": [],
+   "split": "validation",
+   "difficulty": "hard",
+   "category": "hard_negatives",
+   "labels": {
+    "similar": false
+   },
+   "expected": {},
+   "tags": [
+    "hard_negatives"
+   ]
+  },
+  {
+   "id": "hn_035",
+   "a": "dual",
+   "b": "duel",
+   "languages": [],
+   "split": "validation",
    "difficulty": "hard",
    "category": "hard_negatives",
    "labels": {

@@ -17,15 +17,6 @@ fn compact(text: &str) -> String {
     text.chars().filter(|ch| !ch.is_whitespace()).collect()
 }
 
-fn transliteration_views(fingerprint: &MessageFingerprint) -> Vec<&str> {
-    fingerprint
-        .normalization_views
-        .iter()
-        .filter(|(name, _)| name.starts_with("transliteration:"))
-        .map(|(_, value)| value.as_str())
-        .collect()
-}
-
 fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
     let mut left = BTreeSet::new();
     let mut right = BTreeSet::new();
@@ -44,26 +35,52 @@ fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
     // Transliteration views join the overlap set so cross-script pairs
     // (`privet` ↔ `привет`) match through the converted view. Only
     // transliteration views participate — other normalization views stay out
-    // so leet/casefold variants cannot inflate decoded similarity.
-    let views_left: BTreeSet<String> = transliteration_views(a)
+    // so leet/casefold variants cannot inflate decoded similarity. Every view
+    // carries its provider confidence: a view match contributes
+    // `similarity * confidence`, never an unconditional 1.0.
+    let views_left: Vec<(String, f64)> = a
+        .transliteration_views()
         .into_iter()
-        .map(|view| compact(&casefold_text(view)))
+        .map(|(view, confidence)| (compact(&casefold_text(view)), confidence))
         .collect();
-    let views_right: BTreeSet<String> = transliteration_views(b)
+    let views_right: Vec<(String, f64)> = b
+        .transliteration_views()
         .into_iter()
-        .map(|view| compact(&casefold_text(view)))
+        .map(|(view, confidence)| (compact(&casefold_text(view)), confidence))
         .collect();
-    // Phase 1: exact matches (cheap string equality, views included)
-    // short-circuit before any edit-distance work.
-    for left_value in left.iter().chain(views_left.iter()) {
-        if !left_value.is_empty()
-            && (right.contains(left_value) || views_right.contains(left_value))
-        {
+    // Phase 1a: exact base matches (raw/normalized/rebus, no conversion
+    // involved) still short-circuit at 1.0.
+    for left_value in left.iter() {
+        if !left_value.is_empty() && right.contains(left_value) {
             return 1.0;
         }
     }
-    // Phase 2: fuzzy overlap over the base sets (no views).
+    // Phase 1b: exact matches involving a transliteration view contribute the
+    // view confidence (similarity 1.0 times provider confidence). View↔view
+    // matches take the weaker confidence; view↔base matches take the view's.
     let mut best: f64 = 0.0;
+    for (view, confidence) in &views_left {
+        if view.is_empty() {
+            continue;
+        }
+        if right.contains(view) {
+            best = best.max(*confidence);
+        }
+        for (other, other_confidence) in &views_right {
+            if view == other {
+                best = best.max(confidence.min(*other_confidence));
+            }
+        }
+    }
+    for (view, confidence) in &views_right {
+        if view.is_empty() {
+            continue;
+        }
+        if left.contains(view) {
+            best = best.max(*confidence);
+        }
+    }
+    // Phase 2: fuzzy overlap over the base sets (no views).
     for left_value in &left {
         if left_value.is_empty() {
             continue;
@@ -88,7 +105,7 @@ fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
             compact(&casefold_text(b.normalized.as_deref().unwrap_or(""))),
         ];
         for (views, anchors) in [(&views_left, &anchors_right), (&views_right, &anchors_left)] {
-            for view in views.iter() {
+            for (view, confidence) in views.iter() {
                 if view.is_empty() {
                     continue;
                 }
@@ -96,12 +113,12 @@ fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
                     if anchor.is_empty() {
                         continue;
                     }
-                    best = best.max(combined_character_similarity(view, anchor));
+                    best = best.max(combined_character_similarity(view, anchor) * confidence);
                 }
             }
         }
     }
-    best
+    best.clamp(0.0, 1.0)
 }
 
 fn obfuscation_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
@@ -262,12 +279,15 @@ pub fn score_fingerprints(
         Some(value) => format!("phonetic={value:.3}"),
         None => "phonetic=absent".to_string(),
     });
-    evidence.push(
-        match crate::transliteration::transliteration_similarity(a, b) {
-            Some(value) => format!("transliteration={value:.3}"),
-            None => "transliteration=absent".to_string(),
-        },
-    );
+    let transliteration = crate::transliteration::transliteration_evidence(a, b);
+    match transliteration {
+        Some(tr) => {
+            evidence.push(format!("transliteration={:.3}", tr.weighted()));
+            evidence.push(format!("transliteration_similarity={:.3}", tr.similarity));
+            evidence.push(format!("transliteration_confidence={:.3}", tr.confidence));
+        }
+        None => evidence.push("transliteration=absent".to_string()),
+    }
     if a.obfuscation_features.detected {
         evidence.push(format!(
             "obfuscation_flags_a={:?}",
@@ -295,6 +315,8 @@ pub fn score_fingerprints(
         phonetic,
         symbolic,
         decoded_similarity: Some(decoded),
+        transliteration_similarity: transliteration.map(|tr| tr.similarity),
+        transliteration_confidence: transliteration.map(|tr| tr.confidence),
         obfuscation_similarity: Some(obfuscation),
         obfuscation: Some(obfuscation),
         explanations,

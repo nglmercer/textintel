@@ -174,8 +174,15 @@ pub fn spam_feature_vector(features: &SpamFeatures) -> Vec<f64> {
     ]
 }
 
+fn default_decision_threshold() -> f64 {
+    0.5
+}
+
 /// Versioned trained-spam artifact. `calibrated` is true only for artifacts
 /// produced by the training tool, which fits the bias on held-out data.
+/// `decision_threshold` is the operating point chosen on held-out validation
+/// data (Youden's J); inference labels `probability >= decision_threshold`
+/// as spam instead of a hardcoded `0.5`.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
 pub struct SpamModelArtifact {
     pub artifact_version: u32,
@@ -184,6 +191,8 @@ pub struct SpamModelArtifact {
     pub dataset_version: String,
     pub weights: std::collections::BTreeMap<String, f64>,
     pub bias: f64,
+    #[serde(default = "default_decision_threshold")]
+    pub decision_threshold: f64,
     #[serde(default)]
     pub revision: Option<String>,
     #[serde(default)]
@@ -205,6 +214,7 @@ impl SpamModelArtifact {
             dataset_version: dataset_version.into(),
             weights,
             bias,
+            decision_threshold: default_decision_threshold(),
             revision: None,
             calibrated: false,
             metrics: std::collections::BTreeMap::new(),
@@ -213,6 +223,11 @@ impl SpamModelArtifact {
 
     pub fn with_revision(mut self, revision: impl Into<String>) -> Self {
         self.revision = Some(revision.into());
+        self
+    }
+
+    pub fn with_decision_threshold(mut self, threshold: f64) -> Self {
+        self.decision_threshold = threshold;
         self
     }
 
@@ -253,6 +268,14 @@ impl SpamModelArtifact {
         {
             return Err("artifact contains non-finite parameters".to_string());
         }
+        if !artifact.decision_threshold.is_finite()
+            || !(0.0..=1.0).contains(&artifact.decision_threshold)
+        {
+            return Err(format!(
+                "decision_threshold {} must be finite and within [0.0, 1.0]",
+                artifact.decision_threshold
+            ));
+        }
         Ok(artifact)
     }
 
@@ -283,6 +306,10 @@ impl TrainedSpamPredictor {
 
     pub fn artifact(&self) -> &SpamModelArtifact {
         &self.artifact
+    }
+
+    pub fn decision_threshold(&self) -> f64 {
+        self.artifact.decision_threshold
     }
 
     fn probability(&self, features: &SpamFeatures) -> f64 {
@@ -322,7 +349,7 @@ impl SpamPredictor for TrainedSpamPredictor {
                 .then_with(|| left.0.cmp(right.0))
         });
         let mut labels = Vec::new();
-        if probability >= 0.5 {
+        if probability >= self.artifact.decision_threshold {
             labels.push("spam".to_string());
         }
         let reasons = contributions

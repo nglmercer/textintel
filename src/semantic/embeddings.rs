@@ -172,9 +172,7 @@ fn stable_hash(bytes: &[u8]) -> u64 {
 /// instead of serving stale vectors.
 pub struct CachedEmbeddingProvider<P> {
     inner: P,
-    max_entries: usize,
-    cache: Mutex<BTreeMap<(String, String, String), Vec<f32>>>,
-    revision: Mutex<String>,
+    cache: Mutex<crate::cache::RevisionCache<(String, String, String), Vec<f32>>>,
 }
 
 impl<P> std::fmt::Debug for CachedEmbeddingProvider<P>
@@ -185,7 +183,6 @@ where
         formatter
             .debug_struct("CachedEmbeddingProvider")
             .field("inner", &self.inner)
-            .field("max_entries", &self.max_entries)
             .field(
                 "cache_size",
                 &self.cache.lock().map(|cache| cache.len()).unwrap_or(0),
@@ -202,9 +199,7 @@ where
         let revision = current_revision(&inner);
         Self {
             inner,
-            max_entries: max_entries.max(1),
-            cache: Mutex::new(BTreeMap::new()),
-            revision: Mutex::new(revision),
+            cache: Mutex::new(crate::cache::RevisionCache::new(revision, max_entries)),
         }
     }
 
@@ -215,7 +210,7 @@ where
     /// Drop all cached vectors (e.g. after a model swap outside the provider).
     pub fn invalidate(&self) {
         if let Ok(mut cache) = self.cache.lock() {
-            cache.clear();
+            cache.invalidate();
         }
     }
 
@@ -225,6 +220,18 @@ where
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.cache.lock().map(|cache| cache.capacity()).unwrap_or(0)
+    }
+
+    /// Observable state: counts only, never cached texts or vectors.
+    pub fn diagnostics(&self) -> crate::cache::CacheDiagnostics {
+        self.cache
+            .lock()
+            .map(|cache| cache.diagnostics())
+            .unwrap_or_default()
     }
 }
 
@@ -254,16 +261,6 @@ where
             .map(|metadata| metadata.model_id)
             .unwrap_or_else(|| self.inner.capabilities().provider);
         let revision = current_revision(&self.inner);
-        // Revision changes invalidate before any read: stale vectors across
-        // model revisions are a correctness bug.
-        if let Ok(mut known) = self.revision.lock() {
-            if *known != revision {
-                *known = revision.clone();
-                if let Ok(mut cache) = self.cache.lock() {
-                    cache.clear();
-                }
-            }
-        }
         let keys = texts
             .iter()
             .map(|text| (model.clone(), revision.clone(), casefold_text(text)))
@@ -272,10 +269,13 @@ where
         let mut missing = Vec::new();
         let mut missing_positions = Vec::new();
         {
-            let cache = self
+            let mut cache = self
                 .cache
                 .lock()
                 .map_err(|_| ProviderError::new("embedding_cache", "cache lock poisoned"))?;
+            // Revision changes invalidate before any read: stale vectors
+            // across model revisions are a correctness bug.
+            cache.set_revision(&revision);
             for (index, key) in keys.iter().enumerate() {
                 if let Some(vector) = cache.get(key) {
                     output[index] = Some(vector.clone());
@@ -301,14 +301,10 @@ where
                 .cache
                 .lock()
                 .map_err(|_| ProviderError::new("embedding_cache", "cache lock poisoned"))?;
+            cache.set_revision(&revision);
             for (position, vector) in missing_positions.into_iter().zip(values) {
-                cache.insert(keys[position].clone(), vector.clone());
+                cache.put(keys[position].clone(), vector.clone());
                 output[position] = Some(vector);
-            }
-            while cache.len() > self.max_entries {
-                if let Some(key) = cache.keys().next().cloned() {
-                    cache.remove(&key);
-                }
             }
         }
         Ok(output.into_iter().map(Option::unwrap_or_default).collect())
@@ -324,5 +320,9 @@ where
 
     fn health_check(&self) -> Result<(), ProviderError> {
         self.inner.health_check()
+    }
+
+    fn cache_diagnostics(&self) -> Option<crate::cache::CacheDiagnostics> {
+        Some(self.diagnostics())
     }
 }

@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
-use crate::core::providers::VectorStore;
+use crate::core::providers::{VectorStore, VectorStoreCapabilities};
 use crate::core::types::{MessageFingerprint, SearchCandidateSet};
 use crate::lexical::minhash::minhash_similarity;
 use crate::normalization::unicode::casefold_text;
@@ -46,6 +46,48 @@ impl MemoryStore {
     #[cfg(feature = "ann-hnsw")]
     pub fn ann_index(&self) -> Option<&crate::storage::ann::HnswVectorIndex> {
         self.ann.as_deref()
+    }
+
+    /// Attach an HNSW accelerator to a store that was loaded without one by
+    /// deterministically rebuilding the graph from the live records (the
+    /// documented persistence strategy). Records without a usable
+    /// whole-text embedding are skipped; returns the live entries indexed.
+    /// Replaces any previously configured accelerator.
+    #[cfg(feature = "ann-hnsw")]
+    pub fn enable_ann(&mut self, dimensions: usize, max_elements: usize) -> Result<usize, String> {
+        let snapshot = crate::storage::ann::HnswVectorIndex::snapshot_store(self);
+        let rebuilt =
+            crate::storage::ann::HnswVectorIndex::rebuild(dimensions, max_elements, &snapshot)
+                .map_err(|error| {
+                    format!("ann rebuild failed for {} records: {error}", snapshot.len())
+                })?;
+        let live = rebuilt.len();
+        self.ann = Some(Arc::new(rebuilt));
+        Ok(live)
+    }
+
+    /// Retrieval channels this store serves, including `semantic_ann` when an
+    /// ANN index is actually configured.
+    pub fn indexed_channels(&self) -> Vec<String> {
+        // Without `ann-hnsw` nothing is pushed; the `mut` is only needed
+        // when the feature can extend the list.
+        #[cfg_attr(not(feature = "ann-hnsw"), allow(unused_mut))]
+        let mut channels = [
+            "lexical",
+            "symbol",
+            "normalized",
+            "minhash",
+            "semantic",
+            "phonetic",
+        ]
+        .into_iter()
+        .map(str::to_string)
+        .collect::<Vec<_>>();
+        #[cfg(feature = "ann-hnsw")]
+        if self.ann.is_some() {
+            channels.push("semantic_ann".to_string());
+        }
+        channels
     }
 
     /// Deterministic ANN rebuild from this store's live records (the
@@ -357,6 +399,26 @@ impl VectorStore for MemoryStore {
 
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::new("memory_store").with_quality(CapabilityLevel::Basic)
+    }
+
+    fn store_capabilities(&self) -> VectorStoreCapabilities {
+        #[cfg(feature = "ann-hnsw")]
+        let (ann_enabled, ann_dimensions, ann_entries): (bool, Option<usize>, usize) =
+            match self.ann.as_ref() {
+                Some(index) => (true, Some(index.dimensions()), index.len()),
+                None => (false, None, 0),
+            };
+        #[cfg(not(feature = "ann-hnsw"))]
+        let (ann_enabled, ann_dimensions, ann_entries): (bool, Option<usize>, usize) =
+            (false, None, 0);
+        VectorStoreCapabilities {
+            store_type: "memory".to_string(),
+            persistent: false,
+            ann_enabled,
+            ann_dimensions,
+            ann_entries,
+            indexed_channels: self.indexed_channels(),
+        }
     }
 }
 

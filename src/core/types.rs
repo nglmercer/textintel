@@ -373,6 +373,11 @@ pub struct MessageFingerprint {
     pub normalized: Option<String>,
     #[serde(default)]
     pub normalization_views: BTreeMap<String, String>,
+    /// Provider confidence per `transliteration:*` view, keyed by the same
+    /// view name. Fresh fingerprints always carry it; entries missing from
+    /// pre-v1.0 stored payloads score at face value (1.0).
+    #[serde(default)]
+    pub transliteration_confidence: BTreeMap<String, f64>,
     #[serde(default)]
     pub transformations: Vec<Transformation>,
     pub language_candidates: Vec<LanguageCandidate>,
@@ -394,6 +399,30 @@ pub struct MessageFingerprint {
 }
 
 impl MessageFingerprint {
+    /// `(text, confidence)` for every `transliteration:*` view. Views without
+    /// a recorded confidence (pre-v1.0 payloads) report 1.0; non-finite
+    /// confidences (hostile input) report 0.0 instead of poisoning the score.
+    pub fn transliteration_views(&self) -> Vec<(&str, f64)> {
+        self.normalization_views
+            .iter()
+            .filter(|(name, _)| name.starts_with("transliteration:"))
+            .map(|(name, value)| {
+                let confidence = self
+                    .transliteration_confidence
+                    .get(name)
+                    .map(|value| {
+                        if value.is_finite() {
+                            value.clamp(0.0, 1.0)
+                        } else {
+                            0.0
+                        }
+                    })
+                    .unwrap_or(1.0);
+                (value.as_str(), confidence)
+            })
+            .collect()
+    }
+
     pub fn top_language(&self) -> Option<&str> {
         self.language_candidates
             .first()
@@ -417,6 +446,17 @@ pub struct ComparisonResult {
     pub phonetic: Option<f64>,
     pub symbolic: Option<f64>,
     pub decoded_similarity: Option<f64>,
+    /// Best cross-view string similarity (`None` when neither side carries a
+    /// transliteration view). Raw text similarity, unweighted by confidence.
+    #[serde(default)]
+    pub transliteration_similarity: Option<f64>,
+    /// Provider confidence behind `transliteration_similarity` (the minimum
+    /// over the converted views forming the best pair; 1.0 when the best
+    /// pair needs no conversion). The decision-relevant evidence is the
+    /// product `similarity * confidence`, which is also what view matches
+    /// contribute to `decoded_similarity` instead of an unconditional 1.0.
+    #[serde(default)]
+    pub transliteration_confidence: Option<f64>,
     pub obfuscation_similarity: Option<f64>,
     /// Short alias retained for callers from the Python MVP.
     pub obfuscation: Option<f64>,

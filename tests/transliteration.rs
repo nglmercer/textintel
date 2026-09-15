@@ -94,23 +94,77 @@ fn fingerprint_preserves_views_and_raw() {
 
 #[test]
 fn decoded_channel_matches_cross_script_pairs() {
+    // A transliteration view match contributes `similarity * provider
+    // confidence`, never an unconditional 1.0: the rule-based provider trusts
+    // its Cyrillic tables at 0.6, Han at 0.5, and Arabic at 0.55.
     let engine = TextIntelligence::default();
-    for (left, right) in [("privet", "привет"), ("ni hao", "你好"), ("salam", "سلام")] {
+    for (left, right, confidence) in [
+        ("privet", "привет", 0.6),
+        ("ni hao", "你好", 0.5),
+        ("salam", "سلام", 0.55),
+    ] {
         let comparison = engine.compare(left, right).unwrap();
-        assert_eq!(
-            comparison.decoded_similarity,
-            Some(1.0),
-            "{left} ↔ {right} must match through transliteration views"
-        );
+        let decoded = comparison.decoded_similarity.unwrap();
         assert!(
-            comparison
-                .explanations
-                .iter()
-                .any(|line| line.contains("transliteration=")),
-            "missing transliteration evidence: {:?}",
-            comparison.explanations
+            (decoded - confidence).abs() < 1e-12,
+            "{left} ↔ {right} must match through transliteration views at confidence {confidence}: {decoded}"
         );
+        assert_eq!(comparison.transliteration_similarity, Some(1.0));
+        let reported = comparison.transliteration_confidence.unwrap();
+        assert!(
+            (reported - confidence).abs() < 1e-12,
+            "{left} ↔ {right} confidence: {reported}"
+        );
+        for line in [
+            "transliteration=",
+            "transliteration_similarity=",
+            "transliteration_confidence=",
+        ] {
+            assert!(
+                comparison
+                    .explanations
+                    .iter()
+                    .any(|item| item.contains(line)),
+                "missing {line} evidence: {:?}",
+                comparison.explanations
+            );
+        }
     }
+}
+
+#[test]
+fn fingerprints_record_per_view_confidence() {
+    let engine = TextIntelligence::default();
+    let fingerprint = engine.analyze("привет").unwrap();
+    assert_eq!(
+        fingerprint
+            .transliteration_confidence
+            .get("transliteration:latn")
+            .copied(),
+        Some(0.6)
+    );
+    let step = fingerprint
+        .transformations
+        .iter()
+        .find(|step| step.transformation_type == "normalization:transliteration:latn")
+        .expect("transliteration transformation must be recorded");
+    assert_eq!(step.provider.as_deref(), Some("transliteration"));
+    assert_eq!(step.confidence, Some(0.6));
+}
+
+#[test]
+fn low_confidence_mappings_cannot_false_positive() {
+    // Unrelated cross-script words carry views on both sides, but the
+    // discounted evidence must stay well below any decision threshold.
+    let engine = TextIntelligence::default();
+    let comparison = engine.compare("hello", "привет").unwrap();
+    assert!(comparison.transliteration_similarity.is_some());
+    assert!(
+        comparison.decoded_similarity.unwrap_or(1.0) < 0.5,
+        "decoded: {:?}",
+        comparison.decoded_similarity
+    );
+    assert!(comparison.score < 0.5, "score: {}", comparison.score);
 }
 
 #[test]
@@ -125,7 +179,7 @@ fn hard_negatives_pin_the_threshold_gap() {
         lookalike.decoded_similarity.unwrap_or(1.0) < 1.0,
         "salami must not match exactly"
     );
-    assert_eq!(cross_script.decoded_similarity, Some(1.0));
+    assert_eq!(cross_script.decoded_similarity, Some(0.55));
     assert!(
         lookalike.score > cross_script.score,
         "documents the known inversion: lookalike={} cross-script={}",

@@ -6,6 +6,7 @@ use super::types::{
     ComparisonResult, LanguageCandidate, MessageFingerprint, PatternMatch, PhoneticCandidate,
     SearchCandidateSet, SpamResult, SymbolConcept, SymbolReading,
 };
+use crate::cache::CacheDiagnostics;
 
 /// Provider boundary for multilingual embeddings.  Providers may be local or
 /// remote; the core never chooses a vendor or sends data implicitly.
@@ -26,6 +27,12 @@ pub trait EmbeddingProvider: Send + Sync {
 
     fn health_check(&self) -> Result<(), ProviderError> {
         Ok(())
+    }
+
+    /// Cache state when this provider serves through a revision-aware cache,
+    /// `None` when uncached. Counts only — never cached texts.
+    fn cache_diagnostics(&self) -> Option<CacheDiagnostics> {
+        None
     }
 }
 
@@ -88,6 +95,12 @@ pub trait G2PProvider: Send + Sync {
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::new("g2p")
     }
+
+    /// Cache state when this provider serves through a revision-aware cache,
+    /// `None` when uncached. Counts only — never cached texts.
+    fn cache_diagnostics(&self) -> Option<CacheDiagnostics> {
+        None
+    }
 }
 
 /// Provider boundary for probabilistic language detection.
@@ -100,6 +113,12 @@ pub trait LanguageDetectionProvider: Send + Sync {
 
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::new("language").with_quality(CapabilityLevel::Basic)
+    }
+
+    /// Cache state when this provider serves through a revision-aware cache,
+    /// `None` when uncached. Counts only — never cached texts.
+    fn cache_diagnostics(&self) -> Option<CacheDiagnostics> {
+        None
     }
 }
 
@@ -221,6 +240,32 @@ pub trait RerankerProvider: Send + Sync {
     }
 }
 
+/// Explicit vector-store capabilities: persistence, ANN availability, and
+/// indexed retrieval channels. Diagnostics must use this instead of inferring
+/// behavior from provider names (a `MemoryStore` may contain an HNSW index
+/// internally while reporting a plain `memory_store` provider).
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq, Default)]
+pub struct VectorStoreCapabilities {
+    /// `memory`, `json`, `redb`, or a custom store label.
+    #[serde(default)]
+    pub store_type: String,
+    #[serde(default)]
+    pub persistent: bool,
+    /// True only when an ANN index is actually serving.
+    #[serde(default)]
+    pub ann_enabled: bool,
+    /// ANN vector dimensions when enabled.
+    #[serde(default)]
+    pub ann_dimensions: Option<usize>,
+    /// Live ANN entries (tombstoned removals excluded).
+    #[serde(default)]
+    pub ann_entries: usize,
+    /// Retrieval channels the store can serve
+    /// (`lexical`, `semantic_ann`, …).
+    #[serde(default)]
+    pub indexed_channels: Vec<String>,
+}
+
 /// Storage abstraction for searchable fingerprints.  The in-memory store is
 /// the default; vector databases can implement this trait without changing the
 /// analyzer or comparison code.
@@ -256,6 +301,83 @@ pub trait VectorStore: Send + Sync {
 
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::new("vector_store").with_quality(CapabilityLevel::Basic)
+    }
+
+    /// Explicit store capabilities for diagnostics. Custom stores inherit a
+    /// non-persistent, non-ANN report; override when the store persists or
+    /// serves an ANN index.
+    fn store_capabilities(&self) -> VectorStoreCapabilities {
+        VectorStoreCapabilities::default()
+    }
+}
+
+/// Shared ownership preserves provider behavior: every method (including
+/// capability and cache introspection) forwards to the inner provider. This
+/// lets generic wrappers such as the revision-aware caches hold
+/// `Arc<dyn EmbeddingProvider>` without changing what they report.
+impl<T: EmbeddingProvider + ?Sized> EmbeddingProvider for Arc<T> {
+    fn embed(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
+        (**self).embed(texts)
+    }
+
+    fn embed_batch(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
+        (**self).embed_batch(texts)
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        (**self).capabilities()
+    }
+
+    fn model_metadata(&self) -> Option<ModelMetadata> {
+        (**self).model_metadata()
+    }
+
+    fn health_check(&self) -> Result<(), ProviderError> {
+        (**self).health_check()
+    }
+
+    fn cache_diagnostics(&self) -> Option<CacheDiagnostics> {
+        (**self).cache_diagnostics()
+    }
+}
+
+impl<T: G2PProvider + ?Sized> G2PProvider for Arc<T> {
+    fn phonemize(&self, text: &str, language: &str) -> Result<PhoneticCandidate, ProviderError> {
+        (**self).phonemize(text, language)
+    }
+
+    fn phonemize_batch(
+        &self,
+        texts: &[String],
+        language: &str,
+    ) -> Result<Vec<PhoneticCandidate>, ProviderError> {
+        (**self).phonemize_batch(texts, language)
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        (**self).capabilities()
+    }
+
+    fn cache_diagnostics(&self) -> Option<CacheDiagnostics> {
+        (**self).cache_diagnostics()
+    }
+}
+
+impl<T: LanguageDetectionProvider + ?Sized> LanguageDetectionProvider for Arc<T> {
+    fn detect(&self, text: &str) -> Result<Vec<LanguageCandidate>, ProviderError> {
+        (**self).detect(text)
+    }
+
+    fn detect_batch(&self, texts: &[String]) -> Result<Vec<Vec<LanguageCandidate>>, ProviderError> {
+        (**self).detect_batch(texts)
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        (**self).capabilities()
+    }
+
+    fn cache_diagnostics(&self) -> Option<CacheDiagnostics> {
+        (**self).cache_diagnostics()
     }
 }
 

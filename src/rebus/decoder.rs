@@ -338,12 +338,26 @@ impl RebusDecoder {
         if let Some(similarity) = semantic {
             // Bounded semantic rescoring: at most the top 12 survivors, with
             // the configured blend (0.0 disables without removing survivors).
+            // The identity candidate (input reproduced verbatim) keeps its
+            // beam score: rescoring it by self-similarity (always 1.0) would
+            // systematically bury real readings under the literal input.
             let blend = weights.semantic.clamp(0.0, 1.0);
+            let folded_input = casefold_text(text.trim());
             for candidate in ranked.iter_mut().take(12) {
+                if casefold_text(candidate.text.trim()) == folded_input {
+                    continue;
+                }
                 if let Some(value) = similarity(&candidate.text, text) {
-                    candidate.score = ((1.0 - blend) * candidate.score
-                        + blend * value.clamp(0.0, 1.0))
-                    .clamp(0.0, 1.0);
+                    let value = value.clamp(0.0, 1.0);
+                    // Lift-only: semantic evidence breaks ties upward but
+                    // never vetoes beam evidence. Input embeddings carry
+                    // obfuscation noise (leet, symbols), so a low
+                    // input-similarity must not drag a strong reading below
+                    // the literal.
+                    if value > candidate.score {
+                        candidate.score =
+                            ((1.0 - blend) * candidate.score + blend * value).clamp(0.0, 1.0);
+                    }
                 }
             }
             ranked.sort_by(|left, right| right.score.total_cmp(&left.score));

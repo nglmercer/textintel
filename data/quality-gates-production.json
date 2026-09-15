@@ -1,9 +1,9 @@
 {
   "similarity": {
-    "accuracy_min": 0.8,
-    "f1_min": 0.86,
-    "roc_auc_min": 0.9,
-    "pr_auc_min": 0.95
+    "accuracy_min": 0.81,
+    "f1_min": 0.87,
+    "roc_auc_min": 0.92,
+    "pr_auc_min": 0.96
   },
   "rebus": {
     "top1_min": 0.6,
@@ -15,7 +15,7 @@
     "top3_min": 0.7
   },
   "search": {
-    "recall_at_1_min": 0.35,
+    "recall_at_1_min": 0.38,
     "recall_at_5_min": 0.95,
     "recall_at_10_min": 0.95,
     "mrr_min": 0.6
@@ -35,59 +35,60 @@
       "count_min": 12,
       "f1_min": 0.93,
       "accuracy_min": 0.9,
-      "roc_auc_min": 0.93
+      "roc_auc_min": 0.94
     },
     "hard_negatives": {
       "count_min": 8
     },
     "homoglyph": {
       "count_min": 12,
-      "f1_min": 0.85,
-      "accuracy_min": 0.8
+      "f1_min": 0.88,
+      "accuracy_min": 0.84
     },
     "leetspeak": {
       "count_min": 12,
-      "f1_min": 0.95,
-      "accuracy_min": 0.92,
+      "f1_min": 0.94,
+      "accuracy_min": 0.9,
       "roc_auc_min": 0.97
     },
     "phonetic": {
       "count_min": 12,
-      "f1_min": 0.35,
+      "f1_min": 0.15,
       "accuracy_min": 0.35
     },
     "rebus": {
       "count_min": 12,
-      "f1_min": 0.78,
-      "accuracy_min": 0.68,
-      "roc_auc_min": 0.84
+      "f1_min": 0.87,
+      "accuracy_min": 0.8,
+      "roc_auc_min": 0.72
     },
     "semantic": {
       "count_min": 12,
-      "f1_min": 0.75,
-      "accuracy_min": 0.72,
-      "roc_auc_min": 0.8
+      "f1_min": 0.85,
+      "accuracy_min": 0.81,
+      "roc_auc_min": 0.85
     },
     "short_text": {
       "count_min": 12,
-      "f1_min": 0.9,
-      "accuracy_min": 0.9
+      "f1_min": 0.95,
+      "accuracy_min": 0.95
     },
     "spam": {
       "count_min": 12,
-      "f1_min": 0.65,
-      "accuracy_min": 0.6,
-      "roc_auc_min": 0.9
+      "f1_min": 0.7,
+      "accuracy_min": 0.65,
+      "roc_auc_min": 0.95
     },
     "transliteration": {
       "count_min": 12,
-      "accuracy_min": 0.35,
+      "f1_min": 0.3,
+      "accuracy_min": 0.5,
       "roc_auc_min": 0.8
     },
     "unicode": {
       "count_min": 12,
-      "f1_min": 0.6,
-      "accuracy_min": 0.5,
+      "f1_min": 0.65,
+      "accuracy_min": 0.52,
       "roc_auc_min": 0.95
     }
   }

@@ -1,8 +1,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::Instant;
 
+use crate::cache::{
+    rebus_cache_key, resource_revision, CacheDiagnostics, CachedG2PProvider,
+    CachedLanguageDetectionProvider, RevisionCache,
+};
 use crate::comparison::model::{score_fingerprints_with_profile, SimilarityProfile};
 use crate::comparison::scorer::score_fingerprints as weighted_score_fingerprints;
 use crate::core::capabilities::ProviderCapabilities;
@@ -36,7 +40,7 @@ use crate::obfuscation::features::obfuscation_features;
 use crate::phonetic::g2p::RuleBasedG2PProvider;
 use crate::rebus::decoder::RebusDecoder;
 use crate::resources::ResourceLoader;
-use crate::semantic::embeddings::NullEmbeddingProvider;
+use crate::semantic::embeddings::{CachedEmbeddingProvider, NullEmbeddingProvider};
 use crate::storage::{JsonFileStore, MemoryStore};
 use crate::symbols::resolver::resolve_symbols_with_provider;
 use crate::transliteration::RuleBasedTransliterationProvider;
@@ -73,6 +77,11 @@ pub struct TextIntelligence {
     preset_fallbacks: Vec<DegradedCapability>,
     store: RwLock<Box<dyn VectorStore>>,
     patterns: RwLock<BTreeMap<String, RegisteredPattern>>,
+    /// Bounded revision-aware rebus cache (`None` when
+    /// `config.cache.rebus == 0`). Keys cover input, languages, candidate
+    /// limit, scoring weights, and the semantic-rescoring marker; the
+    /// revision tracks the loaded resource packs.
+    rebus_cache: Option<Mutex<RevisionCache<String, Vec<DecodedCandidate>>>>,
 }
 
 impl Default for TextIntelligence {
@@ -101,7 +110,7 @@ impl TextIntelligence {
 
     fn from_parts(config: EngineConfig, resources: Arc<ResourceLoader>) -> Self {
         let language_detector = NgramLanguageDetector::from_resources(&resources);
-        Self {
+        let mut engine = Self {
             config,
             resources: resources.clone(),
             // `NullEmbeddingProvider` keeps the default engine dependency-free;
@@ -122,7 +131,136 @@ impl TextIntelligence {
             preset_fallbacks: Vec::new(),
             store: RwLock::new(Box::new(MemoryStore::default())),
             patterns: RwLock::new(BTreeMap::new()),
+            rebus_cache: None,
+        };
+        engine.install_caches();
+        engine
+    }
+
+    /// Wrap the embedding, G2P, and language providers in bounded
+    /// revision-aware caches and (re)create the rebus cache when
+    /// `config.cache` enables them. Providers that already report cache
+    /// diagnostics are left alone, so user-wrapped providers are never
+    /// double-wrapped. Called after construction and after every provider
+    /// swap so `with_*` replacements stay cached consistently.
+    fn install_caches(&mut self) {
+        let limits = self.config.cache.clone();
+        if limits.embeddings > 0 && self.embedding_provider.cache_diagnostics().is_none() {
+            self.embedding_provider = Arc::new(CachedEmbeddingProvider::new(
+                self.embedding_provider.clone(),
+                limits.embeddings,
+            ));
         }
+        if limits.g2p > 0 && self.g2p_provider.cache_diagnostics().is_none() {
+            self.g2p_provider = Arc::new(CachedG2PProvider::new(
+                self.g2p_provider.clone(),
+                limits.g2p,
+            ));
+        }
+        if limits.language > 0 && self.language_provider.cache_diagnostics().is_none() {
+            self.language_provider = Arc::new(CachedLanguageDetectionProvider::new(
+                self.language_provider.clone(),
+                limits.language,
+            ));
+        }
+        if limits.rebus > 0 {
+            let revision = resource_revision(self.resources.manifest());
+            match &self.rebus_cache {
+                Some(cache) => {
+                    if let Ok(mut guard) = cache.lock() {
+                        guard.set_revision(&revision);
+                    }
+                }
+                None => {
+                    self.rebus_cache = Some(Mutex::new(RevisionCache::new(revision, limits.rebus)));
+                }
+            }
+        } else {
+            self.rebus_cache = None;
+        }
+    }
+
+    /// Drop all cached rebus decodings (used after provider swaps that change
+    /// decoding behavior without changing the resource revision).
+    fn invalidate_rebus_cache(&mut self) {
+        if let Some(cache) = &self.rebus_cache {
+            if let Ok(mut guard) = cache.lock() {
+                guard.invalidate();
+            }
+        }
+    }
+
+    /// Semantic-rescoring marker for rebus cache keys: `sem:off` when
+    /// rescoring is disabled, otherwise the embedding model identity so model
+    /// swaps key separately.
+    fn rebus_semantic_marker(&self) -> String {
+        if !self.config.semantic {
+            return "sem:off".to_string();
+        }
+        if let Some(metadata) = self.embedding_provider.model_metadata() {
+            return format!(
+                "sem:{}@{}#{}",
+                metadata.model_id,
+                metadata.revision.as_deref().unwrap_or("-"),
+                metadata.dimensions
+            );
+        }
+        let capabilities = self.embedding_provider.capabilities();
+        format!(
+            "sem:{}@{}#{}",
+            capabilities.provider,
+            capabilities.model_revision.as_deref().unwrap_or("-"),
+            capabilities.dimensions.unwrap_or(0)
+        )
+    }
+
+    fn rebus_cache_lookup(
+        &self,
+        text: &str,
+        languages: Option<&[String]>,
+        max_candidates: Option<usize>,
+        semantic: &str,
+    ) -> Option<Vec<DecodedCandidate>> {
+        let cache = self.rebus_cache.as_ref()?;
+        let key = rebus_cache_key(
+            text,
+            languages,
+            max_candidates,
+            &self.config.rebus_weights,
+            semantic,
+        );
+        cache.lock().ok()?.get(&key)
+    }
+
+    fn rebus_cache_store(
+        &self,
+        text: &str,
+        languages: Option<&[String]>,
+        max_candidates: Option<usize>,
+        semantic: &str,
+        candidates: Vec<DecodedCandidate>,
+    ) {
+        let Some(cache) = self.rebus_cache.as_ref() else {
+            return;
+        };
+        let key = rebus_cache_key(
+            text,
+            languages,
+            max_candidates,
+            &self.config.rebus_weights,
+            semantic,
+        );
+        if let Ok(mut guard) = cache.lock() {
+            guard.put(key, candidates);
+        }
+    }
+
+    /// Observable rebus-cache state (counts only, never cached texts).
+    fn rebus_cache_diagnostics(&self) -> CacheDiagnostics {
+        self.rebus_cache
+            .as_ref()
+            .and_then(|cache| cache.lock().ok().map(|guard| guard.diagnostics()))
+            .unwrap_or_else(CacheDiagnostics::disabled)
     }
 
     /// Ergonomic construction: `TextIntelligence::builder().build()?`.
@@ -201,10 +339,38 @@ impl TextIntelligence {
                 engine.spam_predictor = Arc::new(predictor);
             }
         }
+        if let Some(path) = builder.reranker_model_path {
+            if let Some(reranker) = crate::engine::production::load_reranker(
+                &path,
+                builder.reranker_model_required,
+                builder.reranker_max_candidates,
+            )? {
+                engine.reranker_provider = Some(Arc::new(reranker));
+            }
+        }
         if let Some(path) = builder.json_store_path {
-            let store = JsonFileStore::open(path).map_err(TextIntelError::Storage)?;
+            #[cfg(feature = "ann-hnsw")]
+            let store = match builder.json_store_ann {
+                Some((dimensions, max_elements)) => {
+                    JsonFileStore::open_with_ann(path, dimensions, max_elements)
+                }
+                None => JsonFileStore::open(path),
+            }
+            .map_err(TextIntelError::Storage)?;
+            #[cfg(not(feature = "ann-hnsw"))]
+            let store = {
+                if builder.json_store_ann.is_some() {
+                    return Err(TextIntelError::InvalidConfiguration(
+                        "json_store_with_ann requires the ann-hnsw feature".to_string(),
+                    ));
+                }
+                JsonFileStore::open(path).map_err(TextIntelError::Storage)?
+            };
             engine.store = RwLock::new(Box::new(store));
         }
+        // Builder-supplied providers replaced the from_parts defaults above;
+        // wrap them when the configured cache limits enable caching.
+        engine.install_caches();
         Ok(engine)
     }
 
@@ -280,6 +446,14 @@ impl TextIntelligence {
                 .unwrap_or_else(|| ProviderCapabilities::new(format!("{name}:unknown")))
         };
         let symbol_languages = self.resources.symbol_pack_languages();
+        // ANN availability comes from explicit store capabilities, never from
+        // the provider name: a `MemoryStore` may serve HNSW internally while
+        // reporting a plain `memory_store` provider.
+        let store_capabilities = self
+            .store
+            .read()
+            .map(|store| store.store_capabilities())
+            .unwrap_or_default();
         EngineDiagnostics {
             api_version: env!("CARGO_PKG_VERSION").to_string(),
             fingerprint_schema: crate::core::types::FINGERPRINT_SCHEMA_VERSION,
@@ -293,14 +467,43 @@ impl TextIntelligence {
             lexicon: get("lexicon"),
             symbols: get("symbols"),
             abbreviations: capabilities.get("abbreviations").cloned(),
+            transliteration: capabilities.get("transliteration").cloned(),
             spam: get("spam"),
             similarity: capabilities.get("similarity").cloned(),
             reranker: capabilities.get("reranker").cloned(),
             store: get("store"),
-            ann_enabled: get("store").provider == "hnsw_ann",
+            ann_enabled: store_capabilities.ann_enabled,
             degraded: self.degraded_capabilities(&capabilities),
             resource_manifest: self.resource_manifest(),
+            caches: self.cache_diagnostics(),
+            store_capabilities,
         }
+    }
+
+    /// Bounded revision-aware cache state by subsystem. Counts only — never
+    /// cached texts. Uncached subsystems report `enabled: false`.
+    fn cache_diagnostics(&self) -> BTreeMap<String, CacheDiagnostics> {
+        BTreeMap::from([
+            (
+                "embeddings".to_string(),
+                self.embedding_provider
+                    .cache_diagnostics()
+                    .unwrap_or_else(CacheDiagnostics::disabled),
+            ),
+            (
+                "g2p".to_string(),
+                self.g2p_provider
+                    .cache_diagnostics()
+                    .unwrap_or_else(CacheDiagnostics::disabled),
+            ),
+            (
+                "language".to_string(),
+                self.language_provider
+                    .cache_diagnostics()
+                    .unwrap_or_else(CacheDiagnostics::disabled),
+            ),
+            ("rebus".to_string(), self.rebus_cache_diagnostics()),
+        ])
     }
 
     fn degraded_capabilities(
@@ -308,6 +511,11 @@ impl TextIntelligence {
         capabilities: &BTreeMap<String, ProviderCapabilities>,
     ) -> Vec<DegradedCapability> {
         use crate::core::capabilities::CapabilityLevel;
+        let store = self
+            .store
+            .read()
+            .map(|store| store.store_capabilities())
+            .unwrap_or_default();
         let mut degraded = Vec::new();
         let mut note = |capability: &str, configured: &str, wanted: &str, detail: &str| {
             degraded.push(DegradedCapability {
@@ -370,12 +578,7 @@ impl TextIntelligence {
                 "full-comparison order is final; configure a RerankerProvider to rescore top candidates",
             );
         }
-        if capabilities
-            .get("store")
-            .map(|info| info.provider.as_str())
-            .unwrap_or("memory_store")
-            == "memory_store"
-        {
+        if !store.persistent {
             note(
                 "persistence",
                 "in-memory",
@@ -383,7 +586,7 @@ impl TextIntelligence {
                 "fingerprints do not survive restarts; use json_store() or a persistent VectorStore",
             );
         }
-        if capabilities.get("store").map(|info| info.provider.as_str()) != Some("hnsw_ann") {
+        if !store.ann_enabled {
             note(
                 "retrieval",
                 "index scan",
@@ -397,11 +600,15 @@ impl TextIntelligence {
 
     pub fn with_embedding_provider<P: EmbeddingProvider + 'static>(mut self, provider: P) -> Self {
         self.embedding_provider = Arc::new(provider);
+        self.install_caches();
+        self.invalidate_rebus_cache();
         self
     }
 
     pub fn with_g2p_provider<P: G2PProvider + 'static>(mut self, provider: P) -> Self {
         self.g2p_provider = Arc::new(provider);
+        self.install_caches();
+        self.invalidate_rebus_cache();
         self
     }
 
@@ -410,11 +617,13 @@ impl TextIntelligence {
         provider: P,
     ) -> Self {
         self.language_provider = Arc::new(provider);
+        self.install_caches();
         self
     }
 
     pub fn with_lexicon_provider<P: LexiconProvider + 'static>(mut self, provider: P) -> Self {
         self.lexicon_provider = Arc::new(provider);
+        self.invalidate_rebus_cache();
         self
     }
 
@@ -428,6 +637,9 @@ impl TextIntelligence {
         self.symbol_provider = resources.clone();
         self.abbreviation_provider = Some(resources.clone());
         self.resources = resources;
+        // A new resource set changes the rebus revision (invalidating when it
+        // differs) and re-caches the fresh language detector.
+        self.install_caches();
         self
     }
 
@@ -436,6 +648,7 @@ impl TextIntelligence {
         provider: P,
     ) -> Self {
         self.abbreviation_provider = Some(Arc::new(provider));
+        self.invalidate_rebus_cache();
         self
     }
 
@@ -452,6 +665,7 @@ impl TextIntelligence {
         provider: P,
     ) -> Self {
         self.symbol_provider = Arc::new(provider);
+        self.invalidate_rebus_cache();
         self
     }
 
@@ -667,18 +881,39 @@ impl TextIntelligence {
             self.config.language_hints.clone()
         };
         let started = Instant::now();
-        let decoder = RebusDecoder::new(self.config.clone());
-        let abbreviations = self.abbreviation_provider.as_deref();
-        let rebus = decoder.decode_with_abbreviations(
+        // Fingerprint rebus decoding never uses semantic rescoring (the
+        // `sem:off` key marker); `decode_with_languages` may, and keys
+        // separately.
+        let rebus = match self.rebus_cache_lookup(
             text,
             Some(&decode_languages),
             Some(self.config.max_candidates),
-            self.symbol_provider.as_ref(),
-            self.lexicon_provider.as_ref(),
-            self.g2p_provider.as_ref(),
-            None,
-            abbreviations,
-        );
+            "sem:off",
+        ) {
+            Some(hit) => hit,
+            None => {
+                let decoder = RebusDecoder::new(self.config.clone());
+                let abbreviations = self.abbreviation_provider.as_deref();
+                let decoded = decoder.decode_with_abbreviations(
+                    text,
+                    Some(&decode_languages),
+                    Some(self.config.max_candidates),
+                    self.symbol_provider.as_ref(),
+                    self.lexicon_provider.as_ref(),
+                    self.g2p_provider.as_ref(),
+                    None,
+                    abbreviations,
+                );
+                self.rebus_cache_store(
+                    text,
+                    Some(&decode_languages),
+                    Some(self.config.max_candidates),
+                    "sem:off",
+                    decoded.clone(),
+                );
+                decoded
+            }
+        };
         let spoken_candidates = rebus
             .iter()
             .map(|candidate| SpokenCandidate {
@@ -712,13 +947,15 @@ impl TextIntelligence {
             collapse_repetition(&unicode.casefolded, self.config.repetition_keep),
         );
         normalization_views.insert("normalized".to_string(), normalized.clone());
-        // Transliteration views are additive: `raw` is never replaced.
+        // Transliteration views are additive: `raw` is never replaced. Each
+        // view records its provider confidence so scoring can weight the
+        // conversion instead of trusting it unconditionally.
+        let mut transliteration_confidence = BTreeMap::new();
         if let Some(provider) = &self.transliteration_provider {
             for view in provider.transliterate(text) {
-                normalization_views.insert(
-                    format!("transliteration:{}", view.target_script.to_lowercase()),
-                    view.text,
-                );
+                let name = format!("transliteration:{}", view.target_script.to_lowercase());
+                transliteration_confidence.insert(name.clone(), view.confidence);
+                normalization_views.insert(name, view.text);
             }
         }
         let transformations = normalization_views
@@ -730,6 +967,9 @@ impl TextIntelligence {
                         .with_span(0, text.len(), text);
                 if name.starts_with("transliteration:") {
                     step = step.with_provider("transliteration");
+                    if let Some(confidence) = transliteration_confidence.get(name) {
+                        step = step.with_confidence(*confidence);
+                    }
                 } else {
                     step = step.with_provider("normalization");
                 }
@@ -827,6 +1067,7 @@ impl TextIntelligence {
             raw: text.to_string(),
             normalized: Some(normalized),
             normalization_views,
+            transliteration_confidence,
             transformations,
             language_candidates: languages,
             segments,
@@ -1059,7 +1300,11 @@ impl TextIntelligence {
         } else {
             Some(self.config.language_hints.as_slice())
         });
-        Ok(decoder.decode_with_abbreviations(
+        let marker = self.rebus_semantic_marker();
+        if let Some(hit) = self.rebus_cache_lookup(text, effective, max_candidates, &marker) {
+            return Ok(hit);
+        }
+        let decoded = decoder.decode_with_abbreviations(
             text,
             effective,
             max_candidates,
@@ -1068,7 +1313,9 @@ impl TextIntelligence {
             self.g2p_provider.as_ref(),
             semantic_ref,
             self.abbreviation_provider.as_deref(),
-        ))
+        );
+        self.rebus_cache_store(text, effective, max_candidates, &marker, decoded.clone());
+        Ok(decoded)
     }
 
     pub fn compare(&self, left: &str, right: &str) -> Result<ComparisonResult, TextIntelError> {

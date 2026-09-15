@@ -219,6 +219,57 @@ impl RebusWeights {
     }
 }
 
+/// Bounded revision-aware cache limits (entries per cache). `0` disables
+/// that cache. Caches are transparent: hits return clones of what the
+/// wrapped provider would compute, keys always include the provider identity
+/// and model/resource revision, and an observed revision change invalidates
+/// instead of serving stale values.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
+pub struct CacheLimits {
+    pub embeddings: usize,
+    pub g2p: usize,
+    pub language: usize,
+    pub rebus: usize,
+}
+
+impl CacheLimits {
+    /// Production preset: generous text-keyed caches for the embedding, G2P,
+    /// and language providers plus a smaller rebus cache (decoded candidate
+    /// lists are the largest values).
+    pub fn production() -> Self {
+        Self {
+            embeddings: 1024,
+            g2p: 1024,
+            language: 1024,
+            rebus: 256,
+        }
+    }
+
+    /// Fill disabled (`0`) entries with the production defaults, keeping any
+    /// explicitly configured limits.
+    pub fn with_production_defaults(mut self) -> Self {
+        let production = Self::production();
+        if self.embeddings == 0 {
+            self.embeddings = production.embeddings;
+        }
+        if self.g2p == 0 {
+            self.g2p = production.g2p;
+        }
+        if self.language == 0 {
+            self.language = production.language;
+        }
+        if self.rebus == 0 {
+            self.rebus = production.rebus;
+        }
+        self
+    }
+
+    pub fn any_enabled(&self) -> bool {
+        self.embeddings > 0 || self.g2p > 0 || self.language > 0 || self.rebus > 0
+    }
+}
+
 /// Resource and provider limits.  These bounds protect candidate generation
 /// from untrusted input and make runtime behavior predictable.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -245,6 +296,9 @@ pub struct EngineConfig {
     /// "use detected languages". Hints never change detection itself, only
     /// which readings the decoder and G2P prefer.
     pub language_hints: Vec<String>,
+    /// Bounded revision-aware caches. Disabled by default; the production
+    /// preset enables them (see [`CacheLimits::production`]).
+    pub cache: CacheLimits,
 }
 
 impl Default for EngineConfig {
@@ -270,6 +324,7 @@ impl Default for EngineConfig {
             phonetic: false,
             rebus_weights: RebusWeights::default(),
             language_hints: Vec::new(),
+            cache: CacheLimits::default(),
         }
     }
 }

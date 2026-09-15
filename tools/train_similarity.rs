@@ -3,21 +3,25 @@
 //! Usage:
 //!
 //! ```text
-//! textintel-train similarity data/evaluation.json --output models/similarity-v1.json
+//! textintel-train similarity data/evaluation.json --output models/similarity-v2.json
 //! ```
 //!
 //! The tool trains on the `train` split only, calibrates the bias on the
 //! `validation` split, and reports held-out metrics on `test` without
-//! training on it. The default engine configuration is used so the artifact
-//! matches production scoring conditions.
+//! training on it. A production-like engine (semantic and phonetic channels
+//! enabled, feature-hash embeddings, rule-based G2P) featurizes every pair so
+//! the artifact matches production scoring conditions — including nonzero
+//! semantic and phonetic weights whenever the evaluation proves them useful.
 
 use std::collections::BTreeMap;
 
 use textintel::evaluation::EvaluationDataset;
+use textintel::semantic::FeatureHashEmbeddingProvider;
 use textintel::SimilarityScorer;
 use textintel::{
-    language_agreement, logistic_step, training_features, EngineConfig, LogisticSimilarityScorer,
-    SimilarityModelArtifact, TextIntelligence, TRAINING_FEATURES,
+    balanced_sample_weights, language_agreement, logistic_step, logistic_step_weighted,
+    training_features, EngineConfig, LogisticSimilarityScorer, SimilarityModelArtifact,
+    TextIntelligence, TRAINING_FEATURES,
 };
 
 const ITERATIONS: usize = 20000;
@@ -48,10 +52,14 @@ fn featurize(
     let cases = dataset.filter_split(split);
     let mut features = Vec::with_capacity(cases.len());
     let mut labels = Vec::with_capacity(cases.len());
+    let mut semantic_present = 0usize;
+    let mut phonetic_present = 0usize;
     for case in cases {
         let left = engine.analyze(&case.a)?;
         let right = engine.analyze(&case.b)?;
         let comparison = engine.compare_fingerprints(&left, &right);
+        semantic_present += usize::from(comparison.semantic.is_some());
+        phonetic_present += usize::from(comparison.phonetic.is_some());
         let agreement = language_agreement(&left, &right);
         let map = training_features(&comparison, agreement);
         features.push(
@@ -62,6 +70,11 @@ fn featurize(
         );
         labels.push(case.is_similar());
     }
+    println!(
+        "{split}: semantic present in {semantic_present}/{} pairs, phonetic in {phonetic_present}/{}",
+        features.len(),
+        features.len()
+    );
     Ok(SplitData { features, labels })
 }
 
@@ -273,7 +286,17 @@ fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or(L2);
     let source = std::fs::read_to_string(path)?;
     let dataset = EvaluationDataset::from_json(&source)?;
-    let engine = TextIntelligence::new(EngineConfig::default());
+    // Production-like featurization: semantic and phonetic evidence must be
+    // present or their weights train to exactly zero (a default engine would
+    // starve both channels and ship a misleading artifact).
+    let engine = TextIntelligence::new(EngineConfig {
+        semantic: true,
+        phonetic: true,
+        ..EngineConfig::default()
+    })
+    .with_embedding_provider(
+        FeatureHashEmbeddingProvider::new(256).map_err(|error| error.to_string())?,
+    );
 
     println!("featurizing train split...");
     let train = featurize(&engine, &dataset, "train")?;
@@ -285,32 +308,39 @@ fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         train.labels.iter().filter(|label| **label).count()
     );
 
+    // Class-balanced loss: the training split is ~85% positive while held-out
+    // slices are closer to balanced, so uniform weighting would drag the
+    // operating point toward always-positive (recall ~0.98, poor precision).
+    let train_sample_weights = balanced_sample_weights(&train.labels);
+    let validation_sample_weights = balanced_sample_weights(&validation.labels);
     let mut weights = vec![0.0; TRAINING_FEATURES.len()];
     let mut bias = 0.0;
     let mut loss = f64::INFINITY;
     for _ in 0..iterations {
-        loss = logistic_step(
+        loss = logistic_step_weighted(
             &train.features,
             &train.labels,
             &mut weights,
             &mut bias,
             learning_rate,
             l2,
+            &train_sample_weights,
         );
     }
-    println!("train loss after {iterations} iterations: {loss:.4}");
+    println!("balanced train loss after {iterations} iterations: {loss:.4}");
 
     // Calibration on validation: freeze weights, fit the bias only. The
     // scratch copy absorbs the weight update and is discarded.
     for _ in 0..CALIBRATION_ITERATIONS {
         let mut scratch = weights.clone();
-        logistic_step(
+        logistic_step_weighted(
             &validation.features,
             &validation.labels,
             &mut scratch,
             &mut bias,
             learning_rate,
             0.0,
+            &validation_sample_weights,
         );
     }
     println!("bias after validation calibration: {bias:.4}");
@@ -320,6 +350,10 @@ fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         .zip(weights.iter())
         .map(|(name, weight)| ((*name).to_string(), *weight))
         .collect();
+    println!("weights:");
+    for name in TRAINING_FEATURES {
+        println!("  {name} = {:.4}", names.get(*name).copied().unwrap_or(0.0));
+    }
     let scorer = LogisticSimilarityScorer::new(names.clone(), bias);
     let mut metrics = BTreeMap::new();
     for split in ["train", "validation", "test"] {
@@ -339,7 +373,7 @@ fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let artifact = SimilarityModelArtifact::new(dataset.version.clone(), names, bias)
-        .with_revision(format!("train-{iterations}-iter"))
+        .with_revision(format!("train-{iterations}-iter-ds{}", dataset.version))
         .with_metrics(metrics);
     if let Some(parent) = std::path::Path::new(&output).parent() {
         if !parent.as_os_str().is_empty() {
@@ -651,9 +685,19 @@ fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         metrics.insert(format!("heldout_eval_{key}"), value);
     }
 
+    // Operating point from held-out validation data (Youden's J), never from
+    // train. Inference labels `probability >= decision_threshold` as spam.
+    let decision_threshold = metrics
+        .get("validation_best_threshold")
+        .copied()
+        .filter(|value| value.is_finite())
+        .map(|value| value.clamp(0.0, 1.0))
+        .unwrap_or(0.5);
+    println!("decision threshold from validation: {decision_threshold:.3}");
     let artifact = SpamModelArtifact::new("synthetic-spam-v1", names, bias)
         .with_revision(format!("synth-{count}-{seed}"))
         .with_calibrated(true)
+        .with_decision_threshold(decision_threshold)
         .with_metrics(metrics);
     if let Some(parent) = std::path::Path::new(&output).parent() {
         if !parent.as_os_str().is_empty() {

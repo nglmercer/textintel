@@ -113,3 +113,162 @@ fn rebuild_without_ann_is_an_explicit_error() {
         "unexpected error: {error}"
     );
 }
+
+#[test]
+fn memory_ann_is_visible_in_diagnostics() {
+    let engine = semantic_engine();
+    let store = seed_store();
+    assert!(store.store_capabilities().ann_enabled);
+    assert_eq!(
+        store.store_capabilities().ann_dimensions,
+        Some(32),
+        "dimensions must be reported"
+    );
+    assert_eq!(store.store_capabilities().ann_entries, DOCUMENTS.len());
+    assert!(store
+        .store_capabilities()
+        .indexed_channels
+        .contains(&"semantic_ann".to_string()));
+    let engine = engine.with_store(store);
+    let diagnostics = engine.diagnostics();
+    assert!(
+        diagnostics.ann_enabled,
+        "diagnostics must reflect the serving HNSW index"
+    );
+    assert_eq!(diagnostics.store_capabilities.store_type, "memory");
+    assert_eq!(
+        diagnostics.store_capabilities.ann_dimensions,
+        Some(32),
+        "diagnostics must report ANN dimensions"
+    );
+    assert_eq!(
+        diagnostics.store_capabilities.ann_entries,
+        DOCUMENTS.len(),
+        "diagnostics must report ANN live entries"
+    );
+    assert!(
+        diagnostics
+            .degraded
+            .iter()
+            .all(|item| item.capability != "retrieval"),
+        "serving ANN must not report degraded retrieval: {:?}",
+        diagnostics.degraded
+    );
+}
+
+#[test]
+fn json_store_with_ann_rebuilds_automatically_on_open() {
+    use textintel::storage::JsonFileStore;
+
+    let path = std::env::temp_dir().join(format!(
+        "textintel-ann-json-{}-{}.json",
+        std::process::id(),
+        "auto"
+    ));
+    let _ = std::fs::remove_file(&path);
+    {
+        let engine = semantic_engine().with_store(JsonFileStore::open(&path).unwrap());
+        for &(id, text) in DOCUMENTS {
+            engine.add_document(id, text).unwrap();
+        }
+        assert_eq!(engine.document_count().unwrap(), DOCUMENTS.len());
+    }
+    // Reopen with ANN: no application-level `rebuild_ann` call. The graph is
+    // rebuilt from the persisted embeddings before serving.
+    let engine =
+        semantic_engine().with_store(JsonFileStore::open_with_ann(&path, 32, 100).unwrap());
+    let diagnostics = engine.diagnostics();
+    assert!(diagnostics.ann_enabled);
+    assert_eq!(diagnostics.store_capabilities.store_type, "json");
+    assert!(diagnostics.store_capabilities.persistent);
+    assert_eq!(diagnostics.store_capabilities.ann_dimensions, Some(32));
+    assert_eq!(
+        diagnostics.store_capabilities.ann_entries,
+        DOCUMENTS.len(),
+        "every persisted embedding must be reindexed"
+    );
+    assert_eq!(
+        engine.find_similar("coffee break today", 1).unwrap()[0].id,
+        "doc-en"
+    );
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+#[cfg(feature = "persist-redb")]
+fn redb_store_with_ann_rebuilds_automatically_on_open() {
+    let path = std::env::temp_dir().join(format!(
+        "textintel-ann-redb-{}-auto.redb",
+        std::process::id()
+    ));
+    let _ = std::fs::remove_file(&path);
+    {
+        let engine =
+            semantic_engine().with_store(textintel::storage::RedbStore::open(&path).unwrap());
+        for &(id, text) in DOCUMENTS {
+            engine.add_document(id, text).unwrap();
+        }
+    }
+    let engine = semantic_engine()
+        .with_store(textintel::storage::RedbStore::open_with_ann(&path, 32, 100).unwrap());
+    let diagnostics = engine.diagnostics();
+    assert!(diagnostics.ann_enabled);
+    assert_eq!(diagnostics.store_capabilities.store_type, "redb");
+    assert_eq!(diagnostics.store_capabilities.ann_entries, DOCUMENTS.len());
+    assert_eq!(
+        engine.find_similar("coffee break today", 1).unwrap()[0].id,
+        "doc-en"
+    );
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn ann_rebuild_failures_are_explicit() {
+    use textintel::storage::JsonFileStore;
+
+    let path = std::env::temp_dir().join(format!(
+        "textintel-ann-json-{}-{}.json",
+        std::process::id(),
+        "full"
+    ));
+    let _ = std::fs::remove_file(&path);
+    {
+        let engine = semantic_engine().with_store(JsonFileStore::open(&path).unwrap());
+        for &(id, text) in DOCUMENTS {
+            engine.add_document(id, text).unwrap();
+        }
+    }
+    // Six records cannot fit an index capped at one element.
+    let error = JsonFileStore::open_with_ann(&path, 32, 1).unwrap_err();
+    assert!(
+        error.contains("ann"),
+        "rebuild failures must name ANN: {error}"
+    );
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn builder_json_store_with_ann_serves_ann() {
+    let path = std::env::temp_dir().join(format!(
+        "textintel-ann-json-{}-{}.json",
+        std::process::id(),
+        "builder"
+    ));
+    let _ = std::fs::remove_file(&path);
+    let engine = textintel::TextIntelligence::builder()
+        .config(textintel::EngineConfig {
+            semantic: true,
+            ..Default::default()
+        })
+        .semantic_provider(textintel::semantic::FeatureHashEmbeddingProvider::new(32).unwrap())
+        .json_store_with_ann(&path, 32, 100)
+        .build()
+        .unwrap();
+    for &(id, text) in DOCUMENTS {
+        engine.add_document(id, text).unwrap();
+    }
+    let diagnostics = engine.diagnostics();
+    assert!(diagnostics.ann_enabled);
+    assert_eq!(diagnostics.store_capabilities.ann_entries, DOCUMENTS.len());
+    let _ = std::fs::remove_file(&path);
+}

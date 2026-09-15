@@ -26,21 +26,23 @@ pub mod transliteration;
 pub mod visual;
 
 pub use cache::{
-    CachedG2PProvider, CachedLanguageDetectionProvider, CachedRebusDecoder, RevisionCache,
+    rebus_cache_key, resource_revision, CacheDiagnostics, CachedG2PProvider,
+    CachedLanguageDetectionProvider, CachedRebusDecoder, RevisionCache,
 };
 pub use comparison::{
-    language_agreement, logistic_step, rerank_score, score_fingerprints_with_profile, sigmoid,
-    training_features, ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer,
+    balanced_sample_weights, language_agreement, logistic_step, logistic_step_weighted,
+    rerank_score, score_fingerprints_with_profile, sigmoid, training_features,
+    ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer, RerankerModelArtifact,
     SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURES, TRAINING_FEATURE_SCHEMA_VERSION,
 };
 pub use core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
-pub use core::config::{EngineConfig, RebusWeights, SimilarityWeights};
+pub use core::config::{CacheLimits, EngineConfig, RebusWeights, SimilarityWeights};
 pub use core::error::{ProviderError, TextIntelError};
 pub use core::providers::{
     AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
     LemmatizerProvider, LexiconProvider, RerankerProvider, SharedAbbreviationProvider,
     SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, Transliteration,
-    TransliterationProvider, VectorStore,
+    TransliterationProvider, VectorStore, VectorStoreCapabilities,
 };
 pub use core::types::*;
 pub use detection::{
@@ -82,4 +84,7 @@ pub use storage::{
     OLDEST_SUPPORTED_FINGERPRINT_VERSION, PATTERN_STORE_SCHEMA_VERSION,
 };
 pub use symbols::DefaultSymbolKnowledge;
-pub use transliteration::{transliteration_similarity, RuleBasedTransliterationProvider};
+pub use transliteration::{
+    transliteration_evidence, transliteration_similarity, RuleBasedTransliterationProvider,
+    TransliterationEvidence,
+};

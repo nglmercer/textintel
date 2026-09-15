@@ -3,7 +3,7 @@
 
 use textintel::core::providers::RerankerProvider;
 use textintel::engine::TextIntelligence;
-use textintel::{ChannelRerankWeights, ChannelScoreReranker};
+use textintel::{ChannelRerankWeights, ChannelScoreReranker, RerankerModelArtifact};
 
 fn engine() -> TextIntelligence {
     TextIntelligence::default()
@@ -96,4 +96,115 @@ fn empty_input_stays_empty() {
         .rerank(&query, Vec::new())
         .expect("rerank")
         .is_empty());
+}
+
+#[test]
+fn deterministic_artifact_round_trips_with_baseline_revision() {
+    let artifact = RerankerModelArtifact::deterministic("0.5.0");
+    let loaded = RerankerModelArtifact::from_json(&artifact.to_json().unwrap()).unwrap();
+    assert_eq!(loaded, artifact);
+    assert_eq!(loaded.revision.as_deref(), Some("channel-reranker-v1"));
+    let reranker = loaded.to_reranker(16).unwrap();
+    assert_eq!(reranker.max_candidates(), 16);
+    assert_eq!(
+        reranker.capabilities().model_revision.as_deref(),
+        Some("channel-reranker-v1")
+    );
+}
+
+#[test]
+fn artifact_rejects_bad_versions_and_weights() {
+    let mut bad_version =
+        serde_json::to_value(RerankerModelArtifact::deterministic("0.5.0")).unwrap();
+    bad_version["artifact_version"] = serde_json::json!(999);
+    assert!(RerankerModelArtifact::from_json(&bad_version.to_string()).is_err());
+    let mut bad_kind = serde_json::to_value(RerankerModelArtifact::deterministic("0.5.0")).unwrap();
+    bad_kind["kind"] = serde_json::json!("something_else");
+    assert!(RerankerModelArtifact::from_json(&bad_kind.to_string()).is_err());
+    // Non-finite weights cannot arrive via JSON (serde_json maps them to
+    // null, which fails f64 deserialization); a wrong type must also fail.
+    let mut bad_weights =
+        serde_json::to_value(RerankerModelArtifact::deterministic("0.5.0")).unwrap();
+    bad_weights["weights"]["base"] = serde_json::json!("nan");
+    assert!(RerankerModelArtifact::from_json(&bad_weights.to_string()).is_err());
+    let overflow = RerankerModelArtifact::new(
+        "0.5.0",
+        ChannelRerankWeights {
+            base: f64::INFINITY,
+            ..ChannelRerankWeights::default()
+        },
+    );
+    assert!(overflow.to_reranker(8).is_err());
+}
+
+#[test]
+fn trained_weights_load_through_the_builder() {
+    let path = std::env::temp_dir().join(format!("textintel-reranker-{}.json", std::process::id()));
+    let artifact = RerankerModelArtifact::new(
+        "0.5.0",
+        ChannelRerankWeights {
+            base: 2.0,
+            ..ChannelRerankWeights::default()
+        },
+    )
+    .with_revision("trained-test");
+    std::fs::write(&path, artifact.to_json().unwrap()).unwrap();
+    let engine = TextIntelligence::builder()
+        .trained_reranker_model(&path)
+        .reranker_max_candidates(4)
+        .build()
+        .unwrap();
+    let diagnostics = engine.diagnostics();
+    let reranker = diagnostics.reranker.expect("reranker must load");
+    assert_eq!(reranker.provider, "channel_score_reranker");
+    assert_eq!(reranker.model_revision.as_deref(), Some("trained-test"));
+    assert!(
+        diagnostics
+            .degraded
+            .iter()
+            .all(|item| item.capability != "reranker"),
+        "loaded reranker must clear the degradation note"
+    );
+    let _ = std::fs::remove_file(&path);
+
+    let missing = TextIntelligence::builder()
+        .trained_reranker_model("models/does-not-exist.json")
+        .build();
+    assert!(missing.is_err(), "missing required reranker must fail");
+}
+
+#[test]
+fn reranked_search_never_bypasses_full_comparison() {
+    // Every reranked hit must be a fully-compared store record: no injected
+    // ids, bounded output, finite scores, intact channel evidence.
+    let path = std::env::temp_dir().join(format!(
+        "textintel-reranker-search-{}.json",
+        std::process::id()
+    ));
+    let artifact = RerankerModelArtifact::deterministic("0.5.0");
+    std::fs::write(&path, artifact.to_json().unwrap()).unwrap();
+    let engine = TextIntelligence::builder()
+        .trained_reranker_model(&path)
+        .reranker_max_candidates(2)
+        .build()
+        .unwrap();
+    for (id, text) in [
+        ("a", "gana dinero ahora"),
+        ("b", "el cielo es azul"),
+        ("c", "gana dinero rapido"),
+        ("d", "la luna brilla"),
+    ] {
+        engine.add_document(id, text).unwrap();
+    }
+    let results = engine.find_similar("gana dinero", 10).unwrap();
+    assert!(!results.is_empty());
+    for result in &results {
+        assert!(["a", "b", "c", "d"].contains(&result.id.as_str()));
+        assert!(result.score.is_finite() && (0.0..=1.0).contains(&result.score));
+        assert!(
+            result.comparison.decoded_similarity.is_some(),
+            "full comparison channels must survive reranking"
+        );
+    }
+    let _ = std::fs::remove_file(&path);
 }

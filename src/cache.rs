@@ -10,11 +10,79 @@
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
+use serde::{Deserialize, Serialize};
+
 use crate::core::error::ProviderError;
 use crate::core::providers::{
     G2PProvider as G2PProviderTrait, LanguageDetectionProvider as LanguageDetectionTrait,
 };
 use crate::core::types::{DecodedCandidate, LanguageCandidate, PhoneticCandidate};
+
+/// Observable cache state. Carries counts only — never keys, values, or user
+/// text — so it is safe to log and export by default.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct CacheDiagnostics {
+    pub enabled: bool,
+    pub entries: usize,
+    pub capacity: usize,
+    pub revision: String,
+    pub hits: u64,
+    pub misses: u64,
+    pub invalidations: u64,
+}
+
+impl CacheDiagnostics {
+    pub fn disabled() -> Self {
+        Self {
+            enabled: false,
+            ..Self::default()
+        }
+    }
+}
+
+/// Stable cache revision for a resource set: every pack's kind, language,
+/// name, declared revision, and content hash, sorted. Any pack swap changes
+/// the string, so revision-aware caches invalidate instead of serving decodes
+/// from stale resources. Pack metadata only — never user text.
+pub fn resource_revision(manifest: &[crate::resources::ResourcePackInfo]) -> String {
+    let mut parts: Vec<String> = manifest
+        .iter()
+        .map(|pack| {
+            format!(
+                "{}:{}:{}@{}#{}",
+                pack.kind,
+                pack.language.as_deref().unwrap_or("-"),
+                pack.name,
+                pack.revision.as_deref().unwrap_or("-"),
+                pack.sha256.as_deref().unwrap_or("-")
+            )
+        })
+        .collect();
+    parts.sort();
+    format!("resources:v1:[{}]", parts.join(","))
+}
+
+/// Revision-cache key for one rebus decoding: input text, requested
+/// languages, candidate limit, scoring weights, and the semantic-rescoring
+/// marker (`sem:off` when rescoring is disabled, otherwise the embedding
+/// model identity). Different weights or models legitimately decode
+/// differently, so all of them key the cache.
+pub fn rebus_cache_key(
+    text: &str,
+    languages: Option<&[String]>,
+    max_candidates: Option<usize>,
+    weights: &crate::core::config::RebusWeights,
+    semantic: &str,
+) -> String {
+    let weights = weights.to_json().unwrap_or_default();
+    format!(
+        "{text}\u{1f}{}\u{1f}{}\u{1f}{weights}\u{1f}{semantic}",
+        languages.map(|values| values.join(",")).unwrap_or_default(),
+        max_candidates
+            .map(|value| value.to_string())
+            .unwrap_or_default(),
+    )
+}
 
 /// Bounded deterministic cache namespaced by a revision string. A revision
 /// change (new model weights, new resource packs) clears all entries: stale
@@ -24,6 +92,9 @@ pub struct RevisionCache<Key, Value> {
     revision: String,
     max_entries: usize,
     entries: BTreeMap<Key, Value>,
+    hits: u64,
+    misses: u64,
+    invalidations: u64,
 }
 
 impl<Key, Value> RevisionCache<Key, Value>
@@ -36,11 +107,18 @@ where
             revision: revision.into(),
             max_entries: max_entries.max(1),
             entries: BTreeMap::new(),
+            hits: 0,
+            misses: 0,
+            invalidations: 0,
         }
     }
 
     pub fn revision(&self) -> &str {
         &self.revision
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.max_entries
     }
 
     pub fn len(&self) -> usize {
@@ -51,8 +129,27 @@ where
         self.entries.is_empty()
     }
 
-    pub fn get(&self, key: &Key) -> Option<Value> {
-        self.entries.get(key).cloned()
+    /// Observable state: counts only, never keys or values.
+    pub fn diagnostics(&self) -> CacheDiagnostics {
+        CacheDiagnostics {
+            enabled: true,
+            entries: self.entries.len(),
+            capacity: self.max_entries,
+            revision: self.revision.clone(),
+            hits: self.hits,
+            misses: self.misses,
+            invalidations: self.invalidations,
+        }
+    }
+
+    pub fn get(&mut self, key: &Key) -> Option<Value> {
+        let hit = self.entries.get(key).cloned();
+        if hit.is_some() {
+            self.hits += 1;
+        } else {
+            self.misses += 1;
+        }
+        hit
     }
 
     pub fn put(&mut self, key: Key, value: Value) {
@@ -70,6 +167,7 @@ where
 
     pub fn invalidate(&mut self) {
         self.entries.clear();
+        self.invalidations += 1;
     }
 
     /// Adopt `revision`, clearing entries when it differs from the current
@@ -78,6 +176,7 @@ where
         if self.revision != revision {
             self.revision = revision.to_string();
             self.entries.clear();
+            self.invalidations += 1;
             true
         } else {
             false
@@ -140,6 +239,18 @@ where
 
     pub fn is_empty(&self) -> bool {
         self.len() == 0
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.cache.lock().map(|cache| cache.capacity()).unwrap_or(0)
+    }
+
+    /// Observable state: counts only, never cached texts.
+    pub fn diagnostics(&self) -> CacheDiagnostics {
+        self.cache
+            .lock()
+            .map(|cache| cache.diagnostics())
+            .unwrap_or_default()
     }
 
     fn key(&self, text: &str, language: &str) -> (String, String, String, String) {
@@ -235,6 +346,10 @@ where
     fn capabilities(&self) -> crate::core::capabilities::ProviderCapabilities {
         self.inner.capabilities()
     }
+
+    fn cache_diagnostics(&self) -> Option<CacheDiagnostics> {
+        Some(self.diagnostics())
+    }
 }
 
 /// Revision-aware language-detection cache keyed by
@@ -295,6 +410,18 @@ where
         self.len() == 0
     }
 
+    pub fn capacity(&self) -> usize {
+        self.cache.lock().map(|cache| cache.capacity()).unwrap_or(0)
+    }
+
+    /// Observable state: counts only, never cached texts.
+    pub fn diagnostics(&self) -> CacheDiagnostics {
+        self.cache
+            .lock()
+            .map(|cache| cache.diagnostics())
+            .unwrap_or_default()
+    }
+
     fn key(&self, text: &str) -> (String, String, String) {
         let capabilities = self.inner.capabilities();
         (
@@ -333,6 +460,10 @@ where
 
     fn capabilities(&self) -> crate::core::capabilities::ProviderCapabilities {
         self.inner.capabilities()
+    }
+
+    fn cache_diagnostics(&self) -> Option<CacheDiagnostics> {
+        Some(self.diagnostics())
     }
 }
 
@@ -413,24 +544,32 @@ impl CachedRebusDecoder {
         self.len() == 0
     }
 
+    pub fn capacity(&self) -> usize {
+        self.cache.lock().map(|cache| cache.capacity()).unwrap_or(0)
+    }
+
+    /// Observable state: counts only, never cached texts.
+    pub fn diagnostics(&self) -> CacheDiagnostics {
+        self.cache
+            .lock()
+            .map(|cache| cache.diagnostics())
+            .unwrap_or_default()
+    }
+
     fn key(
         &self,
         text: &str,
         languages: Option<&[String]>,
         max_candidates: Option<usize>,
     ) -> String {
-        let weights = self
-            .decoder
-            .config
-            .rebus_weights
-            .to_json()
-            .unwrap_or_default();
-        format!(
-            "{text}\u{1f}{}\u{1f}{}\u{1f}{weights}",
-            languages.map(|values| values.join(",")).unwrap_or_default(),
-            max_candidates
-                .map(|value| value.to_string())
-                .unwrap_or_default(),
+        // This decoder never uses semantic rescoring, so the semantic marker
+        // is fixed; see [`rebus_cache_key`].
+        rebus_cache_key(
+            text,
+            languages,
+            max_candidates,
+            &self.decoder.config.rebus_weights,
+            "sem:off",
         )
     }
 
@@ -443,7 +582,7 @@ impl CachedRebusDecoder {
         max_candidates: Option<usize>,
     ) -> Vec<DecodedCandidate> {
         let key = self.key(text, languages, max_candidates);
-        if let Ok(cache) = self.cache.lock() {
+        if let Ok(mut cache) = self.cache.lock() {
             if let Some(hit) = cache.get(&key) {
                 return hit;
             }
@@ -486,6 +625,27 @@ mod tests {
         cache.put("b".to_string(), 2);
         cache.put("c".to_string(), 3);
         assert_eq!(cache.len(), 2);
+    }
+
+    #[test]
+    fn diagnostics_count_hits_misses_and_invalidations() {
+        let mut cache = RevisionCache::new("r1", 8);
+        cache.put("a".to_string(), 1);
+        assert_eq!(cache.get(&"a".to_string()), Some(1));
+        assert_eq!(cache.get(&"missing".to_string()), None);
+        assert!(cache.set_revision("r2"));
+        cache.invalidate();
+        let diagnostics = cache.diagnostics();
+        assert!(diagnostics.enabled);
+        assert_eq!(diagnostics.entries, 0);
+        assert_eq!(diagnostics.capacity, 8);
+        assert_eq!(diagnostics.revision, "r2");
+        assert_eq!(diagnostics.hits, 1);
+        assert_eq!(diagnostics.misses, 1);
+        assert_eq!(diagnostics.invalidations, 2);
+        // Diagnostics serialize without keys or values.
+        let json = serde_json::to_string(&diagnostics).unwrap();
+        assert!(!json.contains("\"a\""));
     }
 
     #[test]

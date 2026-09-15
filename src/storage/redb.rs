@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
 
 use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
-use crate::core::providers::VectorStore;
+use crate::core::providers::{VectorStore, VectorStoreCapabilities};
 use crate::core::types::{MessageFingerprint, SearchCandidateSet, FINGERPRINT_SCHEMA_VERSION};
 
 use super::MemoryStore;
@@ -99,6 +99,25 @@ impl RedbStore {
             inner: MemoryStore::default(),
         };
         store.load_records()?;
+        Ok(store)
+    }
+
+    /// Open with an HNSW accelerator: records load from the database, then
+    /// the graph is rebuilt deterministically from their embeddings before
+    /// serving — application code never calls `rebuild_ann` itself. Rebuild
+    /// failures are returned; records without usable embeddings are skipped
+    /// and stay searchable through the exact channels.
+    #[cfg(feature = "ann-hnsw")]
+    pub fn open_with_ann(
+        path: impl AsRef<Path>,
+        dimensions: usize,
+        max_elements: usize,
+    ) -> Result<Self, String> {
+        let mut store = Self::open(path)?;
+        store
+            .inner
+            .enable_ann(dimensions, max_elements)
+            .map_err(|error| format!("{}: {error}", store.path.display()))?;
         Ok(store)
     }
 
@@ -263,6 +282,13 @@ impl VectorStore for RedbStore {
 
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::new(PROVIDER).with_quality(CapabilityLevel::Production)
+    }
+
+    fn store_capabilities(&self) -> VectorStoreCapabilities {
+        let mut capabilities = self.inner.store_capabilities();
+        capabilities.store_type = "redb".to_string();
+        capabilities.persistent = true;
+        capabilities
     }
 }
 

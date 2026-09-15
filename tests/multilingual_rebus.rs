@@ -17,6 +17,25 @@ fn top1(text: &str, languages: &[&str]) -> String {
     candidates[0].text.clone()
 }
 
+fn semantic_engine() -> TextIntelligence {
+    TextIntelligence::new(EngineConfig {
+        semantic: true,
+        ..Default::default()
+    })
+    .with_embedding_provider(
+        textintel::FeatureHashEmbeddingProvider::new(64).expect("embedding dimensions"),
+    )
+}
+
+fn semantic_top1(text: &str, languages: &[&str]) -> String {
+    let languages: Vec<String> = languages.iter().map(|code| code.to_string()).collect();
+    let candidates = semantic_engine()
+        .decode_with_languages(text, Some(&languages), Some(5))
+        .unwrap();
+    assert!(!candidates.is_empty(), "no candidates for {text:?}");
+    candidates[0].text.clone()
+}
+
 #[test]
 fn slang_decodes_across_languages() {
     assert_eq!(top1("gr8", &["en"]), "great");
@@ -76,6 +95,74 @@ fn mixed_language_comparison_beats_unrelated() {
 }
 
 #[test]
+fn flagship_chain_decodes_without_hardcoding() {
+    // Every expansion composes from resource packs (symbol, leet, numeric);
+    // the decoder holds no full-string special cases. Case-insensitive:
+    // literal spans keep their input case by design.
+    assert_eq!(top1("Fra🏠do", &["es"]).to_lowercase(), "fracasado");
+    assert_eq!(top1("Fr4🏠d0", &["es"]).to_lowercase(), "fracasado");
+    assert_eq!(top1("salU2", &["es"]).to_lowercase(), "saludos");
+    // The flagship win composes a symbol step with leet steps, each carrying
+    // span, replacement, confidence, provider, language, and type.
+    let languages = vec!["es".to_string()];
+    let winner = engine()
+        .decode_with_languages("Fr4🏠d0", Some(&languages), Some(5))
+        .unwrap()[0]
+        .clone();
+    assert_eq!(winner.text.to_lowercase(), "fracasado");
+    assert!(
+        winner
+            .transformations
+            .iter()
+            .any(|step| step.transformation_type.contains("symbol")),
+        "flagship must compose a symbol step: {:?}",
+        winner.transformations
+    );
+    assert!(
+        winner
+            .transformations
+            .iter()
+            .any(|step| step.transformation_type.contains("number_reading")),
+        "flagship must compose digit-reading steps: {:?}",
+        winner.transformations
+    );
+    for step in &winner.transformations {
+        match (step.start, step.end) {
+            (Some(start), Some(end)) => assert!(
+                end > start,
+                "transformation must carry a source span: {step:?}"
+            ),
+            _ => panic!("transformation must carry a source span: {step:?}"),
+        }
+        assert!(
+            !step.replacement.is_empty(),
+            "missing replacement: {step:?}"
+        );
+        assert!(step.confidence.is_some(), "missing confidence: {step:?}");
+        assert!(step.provider.is_some(), "missing provider: {step:?}");
+        assert!(
+            !step.transformation_type.is_empty(),
+            "missing type: {step:?}"
+        );
+    }
+}
+
+#[test]
+fn semantic_rescoring_does_not_reward_the_literal() {
+    // Regression: rescoring by input self-similarity (always 1.0 for the
+    // identity) buried real readings under the literal input in production
+    // decode. The identity keeps its beam score now.
+    assert_eq!(semantic_top1("g00d", &["en"]), "good");
+    assert_eq!(semantic_top1("aku ❤ kamu", &["id"]), "aku cinta kamu");
+    assert!(
+        ["mi casa", "mi vivienda"].contains(&semantic_top1("mi 🏠", &["es"]).as_str()),
+        "mi casa/mi vivienda must beat the literal"
+    );
+    // ...while genuine non-decodes still return the literal on top.
+    assert_eq!(semantic_top1("kasa", &["es"]), "kasa");
+}
+
+#[test]
 fn rebus_hard_negatives() {
     let engine = engine();
     // Lookalikes score below the duplicate threshold.
@@ -84,6 +171,13 @@ fn rebus_hard_negatives() {
         ("m8", "made"),
         ("b4", "after"),
         ("Fra🏠do", "ferrocarril"),
+        // Multilingual lookalikes: French slang, Portuguese slang, Spanish
+        // rebus, German and Spanish decoys.
+        ("slt", "silence"),
+        ("bj", "bijou"),
+        ("Fra🏠do", "fregado"),
+        ("gr8", "groß"),
+        ("m8", "Miete"),
     ] {
         let comparison = engine.compare(left, right).unwrap();
         assert!(

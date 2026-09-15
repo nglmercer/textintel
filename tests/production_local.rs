@@ -3,7 +3,7 @@
 
 use textintel::core::capabilities::CapabilityLevel;
 use textintel::core::types::FINGERPRINT_SCHEMA_VERSION;
-use textintel::engine::TextIntelligence;
+use textintel::engine::{EngineDiagnostics, TextIntelligence};
 
 #[test]
 fn production_local_builds_and_reports_graceful_fallbacks() {
@@ -54,6 +54,49 @@ fn production_local_builds_and_reports_graceful_fallbacks() {
 }
 
 #[test]
+fn production_preset_prefers_similarity_v2() {
+    // similarity-v2 (dataset 0.5.0, semantic + phonetic evidence) is the
+    // production artifact; v1 remains only as a fallback for old checkouts.
+    let engine = TextIntelligence::production_local().expect("production_local must not fail");
+    let diagnostics = engine.diagnostics();
+    let similarity = diagnostics
+        .similarity
+        .as_ref()
+        .expect("production loads a similarity model");
+    let source =
+        std::fs::read_to_string("models/similarity-v2.json").expect("similarity-v2 must exist");
+    let artifact = textintel::SimilarityModelArtifact::from_json(&source).unwrap();
+    assert_eq!(similarity.provider, "logistic_similarity_scorer");
+    assert_eq!(similarity.version.as_deref(), artifact.revision.as_deref());
+    assert_eq!(artifact.dataset_version, "0.5.0");
+    assert_ne!(
+        artifact.weights.get("semantic").copied().unwrap_or(0.0),
+        0.0,
+        "v2 must carry useful semantic evidence"
+    );
+    assert_ne!(
+        artifact.weights.get("phonetic").copied().unwrap_or(0.0),
+        0.0,
+        "v2 must carry useful phonetic evidence"
+    );
+    for metric in [
+        "test_accuracy",
+        "test_precision",
+        "test_recall",
+        "test_f1",
+        "test_roc_auc",
+        "test_pr_auc",
+        "test_brier",
+        "test_ece",
+    ] {
+        assert!(
+            artifact.metrics.contains_key(metric),
+            "v2 must record {metric}"
+        );
+    }
+}
+
+#[test]
 fn diagnostics_cover_resources_and_missing_channels() {
     let engine = TextIntelligence::default();
     let diagnostics = engine.diagnostics();
@@ -95,6 +138,47 @@ fn diagnostics_cover_resources_and_missing_channels() {
             .any(|item| item.capability == "reranker"),
         "missing reranker degradation note"
     );
+}
+
+#[test]
+fn diagnostics_expose_the_full_running_configuration() {
+    let engine = TextIntelligence::production_local().expect("production_local must not fail");
+    let diagnostics = engine.diagnostics();
+    // Library version, fingerprint schema, resource revisions.
+    assert_eq!(diagnostics.api_version, env!("CARGO_PKG_VERSION"));
+    assert_eq!(diagnostics.fingerprint_schema, FINGERPRINT_SCHEMA_VERSION);
+    assert!(!diagnostics.resource_manifest.is_empty());
+    // Providers: embedding (+model revision), G2P, transliteration,
+    // similarity, spam, reranker.
+    assert!(!diagnostics.embedding.provider.is_empty());
+    assert!(!diagnostics.g2p.provider.is_empty());
+    assert_eq!(
+        diagnostics
+            .transliteration
+            .as_ref()
+            .map(|info| info.provider.as_str()),
+        Some("rule_based_transliteration")
+    );
+    assert!(diagnostics.similarity.is_some());
+    assert_eq!(diagnostics.spam.provider, "trained_spam");
+    // Store type, ANN status, cache status.
+    assert_eq!(diagnostics.store_capabilities.store_type, "memory");
+    assert_eq!(
+        diagnostics.ann_enabled,
+        diagnostics.store_capabilities.ann_enabled
+    );
+    for name in ["embeddings", "g2p", "language", "rebus"] {
+        assert!(
+            diagnostics.caches.contains_key(name),
+            "missing {name} cache status"
+        );
+    }
+    // Degraded capabilities are reported (possibly empty) and the whole
+    // report round-trips through JSON.
+    let _ = &diagnostics.degraded;
+    let round_trip: EngineDiagnostics =
+        serde_json::from_str(&serde_json::to_string(&diagnostics).unwrap()).unwrap();
+    assert_eq!(round_trip, diagnostics);
 }
 
 #[test]
