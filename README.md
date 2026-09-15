@@ -124,16 +124,23 @@ let engine = TextIntelligence::new(textintel::EngineConfig {
 ```
 
 Provider failures are returned as `TextIntelError::Provider`; input length,
-beam width, candidate count, symbol readings, recursion, and document count
-are bounded by `EngineConfig`.
+segments, beam width, symbol readings, decoded candidates, branches,
+recursion, batch size, search candidates, reranker candidates, cache entries,
+and model token length are bounded by `EngineConfig`, `CacheLimits`, and the
+provider constructors. Non-finite model parameters are rejected at load;
+user text is never fetched as a URL and never executed as a shell command.
 
 Optional feature names are available for packaging integrations:
 `lang-profile`, `semantic-local`, `semantic-candle`, `semantic-http`,
 `phonetic-ipa`, `phonetic-espeak`, `ann-hnsw`, `persist`, `persist-redb`,
-`semantic`, `phonetic`, `ml`, `production-local`, `semantic-transformer`,
-and `all`. The default build stays local and
+`semantic`, `phonetic`, `ml`, `production-local-lite`, `production-local`,
+`semantic-transformer`, and `all`. The default build stays local and
 lightweight; `semantic-http` is the explicit remote-provider adapter and
 `semantic-local` provides the deterministic feature-hash embedding baseline.
+`production-local` is the full local stack (transformer embeddings, espeak-ng
+phonetics, HNSW retrieval, redb persistence; no network access);
+`production-local-lite` is the same preset without the heavy native
+dependencies.
 
 Provider capability and model metadata are exposed so callers can record the
 backend, revision, dimensions, language coverage, and local/remote status used
@@ -202,16 +209,25 @@ cargo fmt --check
 cargo test --locked --no-default-features --all-targets
 cargo test --locked --all-features --all-targets
 cargo clippy --all-targets --all-features -- -D warnings
-cargo doc --no-deps
+cargo doc --no-deps --all-features
 cargo bench --locked --no-run --all-features
-cargo run --locked --no-default-features --bin textintel -- eval data/evaluation.json --split test --gates data/quality-gates.json
+cargo run --locked --all-features --bin textintel -- eval data/evaluation.json --split test --gates data/quality-gates.json
+```
+
+Then the production preset separately:
+
+```text
+cargo run --locked --all-features --bin textintel -- eval data/evaluation.json --split test --production --gates data/quality-gates-production.json
 ```
 
 The integration suite covers the plan's MVP examples plus provider injection,
 batch APIs, persistence, multilingual segmentation, IPA features, patterns,
 spam, duplicate detection, and indexed search behavior. A versioned seed
-evaluation set with ranking and calibration metrics is available at
-`data/evaluation.json`.
+evaluation set (currently `0.5.0`, 1314 cases over train/validation/test)
+with ranking and calibration metrics is available at
+`data/evaluation.json`; `data/quality-gates.json` pins the default-engine
+bars and `data/quality-gates-production.json` the stronger production bars,
+both calibrated on the held-out test split.
 
 CI runs fmt, tests on Ubuntu/Windows/macOS, quality gates, coverage, clippy,
 MSRV, and a nightly fuzz job. The repository includes fuzz targets for
