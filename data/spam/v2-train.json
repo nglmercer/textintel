@@ -1,0 +1,1206 @@
+{
+ "version": "2.0.0",
+ "source": "uci-sms-spam-collection-subset",
+ "items": [
+  {
+   "id": "spam-tr-001",
+   "text": "The current leading bid is 151. To pause this auction send OUT. Customer Care: 08718726270",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-002",
+   "text": "Your free ringtone is waiting to be collected. Simply text the password \"MIX\" to 85069 to verify. Get Usher and Britney. FML, PO Box 5249, MK17 92H. 450Ppw 16",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-003",
+   "text": "SMS SERVICES. for your inclusive text credits, pls goto www.comuk.net login= 3qxj9 unsubscribe with STOP, no extra charge. help 08702840625.COMUK. 220-CM2 9AE",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-004",
+   "text": "Do you want a new Video handset? 750 any time any network mins? UNLIMITED TEXT? Camcorder? Reply or Call now 08000930705 for del Sat AM",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-005",
+   "text": "URGENT! Your Mobile No 07808726822 was awarded a £2,000 Bonus Caller Prize on 02/09/03! This is our 2nd attempt to contact YOU! Call 0871-872-9758 BOX95QU",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-006",
+   "text": "PRIVATE! Your 2003 Account Statement for <fone no> shows 800 un-redeemed S. I. M. points. Call 08715203656 Identifier Code: 42049 Expires 26/10/04",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-007",
+   "text": "4mths half price Orange line rental & latest camera phones 4 FREE. Had your phone 11mths ? Call MobilesDirect free on 08000938767 to update now! or2stoptxt",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-008",
+   "text": "<Forwarded from 21870000>Hi - this is your Mailbox Messaging SMS alert. You have 40 matches. Please call back on 09056242159 to retrieve your messages and matches cc100p/min",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-009",
+   "text": "URGENT, IMPORTANT INFORMATION FOR O2 USER. TODAY IS YOUR LUCKY DAY! 2 FIND OUT WHY LOG ONTO HTTP://WWW.URAWINNER.COM THERE IS A FANTASTIC SURPRISE AWAITING FOR YOU",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-010",
+   "text": "Sorry! U can not unsubscribe yet. THE MOB offer package has a min term of 54 weeks> pls resubmit request after expiry. Reply THEMOB HELP 4 more info",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-011",
+   "text": "Please CALL 08712402972 immediately as there is an urgent message waiting for you",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-012",
+   "text": "Update_Now - 12Mths Half Price Orange line rental: 400mins...Call MobileUpd8 on 08000839402 or call2optout=J5Q",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-013",
+   "text": "We know someone who you know that fancies you. Call 09058097218 to find out who. POBox 6, LS15HB 150p",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-014",
+   "text": "URGENT!! Your 4* Costa Del Sol Holiday or £5000 await collection. Call 09050090044 Now toClaim. SAE, TC s, POBox334, Stockport, SK38xh, Cost£1.50/pm, Max10mins",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-015",
+   "text": "500 New Mobiles from 2004, MUST GO! Txt: NOKIA to No: 89545 & collect yours today!From ONLY £1 www.4-tc.biz 2optout 087187262701.50gbp/mtmsg18",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-016",
+   "text": "U've been selected to stay in 1 of 250 top British hotels - FOR NOTHING! Holiday valued at £350! Dial 08712300220 to claim - National Rate Call. Bx526, SW73SS",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-017",
+   "text": "Bears Pic Nick, and Tom, Pete and ... Dick. In fact, all types try gay chat with photo upload call 08718730666 (10p/min). 2 stop texts call 08712460324",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-018",
+   "text": "December only! Had your mobile 11mths+? You are entitled to update to the latest colour camera mobile for Free! Call The Mobile Update VCo FREE on 08002986906",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-019",
+   "text": "Mila, age23, blonde, new in UK. I look sex with UK guys. if u like fun with me. Text MTALK to 69866.18 . 30pp/txt 1st 5free. £1.50 increments. Help08718728876",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-020",
+   "text": "Had your contract mobile 11 Mnths? Latest Motorola, Nokia etc. all FREE! Double Mins & Text on Orange tariffs. TEXT YES for callback, no to remove from records.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-021",
+   "text": "WELL DONE! Your 4* Costa Del Sol Holiday or £5000 await collection. Call 09050090044 Now toClaim. SAE, TCs, POBox334, Stockport, SK38xh, Cost£1.50/pm, Max10mins",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-022",
+   "text": "Your 2004 account for 07XXXXXXXXX shows 786 unredeemed points. To claim call 08719181259 Identifier code: XXXXX Expires 26.03.05",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-023",
+   "text": "Hi babe its Chloe, how r u? I was smashed on saturday night, it was great! How was your weekend? U been missing me? SP visionsms.com Text stop to stop 150p/text",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-024",
+   "text": "Thank you, winner notified by sms. Good Luck! No future marketing reply STOP to 84122 customer services 08450542832",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-025",
+   "text": "Do you want a NEW video phone750 anytime any network mins 150 text for only five pounds per week call 08000776320 now or reply for delivery tomorrow",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-026",
+   "text": "07732584351 - Rodger Burns - MSG = We tried to call you re your reply to our sms for a free nokia mobile + free camcorder. Please call now 08000930705 for delivery tomorrow",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-027",
+   "text": "FREE for 1st week! No1 Nokia tone 4 ur mob every week just txt NOKIA to 8007 Get txting and tell ur mates www.getzed.co.uk POBox 36504 W45WQ norm150p/tone 16+",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-028",
+   "text": "Bored housewives! Chat n date now! 0871750.77.11! BT-national rate 10p/min only from landlines!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-029",
+   "text": "Want 2 get laid tonight? Want real Dogging locations sent direct 2 ur mob? Join the UK's largest Dogging Network bt Txting GRAVEL to 69888! Nt. ec2a. 31p.msg@150p",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-030",
+   "text": "Todays Voda numbers ending 7548 are selected to receive a $350 award. If you have a match please call 08712300220 quoting claim code 4041 standard rates app",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-031",
+   "text": "Boltblue tones for 150p Reply POLY# or MONO# eg POLY3 1. Cha Cha Slide 2. Yeah 3. Slow Jamz 6. Toxic 8. Come With Me or STOP 4 more tones txt MORE",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-032",
+   "text": "You have 1 new voicemail. Please call 08719181513.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-033",
+   "text": "As a valued customer, I am pleased to advise you that following recent review of your Mob No. you are awarded with a £1500 Bonus Prize, call 09066368470",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-034",
+   "text": "REMINDER FROM O2: To get 2.50 pounds free call credit and details of great offers pls reply 2 this text with your valid name, house no and postcode",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-035",
+   "text": "You are a winner you have been specially selected to receive £1000 cash or a £2000 award. Speak to a live operator to claim call 087147123779am-7pm. Cost 10p",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-036",
+   "text": "Gr8 Poly tones 4 ALL mobs direct 2u rply with POLY TITLE to 8007 eg POLY BREATHE1 Titles: CRAZYIN, SLEEPINGWITH, FINEST, YMCA :getzed.co.uk POBox365O4W45WQ 300p",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-037",
+   "text": "Free tones Hope you enjoyed your new content. text stop to 61610 to unsubscribe. help:08712400602450p Provided by tones2you.co.uk",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-038",
+   "text": "URGENT! We are trying to contact U. Todays draw shows that you have won a £800 prize GUARANTEED. Call 09050001295 from land line. Claim A21. Valid 12hrs only",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-039",
+   "text": "Latest News! Police station toilet stolen, cops have nothing to go on!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-040",
+   "text": "URGENT! Last weekend's draw shows that you have won £1000 cash or a Spanish holiday! CALL NOW 09050000332 to claim. T&C: RSTM, SW7 3SS. 150ppm",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-041",
+   "text": "You are being contacted by our dating service by someone you know! To find out who it is, call from a land line 09050000878. PoBox45W2TG150P",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-042",
+   "text": "goldviking (29/M) is inviting you to be his friend. Reply YES-762 or NO-762 See him: www.SMS.ac/u/goldviking STOP? Send STOP FRND to 62468",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-043",
+   "text": "Ur TONEXS subscription has been renewed and you have been charged £4.50. You can choose 10 more polys this month. www.clubzed.co.uk *BILLING MSG*",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-044",
+   "text": "FreeMsg:Feelin kinda lnly hope u like 2 keep me company! Jst got a cam moby wanna c my pic?Txt or reply DATE to 82242 Msg150p 2rcv Hlp 08712317606 stop to 82242",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-045",
+   "text": "Free entry in 2 a weekly comp for a chance to win an ipod. Txt POD to 80182 to get entry (std txt rate) T&C's apply 08452810073 for details 18+",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-046",
+   "text": "Free Msg: get Gnarls Barkleys \"Crazy\" ringtone TOTALLY FREE just reply GO to this message right now!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-047",
+   "text": "FreeMsg Hey U, i just got 1 of these video/pic fones, reply WILD to this txt & ill send U my pics, hurry up Im so bored at work xxx (18 150p/rcvd STOP2stop)",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-048",
+   "text": "Urgent! Please call 09066612661 from your landline, your complimentary 4* Lux Costa Del Sol holiday or £1000 CASH await collection. ppm 150 SAE T&Cs James 28, EH74RR",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-049",
+   "text": "Your B4U voucher w/c 27/03 is MARSMS. Log onto www.B4Utele.com for discount credit. To opt out reply stop. Customer care call 08717168528",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-050",
+   "text": "Hello. We need some posh birds and chaps to user trial prods for champneys. Can i put you down? I need your address and dob asap. Ta r",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-051",
+   "text": "Thanks for your ringtone order, reference number X49. Your mobile will be charged 4.50. Should your tone not arrive please call customer services 09065989182. From: [colour=red]text[/colour]TXTstar",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-052",
+   "text": "okmail: Dear Dave this is your final notice to collect your 4* Tenerife Holiday or #5000 CASH award! Call 09061743806 from landline. TCs SAE Box326 CW25WX 150ppm",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-053",
+   "text": "URGENT This is our 2nd attempt to contact U. Your £900 prize from YESTERDAY is still awaiting collection. To claim CALL NOW 09061702893. ACL03530150PM",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-054",
+   "text": "Txt: CALL to No: 86888 & claim your reward of 3 hours talk time to use from your phone now! Subscribe6GBP/mnth inc 3hrs 16 stop?txtStop www.gamb.tv",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-055",
+   "text": "You have 1 new message. Please call 08715205273",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-056",
+   "text": "Urgent! Please call 09061743811 from landline. Your ABTA complimentary 4* Tenerife Holiday or £5000 cash await collection SAE T&Cs Box 326 CW25WX 150ppm",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-057",
+   "text": "You are a £1000 winner or Guaranteed Caller Prize, this is our Final attempt to contact you! To Claim Call 09071517866 Now! 150ppmPOBox10183BhamB64XE",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-058",
+   "text": "09066362231 URGENT! Your mobile No 07xxxxxxxxx won a £2,000 bonus caller prize on 02/06/03! this is the 2nd attempt to reach YOU! call 09066362231 ASAP!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-059",
+   "text": "Can U get 2 phone NOW? I wanna chat 2 set up meet Call me NOW on 09096102316 U can cum here 2moro Luv JANE xx Calls£1/minmoremobsEMSPOBox45PO139WA",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-060",
+   "text": "In The Simpsons Movie released in July 2007 name the band that died at the start of the film? A-Green Day, B-Blue Day, C-Red Day. (Send A, B or C)",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-061",
+   "text": "January Male Sale! Hot Gay chat now cheaper, call 08709222922. National rate from 1.5p/min cheap to 7.8p/min peak! To stop texts call 08712460324 (10p/min)",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-062",
+   "text": "Auction round 4. The highest bid is now £54. Next maximum bid is £71. To bid, send BIDS e. g. 10 (to bid £10) to 83383. Good luck.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-063",
+   "text": "As one of our registered subscribers u can enter the draw 4 a 100 G.B. gift voucher by replying with ENTER. To unsubscribe text STOP",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-064",
+   "text": "WIN URGENT! Your mobile number has been awarded with a £2000 prize GUARANTEED call 09061790121 from land line. claim 3030 valid 12hrs only 150ppm",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-065",
+   "text": "Valentines Day Special! Win over £1000 in our quiz and take your partner on the trip of a lifetime! Send GO to 83600 now. 150p/msg rcvd. CustCare:08718720201.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-066",
+   "text": "Hi there, 2nights ur lucky night! Uve been invited 2 XCHAT, the Uks wildest chat! Txt CHAT to 86688 now! 150p/MsgrcvdHG/Suite342/2Lands/Row/W1J6HL LDN 18yrs",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-067",
+   "text": "This is the 2nd time we have tried 2 contact u. U have won the 750 Pound prize. 2 claim is easy, call 08712101358 NOW! Only 10p per min. BT-national-rate",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-068",
+   "text": "Adult 18 Content Your video will be with you shortly",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-069",
+   "text": "You are guaranteed the latest Nokia Phone, a 40GB iPod MP3 player or a £500 prize! Txt word: COLLECT to No: 83355! IBHltd LdnW15H 150p/Mtmsgrcvd18",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-070",
+   "text": "Dear Voucher Holder, To claim this weeks offer, at you PC please go to http://www.e-tlp.co.uk/reward. Ts&Cs apply.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-071",
+   "text": "Freemsg: 1-month unlimited free calls! Activate SmartCall Txt: CALL to No: 68866. Subscriptn3gbp/wk unlimited calls Help: 08448714184 Stop?txt stop landlineonly",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-072",
+   "text": "Knock Knock Txt whose there to 80082 to enter r weekly draw 4 a £250 gift voucher 4 a store of yr choice. T&Cs www.tkls.com age16 to stoptxtstop£1.50/week",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-073",
+   "text": "Welcome to UK-mobile-date this msg is FREE giving you free calling to 08719839835. Future mgs billed at 150p daily. To cancel send \"go stop\" to 89123",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-074",
+   "text": "Great News! Call FREEFONE 08006344447 to claim your guaranteed £1000 CASH or £2000 gift. Speak to a live operator NOW!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-075",
+   "text": "WINNER! As a valued network customer you hvae been selected to receive a £900 reward! To collect call 09061701444. Valid 24 hours only. ACL03530150PM",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-076",
+   "text": "FREE2DAY sexy St George's Day pic of Jordan!Txt PIC to 89080 dont miss out, then every wk a saucy celeb!4 more pics c PocketBabe.co.uk 0870241182716 £3/wk",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-077",
+   "text": "I'd like to tell you my deepest darkest fantasies. Call me 09094646631 just 60p/min. To stop texts call 08712460324 (nat rate)",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-078",
+   "text": "ree entry in 2 a weekly comp for a chance to win an ipod. Txt POD to 80182 to get entry (std txt rate) T&C's apply 08452810073 for details 18+",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-079",
+   "text": "Win the newest “Harry Potter and the Order of the Phoenix (Book 5) reply HARRY, answer 5 questions - chance to be the first among readers!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-080",
+   "text": "For ur chance to win a £250 cash every wk TXT: ACTION to 80608. T's&C's www.movietrivia.tv custcare 08712405022, 1x150p/wk.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-081",
+   "text": "Congrats 2 mobile 3G Videophones R yours. call 09063458130 now! videochat wid ur mates, play java games, Dload polypH music, noline rentl. bx420. ip4. 5we. 150p",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-082",
+   "text": "WIN a year supply of CDs 4 a store of ur choice worth £500 & enter our £100 Weekly draw txt MUSIC to 87066 Ts&Cs www.Ldew.com.subs16+1win150ppmx3",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-083",
+   "text": "Goal! Arsenal 4 (Henry, 7 v Liverpool 2 Henry scores with a simple shot from 6 yards from a pass by Bergkamp to give Arsenal a 2 goal margin after 78 mins.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-084",
+   "text": "U are subscribed to the best Mobile Content Service in the UK for £3 per 10 days until you send STOP to 82324. Helpline 08706091795",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-085",
+   "text": "Call Germany for only 1 pence per minute! Call from a fixed line via access number 0844 861 85 85. No prepayment. Direct access! www.telediscount.co.uk",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-086",
+   "text": "Thanks for your ringtone order, reference number X29. Your mobile will be charged 4.50. Should your tone not arrive please call customer services 09065989180",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-087",
+   "text": "Thanks for your subscription to Ringtone UK your mobile will be charged £5/month Please confirm by replying YES or NO. If you reply NO you will not be charged",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-088",
+   "text": "**FREE MESSAGE**Thanks for using the Auction Subscription Service. 18 . 150p/MSGRCVD 2 Skip an Auction txt OUT. 2 Unsubscribe txt STOP CustomerCare 08718726270",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-089",
+   "text": "85233 FREE>Ringtone!Reply REAL",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-090",
+   "text": "FREE>Ringtone! Reply REAL or POLY eg REAL1 1. PushButton 2. DontCha 3. BabyGoodbye 4. GoldDigger 5. WeBeBurnin 1st tone FREE and 6 more when u join for £3/wk",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-091",
+   "text": "Orange brings you ringtones from all time Chart Heroes, with a free hit each week! Go to Ringtones & Pics on wap. To stop receiving these tips reply STOP.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-092",
+   "text": "44 7732584351, Do you want a New Nokia 3510i colour phone DeliveredTomorrow? With 300 free minutes to any mobile + 100 free texts + Free Camcorder reply or call 08000930705.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-093",
+   "text": "Double Mins & Double Txt & 1/2 price Linerental on Latest Orange Bluetooth mobiles. Call MobileUpd8 for the very latest offers. 08000839402 or call2optout/LF56",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-094",
+   "text": "I am hot n horny and willing I live local to you - text a reply to hear strt back from me 150p per msg Netcollex LtdHelpDesk: 02085076972 reply Stop to end",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-095",
+   "text": "sports fans - get the latest sports news str* 2 ur mobile 1 wk FREE PLUS a FREE TONE Txt SPORT ON to 8007 www.getzed.co.uk 0870141701216+ norm 4txt/120p",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-096",
+   "text": "Latest Nokia Mobile or iPOD MP3 Player +£400 proze GUARANTEED! Reply with: WIN to 83355 now! Norcorp Ltd.£1,50/Mtmsgrcvd18+",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-097",
+   "text": "all the lastest from Stereophonics, Marley, Dizzee Racal, Libertines and The Strokes! Win Nookii games with Flirt!! Click TheMob WAP Bookmark or text WAP to 82468",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-098",
+   "text": "Money i have won wining number 946 wot do i do next",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-099",
+   "text": "Call from 08702490080 - tells u 2 call 09066358152 to claim £5000 prize. U have 2 enter all ur mobile & personal details @ the prompts. Careful!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-100",
+   "text": "URGENT!: Your Mobile No. was awarded a £2,000 Bonus Caller Prize on 02/09/03! This is our 2nd attempt to contact YOU! Call 0871-872-9755 BOX95QU",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-101",
+   "text": "IMPORTANT MESSAGE. This is a final contact attempt. You have important messages waiting out our customer claims dept. Expires 13/4/04. Call 08717507382 NOW!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-102",
+   "text": "HOT LIVE FANTASIES call now 08707500020 Just 20p per min NTT Ltd, PO Box 1327 Croydon CR9 5WB 0870 is a national rate call",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-103",
+   "text": "5p 4 alfie Moon's Children in need song on ur mob. Tell ur m8s. Txt Tone charity to 8007 for Nokias or Poly charity for polys: zed 08701417012 profit 2 charity.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-104",
+   "text": "Todays Voda numbers ending with 7634 are selected to receive a £350 reward. If you have a match please call 08712300220 quoting claim code 7684 standard rates apply.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-105",
+   "text": "PRIVATE! Your 2003 Account Statement for shows 800 un-redeemed S.I.M. points. Call 08718738001 Identifier Code: 49557 Expires 26/11/04",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-106",
+   "text": "You are guaranteed the latest Nokia Phone, a 40GB iPod MP3 player or a £500 prize! Txt word: COLLECT to No: 83355! IBHltd LdnW15H 150p/Mtmsgrcvd18+",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-107",
+   "text": "Ringtone Club: Get the UK singles chart on your mobile each week and choose any top quality ringtone! This message is free of charge.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-108",
+   "text": "from www.Applausestore.com MonthlySubscription@50p/msg max6/month T&CsC web age16 2stop txt stop",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-109",
+   "text": "Please CALL 08712402578 immediately as there is an urgent message waiting for you",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-110",
+   "text": "Would you like to see my XXX pics they are so hot they were nearly banned in the uk!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-111",
+   "text": "Collect your VALENTINE'S weekend to PARIS inc Flight & Hotel + £200 Prize guaranteed! Text: PARIS to No: 69101. www.rtf.sphosting.com",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-112",
+   "text": "U are subscribed to the best Mobile Content Service in the UK for £3 per ten days until you send STOP to 83435. Helpline 08706091795.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-113",
+   "text": "YOU HAVE WON! As a valued Vodafone customer our computer has picked YOU to win a £150 prize. To collect is easy. Just call 09061743386",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-114",
+   "text": "Hi ya babe x u 4goten bout me?' scammers getting smart..Though this is a regular vodafone no, if you respond you get further prem rate msg/subscription. Other nos used also. Beware!",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-115",
+   "text": "FREE MESSAGE Activate your 500 FREE Text Messages by replying to this message with the word FREE For terms & conditions, visit www.07781482378.com",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-116",
+   "text": "u r subscribed 2 TEXTCOMP 250 wkly comp. 1st wk?s free question follows, subsequent wks charged@150p/msg.2 unsubscribe txt STOP 2 84128,custcare 08712405020",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-117",
+   "text": "FREE entry into our £250 weekly competition just text the word WIN to 80086 NOW. 18 T&C www.txttowin.co.uk",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-118",
+   "text": "Hello handsome ! Are you finding that job ? Not being lazy ? Working towards getting back that net for mummy ? Where's my boytoy now ? Does he miss me ?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-119",
+   "text": "This pen thing is beyond a joke. Wont a Biro do? Don't do a masters as can't do this ever again!",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-120",
+   "text": "R u meeting da ge at nite tmr?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-121",
+   "text": "Going for dinner.msg you after.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-122",
+   "text": "My sister going to earn more than me da.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-123",
+   "text": "K, want us to come by now?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-124",
+   "text": "How long has it been since you screamed, princess?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-125",
+   "text": "Actually i deleted my old website..now i m blogging at magicalsongs.blogspot.com",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-126",
+   "text": "Also that chat was awesome but don't make it regular unless you can see her in person",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-127",
+   "text": "But I'm on a diet. And I ate 1 too many slices of pizza yesterday. Ugh I'm ALWAYS on a diet.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-128",
+   "text": "No da..today also i forgot..",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-129",
+   "text": "No she didnt. I will search online and let you know.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-130",
+   "text": "Just sent you an email – to an address with incomm in it, is that right?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-131",
+   "text": "Then mum's repent how?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-132",
+   "text": "Hello my little party animal! I just thought I'd buzz you as you were with your friends ...*grins*... Reminding you were loved and send a naughty adoring kiss",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-133",
+   "text": "My tuition is at 330. Hm we go for the 1120 to 1205 one? Do you mind?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-134",
+   "text": "Oh k.i think most of wi and nz players unsold.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-135",
+   "text": "Shall i come to get pickle",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-136",
+   "text": "Welp apparently he retired",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-137",
+   "text": "Joy's father is John. Then John is the ____ of Joy's father. If u ans ths you hav  &lt;#&gt;  IQ. Tis s IAS question try to answer.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-138",
+   "text": "I know you are serving. I mean what are you doing now.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-139",
+   "text": "K.i did't see you.:)k:)where are you now?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-140",
+   "text": "Jus came back fr lunch wif my sis only. U leh?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-141",
+   "text": "Set a place for me in your heart and not in your mind, as the mind easily forgets but the heart will always remember. Wish you Happy Valentines Day!",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-142",
+   "text": "Omg I want to scream. I weighed myself and I lost more weight! Woohoo!",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-143",
+   "text": "Thursday night? Yeah, sure thing, we'll work it out then",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-144",
+   "text": "Buy one egg for me da..please:)",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-145",
+   "text": "Feel Yourself That You Are Always Happy.. Slowly It Becomes Your Habit &amp; Finally It Becomes Part Of Your Life.. Follow It.. Happy Morning &amp; Have A Happy Day:)",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-146",
+   "text": "Why must we sit around and wait for summer days to celebrate. Such a magical sight when the worlds dressed in white. Oooooh let there be snow.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-147",
+   "text": "Babe, have you got enough money to pick up bread and milk ? And I'll give you it back when you get home ?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-148",
+   "text": "Honestly i've just made a lovely cup of tea and promptly dropped my keys in it and then burnt my fingers getting them out!",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-149",
+   "text": "Aight, lemme know what's up",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-150",
+   "text": "K.k.how is your business now?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-151",
+   "text": "Ok then u tell me wat time u coming later lor.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-152",
+   "text": "Good morning, my boytoy! How's those yummy lips ? Where's my sexy buns now ? What do you do ? Do you think of me ? Do you crave me ? Do you need me ?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-153",
+   "text": "Daddy will take good care of you :)",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-154",
+   "text": "So u wan 2 come for our dinner tonight a not?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-155",
+   "text": "U should have made an appointment",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-156",
+   "text": "Networking technical support associate.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-157",
+   "text": "Thats cool. i am a gentleman and will treat you with dignity and respect.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-158",
+   "text": "Ok.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-159",
+   "text": "Yes, princess. Toledo.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-160",
+   "text": "Not sure yet, still trying to get a hold of him",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-161",
+   "text": "Two fundamentals of cool life: \"Walk, like you are the KING\"...! OR \"Walk like you Dont care,whoever is the KING\"!... Gud nyt",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-162",
+   "text": "I know dat feelin had it with Pete! Wuld get with em , nuther place nuther time mayb?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-163",
+   "text": "Aight, we'll head out in a few",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-164",
+   "text": "You will go to walmart. I.ll stay.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-165",
+   "text": "Lol I would but despite these cramps I like being a girl.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-166",
+   "text": "Great to hear you are settling well. So what's happenin wit ola?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-167",
+   "text": "Pity, * was in mood for that. So...any other suggestions?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-168",
+   "text": "S.s:)i thinl role is like sachin.just standing. Others have to hit.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-169",
+   "text": "I love you both too :-)",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-170",
+   "text": "\"Hello-/@drivby-:0quit edrunk sorry iff pthis makes no senrd-dnot no how ^ dancce 2 drum n basq!ihave fun 2nhite x ros xxxxxxx\"",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-171",
+   "text": "Nothing, smsing u n xy lor. Sorry lor da guys neva c u in person but they sort of know u lor. So u wan 2 meet them xy ask me 2 bring u along 4 our next meeting.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-172",
+   "text": "You're not sure that I'm not trying to make xavier smoke because I don't want to smoke after being told I smoke too much?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-173",
+   "text": "Your right! I'll make the appointment right now.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-174",
+   "text": "Oh ho. Is this the first time u use these type of words",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-175",
+   "text": "I asked you to call him now ok",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-176",
+   "text": "Well am officially in a philosophical hole, so if u wanna call am at home ready to be saved!",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-177",
+   "text": "Will you be here for food",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-178",
+   "text": "Can you pls pls send me a mail on all you know about relatives coming to deliver here? All you know about costs, risks, benefits and anything else. Thanks.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-179",
+   "text": "You know there is. I shall speak to you in  &lt;#&gt;  minutes then",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-180",
+   "text": "Are you willing to go for aptitude class.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-181",
+   "text": "The wine is flowing and i'm i have nevering..",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-182",
+   "text": "Ok that's great thanx a lot.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-183",
+   "text": "I know she called me",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-184",
+   "text": "Come to me right now, Ahmad",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-185",
+   "text": "Blank is Blank. But wat is blank? Lol",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-186",
+   "text": "I have a sore throat. It's scratches when I talk",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-187",
+   "text": "Well you told others you'd marry them...",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-188",
+   "text": "You also didnt get na hi hi hi hi hi",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-189",
+   "text": "Like  &lt;#&gt; , same question",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-190",
+   "text": "Thanx 4 e brownie it's v nice...",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-191",
+   "text": "HI DARLIN HOW WAS WORK DID U GET INTO TROUBLE? IJUST TALKED TO YOUR MUM ALL MORNING! I HAD A REALLY GOOD TIME LAST NIGHT IM GOIN OUT SOON BUT CALL ME IF U CAN",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-192",
+   "text": "Dude we should go sup again",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-193",
+   "text": "I could ask carlos if we could get more if anybody else can chip in",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-194",
+   "text": "Hhahhaahahah rofl wtf nig was leonardo in your room or something",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-195",
+   "text": "I'm not sure, I was just checking out what was happening around the area",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-196",
+   "text": "Lets use it next week, princess :)",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-197",
+   "text": "I prefer my free days... Tues, wed, fri oso can... Ü ask those workin lor...",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-198",
+   "text": "Just got some gas money, any chance you and the gang want to go on a grand nature adventure?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-199",
+   "text": "Night has ended for another day, morning has come in a special way. May you smile like the sunny rays and leaves your worries at the blue blue bay.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-200",
+   "text": "What you need. You have a person to give na.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-201",
+   "text": "When you guys planning on coming over?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-202",
+   "text": "He telling not to tell any one. If so treat for me hi hi hi",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-203",
+   "text": "K.k:)when are you going?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-204",
+   "text": "I've sent ü my part..",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-205",
+   "text": "Ok u can take me shopping when u get paid =D",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-206",
+   "text": "I realise you are a busy guy and i'm trying not to be a bother. I have to get some exams outta the way and then try the cars. Do have a gr8 day",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-207",
+   "text": "Armand says get your ass over to epsilon",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-208",
+   "text": "Fuck babe, I miss you sooooo much !! I wish you were here to sleep with me ... My bed is so lonely ... I go now, to sleep ... To dream of you, my love ...",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-209",
+   "text": "\"CHEERS U TEX MECAUSE U WEREBORED! YEAH OKDEN HUNNY R UIN WK SAT?SOUNDS LIKEYOUR HAVIN GR8FUN J! KEEP UPDAT COUNTINLOTS OF LOVEME XXXXX.\"",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-210",
+   "text": "How u doin baby girl ?? hope u are okay every time I call ure phone is off! I miss u get in touch",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-211",
+   "text": "Sos! Any amount i can get pls.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-212",
+   "text": "Anything...",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-213",
+   "text": "Don't fret. I'll buy the ovulation test strips and send them to you. You wont get them til like march. Can you send me your postal address.u'll be alright.Okay.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-214",
+   "text": "Aight text me when you're back at mu and I'll swing by, need somebody to get the door for me",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-215",
+   "text": "it's really getting me down just hanging around.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-216",
+   "text": "Sure! I am driving but will reach my destination soon.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-217",
+   "text": "I wud never mind if u dont miss me or if u dont need me.. But u wil really hurt me wen u need me &amp; u dont tell me......... Take care:-)",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-218",
+   "text": "You are gorgeous! keep those pix cumming :) thank you!",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-219",
+   "text": "What's ur pin?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-220",
+   "text": "A little. Meds say take once every 8 hours. It's only been 5 but pain is back. So I took another. Hope I don't die",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-221",
+   "text": "somewhere out there beneath the pale moon light someone think in of u some where out there where dreams come true... goodnite &amp; sweet dreams",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-222",
+   "text": "I dunno they close oredi not... Ü v ma fan...",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-223",
+   "text": "A famous quote : when you develop the ability to listen to 'anything' unconditionally without losing your temper or self confidence, it means you are ......... 'MARRIED'",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-224",
+   "text": "Sorry for the delay. Yes masters",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-225",
+   "text": "Can you say what happen",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-226",
+   "text": "Not to worry. I'm sure you'll get it.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-227",
+   "text": "Hey ! Don't forget ... You are MINE ... For ME ... My possession ... MY property ... MMM ... *childish smile* ...",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-228",
+   "text": "You call him and tell now infront of them. Call him now.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-229",
+   "text": "No. Yes please. Been swimming?",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-230",
+   "text": "You only hate me. You can call any but you didnt accept even a single call of mine. Or even you messaged",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-231",
+   "text": "Hi its me you are probably having too much fun to get this message but i thought id txt u cos im bored! and james has been farting at me all night",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-232",
+   "text": "Ya, i'm referin to mei's ex wat... No ah, waitin 4 u to treat, somebody shld b rich liao...So gd, den u dun have to work frm tmr onwards...",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-233",
+   "text": "No management puzzeles.",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-234",
+   "text": "Cold. Dont be sad dear",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-235",
+   "text": "hi baby im cruisin with my girl friend what r u up 2? give me a call in and hour at home if thats alright or fone me on this fone now love jenny xxx",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-236",
+   "text": "It is a good thing I'm now getting the connection to bw",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-237",
+   "text": "Dear we got  &lt;#&gt;  dollars hi hi",
+   "label": "ham"
+  },
+  {
+   "id": "spam-tr-238",
+   "text": "Our brand new mobile music service is now live. The free music player will arrive shortly. Just install on your phone to browse content from the top artists.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-239",
+   "text": "Send a logo 2 ur lover - 2 names joined by a heart. Txt LOVE NAME1 NAME2 MOBNO eg LOVE ADAM EVE 07123456789 to 87077 Yahoo! POBox36504W45WQ TxtNO 4 no ads 150p.",
+   "label": "spam"
+  },
+  {
+   "id": "spam-tr-240",
+   "text": "TheMob> Check out our newest selection of content, Games, Tones, Gossip, babes and sport, Keep your mobile fit and funky text WAP to 82468",
+   "label": "spam"
+  }
+ ]
+}

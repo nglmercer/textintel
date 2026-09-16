@@ -6,7 +6,7 @@ use crate::lexical::character::combined_character_similarity;
 use crate::lexical::similarity::lexical_similarity;
 use crate::normalization::leetspeak::apply_leet;
 use crate::normalization::repetition::collapse_repetition;
-use crate::normalization::unicode::casefold_text;
+use crate::normalization::unicode::{casefold_text, strip_diacritics};
 use crate::normalization::whitespace::normalize_whitespace;
 use crate::phonetic::similarity::phonetic_similarity;
 use crate::semantic::similarity::cosine;
@@ -18,7 +18,8 @@ mod swap;
 
 use decoded::{best_decoded_overlap, exact_decode_confidence};
 use swap::{
-    same_language_swap, swapped_phonetic_similarity, swapped_word_similarity, swapped_words,
+    same_language_swap, swapped_phonetic_similarity, swapped_validity, swapped_word_similarity,
+    swapped_words,
 };
 pub(crate) fn compact(text: &str) -> String {
     text.chars().filter(|ch| !ch.is_whitespace()).collect()
@@ -61,7 +62,7 @@ fn is_single_word(fingerprint: &MessageFingerprint) -> bool {
 }
 
 fn alphanumeric_fold(text: &str) -> String {
-    casefold_text(text)
+    strip_diacritics(&casefold_text(text))
         .chars()
         .filter(|ch| ch.is_alphanumeric())
         .collect()
@@ -284,9 +285,37 @@ pub fn score_fingerprints(
     // Coverage is an exact 1.0 exactly when every word is known, so the
     // 0.999 cut is an exact all-valid test with float slack.
     let all_valid = if lexicon_validity > 0.999 { 1.0 } else { 0.0 };
-    let confusable_swap =
-        (swapped_word_similarity * swapped_phonetic_raw * all_valid * same_language)
-            .clamp(0.0, 1.0);
+    // Swap-position raw validity (computed before the interactions that
+    // need it): the swapped words themselves must be lexicon words. Pair
+    // coverage can reach 1.0 through the decoded reading (`vc` counts
+    // through top candidate `você`) while the raw swapped word is not a
+    // word — without this gate, abbreviation pairs would pay the
+    // confusable penalty meant for real-word swaps.
+    let swap_validity = finite_or_zero(swapped_validity(a, b));
+    let confusable_swap = (swapped_word_similarity
+        * swapped_phonetic_raw
+        * all_valid
+        * swap_validity
+        * same_language)
+        .clamp(0.0, 1.0);
+    // Swap-position validity interaction: `confusable_swap` demands every
+    // word valid, which typos-adjacent malapropisms (`money`/`honey` next to
+    // an uncovered word) fail. Gating on the swapped words alone catches
+    // real-word swaps regardless of sentence coverage, while typo swaps
+    // (one side misspelled) stay at 0. The similarity enters CUBED: a linear
+    // term would tax synonym swaps (`grown`/`expanded`, similarity ~0.2)
+    // nearly as much as malapropisms (`money`/`honey`, ~0.8), while the cube
+    // (0.008 vs 0.51) concentrates the penalty on look-alike swaps and
+    // leaves unrelated-word swaps to the other channels. (Swapped-word
+    // phonetics do not separate: `needed`/`required` (match) sound more
+    // alike than `verified`/`vilified` (malapropism), so only the character
+    // form participates.)
+    let valid_swap_similarity = (swap_validity
+        * swapped_word_similarity
+        * swapped_word_similarity
+        * swapped_word_similarity
+        * same_language)
+        .clamp(0.0, 1.0);
     let normalized_identity = normalized_identity(a, b);
     let substring_containment = substring_containment(a, b);
     let cross_script_pair = cross_script_pair(a, b);
@@ -307,6 +336,7 @@ pub fn score_fingerprints(
         format!("swapped_word_similarity={swapped_word_similarity:.3}"),
         format!("swapped_phonetic={swapped_phonetic:.3}"),
         format!("confusable_swap={confusable_swap:.3}"),
+        format!("valid_swap_similarity={valid_swap_similarity:.3}"),
         format!("normalized_identity={normalized_identity:.0}"),
         format!("substring_containment={substring_containment:.0}"),
         format!("cross_script_pair={cross_script_pair:.0}"),
@@ -373,6 +403,7 @@ pub fn score_fingerprints(
         swapped_word_similarity,
         swapped_phonetic,
         confusable_swap,
+        valid_swap_similarity,
         normalized_identity,
         substring_containment,
         cross_script_pair,

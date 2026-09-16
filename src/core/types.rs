@@ -520,14 +520,16 @@ pub struct ComparisonResult {
     pub swapped_phonetic: f64,
     /// Confusable-swap interaction: `swapped_word_similarity` × ungated
     /// swapped-word phonetic similarity, kept only when every word on both
-    /// sides is lexicon-valid, else 0.0. This is the contextual-hard-negative
+    /// sides is lexicon-valid AND both swapped words are lexicon words
+    /// themselves, else 0.0. This is the contextual-hard-negative
     /// signature — an otherwise identical sentence pair whose one differing
     /// word is real, look-alike, and sound-alike on both sides
     /// (`right`/`rite`, `complement`/`compliment`). Typo pairs fail the
-    /// all-valid test (`thamk` is not a word), paraphrases fail the swap
-    /// gate, and language switches (`mi`/`my` in known-different-language
-    /// segments) are suppressed outright — none of them pays the confusable
-    /// penalty.
+    /// all-valid test (`thamk` is not a word), abbreviation pairs fail the
+    /// swapped-words test (`vc` counts toward coverage through `você` but is
+    /// not a word), paraphrases fail the swap gate, and language switches
+    /// (`mi`/`my` in known-different-language segments) are suppressed
+    /// outright — none of them pays the confusable penalty.
     #[serde(default)]
     pub confusable_swap: f64,
     /// Single-word exact decoding: `single_word_pair` × `exact_decode`.
@@ -550,6 +552,14 @@ pub struct ComparisonResult {
     /// substance (`morning` in `good morning`, `早上` in `早上好`).
     #[serde(default)]
     pub substring_containment: f64,
+    /// Swap-gate validity × cubed swapped-word character similarity,
+    /// suppressed on cross-language switches. Real-word look-alike swaps
+    /// (`money`/`honey`) score high; typo swaps (one side misspelled) score
+    /// 0, and unrelated-word swaps (`grown`/`expanded`) score near zero
+    /// through the cube. Lets the model penalize malapropisms without
+    /// taxing synonym swaps.
+    #[serde(default)]
+    pub valid_swap_similarity: f64,
     pub explanations: Vec<String>,
     pub evidence: Vec<String>,
     pub weights_used: BTreeMap<String, f64>,

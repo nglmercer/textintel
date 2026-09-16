@@ -140,6 +140,11 @@ pub struct EvaluateOptions {
     pub ranking_queries: usize,
     /// Maximum documents indexed for retrieval metrics.
     pub ranking_documents: usize,
+    /// Optional held-out spam corpus; when present the report carries spam
+    /// classifier metrics so quality gates can enforce them. The CLI
+    /// resolves this to the `spam/v2-eval.json` sibling of the dataset
+    /// directory (overridable with `--spam-corpus`).
+    pub spam_corpus: Option<SpamCorpus>,
 }
 
 impl Default for EvaluateOptions {
@@ -148,8 +153,65 @@ impl Default for EvaluateOptions {
             split: None,
             ranking_queries: 100,
             ranking_documents: 500,
+            spam_corpus: None,
         }
     }
+}
+
+/// One labeled spam-corpus message (`spam` or `ham`/`benign`).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SpamCorpusItem {
+    #[serde(default)]
+    pub id: String,
+    pub text: String,
+    pub label: String,
+}
+
+impl SpamCorpusItem {
+    pub fn is_spam(&self) -> bool {
+        self.label.eq_ignore_ascii_case("spam")
+    }
+}
+
+/// Versioned held-out spam corpus (see `data/spam/README.md`).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SpamCorpus {
+    #[serde(default = "default_dataset_version")]
+    pub version: String,
+    pub items: Vec<SpamCorpusItem>,
+}
+
+impl SpamCorpus {
+    pub fn from_json(source: &str) -> Result<Self, TextIntelError> {
+        serde_json::from_str(source).map_err(TextIntelError::from)
+    }
+
+    pub fn from_file(path: impl AsRef<std::path::Path>) -> Result<Self, TextIntelError> {
+        let path = path.as_ref();
+        let source = std::fs::read_to_string(path).map_err(|error| {
+            TextIntelError::InvalidConfiguration(format!(
+                "cannot read {}: {error}",
+                path.display()
+            ))
+        })?;
+        let corpus = Self::from_json(&source)?;
+        if corpus.items.is_empty() {
+            return Err(TextIntelError::InvalidConfiguration(format!(
+                "spam corpus {} has no items",
+                path.display()
+            )));
+        }
+        Ok(corpus)
+    }
+}
+
+/// Spam classifier metrics over a held-out corpus plus the corpus version
+/// they were measured on.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct SpamReport {
+    #[serde(default = "default_report_string")]
+    pub corpus_version: String,
+    pub metrics: BinaryMetrics,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
@@ -275,6 +337,11 @@ pub struct EvaluationReport {
     /// the categories that matter (see `data/quality-gates.json`).
     #[serde(default)]
     pub categories: BTreeMap<String, BinaryMetrics>,
+    /// Spam classifier metrics over the held-out spam corpus, when
+    /// [`EvaluateOptions::spam_corpus`] is set. `None` means spam was not
+    /// measured; gates requiring spam fail closed on `None`.
+    #[serde(default)]
+    pub spam: Option<SpamReport>,
 }
 
 impl EvaluationDataset {
@@ -431,6 +498,7 @@ pub fn evaluate_with_options(
             expectations_total: 0,
             expectations_met: 0,
             categories: BTreeMap::new(),
+            spam: None,
         });
     }
 
@@ -500,6 +568,20 @@ pub fn evaluate_with_options(
     let rebus = rebus_metrics(engine, &cases)?;
     let language = language_metrics(engine, &cases)?;
     let ranking = ranking_metrics(engine, &cases, options)?;
+    let spam = match &options.spam_corpus {
+        Some(corpus) => {
+            let mut samples = Vec::with_capacity(corpus.items.len());
+            for item in &corpus.items {
+                let result = engine.detect_spam(&item.text)?;
+                samples.push((result.probability, item.is_spam()));
+            }
+            Some(SpamReport {
+                corpus_version: corpus.version.clone(),
+                metrics: binary_metrics(&samples),
+            })
+        }
+        None => None,
+    };
 
     let compare_latency = LatencyStats::from_micros(compare_samples);
     let analyze_latency = LatencyStats::from_micros(analyze_samples);
@@ -516,5 +598,6 @@ pub fn evaluate_with_options(
         expectations_total,
         expectations_met,
         categories,
+        spam,
     })
 }

@@ -21,7 +21,7 @@ use similarity::run_similarity;
 use spam::run_spam;
 
 fn usage() -> &'static str {
-    "Usage:\n  textintel-train similarity <dataset> --output <artifact.json> [--iterations N] [--learning-rate F] [--l2 F]\n  textintel-train spam --output <artifact.json> [--count N] [--seed N]"
+    "Usage:\n  textintel-train similarity <dataset> --output <artifact.json> [--iterations N] [--learning-rate F] [--l2 F]\n  textintel-train spam --output <artifact.json> [--count N] [--seed N] [--corpus <spam-train.json>] [--heldout <spam-eval.json>]"
 }
 
 fn flag_value(args: &[String], flag: &str) -> Option<String> {

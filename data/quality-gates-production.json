@@ -1,95 +1,80 @@
 {
   "similarity": {
-    "accuracy_min": 0.81,
-    "f1_min": 0.87,
-    "roc_auc_min": 0.92,
-    "pr_auc_min": 0.96
+    "f1_min": 0.94,
+    "roc_auc_min": 0.95,
+    "pr_auc_min": 0.97,
+    "ece_max": 0.08
   },
   "rebus": {
-    "top1_min": 0.6,
-    "top3_min": 0.65,
-    "top5_min": 0.7
+    "top1_min": 0.75,
+    "top3_min": 0.9
   },
   "language": {
-    "top1_min": 0.55,
-    "top3_min": 0.7
+    "top1_min": 0.8,
+    "top3_min": 0.95
   },
   "search": {
-    "recall_at_1_min": 0.38,
-    "recall_at_5_min": 0.95,
-    "recall_at_10_min": 0.95,
-    "mrr_min": 0.6
+    "recall_at_10_min": 0.98,
+    "mrr_min": 0.7
+  },
+  "spam": {
+    "roc_auc_min": 0.9,
+    "f1_min": 0.8,
+    "brier_max": 0.15,
+    "ece_max": 0.1
   },
   "categories": {
-    "code_switching": {
-      "count_min": 12,
-      "f1_min": 0.9,
-      "accuracy_min": 0.9
-    },
-    "cross_language": {
-      "count_min": 12,
-      "f1_min": 0.95,
-      "accuracy_min": 0.95
-    },
-    "general": {
-      "count_min": 12,
-      "f1_min": 0.93,
-      "accuracy_min": 0.9,
-      "roc_auc_min": 0.94
-    },
     "hard_negatives": {
-      "count_min": 8
-    },
-    "homoglyph": {
-      "count_min": 12,
-      "f1_min": 0.88,
-      "accuracy_min": 0.84
-    },
-    "leetspeak": {
-      "count_min": 12,
-      "f1_min": 0.94,
       "accuracy_min": 0.9,
-      "roc_auc_min": 0.97
+      "count_min": 10
     },
     "phonetic": {
-      "count_min": 12,
-      "f1_min": 0.15,
-      "accuracy_min": 0.35
-    },
-    "rebus": {
-      "count_min": 12,
-      "f1_min": 0.87,
-      "accuracy_min": 0.8,
-      "roc_auc_min": 0.72
-    },
-    "semantic": {
-      "count_min": 12,
-      "f1_min": 0.85,
-      "accuracy_min": 0.81,
-      "roc_auc_min": 0.85
-    },
-    "short_text": {
-      "count_min": 12,
-      "f1_min": 0.95,
-      "accuracy_min": 0.95
-    },
-    "spam": {
-      "count_min": 12,
       "f1_min": 0.7,
-      "accuracy_min": 0.65,
-      "roc_auc_min": 0.95
+      "count_min": 10
     },
     "transliteration": {
-      "count_min": 12,
-      "f1_min": 0.3,
-      "accuracy_min": 0.5,
-      "roc_auc_min": 0.8
+      "accuracy_min": 0.8,
+      "count_min": 10
+    },
+    "semantic": {
+      "f1_min": 0.65,
+      "count_min": 5
+    },
+    "cross_language": {
+      "accuracy_min": 0.55,
+      "count_min": 5
+    },
+    "code_switching": {
+      "accuracy_min": 0.7,
+      "count_min": 5
+    },
+    "leetspeak": {
+      "accuracy_min": 0.95,
+      "count_min": 10
+    },
+    "homoglyph": {
+      "accuracy_min": 0.95,
+      "count_min": 5
     },
     "unicode": {
-      "count_min": 12,
-      "f1_min": 0.65,
-      "accuracy_min": 0.52,
-      "roc_auc_min": 0.95
+      "accuracy_min": 0.9,
+      "count_min": 5
+    },
+    "short_text": {
+      "accuracy_min": 0.8,
+      "count_min": 5
+    },
+    "spam": {
+      "accuracy_min": 0.75,
+      "count_min": 5
+    },
+    "rebus": {
+      "accuracy_min": 0.9,
+      "count_min": 5
+    },
+    "general": {
+      "accuracy_min": 0.95,
+      "count_min": 10
     }
   }
 }

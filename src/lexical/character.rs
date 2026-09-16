@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::core::types::{CharacterFeatures, CharacterSimilarity};
 use crate::lexical::ngrams::character_ngrams;
-use crate::normalization::unicode::casefold_text;
+use crate::normalization::unicode::{casefold_text, strip_diacritics};
 
 pub fn char_features(text: &str) -> CharacterFeatures {
     let mut letters = 0;
@@ -230,8 +230,8 @@ pub fn lcs_similarity(a: &str, b: &str) -> f64 {
 }
 
 pub fn character_similarity(a: &str, b: &str) -> CharacterSimilarity {
-    let aa = casefold_text(a);
-    let bb = casefold_text(b);
+    let aa = strip_diacritics(&casefold_text(a));
+    let bb = strip_diacritics(&casefold_text(b));
     let ac: Vec<char> = aa.chars().collect();
     let bc: Vec<char> = bb.chars().collect();
     let lev = normalized_edit(levenshtein(&aa, &bb), &ac, &bc);

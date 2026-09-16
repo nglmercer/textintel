@@ -40,6 +40,13 @@ pub struct LanguagePack {
     /// Compact stop-word form.
     #[serde(default)]
     pub stop_words: Vec<String>,
+    /// Established netspeak/initialisms (`btw`, `slt`, `tqm`): real language
+    /// use for DETECTION (they join the n-gram/word profiles), but not
+    /// lexicon words — they stay out of the validity index so abbreviation
+    /// expansion (`btw` → `by the way`) and typo-vs-word separation keep
+    /// working. Standard words belong in `words`; slang here.
+    #[serde(default)]
+    pub slang: Vec<String>,
     /// Examples are indexed as words and retained for phrase-level features.
     #[serde(default)]
     pub examples: Vec<String>,

@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::lexical::tokenizer::{simple_lemmas, tokenize};
-use crate::normalization::unicode::casefold_text;
+use crate::normalization::unicode::{casefold_text, strip_diacritics};
 
 pub fn jaccard(a: &BTreeSet<String>, b: &BTreeSet<String>) -> f64 {
     if a.is_empty() && b.is_empty() {
@@ -14,10 +14,10 @@ pub fn jaccard(a: &BTreeSet<String>, b: &BTreeSet<String>) -> f64 {
 }
 
 pub fn lexical_similarity(a: &str, b: &str) -> f64 {
-    let left: BTreeSet<_> = simple_lemmas(&tokenize(&casefold_text(a)))
+    let left: BTreeSet<_> = simple_lemmas(&tokenize(&strip_diacritics(&casefold_text(a))))
         .into_iter()
         .collect();
-    let right: BTreeSet<_> = simple_lemmas(&tokenize(&casefold_text(b)))
+    let right: BTreeSet<_> = simple_lemmas(&tokenize(&strip_diacritics(&casefold_text(b))))
         .into_iter()
         .collect();
     jaccard(&left, &right)

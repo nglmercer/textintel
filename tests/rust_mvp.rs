@@ -26,6 +26,16 @@ fn character_metrics_are_independent_and_bounded() {
 }
 
 #[test]
+fn character_and_lexical_similarity_ignore_accents() {
+    assert_eq!(character_similarity("Paris", "París").combined, 1.0);
+    assert!(character_similarity("music", "música").combined > 0.8);
+    assert!(character_similarity("música", "musica").combined > 0.99);
+    // Cross-script confusables are untouched by accent folding.
+    assert!(character_similarity("paypal", "pаypal").combined < 1.0);
+    assert_eq!(lexical_similarity("feliz cumpleaños", "feliz cumpleanos"), 1.0);
+}
+
+#[test]
 fn lexical_tokenization_and_similarity_work_without_models() {
     let tokens = tokenize("bro compra NOW");
     assert!(tokens.iter().any(|token| token == "bro"));

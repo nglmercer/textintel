@@ -2,7 +2,9 @@
 //! and quality-gate enforcement.
 
 use textintel::comparison::SimilarityProfile;
-use textintel::evaluation::{EvaluateOptions, EvaluationDataset, EvaluationReport};
+use textintel::evaluation::{
+    EvaluateOptions, EvaluationDataset, EvaluationReport, SpamCorpus,
+};
 
 use super::{build_engine, flag_value, print_json};
 
@@ -60,6 +62,18 @@ fn print_eval_human(report: &EvaluationReport) {
         report.ranking.ndcg_at_10,
         report.ranking.queries
     );
+    if let Some(spam) = &report.spam {
+        println!(
+            "spam: accuracy={:.3} f1={:.3} roc_auc={:.3} brier={:.3} ece={:.3} (n={} corpus={})",
+            spam.metrics.accuracy,
+            spam.metrics.f1,
+            spam.metrics.roc_auc,
+            spam.metrics.brier,
+            spam.metrics.expected_calibration_error,
+            spam.metrics.count,
+            spam.corpus_version
+        );
+    }
     if !report.categories.is_empty() {
         println!("categories:");
         let mut names: Vec<&String> = report.categories.keys().collect();
@@ -87,14 +101,17 @@ fn print_eval_human(report: &EvaluationReport) {
     }
 }
 
-/// Quality-gate file shape: `{ "<section>": { "<metric>_min": f64 } }`.
-/// Unknown sections and metrics are ignored so gates stay forwards compatible.
+/// Quality-gate file shape: `{ "<section>": { "<metric>_min": f64,
+/// "<metric>_max": f64 } }`. Unknown sections and metrics are ignored so
+/// gates stay forwards compatible.
 fn check_gates(report: &EvaluationReport, gates: &serde_json::Value) -> Vec<String> {
-    let observed: Vec<(&str, &str, f64)> = vec![
+    let mut observed: Vec<(&str, &str, f64)> = vec![
         ("similarity", "roc_auc", report.metrics.roc_auc),
         ("similarity", "pr_auc", report.metrics.pr_auc),
         ("similarity", "f1", report.metrics.f1),
         ("similarity", "accuracy", report.metrics.accuracy),
+        ("similarity", "brier", report.metrics.brier),
+        ("similarity", "ece", report.metrics.expected_calibration_error),
         ("rebus", "top1", report.rebus.top1_accuracy),
         ("rebus", "top3", report.rebus.top3_accuracy),
         ("rebus", "top5", report.rebus.top_k_accuracy),
@@ -105,20 +122,50 @@ fn check_gates(report: &EvaluationReport, gates: &serde_json::Value) -> Vec<Stri
         ("search", "recall_at_10", report.ranking.recall_at_10),
         ("search", "mrr", report.ranking.mrr),
     ];
+    if let Some(spam) = &report.spam {
+        observed.extend(
+            [
+                ("spam", "roc_auc", spam.metrics.roc_auc),
+                ("spam", "pr_auc", spam.metrics.pr_auc),
+                ("spam", "f1", spam.metrics.f1),
+                ("spam", "accuracy", spam.metrics.accuracy),
+                ("spam", "brier", spam.metrics.brier),
+                ("spam", "ece", spam.metrics.expected_calibration_error),
+            ]
+            .into_iter(),
+        );
+    }
     let mut failures = Vec::new();
     let Some(sections) = gates.as_object() else {
         return failures;
     };
+    // Spam gates fail closed when the corpus was not measured (missing
+    // file): `spam` is the only conditionally-measured section, so it is
+    // the only one checked here; genuinely unknown sections stay ignored.
+    if report.spam.is_none() && sections.contains_key("spam") {
+        failures.push("spam: no metrics measured (missing spam corpus?)".to_string());
+    }
     for (section, metric, value) in observed {
+        let section_gates = sections.get(section);
         let key = format!("{metric}_min");
-        if let Some(minimum) = sections
-            .get(section)
+        if let Some(minimum) = section_gates
             .and_then(|value| value.get(&key))
             .and_then(serde_json::Value::as_f64)
         {
             if value < minimum {
                 failures.push(format!(
                     "{section}.{metric}={value:.3} below minimum {minimum:.3}"
+                ));
+            }
+        }
+        let key = format!("{metric}_max");
+        if let Some(maximum) = section_gates
+            .and_then(|value| value.get(&key))
+            .and_then(serde_json::Value::as_f64)
+        {
+            if value > maximum {
+                failures.push(format!(
+                    "{section}.{metric}={value:.3} above maximum {maximum:.3}"
                 ));
             }
         }
@@ -150,12 +197,22 @@ fn check_gates(report: &EvaluationReport, gates: &serde_json::Value) -> Vec<Stri
                 ("f1", metrics.f1),
                 ("roc_auc", metrics.roc_auc),
                 ("pr_auc", metrics.pr_auc),
+                ("brier", metrics.brier),
+                ("ece", metrics.expected_calibration_error),
             ] {
                 let key = format!("{metric}_min");
                 if let Some(minimum) = thresholds.get(&key).and_then(|v| v.as_f64()) {
                     if value < minimum {
                         failures.push(format!(
                             "categories.{name}.{metric}={value:.3} below minimum {minimum:.3}"
+                        ));
+                    }
+                }
+                let key = format!("{metric}_max");
+                if let Some(maximum) = thresholds.get(&key).and_then(|v| v.as_f64()) {
+                    if value > maximum {
+                        failures.push(format!(
+                            "categories.{name}.{metric}={value:.3} above maximum {maximum:.3}"
                         ));
                     }
                 }
@@ -187,10 +244,30 @@ pub(crate) fn run_eval(
             .map_err(|error| format!("invalid scorer artifact {path}: {error}"))?;
         engine = engine.with_similarity_scorer(artifact.to_scorer());
     }
+    // Held-out spam corpus: explicit `--spam-corpus` wins, otherwise the
+    // `spam/v2-eval.json` sibling of the dataset directory. Absent or
+    // unreadable resolves to `None` (no spam metrics); production gates
+    // requiring spam fail closed on the missing section.
+    let spam_corpus_path = flag_value(args, "--spam-corpus").or_else(|| {
+        let dataset_path = std::path::Path::new(path);
+        let root = if dataset_path.is_dir() {
+            dataset_path.parent()
+        } else {
+            dataset_path.parent()?.parent()
+        }?;
+        let candidate = root.join("spam").join("v2-eval.json");
+        candidate
+            .is_file()
+            .then(|| candidate.to_string_lossy().to_string())
+    });
+    let spam_corpus = spam_corpus_path
+        .as_deref()
+        .and_then(|candidate| SpamCorpus::from_file(candidate).ok());
     let options = EvaluateOptions {
         split: split.clone(),
         ranking_queries: if no_ranking { 0 } else { 100 },
         ranking_documents: 500,
+        spam_corpus,
     };
     let report = textintel::evaluation::evaluate_with_options(&engine, &dataset, &options)?;
     if json {

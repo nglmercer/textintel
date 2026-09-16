@@ -72,14 +72,16 @@ pub struct EngineDiagnostics {
 }
 
 /// Production similarity artifact within `dir`: newest revision wins
-/// (`similarity-v3`, schema 6 with confusable-separation features), falling
-/// back to `similarity-v2` and then `similarity-v1` by existence. Loading
-/// stays strict: a selected artifact whose feature schema does not match
-/// this build is rejected with an explicit error (old revisions predate
-/// schema 6 and must be retrained, never silently loaded). Diagnostics
-/// always report the loaded revision, so the active artifact is explicit.
+/// (`similarity-v4`, schema 7 with the cubed swap-validity interaction),
+/// falling back to `similarity-v3` and then `similarity-v2`
+/// and `similarity-v1` by existence. Loading stays strict: a selected
+/// artifact whose feature schema does not match this build is rejected with
+/// an explicit error (old revisions predate schema 7 and must be
+/// retrained, never silently loaded). Diagnostics always report the loaded
+/// revision, so the active artifact is explicit.
 pub fn preferred_similarity_artifact_in(dir: &std::path::Path) -> PathBuf {
     for name in [
+        "similarity-v4.json",
         "similarity-v3.json",
         "similarity-v2.json",
         "similarity-v1.json",

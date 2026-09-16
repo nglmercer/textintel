@@ -25,8 +25,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for chunk in documents.chunks(200) {
         doc_fps.extend(engine.analyze_batch(chunk)?);
     }
-    let queries: Vec<&&textintel::evaluation::EvaluationCase> = cases.iter().take(100).collect();
+    let offset: usize = std::env::args()
+        .nth(1)
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(0);
+    let limit: usize = std::env::args()
+        .nth(2)
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(100);
+    let queries: Vec<&&textintel::evaluation::EvaluationCase> =
+        cases.iter().skip(offset).take(limit).collect();
     let mut misses = 0;
+    let mut reciprocal_sum = 0.0;
+    let mut relevant = 0usize;
+    let mut recall_at_10 = 0usize;
     for q in &queries {
         if !q.labels.get("similar").copied().unwrap_or(false) {
             continue;
@@ -45,6 +57,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             textintel::normalization::unicode::casefold_text(&documents[*i]).trim()
                 == textintel::normalization::unicode::casefold_text(&q.b).trim()
         });
+        relevant += 1;
+        match rank {
+            Some(position) => {
+                reciprocal_sum += 1.0 / (position + 1) as f64;
+                if position < 10 {
+                    recall_at_10 += 1;
+                }
+            }
+            None => {}
+        }
         match rank {
             Some(0) => {}
             _ => {
@@ -69,6 +91,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    println!("misses={misses}");
+    println!(
+        "misses={misses} relevant={relevant} mrr={:.3} recall_at_10={:.3}",
+        if relevant == 0 {
+            0.0
+        } else {
+            reciprocal_sum / relevant as f64
+        },
+        if relevant == 0 {
+            0.0
+        } else {
+            recall_at_10 as f64 / relevant as f64
+        }
+    );
     Ok(())
 }

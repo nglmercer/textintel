@@ -603,7 +603,7 @@ impl TextIntelligence {
                 "similarity",
                 "weighted deterministic scorer",
                 "trained similarity model",
-                "load models/similarity-v3.json through trained_similarity_model() for calibrated scoring",
+                "load models/similarity-v4.json through trained_similarity_model() for calibrated scoring",
             );
         }
         if capabilities
@@ -935,6 +935,12 @@ impl TextIntelligence {
         // the tail is pure gamble (short slang like `luv` detects as
         // [unknown, fr, es, ...], cutting the true language's readings),
         // while globally the true reading wins on its own probability.
+        // NOTE: multi-segment unknown-topped texts (obfuscated `ch34p`,
+        // digit-heavy `2nite`) keep tail scoping: neutral decoding lets
+        // high-prior foreign number readings (`2` → `dos`) crowd out the
+        // intended reading, which scores worse than the noisy scope. The
+        // principled fix (validity-gated scoping plus calibrated
+        // cross-language priors) is future work; see the gap analysis.
         let decode_languages: Vec<String> = if self.config.language_hints.is_empty() {
             let top_unknown = language_names
                 .first()

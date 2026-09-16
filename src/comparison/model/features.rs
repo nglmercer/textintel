@@ -8,10 +8,11 @@ use crate::core::types::{ComparisonResult, MessageFingerprint};
 
 /// Interpretable features in fixed order: the eight evidence channels
 /// (missing channels read as 0.0, exactly as the scorer treats them),
-/// mean channel confidence, top-language agreement, and the eleven
+/// mean channel confidence, top-language agreement, and the twelve
 /// confusable-separation features (pair lexicon validity, single-word scope,
 /// swapped-word character and phonetic similarity for contextual pairs, the
-/// all-valid confusable-swap interaction, normalized identity for
+/// all-valid confusable-swap interaction, the cubed swap-validity
+/// interaction, normalized identity for
 /// punctuation-only variants, substring containment for super/substring
 /// pairs, the cross-script indicator and its agreement interaction,
 /// confidence-weighted exact decoding, and the single-word exact
@@ -32,6 +33,7 @@ pub const TRAINING_FEATURES: &[&str] = &[
     "swapped_word_similarity",
     "swapped_phonetic",
     "confusable_swap",
+    "valid_swap_similarity",
     "normalized_identity",
     "substring_containment",
     "cross_script_pair",
@@ -103,6 +105,10 @@ pub fn training_features(
         result.confusable_swap.clamp(0.0, 1.0),
     );
     features.insert(
+        "valid_swap_similarity".to_string(),
+        result.valid_swap_similarity.clamp(0.0, 1.0),
+    );
+    features.insert(
         "normalized_identity".to_string(),
         result.normalized_identity.clamp(0.0, 1.0),
     );
@@ -153,8 +159,8 @@ mod tests {
 
     #[test]
     fn training_features_cover_schema_in_order() {
-        assert_eq!(TRAINING_FEATURES.len(), 21);
-        assert_eq!(TRAINING_FEATURE_SCHEMA_VERSION, 6);
+        assert_eq!(TRAINING_FEATURES.len(), 22);
+        assert_eq!(TRAINING_FEATURE_SCHEMA_VERSION, 7);
         let mut sorted = TRAINING_FEATURES.to_vec();
         sorted.sort_unstable();
         sorted.dedup();

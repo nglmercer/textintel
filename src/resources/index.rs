@@ -109,6 +109,7 @@ impl LanguageIndex {
             for loaded in packs {
                 samples.extend(loaded.pack.entries.iter().map(|entry| entry.word.clone()));
                 samples.extend(loaded.pack.words.iter().cloned());
+                samples.extend(loaded.pack.slang.iter().cloned());
                 samples.extend(loaded.pack.examples.iter().cloned());
             }
         }

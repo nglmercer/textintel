@@ -60,16 +60,27 @@ fn emit_word(word: &str, language: &str) -> Vec<String> {
             index += 2;
             continue;
         }
+        // Accented vowels map to their base vowel: diacritics mark stress
+        // or vowel quality, never a distinct phoneme for similarity
+        // purposes (`música` must phonemize like `musica`). Consonant
+        // diacritics keep their own rules (`ñ` → `ɲ` below).
         let phoneme = match ch {
-            'a' => "a",
-            'e' => "e",
-            'i' | 'y' if language == "es" => "i",
-            'i' | 'y' => "ɪ",
-            'o' => "o",
-            'u' => "u",
+            'a' | 'á' | 'à' | 'â' | 'ä' | 'ã' | 'å' | 'ā' | 'ă' | 'ą' => "a",
+            'e' | 'é' | 'è' | 'ê' | 'ë' | 'ē' | 'ė' | 'ę' => "e",
+            'i' | 'y' | 'í' | 'ì' | 'î' | 'ï' | 'ĩ' | 'ī' | 'į' | 'ý' | 'ÿ'
+                if language == "es" =>
+            {
+                "i"
+            }
+            'i' | 'y' | 'í' | 'ì' | 'î' | 'ï' | 'ĩ' | 'ī' | 'į' | 'ý' | 'ÿ' => "ɪ",
+            'o' | 'ó' | 'ò' | 'ô' | 'ö' | 'õ' | 'ø' | 'ō' | 'ő' | 'œ' => "o",
+            'u' | 'ú' | 'ù' | 'û' | 'ü' | 'ũ' | 'ū' | 'ů' | 'ű' | 'ų' => "u",
             'b' | 'v' => "b",
             'c' if next.is_some_and(|value| matches!(value, 'e' | 'i')) && language == "es" => "s",
             'c' => "k",
+            // Cedilla: /s/ in French/Portuguese/Catalan, /tʃ/ in Turkish.
+            'ç' if language == "tr" => "tʃ",
+            'ç' => "s",
             'd' => "d",
             'f' => "f",
             'g' if next.is_some_and(|value| matches!(value, 'e' | 'i')) && language == "es" => "x",
@@ -152,5 +163,22 @@ impl G2PProviderTrait for RuleBasedG2PProvider {
             .with_languages(["es", "en"])
             .with_quality(CapabilityLevel::Basic)
             .with_fallback("Latin-script rules only; unknown scripts yield low confidence")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accented_vowels_phonemize_as_base_vowels() {
+        assert_eq!(emit_word("música", "es"), emit_word("musica", "es"));
+        assert_eq!(emit_word("über", "en"), emit_word("uber", "en"));
+        assert_eq!(
+            emit_word("façade", "fr"),
+            vec!["f", "a", "s", "a", "d", "e"]
+        );
+        // Consonant diacritics keep their own rules.
+        assert!(emit_word("niño", "es").contains(&"ɲ".to_string()));
     }
 }

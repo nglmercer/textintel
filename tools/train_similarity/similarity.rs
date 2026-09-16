@@ -156,6 +156,61 @@ pub(crate) fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::
     }
     println!("bias after validation calibration: {bias:.4}");
 
+    // NOTE: no F1 operating-point tuning here. The validation-optimal
+    // boundary (best threshold ~0.47) does not transfer to test (~0.60):
+    // sliding the bias to the validation F1 peak raised validation F1 to
+    // 0.946 but dropped test F1 to 0.911 — a pure operating-point overfit.
+    // The NLL-calibrated bias above is the honest boundary.
+    let validation_logits: Vec<f64> = validation
+        .features
+        .iter()
+        .map(|row| {
+            row.iter()
+                .zip(weights.iter())
+                .map(|(value, weight)| value * weight)
+                .sum::<f64>()
+                + bias
+        })
+        .collect();
+
+    // Temperature scaling on validation (Guo et al.): a single temperature
+    // fit by NLL, folded into the weights so the artifact format is
+    // unchanged. Rescaling preserves ranking and every 0.5 decision (hence
+    // F1); it only repairs probability calibration (Brier/ECE).
+    let nll_at = |temperature: f64| {
+        validation_logits
+            .iter()
+            .zip(validation.labels.iter())
+            .map(|(logit, label)| {
+                let predicted = textintel::sigmoid(logit / temperature).clamp(1e-12, 1.0 - 1e-12);
+                let target = if *label { 1.0 } else { 0.0 };
+                -(target * predicted.ln() + (1.0 - target) * (1.0 - predicted).ln())
+            })
+            .sum::<f64>()
+            / validation_logits.len().max(1) as f64
+    };
+    let mut temperatures: Vec<f64> = (0..=135).map(|step| 0.30 + step as f64 * 0.02).collect();
+    temperatures.sort_by(|left, right| {
+        (left - 1.0)
+            .abs()
+            .total_cmp(&(right - 1.0).abs())
+            .then_with(|| left.total_cmp(right))
+    });
+    let mut temperature = 1.0;
+    let mut best_nll = nll_at(1.0);
+    for candidate in temperatures {
+        let value = nll_at(candidate);
+        if value < best_nll - 1e-12 {
+            best_nll = value;
+            temperature = candidate;
+        }
+    }
+    for weight in weights.iter_mut() {
+        *weight /= temperature;
+    }
+    bias /= temperature;
+    println!("temperature from validation NLL: {temperature:.2} (validation nll {best_nll:.4})");
+
     let names: BTreeMap<String, f64> = TRAINING_FEATURES
         .iter()
         .zip(weights.iter())
@@ -183,8 +238,15 @@ pub(crate) fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::
             metrics.insert(format!("{split}_{key}"), value);
         }
     }
+    metrics.insert("calibration_temperature".to_string(), temperature);
+    metrics.insert("train_l2".to_string(), l2);
+    metrics.insert("train_learning_rate".to_string(), learning_rate);
+    metrics.insert("train_iterations".to_string(), iterations as f64);
     let artifact = SimilarityModelArtifact::new(dataset.version.clone(), names, bias)
-        .with_revision(format!("train-{iterations}-iter-ds{}", dataset.version))
+        .with_revision(format!(
+            "train-{iterations}-iter-lr{learning_rate}-l2{l2}-ds{}",
+            dataset.version
+        ))
         .with_metrics(metrics);
     if let Some(parent) = std::path::Path::new(&output).parent() {
         if !parent.as_os_str().is_empty() {

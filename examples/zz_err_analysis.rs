@@ -7,11 +7,17 @@ use textintel::{
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let split = std::env::args().nth(1).unwrap_or("validation".to_string());
     let dataset = EvaluationDataset::from_dir("data/evaluation")?;
-    let engine = TextIntelligence::builder()
+    let mut engine = TextIntelligence::builder()
         .config(EngineConfig::default())
         .production_local()
         .build()
         .map_err(|e| e.to_string())?;
+    if let Ok(path) = std::env::var("SCORER") {
+        let source = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+        let artifact =
+            textintel::SimilarityModelArtifact::from_json(&source).map_err(|e| e.to_string())?;
+        engine = engine.with_similarity_scorer(artifact.to_scorer());
+    }
     let cases = dataset.filter_split(&split);
     let mut rows: Vec<(f64, bool, String, String, String, String)> = Vec::new();
     let mut feat_dump: Vec<(String, Vec<f64>)> = Vec::new();

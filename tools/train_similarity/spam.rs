@@ -167,6 +167,19 @@ fn generate_corpus(count: usize, seed: u64) -> Vec<(String, bool)> {
     corpus
 }
 
+#[derive(Debug, serde::Deserialize)]
+struct CorpusFile {
+    #[serde(default)]
+    version: String,
+    items: Vec<CorpusItem>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct CorpusItem {
+    text: String,
+    label: String,
+}
+
 pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     use textintel::{spam_feature_vector, spam_features, SpamModelArtifact, SPAM_FEATURES};
 
@@ -183,10 +196,66 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
         .transpose()
         .map_err(|_| "--seed must be a non-negative integer")?
         .unwrap_or(0xC0FFEE);
+    let corpus_path = flag_value(args, "--corpus");
 
     let engine = TextIntelligence::new(EngineConfig::default());
-    println!("generating {count} ham + {count} spam messages (seed {seed})...");
-    let corpus = generate_corpus(count, seed);
+    let corpus_version: Option<String>;
+    let corpus: Vec<(String, bool)> = match corpus_path.as_deref() {
+        Some(path) => {
+            let source = std::fs::read_to_string(path)
+                .map_err(|error| format!("read spam corpus {path}: {error}"))?;
+            let file: CorpusFile = serde_json::from_str(&source)
+                .map_err(|error| format!("parse spam corpus {path}: {error}"))?;
+            if file.items.is_empty() {
+                return Err("spam corpus has no items".into());
+            }
+            let mut loaded = Vec::with_capacity(file.items.len());
+            for (index, item) in file.items.iter().enumerate() {
+                if item.text.trim().is_empty() {
+                    return Err(format!("spam corpus item {index} has empty text").into());
+                }
+                let label = match item.label.to_ascii_lowercase().as_str() {
+                    "spam" => true,
+                    "ham" | "benign" => false,
+                    other => {
+                        return Err(
+                            format!("spam corpus item {index} has unknown label {other:?}").into(),
+                        );
+                    }
+                };
+                loaded.push((item.text.clone(), label));
+            }
+            if !loaded.iter().any(|(_, label)| *label)
+                || !loaded.iter().any(|(_, label)| !*label)
+            {
+                return Err("spam corpus needs both spam and ham items".into());
+            }
+            // Seeded shuffle (same Fisher-Yates as the synthetic path) so
+            // the 80/20 train/validation split below is deterministic.
+            let mut rng = Rng(seed);
+            for index in (1..loaded.len()).rev() {
+                let other = rng.below(index + 1);
+                loaded.swap(index, other);
+            }
+            corpus_version = if file.version.trim().is_empty() {
+                None
+            } else {
+                Some(file.version.clone())
+            };
+            println!(
+                "loaded {} spam + {} ham messages from {path} (version {}, seed {seed})...",
+                loaded.iter().filter(|(_, label)| *label).count(),
+                loaded.iter().filter(|(_, label)| !*label).count(),
+                corpus_version.as_deref().unwrap_or("unversioned"),
+            );
+            loaded
+        }
+        None => {
+            println!("generating {count} ham + {count} spam messages (seed {seed})...");
+            corpus_version = None;
+            generate_corpus(count, seed)
+        }
+    };
     let mut rows = Vec::with_capacity(corpus.len());
     for (text, label) in &corpus {
         let fingerprint = engine.analyze(text)?;
@@ -262,24 +331,53 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
         }
     }
 
-    // Held-out generalization: evaluation spam labels are measured, never
-    // trained on.
-    let dataset =
-        EvaluationDataset::load_path("data/evaluation").map_err(|error| error.to_string())?;
-    // Both messages of each pair count: the evaluation harness compares
-    // pairs, so score `a` and `b` texts for a fair reading.
+    // Held-out generalization: held-out spam labels are measured, never
+    // trained on. Corpus mode scores the dedicated held-out spam corpus
+    // (default `data/spam/v2-eval.json`, disjoint from the training
+    // corpus); synthetic mode keeps the legacy reading over the evaluation
+    // pairs' spam labels.
     let mut pair_rows = Vec::new();
-    for case in &dataset.cases {
-        let Some(label) = case.labels.get("spam").copied() else {
-            continue;
-        };
-        for text in [&case.a, &case.b] {
-            let fingerprint = engine.analyze(text)?;
-            let patterns = engine.match_patterns(text)?;
+    if corpus_path.is_some() {
+        let heldout_path = flag_value(args, "--heldout")
+            .unwrap_or_else(|| "data/spam/v2-eval.json".to_string());
+        let source = std::fs::read_to_string(&heldout_path)
+            .map_err(|error| format!("read held-out spam corpus {heldout_path}: {error}"))?;
+        let file: CorpusFile = serde_json::from_str(&source)
+            .map_err(|error| format!("parse held-out spam corpus {heldout_path}: {error}"))?;
+        for item in &file.items {
+            let label = match item.label.to_ascii_lowercase().as_str() {
+                "spam" => true,
+                "ham" | "benign" => false,
+                other => {
+                    return Err(
+                        format!("held-out spam corpus has unknown label {other:?}").into(),
+                    );
+                }
+            };
+            let fingerprint = engine.analyze(&item.text)?;
+            let patterns = engine.match_patterns(&item.text)?;
             pair_rows.push((
                 spam_feature_vector(&spam_features(&fingerprint, &patterns)),
                 label,
             ));
+        }
+    } else {
+        let dataset = EvaluationDataset::load_path("data/evaluation")
+            .map_err(|error| error.to_string())?;
+        // Both messages of each pair count: the evaluation harness compares
+        // pairs, so score `a` and `b` texts for a fair reading.
+        for case in &dataset.cases {
+            let Some(label) = case.labels.get("spam").copied() else {
+                continue;
+            };
+            for text in [&case.a, &case.b] {
+                let fingerprint = engine.analyze(text)?;
+                let patterns = engine.match_patterns(text)?;
+                pair_rows.push((
+                    spam_feature_vector(&spam_features(&fingerprint, &patterns)),
+                    label,
+                ));
+            }
         }
     }
     let eval_metrics = logistic_report(
@@ -314,11 +412,23 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
         .map(|value| value.clamp(0.0, 1.0))
         .unwrap_or(0.5);
     println!("decision threshold from validation: {decision_threshold:.3}");
-    let artifact = SpamModelArtifact::new("synthetic-spam-v1", names, bias)
-        .with_revision(format!("synth-{count}-{seed}"))
-        .with_calibrated(true)
-        .with_decision_threshold(decision_threshold)
-        .with_metrics(metrics);
+    let artifact = match (corpus_path.as_deref(), corpus_version) {
+        (Some(path), Some(version)) => SpamModelArtifact::new(version.clone(), names, bias)
+            .with_revision(format!(
+                "corpus-{version}-{}-seed{seed}",
+                std::path::Path::new(path)
+                    .file_stem()
+                    .and_then(|stem| stem.to_str())
+                    .unwrap_or("corpus"),
+            )),
+        (Some(_), None) => SpamModelArtifact::new("unversioned-spam-corpus", names, bias)
+            .with_revision(format!("corpus-seed{seed}")),
+        (None, _) => SpamModelArtifact::new("synthetic-spam-v1", names, bias)
+            .with_revision(format!("synth-{count}-{seed}")),
+    }
+    .with_calibrated(true)
+    .with_decision_threshold(decision_threshold)
+    .with_metrics(metrics);
     if let Some(parent) = std::path::Path::new(&output).parent() {
         if !parent.as_os_str().is_empty() {
             std::fs::create_dir_all(parent)?;

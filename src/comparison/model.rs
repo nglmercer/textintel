@@ -163,7 +163,7 @@ impl SimilarityScorer for LogisticSimilarityScorer {
     fn score(&self, left: &MessageFingerprint, right: &MessageFingerprint) -> ComparisonResult {
         let base = score_fingerprints(left, right, &SimilarityWeights::default());
         // Every trained feature is applied: the eight channels plus mean
-        // channel confidence, top-language agreement, and the eleven
+        // channel confidence, top-language agreement, and the twelve
         // confusable-separation features (see [`training_features`]).
         let values = [
             ("semantic", base.semantic.unwrap_or(0.0)),
@@ -184,6 +184,10 @@ impl SimilarityScorer for LogisticSimilarityScorer {
             ),
             ("swapped_phonetic", base.swapped_phonetic.clamp(0.0, 1.0)),
             ("confusable_swap", base.confusable_swap.clamp(0.0, 1.0)),
+            (
+                "valid_swap_similarity",
+                base.valid_swap_similarity.clamp(0.0, 1.0),
+            ),
             (
                 "normalized_identity",
                 base.normalized_identity.clamp(0.0, 1.0),
@@ -226,7 +230,7 @@ impl SimilarityScorer for LogisticSimilarityScorer {
 
 /// Schema version of the interpretable training feature vector. Bump when
 /// [`training_features`] gains, drops, or reorders features.
-pub const TRAINING_FEATURE_SCHEMA_VERSION: u32 = 6;
+pub const TRAINING_FEATURE_SCHEMA_VERSION: u32 = 7;
 
 /// Versioned trained-similarity artifact written by `tools/train_similarity.rs`.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
