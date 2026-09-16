@@ -58,6 +58,73 @@ fn featurize(
     Ok(SplitData { features, labels })
 }
 
+/// Production semantic backend for training featurization: the configured
+/// local transformer (`--transformer-model` or `TEXTINTEL_TRANSFORMER_MODEL`)
+/// with the feature-hash fallback armed, or the feature-hash baseline when
+/// no transformer is configured or loadable. Mirrors the production
+/// preference order so training never featurizes on a weaker backend than
+/// serving evaluates. Returns the engine plus a backend label recorded in
+/// the artifact's training config.
+fn training_engine(
+    transformer_model: Option<&str>,
+) -> Result<(TextIntelligence, String), Box<dyn std::error::Error>> {
+    let config = EngineConfig {
+        semantic: true,
+        phonetic: true,
+        ..EngineConfig::default()
+    };
+    #[cfg(feature = "semantic-transformer")]
+    {
+        if let Some(directory) = transformer_model {
+            match textintel::semantic::TransformerEmbeddingProvider::open(directory) {
+                Ok(provider) => {
+                    let label = format!(
+                        "transformer:{} (feature-hash fallback armed)",
+                        provider.model_id()
+                    );
+                    println!("training embeddings: local transformer at {directory}");
+                    let engine = TextIntelligence::new(config).with_embedding_provider(
+                        textintel::semantic::FallbackEmbeddingProvider::new(
+                            provider,
+                            FeatureHashEmbeddingProvider::new(256)
+                                .map_err(|error| error.to_string())?,
+                        ),
+                    );
+                    return Ok((engine, label));
+                }
+                Err(error) => {
+                    println!(
+                        "training embeddings: configured transformer at {directory} unavailable \
+                         ({error}); featurizing with the feature-hash fallback"
+                    );
+                    let engine = TextIntelligence::new(config).with_embedding_provider(
+                        FeatureHashEmbeddingProvider::new(256)
+                            .map_err(|error| error.to_string())?,
+                    );
+                    return Ok((
+                        engine,
+                        format!("feature-hash-v1 (configured transformer failed: {error})"),
+                    ));
+                }
+            }
+        }
+    }
+    #[cfg(not(feature = "semantic-transformer"))]
+    if let Some(directory) = transformer_model {
+        println!(
+            "training embeddings: transformer configured at {directory} but this build lacks \
+             the semantic-transformer feature; featurizing with the feature-hash fallback"
+        );
+    }
+    if transformer_model.is_none() {
+        println!("training embeddings: no transformer configured; featurizing with feature-hash");
+    }
+    let engine = TextIntelligence::new(config).with_embedding_provider(
+        FeatureHashEmbeddingProvider::new(256).map_err(|error| error.to_string())?,
+    );
+    Ok((engine, "feature-hash-v1".to_string()))
+}
+
 fn metrics_at(
     scorer: &LogisticSimilarityScorer,
     engine: &TextIntelligence,
@@ -99,15 +166,12 @@ pub(crate) fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::
     let dataset = EvaluationDataset::load_path(path).map_err(|error| error.to_string())?;
     // Production-like featurization: semantic and phonetic evidence must be
     // present or their weights train to exactly zero (a default engine would
-    // starve both channels and ship a misleading artifact).
-    let engine = TextIntelligence::new(EngineConfig {
-        semantic: true,
-        phonetic: true,
-        ..EngineConfig::default()
-    })
-    .with_embedding_provider(
-        FeatureHashEmbeddingProvider::new(256).map_err(|error| error.to_string())?,
-    );
+    // starve both channels and ship a misleading artifact). The semantic
+    // backend follows the production preference order (configured local
+    // transformer, feature-hash fallback).
+    let transformer_model = flag_value(args, "--transformer-model")
+        .or_else(|| std::env::var("TEXTINTEL_TRANSFORMER_MODEL").ok());
+    let (engine, embedding_backend) = training_engine(transformer_model.as_deref())?;
 
     println!("featurizing train split...");
     let train = featurize(&engine, &dataset, "train")?;
@@ -247,6 +311,7 @@ pub(crate) fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::
     training_config.insert("learning_rate".to_string(), learning_rate.to_string());
     training_config.insert("l2".to_string(), l2.to_string());
     training_config.insert("sample_weighting".to_string(), "balanced".to_string());
+    training_config.insert("embedding_backend".to_string(), embedding_backend);
     training_config.insert(
         "feature_schema_version".to_string(),
         textintel::TRAINING_FEATURE_SCHEMA_VERSION.to_string(),

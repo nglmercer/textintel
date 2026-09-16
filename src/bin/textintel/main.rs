@@ -334,6 +334,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "embedding_model": diagnostics.embedding_model,
                 "ann_enabled": diagnostics.ann_enabled,
                 "store_capabilities": diagnostics.store_capabilities,
+                "candidate_budgets": diagnostics.candidate_budgets,
                 "caches": diagnostics.caches,
                 "degraded": diagnostics.degraded,
                 "symbol_languages": diagnostics.symbol_languages,
@@ -347,6 +348,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("embedding_model: {:?}", diagnostics.embedding_model);
                 println!("ann_enabled: {}", diagnostics.ann_enabled);
                 println!("store: {:?}", diagnostics.store_capabilities);
+                println!("candidate_budgets: {:?}", diagnostics.candidate_budgets);
                 println!("caches: {:?}", diagnostics.caches);
                 for item in &diagnostics.degraded {
                     println!(

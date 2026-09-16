@@ -37,6 +37,16 @@ pub struct DegradedCapability {
     pub detail: String,
 }
 
+/// Retrieval candidate budgets behind the candidate union: per-channel
+/// contribution caps, the semantic-ANN channel cap, and the final union cut.
+/// Counts only — safe to log and export.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct CandidateBudgets {
+    pub max_search_candidates: usize,
+    pub max_per_channel_candidates: usize,
+    pub max_ann_candidates: usize,
+}
+
 /// Reproducibility and deployment report for an engine instance.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct EngineDiagnostics {
@@ -76,6 +86,9 @@ pub struct EngineDiagnostics {
     /// status (enabled, dimensions, live entries), and indexed channels.
     #[serde(default)]
     pub store_capabilities: crate::core::providers::VectorStoreCapabilities,
+    /// Retrieval candidate budgets (per-channel, ANN, union cut).
+    #[serde(default)]
+    pub candidate_budgets: CandidateBudgets,
 }
 
 /// Production similarity artifact within `dir`: newest revision wins

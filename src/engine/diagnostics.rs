@@ -119,6 +119,11 @@ impl TextIntelligence {
             resource_manifest: self.resource_manifest(),
             caches: self.cache_diagnostics(),
             store_capabilities,
+            candidate_budgets: crate::engine::production::CandidateBudgets {
+                max_search_candidates: self.config.max_search_candidates,
+                max_per_channel_candidates: self.config.max_per_channel_candidates,
+                max_ann_candidates: self.config.max_ann_candidates,
+            },
         }
     }
 

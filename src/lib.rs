@@ -74,7 +74,9 @@ pub use detection::{
     HeuristicSpamPredictor, SpamModelArtifact, TrainedSpamPredictor, SPAM_FEATURES,
     SPAM_FEATURE_SCHEMA_VERSION,
 };
-pub use engine::production::{DegradedCapability, EngineBuilder, EngineDiagnostics};
+pub use engine::production::{
+    CandidateBudgets, DegradedCapability, EngineBuilder, EngineDiagnostics,
+};
 pub use engine::TextIntelligence;
 pub use entities::{
     entity_agreement, entity_conflict, RuleBasedEntityProvider, DEFAULT_MAX_ENTITIES,

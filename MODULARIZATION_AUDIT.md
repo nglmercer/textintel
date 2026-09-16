@@ -1,19 +1,58 @@
 # Modularization Audit
 
-Date: 2026-09-16. Scope: `src/`, `tests/`, `tools/` (Rust files only;
-generated files and data/resources excluded — none are Rust sources).
+Date: 2026-09-16 (re-baselined 2026-09-16 against `76f2735` plus the
+transformer-closeout working tree). Scope: `src/`, `tests/`, `tools/`
+(Rust files only; generated files and data/resources excluded — none are
+Rust sources).
 
 Thresholds: `> 500` review, `> 800` should split, `> 1200` must split
 unless strongly justified.
 
 ## Result after this audit
 
-No file exceeds 800 lines. Two former must-split files were divided by
-responsibility; everything else was reviewed and kept or split as below.
-Every split is behavior-preserving (public API unchanged) and was verified
-with `cargo fmt --check`, `cargo test --locked --all-features
---all-targets`, and `cargo clippy --locked --all-targets --all-features --
--D warnings`.
+One file sits 10 lines over the split threshold with a documented
+justification (`src/engine/analyzer.rs`, 810 — see below); everything else
+is at or under 800. The `production-quality` commit landed after the
+previous audit and grew several files past their audited counts, so this
+pass re-baselines every count below against the current tree. Every split
+is behavior-preserving (public API unchanged) and was verified with
+`cargo fmt --check`, `cargo test --locked --all-features --all-targets`,
+and `cargo clippy --locked --all-targets --all-features -- -D warnings`.
+
+## Splits performed (this pass)
+
+### 4. `src/entities.rs` (1132 → 10 modules, largest 383)
+
+Was: one file owning the rule-based provider, all eight scanner families,
+span claiming/normalization, and the agreement/conflict evidence functions.
+
+Now (`src/entities/`):
+
+| File | Lines | Responsibility |
+|---|---|---|
+| `mod.rs` | 32 | module docs, `DEFAULT_MAX_*` bounds, public re-exports |
+| `provider.rs` | 383 | `RuleBasedEntityProvider`, scan orchestration, agreement/conflict/evidence |
+| `normalize.rs` | 47 | span claiming, casefolding, mention construction |
+| `url.rs` | 50 | URL spans |
+| `email.rs` | 80 | email spans |
+| `mention.rs` | 57 | `@handle` spans |
+| `numeric.rs` | 66 | standalone numbers |
+| `currency.rs` | 146 | currency amounts (`normalize_amount` shared with `numeric`) |
+| `datetime.rs` | 150 | ISO/slashed dates, times |
+| `names.rs` | 198 | title-case spans, acronyms, org suffixes |
+
+Notes:
+
+- Exact code moves: scanners became `pub(crate)` free functions, `scan_names`
+  stayed an inherent `impl RuleBasedEntityProvider` block in `names.rs`, and
+  the five unit tests moved with their modules (names → `names.rs`, the rest
+  → `provider.rs`). `crate::entities::{entity_agreement, entity_conflict,
+  entity_evidence_lines, RuleBasedEntityProvider, DEFAULT_MAX_*}` paths are
+  unchanged, as are the `textintel::` re-exports.
+- Verified with `cargo fmt --check`, the entities unit tests (5/5),
+  `cargo test --locked --all-features --all-targets`, and clippy `-D warnings`.
+
+## Earlier splits (kept)
 
 ## Splits performed
 
@@ -94,17 +133,23 @@ Notes:
 
 | File | Lines | Justification |
 |---|---|---|
-| `src/core/types.rs` | 719 | Shared DTOs (`MessageFingerprint`, `ComparisonResult`, …). Splitting them across files invites circular imports for no responsibility gain; central types are the correct shape. |
+| `src/engine/analyzer.rs` | 810 | **Over threshold by 10, justified:** still one cohesive `analyze_stages` pipeline building one fingerprint; the growth since the last audit (764 → 810) is the semantic-provenance block inside the same pipeline function (`semantic_model`/`semantic_revision`/`semantic_quality` metadata), not a new responsibility. Splitting the pipeline mid-function would be arbitrary. |
+| `src/core/types.rs` | 791 | Shared DTOs (`MessageFingerprint`, `ComparisonResult`, …). Splitting them across files invites circular imports for no responsibility gain; central types are the correct shape. |
+| `src/storage/memory.rs` | 746 | One responsibility: the in-memory multi-channel index (lexical, symbol, normalized, minhash, semantic, phonetic, transliteration, decoded, concept, character) plus the bounded candidate-union retrieval over it. |
 | `src/phonetic/espeak.rs` | 585 | One responsibility: the espeak-ng backend client (voices, IPA, provider). |
 | `src/resources/loader.rs` | 583 | `ResourceLoader` core; validation already extracted to `loader/validation.rs` (260). Further division would be arbitrary. |
+| `src/comparison/scorer.rs` | 530 | One cohesive fingerprint-pair scoring function plus channel helpers; `decoded`/`swap` already extracted. |
 | `src/resources/index.rs` | 519 | One responsibility: the language index. |
-| `src/bin/textintel/main.rs` | 450 | CLI dispatcher; `eval` already extracted to `eval.rs` (173). Under threshold. |
-| `src/comparison/*` | ≤ 457 | Already modular (`model/`, `scorer/`, `reranker.rs`); calibration lives with the model as `SimilarityProfile`. No file over threshold. |
-| `src/semantic/transformer*` | ≤ 470 | Already modular (`transformer.rs` + `transformer/`). |
+| `src/engine/production.rs` | 525 | Builder + preset + diagnostics types; under threshold. |
 | `src/detection/spam.rs` | 487 | Heuristic predictor + shared spam features; under threshold. |
-| `src/engine/production.rs` | 483 | Builder + preset + diagnostics types; under threshold. |
+| `src/bin/textintel/main.rs` | 450 | CLI dispatcher; `eval` already extracted to `eval.rs` (173). Under threshold. |
+| `src/comparison/model/` | ≤ 440 | Already modular (`model.rs`, `model/features.rs`, `model/optim.rs`). |
+| `src/semantic/transformer*` | ≤ 470 | Already modular (`transformer.rs` + `transformer/`). |
+| `src/entities/*` | ≤ 383 | Split this pass (see above). |
+| `tests/production_v5.rs` | 575 | Production v5 behavior suite; under threshold. |
 | `tests/production.rs` | 471 | Production integration suite; under threshold. |
 | `tests/rust_mvp.rs` | 482 | MVP contract suite; under threshold. |
+| `tests/transformer_semantics.rs` | 371 | Transformer evidence routing suite (new this pass); under threshold. |
 | `tools/train_similarity/*` | ≤ 440 | Trainer already split (`similarity.rs`, `spam.rs`, `metrics.rs`). |
 
 All other files are under 440 lines with a single responsibility each;

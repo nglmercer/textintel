@@ -20,6 +20,22 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
   dataset 0.8.0), selected on validation only.
 - Evaluation dataset 0.8.0: expanded `train` (1121) and `validation`
   (415); `test` cases unchanged (482).
+- Training follows the production semantic preference order:
+  `textintel-train similarity` accepts `--transformer-model <dir>` (or
+  `TEXTINTEL_TRANSFORMER_MODEL`) and records the embedding backend in the
+  artifact's training config; without a configured transformer it featurizes
+  with the feature-hash fallback and says so.
+- Production diagnostics report retrieval candidate budgets
+  (`EngineDiagnostics::candidate_budgets`).
+- Evaluation dataset 0.9.0: expanded `train` (1229) and `validation`
+  (469) with low-overlap paraphrases, cross-language paraphrases and
+  cognates, false cognates, transliteration false friends, entity
+  substitutions, single-word ambiguity, semantic hard negatives, and
+  mixed-language paraphrases; `test` cases byte-identical (482).
+- Regression suites: transformer semantic-evidence routing
+  (`tests/transformer_semantics.rs`), store-path recall
+  (`tests/search_recall.rs`), diagnostics budgets and no-raw-text
+  guarantees.
 
 ### Fixed
 
@@ -33,8 +49,10 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 - Internal modularization with no public API changes: the engine split
   into builder/analyzer/comparison/search/patterns/diagnostics modules,
   evaluation split into dataset/report/gates modules (quality gates moved
-  from the CLI into the library with unit tests), and the core engine
-  coverage suite split by behavior area.
+  from the CLI into the library with unit tests), the core engine
+  coverage suite split by behavior area, and `src/entities.rs` split into
+  `src/entities/` by scanner responsibility (provider, normalize, url,
+  email, mention, numeric, currency, datetime, names).
 - CI quality job additionally runs the production evaluation gate
   (`eval --production --gates data/quality-gates-production.json`).
 

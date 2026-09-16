@@ -1,5 +1,5 @@
 {
-  "version": "0.8.0",
+  "version": "0.9.0",
   "split": "train",
   "cases": [
     {
@@ -22459,6 +22459,2310 @@
       "expected": {},
       "tags": [
         "code_switching"
+      ]
+    },
+    {
+      "id": "x6tr_lop01",
+      "a": "The lighthouse keeper retired after forty years of service",
+      "b": "Following four decades on duty, the beacon warden stepped down",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop02",
+      "a": "Our flight was delayed by three hours due to fog",
+      "b": "Dense fog held our plane on the ground for three extra hours",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop03",
+      "a": "She adopted a rescue dog from the shelter last spring",
+      "b": "Last spring she took in a homeless hound from the pound",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop04",
+      "a": "The bakery on the corner sells fresh sourdough daily",
+      "b": "Every day you can buy just-baked sour bread at the neighborhood bake shop",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop05",
+      "a": "He fixed the leaking faucet with a wrench",
+      "b": "Using a spanner, he repaired the dripping tap",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop06",
+      "a": "The conference call starts at nine in the morning",
+      "b": "Our phone meeting begins at 9am",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop07",
+      "a": "They cancelled the picnic because of the thunderstorm",
+      "b": "The storm forced them to call off the outdoor lunch",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop08",
+      "a": "My grandmother grows tomatoes in her backyard",
+      "b": "My gran raises tomato plants in the garden behind her home",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop09",
+      "a": "The museum closes early on public holidays",
+      "b": "On national feast days the gallery shuts its doors ahead of schedule",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop10",
+      "a": "He missed the bus and walked to work instead",
+      "b": "After the coach left without him, he went to the office on foot",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop11",
+      "a": "The newborn slept through the entire night",
+      "b": "The baby did not wake up once until morning",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_lop12",
+      "a": "We booked a cabin near the lake for the weekend",
+      "b": "For Saturday and Sunday we reserved a cottage by the water",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "paraphrase",
+        "low-overlap"
+      ]
+    },
+    {
+      "id": "x6tr_xlp01",
+      "a": "The train arrives at noon",
+      "b": "El tren llega al mediodía",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp02",
+      "a": "Please turn off the lights",
+      "b": "Por favor apaga las luces",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp03",
+      "a": "I need a glass of water",
+      "b": "J'ai besoin d'un verre d'eau",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp04",
+      "a": "The dog is sleeping in the garden",
+      "b": "Le chien dort dans le jardin",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp05",
+      "a": "Il pleut beaucoup aujourd'hui",
+      "b": "It is raining a lot today",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp06",
+      "a": "The library closes at six",
+      "b": "Die Bibliothek schließt um sechs Uhr",
+      "languages": [
+        "en",
+        "de"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp07",
+      "a": "Das Essen schmeckt gut",
+      "b": "The food tastes good",
+      "languages": [
+        "en",
+        "de"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp08",
+      "a": "She bought fresh bread",
+      "b": "Ha comprato pane fresco",
+      "languages": [
+        "en",
+        "it"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp09",
+      "a": "Il bambino dorme tranquillo",
+      "b": "The child sleeps peacefully",
+      "languages": [
+        "en",
+        "it"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp10",
+      "a": "Where is the nearest pharmacy",
+      "b": "Onde fica a farmácia mais próxima",
+      "languages": [
+        "en",
+        "pt"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp11",
+      "a": "O museu fica no centro",
+      "b": "The museum is downtown",
+      "languages": [
+        "en",
+        "pt"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_xlp12",
+      "a": "La reunión empieza mañana",
+      "b": "The meeting starts tomorrow",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross-language",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_cog01",
+      "a": "olive",
+      "b": "oliva",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog02",
+      "a": "balcony",
+      "b": "balcón",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog03",
+      "a": "vanilla",
+      "b": "vainilla",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog04",
+      "a": "pyramid",
+      "b": "pyramide",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog05",
+      "a": "family",
+      "b": "famille",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog06",
+      "a": "paper",
+      "b": "papier",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog07",
+      "a": "soup",
+      "b": "soupe",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog08",
+      "a": "lantern",
+      "b": "lanterne",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog09",
+      "a": "atom",
+      "b": "Atom",
+      "languages": [
+        "en",
+        "de"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog10",
+      "a": "dolphin",
+      "b": "delfino",
+      "languages": [
+        "en",
+        "it"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog11",
+      "a": "volcano",
+      "b": "vulcano",
+      "languages": [
+        "en",
+        "it"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_cog12",
+      "a": "elephant",
+      "b": "elefante",
+      "languages": [
+        "en",
+        "pt"
+      ],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg01",
+      "a": "contest",
+      "b": "contestar",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg02",
+      "a": "fabric",
+      "b": "fábrica",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg03",
+      "a": "idiom",
+      "b": "idioma",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg04",
+      "a": "molest",
+      "b": "molestar",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg05",
+      "a": "diversion",
+      "b": "diversión",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg06",
+      "a": "pretend",
+      "b": "pretender",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg07",
+      "a": "gift",
+      "b": "Gift",
+      "languages": [
+        "en",
+        "de"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg08",
+      "a": "rat",
+      "b": "Rat",
+      "languages": [
+        "en",
+        "de"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg09",
+      "a": "become",
+      "b": "bekommen",
+      "languages": [
+        "en",
+        "de"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg10",
+      "a": "mist",
+      "b": "Mist",
+      "languages": [
+        "en",
+        "de"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg11",
+      "a": "bless",
+      "b": "blesser",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_fcg12",
+      "a": "hazard",
+      "b": "hasard",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "false-cognate"
+      ]
+    },
+    {
+      "id": "x6tr_tff01",
+      "a": "pot",
+      "b": "пот",
+      "languages": [
+        "en",
+        "ru"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff02",
+      "a": "rot",
+      "b": "рот",
+      "languages": [
+        "en",
+        "ru"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff03",
+      "a": "fan",
+      "b": "فن",
+      "languages": [
+        "en",
+        "ar"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff04",
+      "a": "dean",
+      "b": "دين",
+      "languages": [
+        "en",
+        "ar"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff05",
+      "a": "jar",
+      "b": "جار",
+      "languages": [
+        "en",
+        "ar"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff06",
+      "a": "seal",
+      "b": "سيل",
+      "languages": [
+        "en",
+        "ar"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff07",
+      "a": "amen",
+      "b": "أمين",
+      "languages": [
+        "en",
+        "ar"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff08",
+      "a": "man",
+      "b": "मन",
+      "languages": [
+        "en",
+        "hi"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff09",
+      "a": "rang",
+      "b": "रंग",
+      "languages": [
+        "en",
+        "hi"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff10",
+      "a": "kal",
+      "b": "कल",
+      "languages": [
+        "en",
+        "hi"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff11",
+      "a": "bar",
+      "b": "बार",
+      "languages": [
+        "en",
+        "hi"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_tff12",
+      "a": "moon",
+      "b": "문",
+      "languages": [
+        "en",
+        "ko"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "false-friend"
+      ]
+    },
+    {
+      "id": "x6tr_ent01",
+      "a": "Transfer $500 to Alice",
+      "b": "Transfer $500 to Bob",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent02",
+      "a": "The meeting starts at 3pm",
+      "b": "The meeting starts at 5pm",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent03",
+      "a": "Flight AA123 boards now",
+      "b": "Flight AA456 boards now",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent04",
+      "a": "Call me at 555-0100",
+      "b": "Call me at 555-0199",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent05",
+      "a": "Send the invoice to acme@example.com",
+      "b": "Send the invoice to apex@example.com",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent06",
+      "a": "Visit https://north.example.com/shop",
+      "b": "Visit https://south.example.com/shop",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent07",
+      "a": "The parcel arrives on 2026-03-14",
+      "b": "The parcel arrives on 2026-04-14",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent08",
+      "a": "Pay €49.99 before Friday",
+      "b": "Pay €94.99 before Friday",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent09",
+      "a": "Professor Alvarez cancelled class",
+      "b": "Professor Benitez cancelled class",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent10",
+      "a": "Meet @carlos at noon",
+      "b": "Meet @diego at noon",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent11",
+      "a": "Order 40 chairs for the hall",
+      "b": "Order 400 chairs for the hall",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_ent12",
+      "a": "The treaty was signed in 1998",
+      "b": "The treaty was signed in 1989",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "entity",
+        "substitution"
+      ]
+    },
+    {
+      "id": "x6tr_swd01",
+      "a": "favourite",
+      "b": "favorite",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "variant"
+      ]
+    },
+    {
+      "id": "x6tr_swd02",
+      "a": "organise",
+      "b": "organize",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "variant"
+      ]
+    },
+    {
+      "id": "x6tr_swd03",
+      "a": "traveller",
+      "b": "traveler",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "variant"
+      ]
+    },
+    {
+      "id": "x6tr_swd04",
+      "a": "theatre",
+      "b": "theater",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "variant"
+      ]
+    },
+    {
+      "id": "x6tr_swd05",
+      "a": "lift",
+      "b": "elevator",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "variant"
+      ]
+    },
+    {
+      "id": "x6tr_swd06",
+      "a": "autumn",
+      "b": "fall",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "variant"
+      ]
+    },
+    {
+      "id": "x6tr_swd07",
+      "a": "aisle",
+      "b": "isle",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "confusable"
+      ]
+    },
+    {
+      "id": "x6tr_swd08",
+      "a": "quite",
+      "b": "quiet",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "confusable"
+      ]
+    },
+    {
+      "id": "x6tr_swd09",
+      "a": "waive",
+      "b": "wave",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "confusable"
+      ]
+    },
+    {
+      "id": "x6tr_swd10",
+      "a": "then",
+      "b": "than",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "confusable"
+      ]
+    },
+    {
+      "id": "x6tr_swd11",
+      "a": "wander",
+      "b": "wonder",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "confusable"
+      ]
+    },
+    {
+      "id": "x6tr_swd12",
+      "a": "emigrate",
+      "b": "immigrate",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "single-word",
+        "confusable"
+      ]
+    },
+    {
+      "id": "x6tr_shn01",
+      "a": "The dog bit the man",
+      "b": "The man bit the dog",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn02",
+      "a": "All mushrooms are edible",
+      "b": "No mushrooms are edible",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn03",
+      "a": "She opened the window",
+      "b": "She closed the window",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn04",
+      "a": "The train leaves before noon",
+      "b": "The train leaves after noon",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn05",
+      "a": "He passed the final exam",
+      "b": "He failed the final exam",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn06",
+      "a": "The store is open on Sundays",
+      "b": "The store is closed on Sundays",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn07",
+      "a": "I love hot coffee",
+      "b": "I hate hot coffee",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn08",
+      "a": "The baby is asleep upstairs",
+      "b": "The baby is awake upstairs",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn09",
+      "a": "They arrived early for dinner",
+      "b": "They arrived late for dinner",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn10",
+      "a": "My keys are on the table",
+      "b": "My keys are under the table",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn11",
+      "a": "She speaks French fluently",
+      "b": "She speaks French poorly",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_shn12",
+      "a": "The water is boiling hot",
+      "b": "The water is freezing cold",
+      "languages": [
+        "en"
+      ],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard-negative",
+        "semantic"
+      ]
+    },
+    {
+      "id": "x6tr_mxp01",
+      "a": "I love mi casa nueva",
+      "b": "I love my new house",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp02",
+      "a": "La cena was delicious anoche",
+      "b": "Dinner was delicious last night",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp03",
+      "a": "Vamos al beach this afternoon",
+      "b": "Let's go to the beach this afternoon",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp04",
+      "a": "Mi padre cooks los domingos",
+      "b": "My father cooks on Sundays",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp05",
+      "a": "C'est la vie, my amigo",
+      "b": "That's life, my friend",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp06",
+      "a": "On va grab lunch ensemble",
+      "b": "We will grab lunch together",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp07",
+      "a": "Mon frère is coming ce weekend",
+      "b": "My brother is coming this weekend",
+      "languages": [
+        "en",
+        "fr"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp08",
+      "a": "Ich habe das file gespeichert",
+      "b": "I saved the file",
+      "languages": [
+        "en",
+        "de"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp09",
+      "a": "Das Wetter ist nice heute",
+      "b": "The weather is nice today",
+      "languages": [
+        "en",
+        "de"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp10",
+      "a": "Ho comprato new shoes ieri",
+      "b": "I bought new shoes yesterday",
+      "languages": [
+        "en",
+        "it"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp11",
+      "a": "Ela está happy com o result",
+      "b": "She is happy with the result",
+      "languages": [
+        "en",
+        "pt"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
+      ]
+    },
+    {
+      "id": "x6tr_mxp12",
+      "a": "El meeting es mañana morning",
+      "b": "The meeting is tomorrow morning",
+      "languages": [
+        "en",
+        "es"
+      ],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code-switching",
+        "paraphrase"
       ]
     }
   ]
