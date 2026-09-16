@@ -25,16 +25,54 @@ pub(crate) fn compact(text: &str) -> String {
     text.chars().filter(|ch| !ch.is_whitespace()).collect()
 }
 
+/// A piece made only of invisible format characters (zero-width space,
+/// byte-order mark, soft hyphen): text that renders as nothing and must not
+/// break confusable scope. Segmentation keeps these as boundaries (correct
+/// for Thai, where ZWSP delimits words); scope glues across them (`co\u{200b}de`
+/// reads as one word, `code`, with invisible junk — not two words).
+fn is_zero_width_glue(piece: &str) -> bool {
+    !piece.is_empty()
+        && piece
+            .chars()
+            .all(|ch| matches!(ch, '\u{200b}' | '\u{feff}' | '\u{00ad}'))
+}
+
 /// Alphabetic tokens of a fingerprint: segments without a letter (URLs,
 /// emoji, pure numbers) are not words and are excluded, mirroring
-/// `lexicon_coverage`.
-pub(crate) fn word_tokens(fingerprint: &MessageFingerprint) -> Vec<&str> {
-    fingerprint
-        .tokens
-        .iter()
-        .map(String::as_str)
-        .filter(|token| token.chars().any(|ch| ch.is_alphabetic()))
-        .collect()
+/// `lexicon_coverage`. Runs joined solely by zero-width format characters
+/// glue into one word (see [`is_zero_width_glue`]); every other boundary
+/// still splits.
+pub(crate) fn word_tokens(fingerprint: &MessageFingerprint) -> Vec<String> {
+    let mut words = Vec::new();
+    let mut current = String::new();
+    // Set when the previous piece was zero-width glue: only then does the
+    // next alphabetic piece extend the run. Ordinary token boundaries
+    // (spaces) always split — without this flag `co de` would glue to `code`.
+    let mut glue_pending = false;
+    let flush = |current: &mut String, words: &mut Vec<String>| {
+        if current.chars().any(|ch| ch.is_alphabetic()) {
+            words.push(std::mem::take(current));
+        } else {
+            current.clear();
+        }
+    };
+    for token in &fingerprint.tokens {
+        if is_zero_width_glue(token) {
+            glue_pending = true;
+            continue;
+        }
+        if token.chars().any(|ch| ch.is_alphabetic()) {
+            if !(glue_pending && !current.is_empty()) {
+                flush(&mut current, &mut words);
+            }
+            current.push_str(token);
+        } else {
+            flush(&mut current, &mut words);
+        }
+        glue_pending = false;
+    }
+    flush(&mut current, &mut words);
+    words
 }
 
 fn is_cjk(character: char) -> bool {

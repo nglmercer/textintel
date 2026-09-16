@@ -5,6 +5,35 @@ It keeps independent evidence channels in a `MessageFingerprint` instead of
 forcing a single interpretation of a message.
 
 The Rust crate is the sole implementation and exposes a typed API.
+See [`docs/API.md`](docs/API.md) for the API reference,
+[`resources/README.md`](resources/README.md) for the resource-pack format,
+and [`CHANGELOG.md`](CHANGELOG.md) for release notes.
+
+## Installation
+
+Requires Rust 1.71 or later (see `rust-version` in `Cargo.toml`).
+The default build is offline and dependency-light; no model download
+and no network access.
+
+As a library:
+
+```toml
+[dependencies]
+textintel = "0.2"
+```
+
+From a checkout, build and run the CLI:
+
+```text
+cargo build --locked
+cargo run --locked --bin textintel -- analyze "Fra🏠do" --json
+```
+
+Optional backends are Cargo features (see below); for example:
+
+```text
+cargo build --locked --features production-local-lite
+```
 
 ## Quick start
 
@@ -45,8 +74,10 @@ The default engine requires no model download and provides:
   `load_patterns_from`). Stored fingerprints migrate across schema versions
   through an explicit version-checked path instead of failing or guessing.
 - Trained artifacts: an interpretable logistic similarity scorer
-  (`models/similarity-v1.json`, see `tools/train_similarity.rs`) and a
-  calibrated spam predictor (`models/spam-v1.json`).
+  (`models/similarity-v4.json`, feature schema 8, dataset 0.7.0; retrain
+  with `cargo run --bin textintel-train -- similarity data/evaluation
+  --output <artifact.json>`) and calibrated spam predictors
+  (`models/spam-v1.json`, `models/spam-v2.json`; v2 preferred).
 
 Optional production backends (off by default, no automatic network access):
 
@@ -95,8 +126,8 @@ let engine = TextIntelligence::production_local()?;
 // Ergonomic builder with the same preset plus explicit configuration.
 let engine = TextIntelligence::builder()
     .production_local()
-    .trained_similarity_model("models/similarity-v1.json")
-    .trained_spam_model("models/spam-v1.json")
+    .trained_similarity_model("models/similarity-v4.json")
+    .trained_spam_model("models/spam-v2.json")
     .build()?;
 # Ok::<(), textintel::TextIntelError>(())
 ```
@@ -114,13 +145,15 @@ Expensive or remote functionality is explicit. Implement one of the provider
 traits and inject it with a builder method:
 
 ```rust
+use textintel::{FeatureHashEmbeddingProvider, RuleBasedG2PProvider, TextIntelligence};
+
 let engine = TextIntelligence::new(textintel::EngineConfig {
     semantic: true,
     phonetic: true,
     ..Default::default()
 })
-.with_embedding_provider(my_embedding_provider)
-.with_g2p_provider(my_g2p_provider);
+.with_embedding_provider(FeatureHashEmbeddingProvider::default())
+.with_g2p_provider(RuleBasedG2PProvider);
 ```
 
 Provider failures are returned as `TextIntelError::Provider`; input length,
@@ -177,17 +210,27 @@ resource byte, entry, symbol, and reading limits are enforced before indexing.
 ## CLI
 
 ```text
-cargo run -- analyze "Fra🏠do" --json
-cargo run -- decode "salU2"
-cargo run -- compare "c0mpr4 ah0r4" "compra ahora" --json
-cargo run -- spam "ganaste un premio https://example.test"
-cargo run -- batch messages.jsonl
-cargo run -- resources resources
-cargo run -- diagnostics
-cargo run -- evaluate data/evaluation/
-cargo run -- index store.json id-1 "a message"
-cargo run -- search store.json "similar message" 5
+cargo run --bin textintel -- analyze "Fra🏠do" --json
+cargo run --bin textintel -- explain "salU2"
+cargo run --bin textintel -- decode "salU2" --languages es,en
+cargo run --bin textintel -- compare "c0mpr4 ah0r4" "compra ahora" --json
+cargo run --bin textintel -- duplicate "compra ahora" "c0mpr4 ah0r4" --threshold 0.85
+cargo run --bin textintel -- spam "ganaste un premio https://example.test"
+cargo run --bin textintel -- batch messages.jsonl
+cargo run --bin textintel -- resources resources
+cargo run --bin textintel -- resources validate resources/languages/en.json
+cargo run --bin textintel -- diagnostics
+cargo run --bin textintel -- provider-info
+cargo run --bin textintel -- schema-version
+cargo run --bin textintel -- eval data/evaluation/ --split test
+cargo run --bin textintel -- index store.json id-1 "a message"
+cargo run --bin textintel -- search store.json "similar message" 5
 ```
+
+Global flags: `--json` (versioned JSON output), `--production` (local
+production preset), `--resource-root <dir>`, `--model-path <dir>`, and
+`--language <code>`. Every `--json` payload follows `API_VERSION` (see
+`schema-version`) and evolves additively within a major version.
 
 ## Examples
 
@@ -223,8 +266,8 @@ cargo run --locked --all-features --bin textintel -- eval data/evaluation/ --spl
 The integration suite covers the plan's MVP examples plus provider injection,
 batch APIs, persistence, multilingual segmentation, IPA features, patterns,
 spam, duplicate detection, and indexed search behavior. A versioned seed
-evaluation set (currently `0.5.0`, 1314 cases over train/validation/test)
-with ranking and calibration metrics is available at
+evaluation set (currently `0.7.0`, 1902 cases over train/validation/test:
+1045/375/482) with ranking and calibration metrics is available at
 `data/evaluation/`; `data/quality-gates.json` pins the default-engine
 bars and `data/quality-gates-production.json` the stronger production bars,
 both calibrated on the held-out test split.
@@ -235,3 +278,7 @@ Unicode, tokenization, and rebus parsing under `fuzz/` with a curated seed
 corpus in `fuzz/corpus/`; run them locally with
 `cd fuzz && cargo +nightly fuzz run <target> corpus/<target> -- -max_total_time=60`
 (requires a nightly toolchain plus `cargo install cargo-fuzz`).
+
+## License
+
+MIT — see [`LICENSE-MIT`](LICENSE-MIT).

@@ -2,9 +2,7 @@
 //! and quality-gate enforcement.
 
 use textintel::comparison::SimilarityProfile;
-use textintel::evaluation::{
-    EvaluateOptions, EvaluationDataset, EvaluationReport, SpamCorpus,
-};
+use textintel::evaluation::{EvaluateOptions, EvaluationDataset, EvaluationReport, SpamCorpus};
 
 use super::{build_engine, flag_value, print_json};
 
@@ -111,7 +109,11 @@ fn check_gates(report: &EvaluationReport, gates: &serde_json::Value) -> Vec<Stri
         ("similarity", "f1", report.metrics.f1),
         ("similarity", "accuracy", report.metrics.accuracy),
         ("similarity", "brier", report.metrics.brier),
-        ("similarity", "ece", report.metrics.expected_calibration_error),
+        (
+            "similarity",
+            "ece",
+            report.metrics.expected_calibration_error,
+        ),
         ("rebus", "top1", report.rebus.top1_accuracy),
         ("rebus", "top3", report.rebus.top3_accuracy),
         ("rebus", "top5", report.rebus.top_k_accuracy),
@@ -123,17 +125,14 @@ fn check_gates(report: &EvaluationReport, gates: &serde_json::Value) -> Vec<Stri
         ("search", "mrr", report.ranking.mrr),
     ];
     if let Some(spam) = &report.spam {
-        observed.extend(
-            [
-                ("spam", "roc_auc", spam.metrics.roc_auc),
-                ("spam", "pr_auc", spam.metrics.pr_auc),
-                ("spam", "f1", spam.metrics.f1),
-                ("spam", "accuracy", spam.metrics.accuracy),
-                ("spam", "brier", spam.metrics.brier),
-                ("spam", "ece", spam.metrics.expected_calibration_error),
-            ]
-            .into_iter(),
-        );
+        observed.extend([
+            ("spam", "roc_auc", spam.metrics.roc_auc),
+            ("spam", "pr_auc", spam.metrics.pr_auc),
+            ("spam", "f1", spam.metrics.f1),
+            ("spam", "accuracy", spam.metrics.accuracy),
+            ("spam", "brier", spam.metrics.brier),
+            ("spam", "ece", spam.metrics.expected_calibration_error),
+        ]);
     }
     let mut failures = Vec::new();
     let Some(sections) = gates.as_object() else {

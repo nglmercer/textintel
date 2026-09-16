@@ -54,8 +54,8 @@ fn production_local_builds_and_reports_graceful_fallbacks() {
 }
 
 #[test]
-fn production_preset_prefers_similarity_v3() {
-    // similarity-v3 (dataset 0.6.0, semantic + phonetic evidence) is the
+fn production_preset_prefers_similarity_v4() {
+    // similarity-v4 (dataset 0.7.0, semantic + phonetic evidence) is the
     // production artifact; older revisions remain only as a fallback for old
     // checkouts.
     let engine = TextIntelligence::production_local().expect("production_local must not fail");
@@ -65,20 +65,20 @@ fn production_preset_prefers_similarity_v3() {
         .as_ref()
         .expect("production loads a similarity model");
     let source =
-        std::fs::read_to_string("models/similarity-v3.json").expect("similarity-v3 must exist");
+        std::fs::read_to_string("models/similarity-v4.json").expect("similarity-v4 must exist");
     let artifact = textintel::SimilarityModelArtifact::from_json(&source).unwrap();
     assert_eq!(similarity.provider, "logistic_similarity_scorer");
     assert_eq!(similarity.version.as_deref(), artifact.revision.as_deref());
-    assert_eq!(artifact.dataset_version, "0.6.0");
+    assert_eq!(artifact.dataset_version, "0.7.0");
     assert_ne!(
         artifact.weights.get("semantic").copied().unwrap_or(0.0),
         0.0,
-        "v3 must carry useful semantic evidence"
+        "v4 must carry useful semantic evidence"
     );
     assert_ne!(
         artifact.weights.get("phonetic").copied().unwrap_or(0.0),
         0.0,
-        "v3 must carry useful phonetic evidence"
+        "v4 must carry useful phonetic evidence"
     );
     for metric in [
         "test_accuracy",
@@ -92,7 +92,7 @@ fn production_preset_prefers_similarity_v3() {
     ] {
         assert!(
             artifact.metrics.contains_key(metric),
-            "v2 must record {metric}"
+            "v4 must record {metric}"
         );
     }
 }
@@ -217,7 +217,7 @@ fn builder_model_paths_are_strict() {
 
     // Valid explicit paths load trained backends.
     let engine = TextIntelligence::builder()
-        .trained_similarity_model("models/similarity-v3.json")
+        .trained_similarity_model("models/similarity-v4.json")
         .trained_spam_model("models/spam-v1.json")
         .build()
         .expect("valid models must load");

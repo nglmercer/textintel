@@ -218,16 +218,15 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
                     "spam" => true,
                     "ham" | "benign" => false,
                     other => {
-                        return Err(
-                            format!("spam corpus item {index} has unknown label {other:?}").into(),
-                        );
+                        return Err(format!(
+                            "spam corpus item {index} has unknown label {other:?}"
+                        )
+                        .into());
                     }
                 };
                 loaded.push((item.text.clone(), label));
             }
-            if !loaded.iter().any(|(_, label)| *label)
-                || !loaded.iter().any(|(_, label)| !*label)
-            {
+            if !loaded.iter().any(|(_, label)| *label) || !loaded.iter().any(|(_, label)| !*label) {
                 return Err("spam corpus needs both spam and ham items".into());
             }
             // Seeded shuffle (same Fisher-Yates as the synthetic path) so
@@ -338,8 +337,8 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
     // pairs' spam labels.
     let mut pair_rows = Vec::new();
     if corpus_path.is_some() {
-        let heldout_path = flag_value(args, "--heldout")
-            .unwrap_or_else(|| "data/spam/v2-eval.json".to_string());
+        let heldout_path =
+            flag_value(args, "--heldout").unwrap_or_else(|| "data/spam/v2-eval.json".to_string());
         let source = std::fs::read_to_string(&heldout_path)
             .map_err(|error| format!("read held-out spam corpus {heldout_path}: {error}"))?;
         let file: CorpusFile = serde_json::from_str(&source)
@@ -349,9 +348,7 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
                 "spam" => true,
                 "ham" | "benign" => false,
                 other => {
-                    return Err(
-                        format!("held-out spam corpus has unknown label {other:?}").into(),
-                    );
+                    return Err(format!("held-out spam corpus has unknown label {other:?}").into());
                 }
             };
             let fingerprint = engine.analyze(&item.text)?;
@@ -362,8 +359,8 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
             ));
         }
     } else {
-        let dataset = EvaluationDataset::load_path("data/evaluation")
-            .map_err(|error| error.to_string())?;
+        let dataset =
+            EvaluationDataset::load_path("data/evaluation").map_err(|error| error.to_string())?;
         // Both messages of each pair count: the evaluation harness compares
         // pairs, so score `a` and `b` texts for a fair reading.
         for case in &dataset.cases {

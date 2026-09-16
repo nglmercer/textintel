@@ -30,7 +30,7 @@
 //! so two HNSW graphs built from the same records can differ structurally
 //! and large-index search stays approximate across rebuilds (top hits are
 //! stable; see the recall anchors in `tests/ann_search.rs`). Small indexes
-//! (at most [`EXACT_SEARCH_MAX_LIVE`] live entries) answer queries by an
+//! (at most `EXACT_SEARCH_MAX_LIVE` live entries) answer queries by an
 //! exhaustive cosine scan over stored vectors instead, which is exact and
 //! bit-deterministic across rebuilds — and cheaper than graph traversal at
 //! that scale.

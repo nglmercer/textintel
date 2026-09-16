@@ -32,7 +32,10 @@ fn character_and_lexical_similarity_ignore_accents() {
     assert!(character_similarity("música", "musica").combined > 0.99);
     // Cross-script confusables are untouched by accent folding.
     assert!(character_similarity("paypal", "pаypal").combined < 1.0);
-    assert_eq!(lexical_similarity("feliz cumpleaños", "feliz cumpleanos"), 1.0);
+    assert_eq!(
+        lexical_similarity("feliz cumpleaños", "feliz cumpleanos"),
+        1.0
+    );
 }
 
 #[test]

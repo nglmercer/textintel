@@ -33,6 +33,14 @@ fn flag_value(args: &[String], flag: &str) -> Option<String> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
+        Some("--version" | "-V") => {
+            println!("textintel-train {}", env!("CARGO_PKG_VERSION"));
+            Ok(())
+        }
+        Some("--help" | "-h") => {
+            println!("{}", usage());
+            Ok(())
+        }
         Some("similarity") => run_similarity(&args),
         Some("spam") => run_spam(&args),
         _ => {

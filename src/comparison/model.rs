@@ -11,7 +11,8 @@ mod features;
 mod optim;
 
 pub use features::{
-    language_agreement, mean_channel_confidence, training_features, TRAINING_FEATURES,
+    fuzzy_decode_mismatch, language_agreement, mean_channel_confidence, training_features,
+    TRAINING_FEATURES,
 };
 pub use optim::{balanced_sample_weights, logistic_step, logistic_step_weighted, sigmoid};
 
@@ -163,8 +164,9 @@ impl SimilarityScorer for LogisticSimilarityScorer {
     fn score(&self, left: &MessageFingerprint, right: &MessageFingerprint) -> ComparisonResult {
         let base = score_fingerprints(left, right, &SimilarityWeights::default());
         // Every trained feature is applied: the eight channels plus mean
-        // channel confidence, top-language agreement, and the twelve
-        // confusable-separation features (see [`training_features`]).
+        // channel confidence, top-language agreement, the twelve
+        // confusable-separation features, and the fuzzy-decode mismatch
+        // interaction (see [`training_features`]).
         let values = [
             ("semantic", base.semantic.unwrap_or(0.0)),
             ("lexical", base.lexical.unwrap_or(0.0)),
@@ -203,6 +205,7 @@ impl SimilarityScorer for LogisticSimilarityScorer {
             ),
             ("exact_decode", base.exact_decode.clamp(0.0, 1.0)),
             ("single_word_exact", base.single_word_exact.clamp(0.0, 1.0)),
+            ("fuzzy_decode_mismatch", fuzzy_decode_mismatch(&base)),
         ];
         let logit = values.iter().fold(self.bias, |total, (name, value)| {
             total + value * self.weights.get(*name).copied().unwrap_or(0.0)
@@ -230,7 +233,7 @@ impl SimilarityScorer for LogisticSimilarityScorer {
 
 /// Schema version of the interpretable training feature vector. Bump when
 /// [`training_features`] gains, drops, or reorders features.
-pub const TRAINING_FEATURE_SCHEMA_VERSION: u32 = 7;
+pub const TRAINING_FEATURE_SCHEMA_VERSION: u32 = 8;
 
 /// Versioned trained-similarity artifact written by `tools/train_similarity.rs`.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]

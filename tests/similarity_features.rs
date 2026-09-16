@@ -200,3 +200,26 @@ fn confusable_swap_suppressed_across_languages() {
         result.confusable_swap
     );
 }
+
+#[test]
+fn zero_width_space_does_not_break_single_word_scope() {
+    let engine = engine();
+    // `co\u{200b}de` reads as one word (`code`) with invisible junk.
+    let glued = engine
+        .compare("co\u{200b}de", "coda")
+        .expect("compare must succeed");
+    assert_eq!(
+        glued.single_word_pair, 1.0,
+        "ZWSP must not split confusable scope: {}",
+        glued.single_word_pair
+    );
+    // A real space still splits scope.
+    let split = engine
+        .compare("co de", "coda")
+        .expect("compare must succeed");
+    assert_eq!(
+        split.single_word_pair, 0.0,
+        "a real space splits scope: {}",
+        split.single_word_pair
+    );
+}

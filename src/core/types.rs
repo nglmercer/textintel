@@ -445,7 +445,7 @@ impl MessageFingerprint {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct ComparisonResult {
     pub score: f64,
     pub semantic: Option<f64>,

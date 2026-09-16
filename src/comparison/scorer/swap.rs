@@ -13,17 +13,17 @@ use super::word_tokens;
 /// number (≥ 2) of word tokens differing in exactly one position (compared
 /// case-insensitively); `None` otherwise. Single-word pairs are excluded:
 /// their whole-string `character` channel already carries the same signal.
-pub(crate) fn swapped_words<'a>(
-    a: &'a MessageFingerprint,
-    b: &'a MessageFingerprint,
-) -> Option<(usize, &'a str, &'a str)> {
+pub(crate) fn swapped_words(
+    a: &MessageFingerprint,
+    b: &MessageFingerprint,
+) -> Option<(usize, String, String)> {
     let left = word_tokens(a);
     let right = word_tokens(b);
     if left.len() < 2 || right.len() < 2 {
         return None;
     }
     if left.len() == right.len() {
-        let mut differing: Option<(usize, &str, &str)> = None;
+        let mut differing: Option<(usize, String, String)> = None;
         for (index, (left_word, right_word)) in left.iter().zip(right.iter()).enumerate() {
             if casefold_text(left_word) == casefold_text(right_word) {
                 continue;
@@ -31,7 +31,7 @@ pub(crate) fn swapped_words<'a>(
             if differing.is_some() {
                 return None;
             }
-            differing = Some((index, *left_word, *right_word));
+            differing = Some((index, left_word.clone(), right_word.clone()));
         }
         return differing;
     }
@@ -52,13 +52,13 @@ pub(crate) fn swapped_words<'a>(
         (right, left, true)
     };
     for skip in 0..long.len() {
-        let rest: Vec<&&str> = long
+        let rest: Vec<&String> = long
             .iter()
             .enumerate()
             .filter(|(index, _)| *index != skip)
             .map(|(_, word)| word)
             .collect();
-        let mut differing: Option<(usize, &str, &str)> = None;
+        let mut differing: Option<(usize, String, String)> = None;
         let mut aligned = true;
         for (index, (long_word, short_word)) in rest.iter().zip(short.iter()).enumerate() {
             if casefold_text(long_word) == casefold_text(short_word) {
@@ -71,7 +71,7 @@ pub(crate) fn swapped_words<'a>(
             // Position in the longer side's coordinates (shift past the
             // skip when the difference sits at or after it).
             let position = if index >= skip { index + 1 } else { index };
-            differing = Some((position, **long_word, *short_word));
+            differing = Some((position, (*long_word).clone(), (*short_word).clone()));
         }
         if aligned {
             if let Some((position, long_word, short_word)) = differing {
@@ -141,7 +141,7 @@ pub(crate) fn same_language_swap(
 pub(crate) fn swapped_word_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
     match swapped_words(a, b) {
         Some((_, left_word, right_word)) => {
-            combined_character_similarity(left_word, right_word).clamp(0.0, 1.0)
+            combined_character_similarity(&left_word, &right_word).clamp(0.0, 1.0)
         }
         None => 0.0,
     }
@@ -165,7 +165,7 @@ pub(crate) fn swapped_validity(a: &MessageFingerprint, b: &MessageFingerprint) -
     let valid = |word: &str| {
         provider.contains(word, None) || provider.contains(&alphanumeric_fold(word), None)
     };
-    if valid(left_word) && valid(right_word) {
+    if valid(&left_word) && valid(&right_word) {
         1.0
     } else {
         0.0
@@ -188,8 +188,8 @@ pub(crate) fn swapped_phonetic_similarity(a: &MessageFingerprint, b: &MessageFin
         return 0.0;
     };
     let g2p = crate::phonetic::g2p::RuleBasedG2PProvider;
-    let left = g2p.phonemize(left_word, "und");
-    let right = g2p.phonemize(right_word, "und");
+    let left = g2p.phonemize(&left_word, "und");
+    let right = g2p.phonemize(&right_word, "und");
     match (left, right) {
         (Ok(left), Ok(right)) => phonetic_similarity(&left, &right).clamp(0.0, 1.0),
         _ => 0.0,

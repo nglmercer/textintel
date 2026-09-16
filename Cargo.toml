@@ -6,6 +6,7 @@ build = "build.rs"
 description = "Multilingual text intelligence with independent, explainable analysis channels"
 license = "MIT"
 readme = "README.md"
+repository = "https://github.com/nglmercer/textintel"
 rust-version = "1.71"
 
 [lib]

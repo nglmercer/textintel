@@ -199,6 +199,7 @@ fn evaluation_chunks_batches_larger_than_max_batch_size() {
         split: None,
         ranking_queries: 5,
         ranking_documents: 20,
+        spam_corpus: None,
     };
     let report = evaluate_with_options(&engine, &dataset, &options).unwrap();
     assert_eq!(report.metrics.count, 20);
@@ -211,7 +212,7 @@ fn trained_similarity_artifact_loads_and_separates_pairs() {
     use textintel::SimilarityModelArtifact;
     use textintel::SimilarityScorer;
 
-    let source = include_str!("../models/similarity-v3.json");
+    let source = include_str!("../models/similarity-v4.json");
     let artifact = SimilarityModelArtifact::from_json(source).unwrap();
     assert_eq!(artifact.kind, "logistic_similarity");
     assert_eq!(
@@ -354,6 +355,7 @@ fn evaluation_reports_ranking_and_calibration_metrics() {
         split: None,
         ranking_queries: 4,
         ranking_documents: 12,
+        spam_corpus: None,
     };
     let report = evaluate_with_options(&TextIntelligence::default(), &dataset, &options).unwrap();
     assert_eq!(report.metrics.count, 12);
@@ -396,6 +398,7 @@ fn evaluation_dataset_from_dir_loads_splits_and_evaluates() {
         split: None,
         ranking_queries: 2,
         ranking_documents: 10,
+        spam_corpus: None,
     };
     let report = evaluate_with_options(&TextIntelligence::default(), &slice, &options).unwrap();
     assert_eq!(report.metrics.count, 10);

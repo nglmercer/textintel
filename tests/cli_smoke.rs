@@ -81,6 +81,31 @@ fn explain_shows_transformation_chains() {
 }
 
 #[test]
+fn version_and_help_flags_answer_without_engine() {
+    for flag in ["--version", "-V"] {
+        let output = textintel()
+            .arg(flag)
+            .output()
+            .expect("run textintel binary");
+        assert!(output.status.success(), "{flag} failed");
+        let text = String::from_utf8_lossy(&output.stdout);
+        assert!(
+            text.trim() == format!("textintel {}", env!("CARGO_PKG_VERSION")),
+            "unexpected version output: {text}"
+        );
+    }
+    for flag in ["--help", "-h"] {
+        let output = textintel()
+            .arg(flag)
+            .output()
+            .expect("run textintel binary");
+        assert!(output.status.success(), "{flag} failed");
+        let text = String::from_utf8_lossy(&output.stdout);
+        assert!(text.contains("Usage:"), "missing usage: {text}");
+    }
+}
+
+#[test]
 fn json_outputs_are_versioned() {
     let schema = run_json(&["schema-version", "--json"]);
     assert!(schema["api_version"].is_string());

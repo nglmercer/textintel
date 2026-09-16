@@ -189,10 +189,7 @@ impl SpamCorpus {
     pub fn from_file(path: impl AsRef<std::path::Path>) -> Result<Self, TextIntelError> {
         let path = path.as_ref();
         let source = std::fs::read_to_string(path).map_err(|error| {
-            TextIntelError::InvalidConfiguration(format!(
-                "cannot read {}: {error}",
-                path.display()
-            ))
+            TextIntelError::InvalidConfiguration(format!("cannot read {}: {error}", path.display()))
         })?;
         let corpus = Self::from_json(&source)?;
         if corpus.items.is_empty() {

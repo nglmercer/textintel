@@ -16,7 +16,8 @@ use crate::core::types::{ComparisonResult, MessageFingerprint};
 /// punctuation-only variants, substring containment for super/substring
 /// pairs, the cross-script indicator and its agreement interaction,
 /// confidence-weighted exact decoding, and the single-word exact
-/// interaction).
+/// interaction), and the fuzzy-decode mismatch interaction (close decoded
+/// overlap without exact decoding: a confusable signature).
 pub const TRAINING_FEATURES: &[&str] = &[
     "semantic",
     "lexical",
@@ -40,11 +41,26 @@ pub const TRAINING_FEATURES: &[&str] = &[
     "cross_script_agreement",
     "exact_decode",
     "single_word_exact",
+    "fuzzy_decode_mismatch",
 ];
 
+/// Fuzzy decoded overlap without exact decoding:
+/// `symbolic * decoded * (1 - exact_decode)`. A reading that closely but
+/// inexactly matches the target while exact decoding fails (`ch34p`→`cheap`
+/// against `cheep`, `gr8`→`great` against `grate`) is a confusable
+/// signature; true variants decode exactly (`gr8` against `great`) and read
+/// near zero. Missing channels read as 0.0, exactly as the scorer treats
+/// them, so clean-text pairs (no symbolic channel) never fire it.
+pub fn fuzzy_decode_mismatch(result: &ComparisonResult) -> f64 {
+    (result.symbolic.unwrap_or(0.0)
+        * result.decoded_similarity.unwrap_or(0.0)
+        * (1.0 - result.exact_decode.clamp(0.0, 1.0)))
+    .clamp(0.0, 1.0)
+}
+
 /// Mean channel confidence of a comparison. Shared by training and the
-/// [`LogisticSimilarityScorer`] so the `channel_confidence` weight means the
-/// same in both places.
+/// [`LogisticSimilarityScorer`](super::LogisticSimilarityScorer) so the
+/// `channel_confidence` weight means the same in both places.
 pub fn mean_channel_confidence(result: &ComparisonResult) -> f64 {
     if result.channel_confidence.is_empty() {
         0.0
@@ -57,7 +73,8 @@ pub fn mean_channel_confidence(result: &ComparisonResult) -> f64 {
 /// Extract the training feature vector for one comparison. `language_agreement`
 /// is 1.0 when both fingerprints agree on the top language, else 0.0.
 /// Every feature here is also applied at inference by
-/// [`LogisticSimilarityScorer::score`]; trained weights are never dead.
+/// [`SimilarityScorer::score`](crate::SimilarityScorer::score); trained
+/// weights are never dead.
 pub fn training_features(
     result: &ComparisonResult,
     language_agreement: f64,
@@ -132,6 +149,10 @@ pub fn training_features(
         "single_word_exact".to_string(),
         result.single_word_exact.clamp(0.0, 1.0),
     );
+    features.insert(
+        "fuzzy_decode_mismatch".to_string(),
+        fuzzy_decode_mismatch(result),
+    );
     features
 }
 
@@ -159,11 +180,37 @@ mod tests {
 
     #[test]
     fn training_features_cover_schema_in_order() {
-        assert_eq!(TRAINING_FEATURES.len(), 22);
-        assert_eq!(TRAINING_FEATURE_SCHEMA_VERSION, 7);
+        assert_eq!(TRAINING_FEATURES.len(), 23);
+        assert_eq!(TRAINING_FEATURE_SCHEMA_VERSION, 8);
         let mut sorted = TRAINING_FEATURES.to_vec();
         sorted.sort_unstable();
         sorted.dedup();
         assert_eq!(sorted.len(), TRAINING_FEATURES.len());
+    }
+
+    #[test]
+    fn fuzzy_decode_mismatch_needs_fuzzy_overlap_without_exactness() {
+        // `ch34p` against `cheep`: close decoded overlap, no exact decoding.
+        let confusable = ComparisonResult {
+            symbolic: Some(0.41),
+            decoded_similarity: Some(0.75),
+            exact_decode: 0.0,
+            ..Default::default()
+        };
+        assert!((fuzzy_decode_mismatch(&confusable) - 0.3075).abs() < 1e-9);
+        // `gr8` against `great`: exact decoding suppresses the mismatch.
+        let variant = ComparisonResult {
+            symbolic: Some(0.30),
+            decoded_similarity: Some(0.95),
+            exact_decode: 0.9,
+            ..Default::default()
+        };
+        assert!(fuzzy_decode_mismatch(&variant) < 0.05);
+        // Clean text (no symbolic channel) never fires it.
+        let clean = ComparisonResult {
+            decoded_similarity: Some(0.8),
+            ..Default::default()
+        };
+        assert_eq!(fuzzy_decode_mismatch(&clean), 0.0);
     }
 }

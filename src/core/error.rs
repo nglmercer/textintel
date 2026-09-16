@@ -55,7 +55,14 @@ impl Display for TextIntelError {
     }
 }
 
-impl std::error::Error for TextIntelError {}
+impl std::error::Error for TextIntelError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Provider(error) => Some(error),
+            _ => None,
+        }
+    }
+}
 
 impl From<ProviderError> for TextIntelError {
     fn from(value: ProviderError) -> Self {

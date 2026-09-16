@@ -109,6 +109,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         eprintln!("{}", usage());
         std::process::exit(2);
     };
+    // Identity flags answer before any engine is built.
+    match command {
+        "--version" | "-V" => {
+            println!("textintel {}", env!("CARGO_PKG_VERSION"));
+            return Ok(());
+        }
+        "--help" | "-h" => {
+            println!("{}", usage());
+            return Ok(());
+        }
+        _ => {}
+    }
     // Flags with values must not be mistaken for positional arguments.
     let positionals = positional_args(&args);
     let engine = build_engine(&args, production)?;

@@ -34,7 +34,9 @@ fn is_generic_combining_mark(character: char) -> bool {
 /// Apply AFTER [`casefold_text`]: casefolding can emit a combining mark
 /// (`İ` → `i` + dot) that belongs to the fold, not the text.
 pub fn strip_diacritics(text: &str) -> String {
-    text.nfd().filter(|ch| !is_generic_combining_mark(*ch)).collect()
+    text.nfd()
+        .filter(|ch| !is_generic_combining_mark(*ch))
+        .collect()
 }
 
 /// Rust has no standard-library Unicode case-fold API. NFKC followed by

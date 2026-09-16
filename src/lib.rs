@@ -5,6 +5,28 @@
 //! Unicode, lexical, visual, symbolic, rebus, phonetic, semantic, and
 //! obfuscation views.  Providers for expensive or remote capabilities are
 //! optional and can be replaced without changing the engine API.
+//!
+//! # Quick start
+//!
+//! ```rust
+//! use textintel::TextIntelligence;
+//!
+//! let engine = TextIntelligence::default();
+//! let fingerprint = engine.analyze("Fra🏠do")?;
+//! let comparison = engine.compare("Fra🏠do", "fracasado")?;
+//! let candidates = engine.decode("salU2")?;
+//!
+//! assert_eq!(fingerprint.raw, "Fra🏠do");
+//! assert!(candidates.iter().any(|candidate| candidate.text.eq_ignore_ascii_case("saludos")));
+//! # Ok::<(), textintel::TextIntelError>(())
+//! ```
+//!
+//! [`TextIntelligence::production_local`] selects the local production
+//! preset (resource packs, trained models when present, bounded caches),
+//! and [`TextIntelligence::builder`] allows explicit provider, store, and
+//! model configuration.  See `docs/API.md` for the narrative API
+//! reference, `resources/README.md` for the resource-pack format, and the
+//! `examples/` directory for runnable end-to-end flows.
 
 pub mod cache;
 pub mod comparison;
