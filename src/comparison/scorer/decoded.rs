@@ -69,6 +69,12 @@ fn asserted_confidence_map(fingerprint: &MessageFingerprint) -> BTreeMap<String,
 }
 
 pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
+    // Transliteration views contribute `similarity × confidence ×
+    // compatibility`: provider confidence discounts the lossy conversion and
+    // language/context compatibility discounts look-alikes without semantic,
+    // entity, or language support (transliteration alone never creates a
+    // strong match).
+    let compatibility = crate::transliteration::transliteration_compatibility(a, b);
     let mut left = BTreeSet::new();
     let mut right = BTreeSet::new();
     for value in [a.raw.clone(), a.normalized.clone().unwrap_or_default()] {
@@ -111,19 +117,20 @@ pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprin
             best = best.max(confidence.min(*other));
         }
     }
-    // Phase 1b: exact matches involving a transliteration view contribute the
-    // view confidence (similarity 1.0 times provider confidence). View↔view
-    // matches take the weaker confidence; view↔base matches take the view's.
+    // Phase 1b: exact matches involving a transliteration view contribute
+    // the view confidence times compatibility (similarity 1.0 times provider
+    // confidence times language/context compatibility). View↔view matches
+    // take the weaker confidence; view↔base matches take the view's.
     for (view, confidence) in &views_left {
         if view.is_empty() {
             continue;
         }
         if right.contains(view) {
-            best = best.max(*confidence);
+            best = best.max(*confidence * compatibility);
         }
         for (other, other_confidence) in &views_right {
             if view == other {
-                best = best.max(confidence.min(*other_confidence));
+                best = best.max(confidence.min(*other_confidence) * compatibility);
             }
         }
     }
@@ -132,7 +139,7 @@ pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprin
             continue;
         }
         if left.contains(view) {
-            best = best.max(*confidence);
+            best = best.max(*confidence * compatibility);
         }
     }
     // Vowel-folded tier: consonantal views meet vocalized text as
@@ -165,17 +172,17 @@ pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprin
         .collect();
     for (view, confidence) in &folded_views_left {
         if folded_bases_right.contains(view) {
-            best = best.max(*confidence);
+            best = best.max(*confidence * compatibility);
         }
         for (other, other_confidence) in &folded_views_right {
             if view == other {
-                best = best.max(confidence.min(*other_confidence));
+                best = best.max(confidence.min(*other_confidence) * compatibility);
             }
         }
     }
     for (view, confidence) in &folded_views_right {
         if folded_bases_left.contains(view) {
-            best = best.max(*confidence);
+            best = best.max(*confidence * compatibility);
         }
     }
     // Phase 2: fuzzy overlap over the graded base maps (no views).
@@ -215,7 +222,9 @@ pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprin
                     if anchor.is_empty() {
                         continue;
                     }
-                    best = best.max(combined_character_similarity(view, anchor) * confidence);
+                    best = best.max(
+                        combined_character_similarity(view, anchor) * confidence * compatibility,
+                    );
                 }
             }
         }
@@ -234,6 +243,7 @@ pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprin
 /// [`best_decoded_overlap`]'s Phase 1a/1b, but as graded evidence instead of
 /// a short-circuit.
 pub(crate) fn exact_decode_confidence(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
+    let compatibility = crate::transliteration::transliteration_compatibility(a, b);
     let left = graded_confidence_map(a);
     let right = graded_confidence_map(b);
     let mut best: f64 = 0.0;
@@ -257,7 +267,7 @@ pub(crate) fn exact_decode_confidence(a: &MessageFingerprint, b: &MessageFingerp
             continue;
         }
         if right.contains_key(view) {
-            best = best.max(*confidence);
+            best = best.max(*confidence * compatibility);
         }
         // View↔view matches are second-hand evidence: transliteration is
         // lossy, so two different words can share one transliteration
@@ -266,7 +276,7 @@ pub(crate) fn exact_decode_confidence(a: &MessageFingerprint, b: &MessageFingerp
         // the weaker confidence so collisions whisper instead of shout.
         for (other, other_confidence) in &views_right {
             if view == other {
-                best = best.max(confidence.min(*other_confidence) * 0.5);
+                best = best.max(confidence.min(*other_confidence) * 0.5 * compatibility);
             }
         }
     }
@@ -275,7 +285,7 @@ pub(crate) fn exact_decode_confidence(a: &MessageFingerprint, b: &MessageFingerp
             continue;
         }
         if left.contains_key(view) {
-            best = best.max(*confidence);
+            best = best.max(*confidence * compatibility);
         }
     }
     // Vowel-folded tier (see `best_decoded_overlap`): only consonantal
@@ -304,17 +314,17 @@ pub(crate) fn exact_decode_confidence(a: &MessageFingerprint, b: &MessageFingerp
         .collect();
     for (view, confidence) in &folded_views_left {
         if folded_bases_right.contains(view) {
-            best = best.max(*confidence);
+            best = best.max(*confidence * compatibility);
         }
         for (other, other_confidence) in &folded_views_right {
             if view == other {
-                best = best.max(confidence.min(*other_confidence) * 0.5);
+                best = best.max(confidence.min(*other_confidence) * 0.5 * compatibility);
             }
         }
     }
     for (view, confidence) in &folded_views_right {
         if folded_bases_left.contains(view) {
-            best = best.max(*confidence);
+            best = best.max(*confidence * compatibility);
         }
     }
     best.clamp(0.0, 1.0)

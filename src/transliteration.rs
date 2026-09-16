@@ -175,7 +175,10 @@ use devanagari::devanagari_to_latin;
 use han::{han_to_latin, latin_to_han};
 use kana::kana_to_latin;
 
-pub use evidence::{transliteration_evidence, transliteration_similarity, TransliterationEvidence};
+pub use evidence::{
+    effective_transliteration_evidence, transliteration_compatibility, transliteration_evidence,
+    transliteration_similarity, TransliterationEvidence,
+};
 
 #[cfg(test)]
 mod tests {

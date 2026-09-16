@@ -1,5 +1,5 @@
 {
-  "version": "0.7.0",
+  "version": "0.8.0",
   "split": "train",
   "cases": [
     {
@@ -21243,6 +21243,1222 @@
       "tags": [
         "short_text",
         "family:punc-v-002"
+      ]
+    },
+    {
+      "id": "v5t_001",
+      "a": "the vessel departed at dawn",
+      "b": "the ship left early in the morning",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_002",
+      "a": "passengers boarded the ferry",
+      "b": "travelers got on the boat",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_003",
+      "a": "the storm delayed every crossing",
+      "b": "bad weather postponed all trips",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_004",
+      "a": "the captain reported engine trouble",
+      "b": "the skipper described motor problems",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_009",
+      "a": "the market closes at noon",
+      "b": "el mercado cierra al mediodía",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_010",
+      "a": "fresh bread costs two euros",
+      "b": "el pan fresco cuesta dos euros",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_011",
+      "a": "the vendor sells ripe fruit",
+      "b": "el vendedor ofrece fruta madura",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_012",
+      "a": "we bought cheese and olives",
+      "b": "compramos queso y aceitunas",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_017",
+      "a": "music festival",
+      "b": "festival de música",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_018",
+      "a": "piano concert",
+      "b": "concierto de piano",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_019",
+      "a": "the guitar is electric",
+      "b": "la guitarra es eléctrica",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_020",
+      "a": "opera singer",
+      "b": "cantante de ópera",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_021",
+      "a": "jazz trumpet solo",
+      "b": "solo de trompeta de jazz",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_022",
+      "a": "classical orchestra",
+      "b": "orquesta clásica",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_023",
+      "a": "rock drum rhythm",
+      "b": "ritmo de batería rock",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_024",
+      "a": "violin strings",
+      "b": "cuerdas de violín",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5t_025",
+      "a": "she was embarrassed on stage",
+      "b": "ella quedó embarazada en el escenario",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_026",
+      "a": "the library has old books",
+      "b": "la librería tiene libros viejos",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_027",
+      "a": "he attends college",
+      "b": "él asiste al colegio",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_028",
+      "a": "it was a great success",
+      "b": "fue un gran suceso",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_029",
+      "a": "wear sensible shoes",
+      "b": "usa zapatos sensibles",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_030",
+      "a": "read the actual news",
+      "b": "lee las noticias actuales",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_031",
+      "a": "tie the rope tightly",
+      "b": "ata la ropa fuerte",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_032",
+      "a": "spread the jam thickly",
+      "b": "unta el jamón generoso",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_033",
+      "a": "hoc",
+      "b": "нос",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5t_034",
+      "a": "cop",
+      "b": "сор",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5t_035",
+      "a": "tom",
+      "b": "том",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5t_036",
+      "a": "cam",
+      "b": "сам",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5t_037",
+      "a": "mope",
+      "b": "море",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5t_038",
+      "a": "tone",
+      "b": "тоне",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5t_039",
+      "a": "invoice 1042 is overdue",
+      "b": "invoice 2099 is overdue",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_040",
+      "a": "invoice 1042 is overdue",
+      "b": "receipt 1042 is overdue",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_041",
+      "a": "pay $250 before Friday",
+      "b": "pay $520 before Friday",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_042",
+      "a": "delivery on 2026-03-10",
+      "b": "delivery on 2026-03-11",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_043",
+      "a": "contact Ada Lovelace today",
+      "b": "contact Grace Hopper today",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_044",
+      "a": "send it to bob@example.com",
+      "b": "send it to alice@example.com",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_045",
+      "a": "visit https://example.com/pay now",
+      "b": "visit https://example.com/help now",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_046",
+      "a": "message @Ada_Lovelace now",
+      "b": "message @Grace_Hopper now",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_047",
+      "a": "Ada Lovelace won the marathon",
+      "b": "the marathon was won by Ada Lovelace",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_048",
+      "a": "the $5000 prize went to Ada Lovelace",
+      "b": "Ada Lovelace claimed the $5000 prize",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_049",
+      "a": "email ada@example.com for details",
+      "b": "for details, write to ada@example.com",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_050",
+      "a": "the meeting starts at 14:30",
+      "b": "at 14:30 the meeting begins",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_051",
+      "a": "Grace Hopper joined Example Bank",
+      "b": "Example Bank hired Grace Hopper",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_052",
+      "a": "order 9917 shipped yesterday",
+      "b": "yesterday, order 9917 went out",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_053",
+      "a": "see https://example.com/map for directions",
+      "b": "directions are at https://example.com/map",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_054",
+      "a": "ask @Ada_Lovelace for help",
+      "b": "@Ada_Lovelace can help, just ask",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5t_055",
+      "a": "lunch with Alice today",
+      "b": "lunch with Robert today",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_056",
+      "a": "call Alice at noon",
+      "b": "call Robert at noon",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_057",
+      "a": "Alice approved the budget",
+      "b": "Robert approved the budget",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_058",
+      "a": "the gift is for Alice",
+      "b": "the gift is for Robert",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_059",
+      "a": "Alice and Carol arrived",
+      "b": "Alice and Dave arrived",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_060",
+      "a": "dinner at Marios",
+      "b": "dinner at Luidos",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_061",
+      "a": "flight 815 boards now",
+      "b": "flight 447 boards now",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_062",
+      "a": "room 12 is ready",
+      "b": "room 21 is ready",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_063",
+      "a": "run",
+      "b": "running",
+      "languages": [],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_064",
+      "a": "quickly",
+      "b": "quick",
+      "languages": [],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_065",
+      "a": "banks",
+      "b": "bank",
+      "languages": [],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_066",
+      "a": "run",
+      "b": "bun",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_067",
+      "a": "bank",
+      "b": "bunk",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_068",
+      "a": "quick",
+      "b": "quack",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_069",
+      "a": "good job",
+      "b": "well done",
+      "languages": [],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_070",
+      "a": "thanks a lot",
+      "b": "much obliged",
+      "languages": [],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_071",
+      "a": "see you soon",
+      "b": "talk later",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_072",
+      "a": "good luck",
+      "b": "best wishes",
+      "languages": [],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5t_077",
+      "a": "the dog bit the man",
+      "b": "the man bit the dog",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_078",
+      "a": "Alice lends to Robert",
+      "b": "Robert lends to Alice",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_079",
+      "a": "the sale starts Monday",
+      "b": "the sale ends Monday",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_080",
+      "a": "all passengers survived",
+      "b": "no passengers survived",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5t_085",
+      "a": "voy a la meeting now",
+      "b": "voy a la meeting now!",
+      "languages": [],
+      "split": "train",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5t_086",
+      "a": "buy leche on your way home",
+      "b": "buy milk on your way home",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5t_087",
+      "a": "the cuenta is on the table",
+      "b": "the bill is on the table",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5t_088",
+      "a": "llámame when you arrive",
+      "b": "llámame when you get here",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5t_089",
+      "a": "good morning mi amigo",
+      "b": "good morning my friend",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5t_090",
+      "a": "voy a la meeting now",
+      "b": "voy a la party now",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5t_091",
+      "a": "buy leche today",
+      "b": "buy pan today",
+      "languages": [],
+      "split": "train",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5t_092",
+      "a": "llámame when you arrive",
+      "b": "llámame if you leave",
+      "languages": [],
+      "split": "train",
+      "difficulty": "hard",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
       ]
     }
   ]

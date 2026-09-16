@@ -96,3 +96,77 @@ pub fn transliteration_similarity(
 ) -> Option<f64> {
     transliteration_evidence(a, b).map(|evidence| evidence.similarity)
 }
+
+/// Language/context compatibility discount for transliteration evidence, in
+/// `[0.0, 1.0]`. Transliteration alone must never create a strong match, so
+/// the decision-relevant evidence is
+/// `similarity × provider_confidence × compatibility`, where compatibility
+/// multiplies four independent discounts:
+///
+/// - language: `1.0` when the top languages agree, `0.7` otherwise (true
+///   transliteration often crosses languages, so the cut is mild);
+/// - semantic: `0.5 + 0.5 × cosine` when both sides carry
+///   Production-quality (transformer) embeddings, `1.0` otherwise. The
+///   feature-hash fallback reports near-zero cosine for every cross-script
+///   pair — including genuine transliterations — so discounting on it
+///   would punish true pairs for the fallback's blindness rather than for
+///   a meaning mismatch. Missing or fallback evidence never penalizes;
+/// - entity: `1.0 - 0.5 × entity_conflict`;
+/// - validity: `0.5` when both sides are lexicon-valid words in different
+///   languages (the valid-but-different-word false-friend signature),
+///   `1.0` otherwise.
+///
+/// Pairs without transliteration views read `1.0` (nothing to discount).
+pub fn transliteration_compatibility(
+    a: &crate::core::types::MessageFingerprint,
+    b: &crate::core::types::MessageFingerprint,
+) -> f64 {
+    if a.transliteration_views().is_empty() && b.transliteration_views().is_empty() {
+        return 1.0;
+    }
+    let top = |fingerprint: &crate::core::types::MessageFingerprint| {
+        fingerprint
+            .language_candidates
+            .first()
+            .map(|candidate| candidate.language.clone())
+            .unwrap_or_else(|| "unknown".to_string())
+    };
+    let languages_agree = top(a) == top(b);
+    let language_factor = if languages_agree { 1.0 } else { 0.7 };
+    let production_pair = |fingerprint: &crate::core::types::MessageFingerprint| {
+        fingerprint
+            .metadata
+            .get("semantic_quality")
+            .is_some_and(|quality| quality == "production")
+    };
+    let semantic_factor = match (
+        a.semantic_embeddings.get("default"),
+        b.semantic_embeddings.get("default"),
+    ) {
+        (Some(left), Some(right)) if production_pair(a) && production_pair(b) => {
+            0.5 + 0.5 * crate::semantic::similarity::cosine(left, right).clamp(0.0, 1.0)
+        }
+        _ => 1.0,
+    };
+    let entity_factor =
+        1.0 - 0.5 * crate::entities::entity_conflict(&a.entities, &b.entities).clamp(0.0, 1.0);
+    let validity_factor = if a.lexicon_coverage.min(b.lexicon_coverage) > 0.8 && !languages_agree {
+        0.5
+    } else {
+        1.0
+    };
+    (language_factor * semantic_factor * entity_factor * validity_factor).clamp(0.0, 1.0)
+}
+
+/// Decision-relevant transliteration evidence: raw cross-view similarity
+/// discounted by provider confidence and language/context compatibility.
+/// `None` when neither side carries a transliteration view.
+pub fn effective_transliteration_evidence(
+    a: &crate::core::types::MessageFingerprint,
+    b: &crate::core::types::MessageFingerprint,
+) -> Option<f64> {
+    transliteration_evidence(a, b).map(|evidence| {
+        (evidence.similarity * evidence.confidence * transliteration_compatibility(a, b))
+            .clamp(0.0, 1.0)
+    })
+}

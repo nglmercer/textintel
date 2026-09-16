@@ -12,9 +12,9 @@ use crate::comparison::model::SimilarityProfile;
 use crate::core::config::EngineConfig;
 use crate::core::error::TextIntelError;
 use crate::core::providers::{
-    AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
-    LemmatizerProvider, LexiconProvider, RerankerProvider, SimilarityScorer, SpamPredictor,
-    SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
+    LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
+    SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
 };
 use crate::detection::spam::HeuristicSpamPredictor;
 use crate::engine::production::EngineBuilder;
@@ -58,8 +58,11 @@ impl TextIntelligence {
             lexicon_provider: resources.clone(),
             lemmatizer_provider: None,
             symbol_provider: resources.clone(),
-            abbreviation_provider: Some(resources),
+            abbreviation_provider: Some(resources.clone()),
             transliteration_provider: Some(Arc::new(RuleBasedTransliterationProvider)),
+            entity_provider: Some(Arc::new(
+                crate::entities::RuleBasedEntityProvider::default().with_lexicon(resources.clone()),
+            )),
             reranker_provider: None,
             spam_predictor: Arc::new(HeuristicSpamPredictor),
             similarity_scorer: None,
@@ -174,6 +177,11 @@ impl TextIntelligence {
         if let Some(provider) = builder.transliteration {
             engine.transliteration_provider = Some(provider);
         }
+        if builder.entity_disabled {
+            engine.entity_provider = None;
+        } else if let Some(provider) = builder.entity {
+            engine.entity_provider = Some(provider);
+        }
         if let Some(provider) = builder.reranker {
             engine.reranker_provider = Some(provider);
         }
@@ -213,7 +221,7 @@ impl TextIntelligence {
         }
         if let Some(path) = builder.json_store_path {
             #[cfg(feature = "ann-hnsw")]
-            let store = match builder.json_store_ann {
+            let mut store = match builder.json_store_ann {
                 Some((dimensions, max_elements)) => {
                     JsonFileStore::open_with_ann(path, dimensions, max_elements)
                 }
@@ -221,7 +229,7 @@ impl TextIntelligence {
             }
             .map_err(TextIntelError::Storage)?;
             #[cfg(not(feature = "ann-hnsw"))]
-            let store = {
+            let mut store = {
                 if builder.json_store_ann.is_some() {
                     return Err(TextIntelError::InvalidConfiguration(
                         "json_store_with_ann requires the ann-hnsw feature".to_string(),
@@ -229,6 +237,10 @@ impl TextIntelligence {
                 }
                 JsonFileStore::open(path).map_err(TextIntelError::Storage)?
             };
+            store.set_retrieval_limits(
+                engine.config.max_per_channel_candidates,
+                engine.config.max_ann_candidates,
+            );
             engine.store = RwLock::new(Box::new(store));
         }
         // Builder-supplied providers replaced the from_parts defaults above;
@@ -275,6 +287,18 @@ impl TextIntelligence {
         self.lexicon_provider = resources.clone();
         self.symbol_provider = resources.clone();
         self.abbreviation_provider = Some(resources.clone());
+        // The rule-based entity extractor consults the lexicon to tell names
+        // from capitalized common words; re-attach it to the new resources
+        // (custom entity providers are left untouched).
+        if self
+            .entity_provider
+            .as_ref()
+            .is_some_and(|provider| provider.capabilities().provider == "rule_based_entities")
+        {
+            self.entity_provider = Some(Arc::new(
+                crate::entities::RuleBasedEntityProvider::default().with_lexicon(resources.clone()),
+            ));
+        }
         self.resources = resources;
         // A new resource set changes the rebus revision (invalidating when it
         // differs) and re-caches the fresh language detector.
@@ -319,6 +343,18 @@ impl TextIntelligence {
     /// Disable transliteration views (fingerprint keeps all other channels).
     pub fn without_transliteration(mut self) -> Self {
         self.transliteration_provider = None;
+        self
+    }
+
+    pub fn with_entity_provider<P: EntityProvider + 'static>(mut self, provider: P) -> Self {
+        self.entity_provider = Some(Arc::new(provider));
+        self
+    }
+
+    /// Disable entity extraction (fingerprints carry no entity evidence;
+    /// entity features read 0.0, never a penalty).
+    pub fn without_entities(mut self) -> Self {
+        self.entity_provider = None;
         self
     }
 

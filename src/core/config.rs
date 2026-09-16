@@ -285,6 +285,26 @@ pub struct EngineConfig {
     pub repetition_keep: usize,
     pub max_batch_size: usize,
     pub max_search_candidates: usize,
+    /// Candidate-union bound per retrieval channel inside indexed stores:
+    /// each channel contributes at most this many IDs before the union is
+    /// ranked and cut to `max_search_candidates`. Bounds candidate
+    /// expansion for common tokens.
+    pub max_per_channel_candidates: usize,
+    /// ANN retrieval bound: the semantic-ANN channel returns at most this
+    /// many IDs (capped further by `max_search_candidates`).
+    pub max_ann_candidates: usize,
+    /// Embedding provider fan-out bound: analyzer batches are chunked to
+    /// this many texts per provider call (providers may chunk further).
+    pub embedding_batch_size: usize,
+    /// Embedding input bound in characters: texts longer than this are
+    /// truncated on a char boundary before embedding (deterministic
+    /// preprocessing; the transformer additionally caps word pieces at its
+    /// `max_position_embeddings`).
+    pub embedding_max_chars: usize,
+    /// Entity evidence bound: at most this many mentions per fingerprint.
+    pub max_entities: usize,
+    /// Entity span bound in characters: longer mention values are dropped.
+    pub max_entity_span_chars: usize,
     pub max_decoded_branches: usize,
     pub strong_confidence_gap: f64,
     pub similarity_weights: SimilarityWeights,
@@ -314,6 +334,12 @@ impl Default for EngineConfig {
             repetition_keep: 1,
             max_batch_size: 256,
             max_search_candidates: 500,
+            max_per_channel_candidates: 200,
+            max_ann_candidates: 100,
+            embedding_batch_size: 32,
+            embedding_max_chars: 1024,
+            max_entities: 16,
+            max_entity_span_chars: 64,
             max_decoded_branches: 20_000,
             strong_confidence_gap: 0.15,
             similarity_weights: SimilarityWeights::default(),
@@ -344,6 +370,15 @@ impl EngineConfig {
             ("repetition_keep", self.repetition_keep),
             ("max_batch_size", self.max_batch_size),
             ("max_search_candidates", self.max_search_candidates),
+            (
+                "max_per_channel_candidates",
+                self.max_per_channel_candidates,
+            ),
+            ("max_ann_candidates", self.max_ann_candidates),
+            ("embedding_batch_size", self.embedding_batch_size),
+            ("embedding_max_chars", self.embedding_max_chars),
+            ("max_entities", self.max_entities),
+            ("max_entity_span_chars", self.max_entity_span_chars),
             ("max_decoded_branches", self.max_decoded_branches),
         ] {
             if value == 0 {

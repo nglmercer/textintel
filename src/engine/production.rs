@@ -18,9 +18,9 @@ use crate::core::capabilities::ProviderCapabilities;
 use crate::core::config::EngineConfig;
 use crate::core::error::TextIntelError;
 use crate::core::providers::{
-    AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
-    LemmatizerProvider, LexiconProvider, RerankerProvider, SimilarityScorer, SpamPredictor,
-    SymbolKnowledgeProvider, TransliterationProvider,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
+    LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
+    SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider,
 };
 use crate::resources::{ResourceLoader, ResourcePackInfo};
 
@@ -47,6 +47,11 @@ pub struct EngineDiagnostics {
     pub symbol_languages: Vec<String>,
     pub symbol_tokens: usize,
     pub embedding: ProviderCapabilities,
+    /// Embedding model identity (model id, revision, dimensions, source
+    /// path) when the provider reports one. Counts and names only — never
+    /// user text or vectors.
+    #[serde(default)]
+    pub embedding_model: Option<crate::core::capabilities::ModelMetadata>,
     pub g2p: ProviderCapabilities,
     pub language: ProviderCapabilities,
     pub lexicon: ProviderCapabilities,
@@ -54,6 +59,8 @@ pub struct EngineDiagnostics {
     pub abbreviations: Option<ProviderCapabilities>,
     #[serde(default)]
     pub transliteration: Option<ProviderCapabilities>,
+    #[serde(default)]
+    pub entities: Option<ProviderCapabilities>,
     pub spam: ProviderCapabilities,
     pub similarity: Option<ProviderCapabilities>,
     pub reranker: Option<ProviderCapabilities>,
@@ -72,15 +79,16 @@ pub struct EngineDiagnostics {
 }
 
 /// Production similarity artifact within `dir`: newest revision wins
-/// (`similarity-v4`, schema 8 with the fuzzy-decode mismatch interaction),
-/// falling back to `similarity-v3` and then `similarity-v2`
-/// and `similarity-v1` by existence. Loading stays strict: a selected
-/// artifact whose feature schema does not match this build is rejected with
-/// an explicit error (old revisions predate schema 8 and must be
-/// retrained, never silently loaded). Diagnostics always report the loaded
-/// revision, so the active artifact is explicit.
+/// (`similarity-v5`, schema 9 with contextual/entity features), falling
+/// back to `similarity-v4` and then `similarity-v3`, `similarity-v2`, and
+/// `similarity-v1` by existence. Loading stays strict: a selected artifact
+/// whose feature schema does not match this build is rejected with an
+/// explicit error (old revisions predate schema 9 and must be retrained,
+/// never silently loaded). Diagnostics always report the loaded revision,
+/// so the active artifact is explicit.
 pub fn preferred_similarity_artifact_in(dir: &std::path::Path) -> PathBuf {
     for name in [
+        "similarity-v5.json",
         "similarity-v4.json",
         "similarity-v3.json",
         "similarity-v2.json",
@@ -132,6 +140,8 @@ pub struct EngineBuilder {
     pub(crate) symbols: Option<Arc<dyn SymbolKnowledgeProvider>>,
     pub(crate) abbreviations: Option<Arc<dyn AbbreviationProvider>>,
     pub(crate) transliteration: Option<Arc<dyn TransliterationProvider>>,
+    pub(crate) entity: Option<Arc<dyn EntityProvider>>,
+    pub(crate) entity_disabled: bool,
     pub(crate) reranker: Option<Arc<dyn RerankerProvider>>,
     /// Explicit local transformer directory for [`Self::production_local`].
     pub(crate) transformer_model_path: Option<PathBuf>,
@@ -211,6 +221,19 @@ impl EngineBuilder {
         provider: P,
     ) -> Self {
         self.transliteration = Some(Arc::new(provider));
+        self
+    }
+
+    pub fn entity_provider<P: EntityProvider + 'static>(mut self, provider: P) -> Self {
+        self.entity = Some(Arc::new(provider));
+        self.entity_disabled = false;
+        self
+    }
+
+    /// Disable entity extraction for the built engine.
+    pub fn without_entities(mut self) -> Self {
+        self.entity = None;
+        self.entity_disabled = true;
         self
     }
 
@@ -354,7 +377,13 @@ impl EngineBuilder {
                 if let Some(directory) = candidate {
                     match crate::semantic::TransformerEmbeddingProvider::open(&directory) {
                         Ok(provider) => {
-                            self.embedding = Some(Arc::new(provider));
+                            // Production preference: local multilingual
+                            // transformer first, feature-hash fallback on any
+                            // runtime failure (explicit in diagnostics).
+                            let fallback = crate::semantic::FeatureHashEmbeddingProvider::default();
+                            self.embedding = Some(Arc::new(
+                                crate::semantic::FallbackEmbeddingProvider::new(provider, fallback),
+                            ));
                             used_transformer = true;
                         }
                         Err(error) if explicit => {

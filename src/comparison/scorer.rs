@@ -365,6 +365,59 @@ pub fn score_fingerprints(
     // decode to nothing — the linear model cannot express this interaction
     // from `single_word_pair` and `exact_decode` alone.
     let single_word_exact = (single_word_pair * exact_decode).clamp(0.0, 1.0);
+    // Entity evidence is independent: agreement rewards shared entities,
+    // conflict penalizes same-type substitutions, and missing evidence reads
+    // 0.0 on both (never a penalty).
+    let entity_agreement = finite_or_zero(crate::entities::entity_agreement(
+        &a.entities,
+        &a.raw,
+        &b.entities,
+        &b.raw,
+    ));
+    let entity_conflict =
+        finite_or_zero(crate::entities::entity_conflict(&a.entities, &b.entities));
+    let transliteration_compatibility =
+        finite_or_zero(crate::transliteration::transliteration_compatibility(a, b));
+    // Contextual semantic splits: the raw channel value routed by provider
+    // quality, language scope, lexical support, and transliteration backing
+    // so the linear model can price each situation separately.
+    let semantic_value = semantic.unwrap_or(0.0);
+    let production_pair = a
+        .metadata
+        .get("semantic_quality")
+        .is_some_and(|quality| quality == "production")
+        && b.metadata
+            .get("semantic_quality")
+            .is_some_and(|quality| quality == "production");
+    let contextual_semantic = if production_pair { semantic_value } else { 0.0 };
+    let languages_agree = crate::comparison::model::language_agreement(a, b) > 0.5;
+    let cross_language_semantic = if languages_agree { 0.0 } else { semantic_value };
+    let semantic_without_lexical_overlap = if lexical < 0.3 { semantic_value } else { 0.0 };
+    let transliteration_effective =
+        crate::transliteration::effective_transliteration_evidence(a, b).unwrap_or(0.0);
+    // Interaction features use the compatibility-free weighted evidence
+    // (`similarity × confidence`) with explicit gates, keeping them distinct
+    // from the compatibility-discounted evidence priced through `decoded`
+    // and `exact_decode`. Both fire only cross-script: same-script Latin→X
+    // views are spurious byproducts, not transliteration links.
+    let transliteration_weighted = crate::transliteration::transliteration_evidence(a, b)
+        .map(|evidence| evidence.weighted())
+        .unwrap_or(0.0);
+    let semantic_floor = semantic_value.max(0.0);
+    let transliteration_semantic_agreement =
+        (transliteration_weighted * semantic_floor * cross_script_pair).clamp(0.0, 1.0);
+    let semantic_gap = if semantic.is_some() {
+        1.0 - semantic_floor
+    } else {
+        1.0
+    };
+    let language_mismatch = if languages_agree { 0.0 } else { 1.0 };
+    let transliteration_semantic_conflict = (transliteration_weighted
+        * semantic_gap
+        * lexicon_validity.clamp(0.0, 1.0)
+        * language_mismatch
+        * cross_script_pair)
+        .clamp(0.0, 1.0);
     let mut evidence = vec![
         format!("character={character:.3}"),
         format!("lexical={lexical:.3}"),
@@ -381,6 +434,14 @@ pub fn score_fingerprints(
         format!("cross_script_agreement={cross_script_agreement:.0}"),
         format!("exact_decode={exact_decode:.3}"),
         format!("single_word_exact={single_word_exact:.3}"),
+        format!("entity_agreement={entity_agreement:.3}"),
+        format!("entity_conflict={entity_conflict:.3}"),
+        format!("transliteration_compatibility={transliteration_compatibility:.3}"),
+        format!("contextual_semantic={contextual_semantic:.3}"),
+        format!("cross_language_semantic={cross_language_semantic:.3}"),
+        format!("semantic_without_lexical_overlap={semantic_without_lexical_overlap:.3}"),
+        format!("transliteration_semantic_agreement={transliteration_semantic_agreement:.3}"),
+        format!("transliteration_semantic_conflict={transliteration_semantic_conflict:.3}"),
         format!(
             "symbolic={}",
             symbolic.map_or_else(|| "absent".to_string(), |value| format!("{value:.3}"))
@@ -402,6 +463,10 @@ pub fn score_fingerprints(
             evidence.push(format!("transliteration={:.3}", tr.weighted()));
             evidence.push(format!("transliteration_similarity={:.3}", tr.similarity));
             evidence.push(format!("transliteration_confidence={:.3}", tr.confidence));
+            evidence.push(format!(
+                "transliteration_effective={:.3}",
+                transliteration_effective
+            ));
         }
         None => evidence.push("transliteration=absent".to_string()),
     }
@@ -448,6 +513,14 @@ pub fn score_fingerprints(
         cross_script_agreement,
         exact_decode,
         single_word_exact,
+        entity_agreement,
+        entity_conflict,
+        transliteration_compatibility,
+        contextual_semantic,
+        cross_language_semantic,
+        semantic_without_lexical_overlap,
+        transliteration_semantic_agreement,
+        transliteration_semantic_conflict,
         explanations,
         evidence,
         weights_used,

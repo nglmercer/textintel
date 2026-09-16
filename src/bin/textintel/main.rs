@@ -331,6 +331,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "api_version": textintel::API_VERSION,
                 "fingerprint_schema_version": textintel::FINGERPRINT_SCHEMA_VERSION,
                 "providers": engine.provider_capabilities(),
+                "embedding_model": diagnostics.embedding_model,
+                "ann_enabled": diagnostics.ann_enabled,
+                "store_capabilities": diagnostics.store_capabilities,
+                "caches": diagnostics.caches,
                 "degraded": diagnostics.degraded,
                 "symbol_languages": diagnostics.symbol_languages,
                 "abbreviation_languages": diagnostics.abbreviation_languages,
@@ -340,6 +344,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 println!("api: {}", textintel::API_VERSION);
                 println!("providers: {:?}", engine.provider_capabilities());
+                println!("embedding_model: {:?}", diagnostics.embedding_model);
+                println!("ann_enabled: {}", diagnostics.ann_enabled);
+                println!("store: {:?}", diagnostics.store_capabilities);
+                println!("caches: {:?}", diagnostics.caches);
                 for item in &diagnostics.degraded {
                     println!(
                         "degraded: {} (serving {}; want {}): {}",

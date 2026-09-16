@@ -16,14 +16,16 @@ use crate::core::types::{ComparisonResult, MessageFingerprint};
 /// punctuation-only variants, substring containment for super/substring
 /// pairs, the cross-script indicator and its agreement interaction,
 /// confidence-weighted exact decoding, and the single-word exact
-/// interaction), and the fuzzy-decode mismatch interaction (close decoded
-/// overlap without exact decoding: a confusable signature). (Validation
-/// history: single-word typo, cross-script transliteration, cross-script
-/// fuzzy-decoded, and single-word cross-language interactions were all
-/// tried and removed — every rescue is zero-sum against a matched negative
-/// phenomenon (rare-word confusables, exact Cyrillic false friends,
-/// leet-confusables), and no candidate beat the schema-8 validation F1 of
-/// 0.943. See PRODUCTION_GAP_ANALYSIS.md.)
+/// interaction), the fuzzy-decode mismatch interaction (close decoded
+/// overlap without exact decoding: a confusable signature), and the seven
+/// contextual/entity features (transformer-only semantic, cross-language
+/// semantic, entity agreement/conflict, semantic without lexical overlap,
+/// and transliteration↔semantic agreement/conflict). (Validation history:
+/// single-word typo, cross-script transliteration, cross-script
+/// fuzzy-decoded, and single-word cross-language interactions were all tried
+/// and removed before schema 9 — every rescue is zero-sum against a matched
+/// negative phenomenon (rare-word confusables, exact Cyrillic false
+/// friends, leet-confusables). See PRODUCTION_GAP_ANALYSIS.md.)
 pub const TRAINING_FEATURES: &[&str] = &[
     "semantic",
     "lexical",
@@ -48,6 +50,13 @@ pub const TRAINING_FEATURES: &[&str] = &[
     "exact_decode",
     "single_word_exact",
     "fuzzy_decode_mismatch",
+    "contextual_semantic",
+    "cross_language_semantic",
+    "entity_agreement",
+    "entity_conflict",
+    "semantic_without_lexical_overlap",
+    "transliteration_semantic_agreement",
+    "transliteration_semantic_conflict",
 ];
 
 /// Fuzzy decoded overlap without exact decoding:
@@ -159,6 +168,34 @@ pub fn training_features(
         "fuzzy_decode_mismatch".to_string(),
         fuzzy_decode_mismatch(result),
     );
+    features.insert(
+        "contextual_semantic".to_string(),
+        result.contextual_semantic.clamp(0.0, 1.0),
+    );
+    features.insert(
+        "cross_language_semantic".to_string(),
+        result.cross_language_semantic.clamp(0.0, 1.0),
+    );
+    features.insert(
+        "entity_agreement".to_string(),
+        result.entity_agreement.clamp(0.0, 1.0),
+    );
+    features.insert(
+        "entity_conflict".to_string(),
+        result.entity_conflict.clamp(0.0, 1.0),
+    );
+    features.insert(
+        "semantic_without_lexical_overlap".to_string(),
+        result.semantic_without_lexical_overlap.clamp(0.0, 1.0),
+    );
+    features.insert(
+        "transliteration_semantic_agreement".to_string(),
+        result.transliteration_semantic_agreement.clamp(0.0, 1.0),
+    );
+    features.insert(
+        "transliteration_semantic_conflict".to_string(),
+        result.transliteration_semantic_conflict.clamp(0.0, 1.0),
+    );
     features
 }
 
@@ -186,8 +223,8 @@ mod tests {
 
     #[test]
     fn training_features_cover_schema_in_order() {
-        assert_eq!(TRAINING_FEATURES.len(), 23);
-        assert_eq!(TRAINING_FEATURE_SCHEMA_VERSION, 8);
+        assert_eq!(TRAINING_FEATURES.len(), 30);
+        assert_eq!(TRAINING_FEATURE_SCHEMA_VERSION, 9);
         let mut sorted = TRAINING_FEATURES.to_vec();
         sorted.sort_unstable();
         sorted.dedup();

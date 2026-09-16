@@ -166,6 +166,141 @@ fn stable_hash(bytes: &[u8]) -> u64 {
     hash
 }
 
+/// Explicit degradation chain: `primary` (a contextual transformer) serves
+/// until it errors or returns a vector that fails its own declared metadata
+/// (dimension mismatch, non-finite values), at which point every call serves
+/// `fallback` (the feature-hash baseline) instead. The switch latches for
+/// the provider's lifetime and is explicit in [`capabilities`](EmbeddingProviderTrait::capabilities)
+/// and [`model_metadata`](EmbeddingProviderTrait::model_metadata), so
+/// diagnostics always report the serving backend. Revision-aware caches
+/// above this provider invalidate on the metadata switch instead of mixing
+/// vectors across backends.
+pub struct FallbackEmbeddingProvider<P, F> {
+    primary: P,
+    fallback: F,
+    degraded: std::sync::atomic::AtomicBool,
+}
+
+impl<P, F> std::fmt::Debug for FallbackEmbeddingProvider<P, F>
+where
+    P: std::fmt::Debug,
+    F: std::fmt::Debug,
+{
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("FallbackEmbeddingProvider")
+            .field("primary", &self.primary)
+            .field("fallback", &self.fallback)
+            .field(
+                "degraded",
+                &self.degraded.load(std::sync::atomic::Ordering::SeqCst),
+            )
+            .finish()
+    }
+}
+
+impl<P, F> FallbackEmbeddingProvider<P, F>
+where
+    P: EmbeddingProviderTrait,
+    F: EmbeddingProviderTrait,
+{
+    pub fn new(primary: P, fallback: F) -> Self {
+        Self {
+            primary,
+            fallback,
+            degraded: std::sync::atomic::AtomicBool::new(false),
+        }
+    }
+
+    pub fn primary(&self) -> &P {
+        &self.primary
+    }
+
+    pub fn fallback(&self) -> &F {
+        &self.fallback
+    }
+
+    /// True once the primary has failed and the fallback is serving.
+    pub fn is_degraded(&self) -> bool {
+        self.degraded.load(std::sync::atomic::Ordering::SeqCst)
+    }
+
+    fn use_fallback(&self) {
+        self.degraded
+            .store(true, std::sync::atomic::Ordering::SeqCst);
+    }
+
+    fn primary_vectors_valid(&self, vectors: &[Vec<f32>]) -> bool {
+        let Some(metadata) = self.primary.model_metadata() else {
+            return true;
+        };
+        vectors
+            .iter()
+            .all(|vector| metadata.validate_vector(vector).is_ok())
+    }
+
+    fn embed_via_primary(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
+        if self.is_degraded() {
+            return self.fallback.embed_batch(texts);
+        }
+        match self.primary.embed_batch(texts) {
+            Ok(vectors) if vectors.len() == texts.len() && self.primary_vectors_valid(&vectors) => {
+                Ok(vectors)
+            }
+            _ => {
+                self.use_fallback();
+                self.fallback.embed_batch(texts)
+            }
+        }
+    }
+}
+
+impl<P, F> EmbeddingProviderTrait for FallbackEmbeddingProvider<P, F>
+where
+    P: EmbeddingProviderTrait,
+    F: EmbeddingProviderTrait,
+{
+    fn embed(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
+        self.embed_via_primary(texts)
+    }
+
+    fn embed_batch(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
+        self.embed_via_primary(texts)
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        if self.is_degraded() {
+            self.fallback.capabilities().with_fallback(format!(
+                "primary {} failed; serving the fallback explicitly",
+                self.primary.capabilities().provider
+            ))
+        } else {
+            self.primary.capabilities()
+        }
+    }
+
+    fn model_metadata(&self) -> Option<ModelMetadata> {
+        if self.is_degraded() {
+            self.fallback.model_metadata()
+        } else {
+            self.primary.model_metadata()
+        }
+    }
+
+    fn health_check(&self) -> Result<(), ProviderError> {
+        if self.is_degraded() {
+            return self.fallback.health_check();
+        }
+        match self.primary.health_check() {
+            Ok(()) => Ok(()),
+            Err(_) => {
+                self.use_fallback();
+                self.fallback.health_check()
+            }
+        }
+    }
+}
+
 /// Bounded, deterministic embedding cache keyed by model identity, model
 /// revision, and folded text. Missing values are fetched in one batch from
 /// the wrapped provider. An observed revision change invalidates the cache

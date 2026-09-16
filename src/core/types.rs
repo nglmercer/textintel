@@ -365,6 +365,24 @@ pub struct ObfuscationFeatures {
     pub flags: Vec<String>,
 }
 
+/// One bounded entity mention: type (`person`, `organization`, `url`,
+/// `email`, `mention`, `number`, `currency`, `date`, `time`), normalized
+/// value, UTF-8 byte span into the source text, confidence, provider, and
+/// ambient language when known.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct EntityMention {
+    pub entity_type: String,
+    pub value: String,
+    /// UTF-8 byte offset into the source text.
+    pub start: usize,
+    /// UTF-8 byte offset just after the mention.
+    pub end: usize,
+    pub confidence: f64,
+    pub provider: String,
+    #[serde(default)]
+    pub language: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct MessageFingerprint {
     #[serde(default = "default_fingerprint_schema_version")]
@@ -404,6 +422,11 @@ pub struct MessageFingerprint {
     pub obfuscation_features: ObfuscationFeatures,
     #[serde(default)]
     pub channel_availability: BTreeMap<String, ChannelAvailability>,
+    /// Bounded entity mentions (see [`EntityMention`]). Payloads predating
+    /// entity extraction read empty, which the scorer treats as "no entity
+    /// evidence" (agreement and conflict both 0.0, never a penalty).
+    #[serde(default)]
+    pub entities: Vec<EntityMention>,
     pub metadata: BTreeMap<String, String>,
 }
 
@@ -560,6 +583,55 @@ pub struct ComparisonResult {
     /// taxing synonym swaps.
     #[serde(default)]
     pub valid_swap_similarity: f64,
+    /// Entity agreement in `[0.0, 1.0]` (see
+    /// [`crate::entities::entity_agreement`]): same or compatible entities
+    /// across the pair. Empty on either side reads `0.0` (no bonus, never a
+    /// penalty).
+    #[serde(default)]
+    pub entity_agreement: f64,
+    /// Entity conflict in `[0.0, 1.0]` (see
+    /// [`crate::entities::entity_conflict`]): shared entity types with
+    /// disjoint values. Empty on either side reads `0.0` (never a penalty).
+    #[serde(default)]
+    pub entity_conflict: f64,
+    /// Language/context compatibility discount for transliteration evidence
+    /// in `[0.0, 1.0]` (see
+    /// [`crate::transliteration::transliteration_compatibility`]). The
+    /// decision-relevant transliteration evidence is
+    /// `similarity × confidence × compatibility`.
+    #[serde(default)]
+    pub transliteration_compatibility: f64,
+    /// Transformer-only semantic cosine: the semantic channel value when
+    /// both sides carry Production-quality embeddings, else `0.0`. Lets the
+    /// model trust contextual multilingual evidence without trusting the
+    /// feature-hash fallback equally.
+    #[serde(default)]
+    pub contextual_semantic: f64,
+    /// Semantic cosine when the top languages differ, else `0.0`.
+    /// Cross-language matches route here; same-language pairs read `0.0`.
+    #[serde(default)]
+    pub cross_language_semantic: f64,
+    /// Semantic cosine when lexical similarity is low (`< 0.3`), else
+    /// `0.0`. Paraphrases with disjoint lexicons route here; pairs with
+    /// lexical support read `0.0`.
+    #[serde(default)]
+    pub semantic_without_lexical_overlap: f64,
+    /// Cross-script transliteration evidence backed by semantics:
+    /// `weighted × semantic_cosine × cross_script`, else `0.0`. Same-script
+    /// pairs read `0.0` (their Latin→X views are spurious byproducts, not
+    /// transliteration links).
+    #[serde(default)]
+    pub transliteration_semantic_agreement: f64,
+    /// Cross-script look-alike without semantic support where both sides
+    /// are lexicon-valid words in different languages:
+    /// `weighted × (1 - semantic) × validity × language_mismatch ×
+    /// cross_script`, else `0.0`. The false-friend signature
+    /// (valid-but-different words); genuine transliterations (one side
+    /// usually lexicon-invalid, e.g. romanizations) read near `0.0`. When
+    /// semantic evidence is absent the semantic factor is neutral (`1.0`)
+    /// so the validity signature still fires.
+    #[serde(default)]
+    pub transliteration_semantic_conflict: f64,
     pub explanations: Vec<String>,
     pub evidence: Vec<String>,
     pub weights_used: BTreeMap<String, f64>,

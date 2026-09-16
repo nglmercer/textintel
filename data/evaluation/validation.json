@@ -1,5 +1,5 @@
 {
-  "version": "0.7.0",
+  "version": "0.8.0",
   "split": "validation",
   "cases": [
     {
@@ -7532,6 +7532,646 @@
       "tags": [
         "short_text",
         "family:punc-v-004"
+      ]
+    },
+    {
+      "id": "v5v_001",
+      "a": "the gardener pruned the trees",
+      "b": "the orchard keeper trimmed the branches",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5v_002",
+      "a": "rain ruined the harvest",
+      "b": "the crops were spoiled by storms",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5v_005",
+      "a": "borrow a book from the library",
+      "b": "emprunter un livre à la bibliothèque",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5v_006",
+      "a": "the novel was translated twice",
+      "b": "le roman a été traduit deux fois",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5v_009",
+      "a": "telephone conversation",
+      "b": "conversación telefónica",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5v_010",
+      "a": "electric lamp",
+      "b": "lámpara eléctrica",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5v_011",
+      "a": "hospital doctor",
+      "b": "médico del hospital",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5v_012",
+      "a": "hotel reception",
+      "b": "recepción del hotel",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "v5v_013",
+      "a": "meet me at the library",
+      "b": "nos vemos en la librería",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_014",
+      "a": "a new fabric",
+      "b": "una nueva fábrica",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_015",
+      "a": "where is the exit",
+      "b": "dónde está el éxito",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_016",
+      "a": "clean the carpet",
+      "b": "limpia la carpeta",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_017",
+      "a": "note",
+      "b": "поте",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5v_018",
+      "a": "cope",
+      "b": "соре",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5v_019",
+      "a": "coma",
+      "b": "сома",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5v_020",
+      "a": "hope",
+      "b": "норе",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "v5v_021",
+      "a": "transfer $500 to savings",
+      "b": "transfer $900 to savings",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_022",
+      "a": "package arrives 2026-04-02",
+      "b": "package arrives 2026-04-03",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_023",
+      "a": "call 555-0142 now",
+      "b": "call 555-0143 now",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_024",
+      "a": "gate 12 is open",
+      "b": "gate 21 is open",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_025",
+      "a": "the concert starts at 20:00",
+      "b": "at 20:00 the concert begins",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5v_026",
+      "a": "tickets cost €45 each",
+      "b": "each ticket is €45",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5v_027",
+      "a": "the band @The_Rollers plays Friday",
+      "b": "Friday's show features @The_Rollers",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5v_028",
+      "a": "venue: Grand Hall, doors 19:00",
+      "b": "doors open 19:00 at Grand Hall",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "v5v_029",
+      "a": "email bob@example.com today",
+      "b": "email alice@example.com today",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_030",
+      "a": "pay carol@example.com $50",
+      "b": "pay dave@example.com $50",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_031",
+      "a": "meet at https://example.com/north",
+      "b": "meet at https://example.com/south",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_032",
+      "a": "invoice to Hooli Inc",
+      "b": "invoice to Initech LLC",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_033",
+      "a": "walk",
+      "b": "walking",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5v_034",
+      "a": "happy",
+      "b": "happily",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5v_035",
+      "a": "walk",
+      "b": "talk",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5v_036",
+      "a": "happy",
+      "b": "sappy",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5v_037",
+      "a": "nice work",
+      "b": "great effort",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5v_038",
+      "a": "my bad",
+      "b": "my mistake",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "v5v_041",
+      "a": "the window is open",
+      "b": "the window is shut",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_042",
+      "a": "he passed the exam",
+      "b": "he failed the exam",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "v5v_045",
+      "a": "apaga the lights please",
+      "b": "apaga the lights!",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5v_046",
+      "a": "quiero coffee now",
+      "b": "quiero café now",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5v_047",
+      "a": "apaga the lights",
+      "b": "prende the lights",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "v5v_048",
+      "a": "quiero coffee",
+      "b": "quiero té",
+      "languages": [],
+      "split": "validation",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
       ]
     }
   ]

@@ -213,7 +213,7 @@ fn trained_similarity_artifact_loads_and_separates_pairs() {
     use textintel::SimilarityModelArtifact;
     use textintel::SimilarityScorer;
 
-    let source = include_str!("../models/similarity-v4.json");
+    let source = include_str!("../models/similarity-v5.json");
     let artifact = SimilarityModelArtifact::from_json(source).unwrap();
     assert_eq!(artifact.kind, "logistic_similarity");
     assert_eq!(
@@ -439,7 +439,7 @@ fn evaluation_dataset_from_dir_loads_splits_and_evaluates() {
     // Integration guard for the real-data path: the sharded dataset loads
     // with its version and splits intact, and a small slice evaluates.
     let dataset = EvaluationDataset::from_dir("data/evaluation").unwrap();
-    assert_eq!(dataset.version, "0.7.0");
+    assert_eq!(dataset.version, "0.8.0");
     let mut splits = std::collections::BTreeSet::new();
     for case in &dataset.cases {
         splits.insert(case.split.as_str());

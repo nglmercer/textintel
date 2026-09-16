@@ -19,9 +19,9 @@ use crate::cache::RevisionCache;
 use crate::comparison::model::SimilarityProfile;
 use crate::core::config::EngineConfig;
 use crate::core::providers::{
-    AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
-    LemmatizerProvider, LexiconProvider, RerankerProvider, SimilarityScorer, SpamPredictor,
-    SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
+    LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
+    SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
 };
 use crate::core::types::DecodedCandidate;
 use crate::resources::ResourceLoader;
@@ -41,6 +41,7 @@ pub struct TextIntelligence {
     symbol_provider: Arc<dyn SymbolKnowledgeProvider>,
     abbreviation_provider: Option<Arc<dyn AbbreviationProvider>>,
     transliteration_provider: Option<Arc<dyn TransliterationProvider>>,
+    entity_provider: Option<Arc<dyn EntityProvider>>,
     reranker_provider: Option<Arc<dyn RerankerProvider>>,
     spam_predictor: Arc<dyn SpamPredictor>,
     similarity_scorer: Option<Arc<dyn SimilarityScorer>>,

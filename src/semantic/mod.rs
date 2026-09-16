@@ -10,8 +10,8 @@ pub mod transformer;
 #[cfg(feature = "semantic-candle")]
 pub use candle::CandleEmbeddingProvider;
 pub use embeddings::{
-    CachedEmbeddingProvider, EmbeddingProvider, FeatureHashEmbeddingProvider,
-    NullEmbeddingProvider, StaticEmbeddingProvider,
+    CachedEmbeddingProvider, EmbeddingProvider, FallbackEmbeddingProvider,
+    FeatureHashEmbeddingProvider, NullEmbeddingProvider, StaticEmbeddingProvider,
 };
 #[cfg(feature = "semantic-http")]
 pub use http::HttpEmbeddingProvider;

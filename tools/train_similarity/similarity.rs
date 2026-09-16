@@ -242,12 +242,44 @@ pub(crate) fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::
     metrics.insert("train_l2".to_string(), l2);
     metrics.insert("train_learning_rate".to_string(), learning_rate);
     metrics.insert("train_iterations".to_string(), iterations as f64);
-    let artifact = SimilarityModelArtifact::new(dataset.version.clone(), names, bias)
+    let mut training_config = BTreeMap::new();
+    training_config.insert("iterations".to_string(), iterations.to_string());
+    training_config.insert("learning_rate".to_string(), learning_rate.to_string());
+    training_config.insert("l2".to_string(), l2.to_string());
+    training_config.insert("sample_weighting".to_string(), "balanced".to_string());
+    training_config.insert(
+        "feature_schema_version".to_string(),
+        textintel::TRAINING_FEATURE_SCHEMA_VERSION.to_string(),
+    );
+    training_config.insert(
+        "train_split".to_string(),
+        format!("train (n={})", train.labels.len()),
+    );
+    let mut calibration_config = BTreeMap::new();
+    calibration_config.insert(
+        "bias_iterations".to_string(),
+        CALIBRATION_ITERATIONS.to_string(),
+    );
+    calibration_config.insert("temperature".to_string(), temperature.to_string());
+    calibration_config.insert(
+        "method".to_string(),
+        "validation_nll_bias_plus_temperature_scaling".to_string(),
+    );
+    calibration_config.insert(
+        "validation_split".to_string(),
+        format!("validation (n={})", validation.labels.len()),
+    );
+    let mut artifact = SimilarityModelArtifact::new(dataset.version.clone(), names, bias)
         .with_revision(format!(
             "train-{iterations}-iter-lr{learning_rate}-l2{l2}-ds{}",
             dataset.version
         ))
-        .with_metrics(metrics);
+        .with_metrics(metrics)
+        .with_training_config(training_config)
+        .with_calibration_config(calibration_config);
+    if let Some(model) = engine.diagnostics().embedding_model {
+        artifact = artifact.with_embedding_model(model);
+    }
     if let Some(parent) = std::path::Path::new(&output).parent() {
         if !parent.as_os_str().is_empty() {
             std::fs::create_dir_all(parent)?;

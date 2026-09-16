@@ -56,6 +56,10 @@ pub struct HnswVectorIndex {
     index: Hnsw<'static, f32, DistCosine>,
     dimensions: usize,
     max_elements: usize,
+    /// Embedding model backing the vectors (`model_id@revision`) when the
+    /// owning store tracks one. Queries from a different revision skip this
+    /// index instead of comparing across revisions.
+    model: Option<String>,
     next_id: RwLock<usize>,
     ids: RwLock<Vec<Option<String>>>,
     /// Stored vectors mirroring `ids` positionally (tombstones are `None`
@@ -95,6 +99,7 @@ impl HnswVectorIndex {
             ),
             dimensions,
             max_elements,
+            model: None,
             next_id: RwLock::new(0),
             ids: RwLock::new(Vec::new()),
             vectors: RwLock::new(Vec::new()),
@@ -107,6 +112,18 @@ impl HnswVectorIndex {
 
     pub fn max_elements(&self) -> usize {
         self.max_elements
+    }
+
+    /// Embedding model backing the vectors, when tracked.
+    pub fn model(&self) -> Option<&str> {
+        self.model.as_deref()
+    }
+
+    /// Adopt an embedding-model identity (`model_id@revision`). Vectors
+    /// indexed afterwards are expected to come from this model; the owning
+    /// store skips records and queries from other revisions.
+    pub fn set_model(&mut self, model: Option<String>) {
+        self.model = model;
     }
 
     /// Live entries (tombstoned removals excluded).
@@ -208,6 +225,20 @@ impl HnswVectorIndex {
     pub fn snapshot_store(
         store: &dyn crate::core::providers::VectorStore,
     ) -> Vec<(String, Vec<f32>)> {
+        Self::snapshot_store_with_models(store)
+            .into_iter()
+            .map(|(id, vector, _)| (id, vector))
+            .collect()
+    }
+
+    /// Snapshot with embedding-model identity per record
+    /// (`model_id@revision` from analyzer metadata, `None` for payloads that
+    /// predate model recording). Feed the result to
+    /// [`Self::rebuild_with_models`] so the rebuilt index validates
+    /// revisions instead of mixing vectors across models.
+    pub fn snapshot_store_with_models(
+        store: &dyn crate::core::providers::VectorStore,
+    ) -> Vec<(String, Vec<f32>, Option<String>)> {
         store
             .records()
             .into_iter()
@@ -216,9 +247,60 @@ impl HnswVectorIndex {
                     .semantic_embeddings
                     .get("default")
                     .cloned()
-                    .map(|vector| (id, vector))
+                    .map(|vector| {
+                        let model =
+                            fingerprint.metadata.get("semantic_model").map(
+                                |model| match fingerprint.metadata.get("semantic_revision") {
+                                    Some(revision) => format!("{model}@{revision}"),
+                                    None => model.clone(),
+                                },
+                            );
+                        (id, vector, model)
+                    })
             })
             .collect()
+    }
+
+    /// Rebuild like [`Self::rebuild`], additionally validating embedding
+    /// revisions: only vectors from the majority known model are indexed
+    /// (ties break toward the lexicographically smallest model for
+    /// determinism); unknown-model vectors join only when no record carries
+    /// a known model. The rebuilt index adopts the majority model so later
+    /// inserts and queries validate against it; incompatible vectors are
+    /// excluded from the index, never mixed in. They remain searchable
+    /// through the exact channels.
+    pub fn rebuild_with_models(
+        dimensions: usize,
+        max_elements: usize,
+        documents: &[(String, Vec<f32>, Option<String>)],
+    ) -> Result<Self, String> {
+        use std::collections::BTreeMap;
+        let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
+        for (_, _, model) in documents {
+            if let Some(model) = model {
+                *counts.entry(model.as_str()).or_default() += 1;
+            }
+        }
+        let majority = counts
+            .iter()
+            .max_by(|left, right| left.1.cmp(right.1).then_with(|| right.0.cmp(left.0)))
+            .map(|(model, _)| (*model).to_string());
+        let mut sorted: Vec<&(String, Vec<f32>, Option<String>)> = documents.iter().collect();
+        sorted.sort_by(|left, right| left.0.cmp(&right.0));
+        let mut index = Self::new(dimensions, max_elements)?;
+        index.set_model(majority.clone());
+        for (id, vector, model) in sorted {
+            if vector.len() != dimensions || vector.iter().any(|value| !value.is_finite()) {
+                continue;
+            }
+            match (&majority, model) {
+                (Some(expected), Some(actual)) if expected != actual => continue,
+                (Some(_), None) => continue,
+                _ => {}
+            }
+            index.insert(id, vector)?;
+        }
+        Ok(index)
     }
 
     /// Tombstone `id`. Returns false when the id was never indexed.

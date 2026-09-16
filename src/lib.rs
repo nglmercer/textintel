@@ -33,6 +33,7 @@ pub mod comparison;
 pub mod core;
 pub mod detection;
 pub mod engine;
+pub mod entities;
 pub mod evaluation;
 pub mod language;
 pub mod lexical;
@@ -62,10 +63,10 @@ pub use core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilitie
 pub use core::config::{CacheLimits, EngineConfig, RebusWeights, SimilarityWeights};
 pub use core::error::{ProviderError, TextIntelError};
 pub use core::providers::{
-    AbbreviationProvider, EmbeddingProvider, G2PProvider, LanguageDetectionProvider,
-    LemmatizerProvider, LexiconProvider, RerankerProvider, SharedAbbreviationProvider,
-    SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, Transliteration,
-    TransliterationProvider, VectorStore, VectorStoreCapabilities,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
+    LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
+    SharedAbbreviationProvider, SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider,
+    Transliteration, TransliterationProvider, VectorStore, VectorStoreCapabilities,
 };
 pub use core::types::*;
 pub use detection::{
@@ -75,6 +76,10 @@ pub use detection::{
 };
 pub use engine::production::{DegradedCapability, EngineBuilder, EngineDiagnostics};
 pub use engine::TextIntelligence;
+pub use entities::{
+    entity_agreement, entity_conflict, RuleBasedEntityProvider, DEFAULT_MAX_ENTITIES,
+    DEFAULT_MAX_ENTITY_SPAN,
+};
 pub use language::{NgramLanguageDetector, ProfileLanguageDetector};
 #[cfg(feature = "phonetic-espeak")]
 pub use phonetic::{
@@ -93,8 +98,8 @@ pub use semantic::CandleEmbeddingProvider;
 #[cfg(feature = "semantic-http")]
 pub use semantic::HttpEmbeddingProvider;
 pub use semantic::{
-    CachedEmbeddingProvider, FeatureHashEmbeddingProvider, NullEmbeddingProvider,
-    StaticEmbeddingProvider,
+    CachedEmbeddingProvider, FallbackEmbeddingProvider, FeatureHashEmbeddingProvider,
+    NullEmbeddingProvider, StaticEmbeddingProvider,
 };
 #[cfg(feature = "semantic-transformer")]
 pub use semantic::{EncodedBatch, TransformerEmbeddingProvider, TransformerPooling};
@@ -108,6 +113,6 @@ pub use storage::{
 };
 pub use symbols::DefaultSymbolKnowledge;
 pub use transliteration::{
-    transliteration_evidence, transliteration_similarity, RuleBasedTransliterationProvider,
-    TransliterationEvidence,
+    effective_transliteration_evidence, transliteration_compatibility, transliteration_evidence,
+    transliteration_similarity, RuleBasedTransliterationProvider, TransliterationEvidence,
 };

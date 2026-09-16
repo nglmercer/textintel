@@ -66,6 +66,17 @@ impl Transliteration {
     }
 }
 
+/// Provider boundary for bounded entity extraction. Providers return
+/// [`EntityMention`](super::types::EntityMention) values with UTF-8 spans;
+/// the engine stores them on the fingerprint as independent evidence.
+pub trait EntityProvider: Send + Sync {
+    fn extract(&self, text: &str, language: Option<&str>) -> Vec<super::types::EntityMention>;
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("entities").with_quality(CapabilityLevel::Basic)
+    }
+}
+
 /// Provider boundary for script transliteration (e.g. `привет ↔ privet`).
 /// Providers return zero or more converted views; the engine stores each as
 /// a `transliteration:<script>` fingerprint view.
@@ -260,6 +271,11 @@ pub struct VectorStoreCapabilities {
     /// Live ANN entries (tombstoned removals excluded).
     #[serde(default)]
     pub ann_entries: usize,
+    /// Embedding model backing the ANN vectors (`model_id@revision`) when
+    /// the index tracks one. Queries from a different revision skip the ANN
+    /// channel instead of comparing across revisions.
+    #[serde(default)]
+    pub ann_model: Option<String>,
     /// Retrieval channels the store can serve
     /// (`lexical`, `semantic_ann`, …).
     #[serde(default)]
@@ -383,6 +399,7 @@ impl<T: LanguageDetectionProvider + ?Sized> LanguageDetectionProvider for Arc<T>
 
 pub type SharedAbbreviationProvider = Arc<dyn AbbreviationProvider>;
 pub type SharedEmbeddingProvider = Arc<dyn EmbeddingProvider>;
+pub type SharedEntityProvider = Arc<dyn EntityProvider>;
 pub type SharedG2PProvider = Arc<dyn G2PProvider>;
 pub type SharedLanguageProvider = Arc<dyn LanguageDetectionProvider>;
 pub type SharedLemmatizerProvider = Arc<dyn LemmatizerProvider>;

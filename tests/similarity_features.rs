@@ -111,9 +111,24 @@ fn vowel_fold_links_consonantal_views() {
     let result = engine
         .compare("habibi", "حبيبي")
         .expect("compare must succeed");
+    // Effective evidence = similarity × confidence × compatibility: the
+    // skeleton link survives at a language-mismatch discount
+    // (cross-language pair), never at face value and never destroyed.
     assert!(
-        result.exact_decode >= 0.5,
-        "habibi view should meet as skeletons: {}",
+        result
+            .transliteration_similarity
+            .is_some_and(|value| value > 0.5),
+        "cross-view resemblance expected: {:?}",
+        result.transliteration_similarity
+    );
+    assert!(
+        result.transliteration_compatibility > 0.0 && result.transliteration_compatibility < 1.0,
+        "cross-language compatibility should discount: {}",
+        result.transliteration_compatibility
+    );
+    assert!(
+        result.exact_decode > 0.3 && result.exact_decode < 0.6,
+        "habibi view should meet discounted, not at face value: {}",
         result.exact_decode
     );
 }

@@ -39,6 +39,9 @@ impl TextIntelligence {
                 transliteration.capabilities(),
             );
         }
+        if let Some(entities) = &self.entity_provider {
+            capabilities.insert("entities".to_string(), entities.capabilities());
+        }
         capabilities.insert("spam".to_string(), self.spam_predictor.capabilities());
         capabilities.insert(
             "store".to_string(),
@@ -99,12 +102,14 @@ impl TextIntelligence {
             symbol_languages,
             symbol_tokens: self.resources.symbol_count(),
             embedding: get("embedding"),
+            embedding_model: self.embedding_provider.model_metadata(),
             g2p: get("g2p"),
             language: get("language"),
             lexicon: get("lexicon"),
             symbols: get("symbols"),
             abbreviations: capabilities.get("abbreviations").cloned(),
             transliteration: capabilities.get("transliteration").cloned(),
+            entities: capabilities.get("entities").cloned(),
             spam: get("spam"),
             similarity: capabilities.get("similarity").cloned(),
             reranker: capabilities.get("reranker").cloned(),
@@ -192,7 +197,7 @@ impl TextIntelligence {
                 "similarity",
                 "weighted deterministic scorer",
                 "trained similarity model",
-                "load models/similarity-v4.json through trained_similarity_model() for calibrated scoring",
+                "load models/similarity-v5.json through trained_similarity_model() for calibrated scoring",
             );
         }
         if capabilities

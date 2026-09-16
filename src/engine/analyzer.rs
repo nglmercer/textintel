@@ -85,6 +85,15 @@ fn alphanumeric_fold(text: &str) -> String {
         .collect()
 }
 
+/// Truncate to `max_chars` characters on a char boundary (deterministic
+/// preprocessing for bounded embedding inputs).
+fn truncate_chars(text: &str, max_chars: usize) -> String {
+    if text.chars().count() <= max_chars {
+        return text.to_string();
+    }
+    text.chars().take(max_chars).collect()
+}
+
 impl TextIntelligence {
     /// Semantic-rescoring marker for rebus cache keys: `sem:off` when
     /// rescoring is disabled, otherwise the embedding model identity so model
@@ -302,6 +311,20 @@ impl TextIntelligence {
         let obfuscation = obfuscation_features(text, &unicode);
         timings.normalization_micros += elapsed(started);
 
+        // Bounded entity evidence, keyed by the top detected language. The
+        // provider enforces its own bounds; the configured limits apply on
+        // top so deployments can tighten without swapping providers.
+        let entity_language = languages
+            .first()
+            .map(|candidate| candidate.language.clone());
+        let mut entities = match &self.entity_provider {
+            Some(provider) => provider.extract(text, entity_language.as_deref()),
+            None => Vec::new(),
+        };
+        entities
+            .retain(|mention| mention.value.chars().count() <= self.config.max_entity_span_chars);
+        entities.truncate(self.config.max_entities);
+
         // Configured hints override detected languages for decoding; hints
         // never change detection itself. Otherwise scope follows detection,
         // ranked best-first: the long tail is noise that crowds the true
@@ -505,14 +528,15 @@ impl TextIntelligence {
             self.lexicon_provider.as_ref(),
         );
         let embedding_inputs = if self.config.semantic {
+            let bound = self.config.embedding_max_chars;
             let mut values = vec![EmbeddingInput {
                 key: "default".to_string(),
-                text: text.to_string(),
+                text: truncate_chars(text, bound),
             }];
             values.extend(rebus.iter().take(3).enumerate().map(|(index, candidate)| {
                 EmbeddingInput {
                     key: format!("decoded:{}", index + 1),
-                    text: candidate.text.clone(),
+                    text: truncate_chars(&candidate.text, bound),
                 }
             }));
             values.extend(
@@ -523,7 +547,7 @@ impl TextIntelligence {
                     .enumerate()
                     .map(|(index, segment)| EmbeddingInput {
                         key: format!("segment:{index}"),
-                        text: segment.text.clone(),
+                        text: truncate_chars(&segment.text, bound),
                     }),
             );
             values
@@ -552,6 +576,7 @@ impl TextIntelligence {
             rebus_candidates: rebus,
             obfuscation_features: obfuscation,
             channel_availability,
+            entities,
             metadata,
         };
         timings.total_micros = total_started.elapsed().as_secs_f64() * 1_000_000.0;
@@ -617,7 +642,34 @@ impl TextIntelligence {
                     .insert("semantic_revision".to_string(), revision);
             }
         }
+        // Quality tier behind the vectors (`production` for transformer
+        // backends, `basic` for the feature-hash fallback). The scorer uses
+        // it to gate `contextual_semantic` on trustworthy evidence.
+        let quality = match self.embedding_provider.capabilities().quality {
+            crate::core::capabilities::CapabilityLevel::Production => "production",
+            crate::core::capabilities::CapabilityLevel::Basic => "basic",
+            crate::core::capabilities::CapabilityLevel::Unavailable => "unavailable",
+        };
+        fingerprint
+            .metadata
+            .insert("semantic_quality".to_string(), quality.to_string());
         Ok(())
+    }
+
+    /// Provider fan-out bounded by `config.embedding_batch_size`: large
+    /// batches are chunked into sequential provider calls and concatenated
+    /// in order.
+    fn embed_chunked(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, TextIntelError> {
+        let bound = self.config.embedding_batch_size.max(1);
+        let mut output = Vec::with_capacity(texts.len());
+        for chunk in texts.chunks(bound) {
+            let mut vectors = self
+                .embedding_provider
+                .embed_batch(chunk)
+                .map_err(TextIntelError::from)?;
+            output.append(&mut vectors);
+        }
+        Ok(output)
     }
 
     pub fn analyze(&self, text: &str) -> Result<MessageFingerprint, TextIntelError> {
@@ -635,15 +687,12 @@ impl TextIntelligence {
         let (mut fingerprint, embedding_inputs, mut timings) = self.analyze_stages(text)?;
         if self.config.semantic {
             let started = Instant::now();
-            let values = self
-                .embedding_provider
-                .embed_batch(
-                    &embedding_inputs
-                        .iter()
-                        .map(|input| input.text.clone())
-                        .collect::<Vec<_>>(),
-                )
-                .map_err(TextIntelError::from)?;
+            let values = self.embed_chunked(
+                &embedding_inputs
+                    .iter()
+                    .map(|input| input.text.clone())
+                    .collect::<Vec<_>>(),
+            )?;
             self.attach_embeddings(&mut fingerprint, &embedding_inputs, values)?;
             timings.semantic_micros = started.elapsed().as_secs_f64() * 1_000_000.0;
         }
@@ -679,10 +728,7 @@ impl TextIntelligence {
             .iter()
             .map(|input| input.text.clone())
             .collect::<Vec<_>>();
-        let values = self
-            .embedding_provider
-            .embed_batch(&all_embedding_texts)
-            .map_err(TextIntelError::from)?;
+        let values = self.embed_chunked(&all_embedding_texts)?;
         if values.len() != all_embedding_texts.len() {
             return Err(TextIntelError::Provider(ProviderError::new(
                 "embedding",

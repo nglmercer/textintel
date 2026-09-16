@@ -103,6 +103,11 @@ impl JsonFileStore {
         &self.path
     }
 
+    /// Apply candidate-union retrieval limits to the inner index.
+    pub fn set_retrieval_limits(&mut self, per_channel: usize, ann_candidates: usize) {
+        self.inner.set_retrieval_limits(per_channel, ann_candidates);
+    }
+
     pub fn flush(&self) -> Result<(), String> {
         let persisted = PersistedStore {
             schema_version: STORE_SCHEMA_VERSION,

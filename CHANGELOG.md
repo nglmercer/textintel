@@ -7,6 +7,20 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ## [Unreleased]
 
+### Added
+
+- Rule-based entity evidence provider (`rule_based_entities`) with bounded
+  spans, wired into fingerprints and similarity comparison.
+- Contextual semantic similarity features with compatibility-gated
+  transliteration, plus entity-aware comparison signals.
+- Multi-channel candidate union for retrieval with a semantic ANN channel
+  (bounded per-channel budgets, no unbounded expansion).
+- `models/similarity-v5.json`: retrained logistic similarity scorer
+  (revision `train-20000-iter-lr0.2-l20.0001-ds0.8.0`, feature schema 9,
+  dataset 0.8.0), selected on validation only.
+- Evaluation dataset 0.8.0: expanded `train` (1121) and `validation`
+  (415); `test` cases unchanged (482).
+
 ### Fixed
 
 - Retrieval evaluation grouped duplicate queries with graded relevance:

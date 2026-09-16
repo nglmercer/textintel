@@ -54,10 +54,10 @@ fn production_local_builds_and_reports_graceful_fallbacks() {
 }
 
 #[test]
-fn production_preset_prefers_similarity_v4() {
-    // similarity-v4 (dataset 0.7.0, semantic + phonetic evidence) is the
-    // production artifact; older revisions remain only as a fallback for old
-    // checkouts.
+fn production_preset_prefers_similarity_v5() {
+    // similarity-v5 (dataset 0.8.0, semantic + phonetic + entity evidence)
+    // is the production artifact; older revisions remain only as a fallback
+    // for old checkouts (their schemas no longer load).
     let engine = TextIntelligence::production_local().expect("production_local must not fail");
     let diagnostics = engine.diagnostics();
     let similarity = diagnostics
@@ -65,20 +65,51 @@ fn production_preset_prefers_similarity_v4() {
         .as_ref()
         .expect("production loads a similarity model");
     let source =
-        std::fs::read_to_string("models/similarity-v4.json").expect("similarity-v4 must exist");
+        std::fs::read_to_string("models/similarity-v5.json").expect("similarity-v5 must exist");
     let artifact = textintel::SimilarityModelArtifact::from_json(&source).unwrap();
     assert_eq!(similarity.provider, "logistic_similarity_scorer");
     assert_eq!(similarity.version.as_deref(), artifact.revision.as_deref());
-    assert_eq!(artifact.dataset_version, "0.7.0");
+    assert_eq!(artifact.dataset_version, "0.8.0");
     assert_ne!(
         artifact.weights.get("semantic").copied().unwrap_or(0.0),
         0.0,
-        "v4 must carry useful semantic evidence"
+        "v5 must carry useful semantic evidence"
     );
     assert_ne!(
         artifact.weights.get("phonetic").copied().unwrap_or(0.0),
         0.0,
-        "v4 must carry useful phonetic evidence"
+        "v5 must carry useful phonetic evidence"
+    );
+    assert!(
+        artifact
+            .weights
+            .get("entity_conflict")
+            .copied()
+            .unwrap_or(0.0)
+            < 0.0,
+        "v5 must penalize entity conflicts"
+    );
+    assert!(
+        artifact
+            .weights
+            .get("entity_agreement")
+            .copied()
+            .unwrap_or(0.0)
+            > 0.0,
+        "v5 must reward entity agreement"
+    );
+    assert_eq!(artifact.feature_schema_version, 9);
+    assert!(
+        !artifact.training_config.is_empty(),
+        "v5 must record its training configuration"
+    );
+    assert!(
+        !artifact.calibration_config.is_empty(),
+        "v5 must record its calibration configuration"
+    );
+    assert!(
+        artifact.embedding_model.is_some(),
+        "v5 must record its embedding provider metadata"
     );
     for metric in [
         "test_accuracy",
@@ -92,7 +123,7 @@ fn production_preset_prefers_similarity_v4() {
     ] {
         assert!(
             artifact.metrics.contains_key(metric),
-            "v4 must record {metric}"
+            "v5 must record {metric}"
         );
     }
 }
@@ -217,7 +248,7 @@ fn builder_model_paths_are_strict() {
 
     // Valid explicit paths load trained backends.
     let engine = TextIntelligence::builder()
-        .trained_similarity_model("models/similarity-v4.json")
+        .trained_similarity_model("models/similarity-v5.json")
         .trained_spam_model("models/spam-v1.json")
         .build()
         .expect("valid models must load");

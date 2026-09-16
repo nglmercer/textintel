@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
+use crate::core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 use crate::core::config::SimilarityWeights;
 use crate::core::providers::SimilarityScorer;
 use crate::core::types::{ComparisonResult, MessageFingerprint};
@@ -165,8 +165,9 @@ impl SimilarityScorer for LogisticSimilarityScorer {
         let base = score_fingerprints(left, right, &SimilarityWeights::default());
         // Every trained feature is applied: the eight channels plus mean
         // channel confidence, top-language agreement, the twelve
-        // confusable-separation features, and the fuzzy-decode mismatch
-        // interaction (see [`training_features`]).
+        // confusable-separation features, the fuzzy-decode mismatch
+        // interaction, and the seven contextual/entity features (see
+        // [`training_features`]).
         let values = [
             ("semantic", base.semantic.unwrap_or(0.0)),
             ("lexical", base.lexical.unwrap_or(0.0)),
@@ -206,6 +207,28 @@ impl SimilarityScorer for LogisticSimilarityScorer {
             ("exact_decode", base.exact_decode.clamp(0.0, 1.0)),
             ("single_word_exact", base.single_word_exact.clamp(0.0, 1.0)),
             ("fuzzy_decode_mismatch", fuzzy_decode_mismatch(&base)),
+            (
+                "contextual_semantic",
+                base.contextual_semantic.clamp(0.0, 1.0),
+            ),
+            (
+                "cross_language_semantic",
+                base.cross_language_semantic.clamp(0.0, 1.0),
+            ),
+            ("entity_agreement", base.entity_agreement.clamp(0.0, 1.0)),
+            ("entity_conflict", base.entity_conflict.clamp(0.0, 1.0)),
+            (
+                "semantic_without_lexical_overlap",
+                base.semantic_without_lexical_overlap.clamp(0.0, 1.0),
+            ),
+            (
+                "transliteration_semantic_agreement",
+                base.transliteration_semantic_agreement.clamp(0.0, 1.0),
+            ),
+            (
+                "transliteration_semantic_conflict",
+                base.transliteration_semantic_conflict.clamp(0.0, 1.0),
+            ),
         ];
         let logit = values.iter().fold(self.bias, |total, (name, value)| {
             total + value * self.weights.get(*name).copied().unwrap_or(0.0)
@@ -233,7 +256,7 @@ impl SimilarityScorer for LogisticSimilarityScorer {
 
 /// Schema version of the interpretable training feature vector. Bump when
 /// [`training_features`] gains, drops, or reorders features.
-pub const TRAINING_FEATURE_SCHEMA_VERSION: u32 = 8;
+pub const TRAINING_FEATURE_SCHEMA_VERSION: u32 = 9;
 
 /// Versioned trained-similarity artifact written by `tools/train_similarity.rs`.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -248,6 +271,20 @@ pub struct SimilarityModelArtifact {
     pub revision: Option<String>,
     #[serde(default)]
     pub metrics: BTreeMap<String, f64>,
+    /// Training configuration (`iterations`, `learning_rate`, `l2`,
+    /// `sample_weighting`, …). Recorded by the training tool; older
+    /// artifacts read empty.
+    #[serde(default)]
+    pub training_config: BTreeMap<String, String>,
+    /// Calibration configuration (`bias_iterations`, `temperature`,
+    /// `method`, …). Recorded by the training tool; older artifacts read
+    /// empty.
+    #[serde(default)]
+    pub calibration_config: BTreeMap<String, String>,
+    /// Embedding provider metadata behind the training featurization
+    /// (model id, revision, dimensions). Older artifacts read `None`.
+    #[serde(default)]
+    pub embedding_model: Option<ModelMetadata>,
 }
 
 impl SimilarityModelArtifact {
@@ -265,6 +302,9 @@ impl SimilarityModelArtifact {
             bias,
             revision: None,
             metrics: BTreeMap::new(),
+            training_config: BTreeMap::new(),
+            calibration_config: BTreeMap::new(),
+            embedding_model: None,
         }
     }
 
@@ -275,6 +315,21 @@ impl SimilarityModelArtifact {
 
     pub fn with_metrics(mut self, metrics: BTreeMap<String, f64>) -> Self {
         self.metrics = metrics;
+        self
+    }
+
+    pub fn with_training_config(mut self, config: BTreeMap<String, String>) -> Self {
+        self.training_config = config;
+        self
+    }
+
+    pub fn with_calibration_config(mut self, config: BTreeMap<String, String>) -> Self {
+        self.calibration_config = config;
+        self
+    }
+
+    pub fn with_embedding_model(mut self, model: ModelMetadata) -> Self {
+        self.embedding_model = Some(model);
         self
     }
 
