@@ -5,31 +5,356 @@
   "source": "textintel-curated",
   "revision": "2026-09",
   "symbols": [
-    {"token": "🏠", "readings": [{"text": "dom", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "🔥", "readings": [{"text": "ogień", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "💰", "readings": [{"text": "pieniądze", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "❤", "readings": [{"text": "miłość", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "❤️", "readings": [{"text": "miłość", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "0", "readings": [{"text": "zero", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "1", "readings": [{"text": "jeden", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "2", "readings": [{"text": "dwa", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "3", "readings": [{"text": "trzy", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "4", "readings": [{"text": "cztery", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "5", "readings": [{"text": "pięć", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "6", "readings": [{"text": "sześć", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "7", "readings": [{"text": "siedem", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "8", "readings": [{"text": "osiem", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "9", "readings": [{"text": "dziewięć", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "10", "readings": [{"text": "dziesięć", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "100", "readings": [{"text": "sto", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "$", "readings": [{"text": "dolar", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "€", "readings": [{"text": "euro", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "£", "readings": [{"text": "funt", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "¥", "readings": [{"text": "jen", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "₹", "readings": [{"text": "rupia", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "%", "readings": [{"text": "procent", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "+", "readings": [{"text": "plus", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "równe", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "kawa", "probability": 0.80, "reading_type": "symbol_reading"}]}
+    {
+      "token": "🏠",
+      "readings": [
+        {
+          "text": "dom",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🔥",
+      "readings": [
+        {
+          "text": "ogień",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "💰",
+      "readings": [
+        {
+          "text": "pieniądze",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤",
+      "readings": [
+        {
+          "text": "miłość",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤️",
+      "readings": [
+        {
+          "text": "miłość",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "0",
+      "readings": [
+        {
+          "text": "zero",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "1",
+      "readings": [
+        {
+          "text": "jeden",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "2",
+      "readings": [
+        {
+          "text": "dwa",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "3",
+      "readings": [
+        {
+          "text": "trzy",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "4",
+      "readings": [
+        {
+          "text": "cztery",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "5",
+      "readings": [
+        {
+          "text": "pięć",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "6",
+      "readings": [
+        {
+          "text": "sześć",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "7",
+      "readings": [
+        {
+          "text": "siedem",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "8",
+      "readings": [
+        {
+          "text": "osiem",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "9",
+      "readings": [
+        {
+          "text": "dziewięć",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "10",
+      "readings": [
+        {
+          "text": "dziesięć",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "100",
+      "readings": [
+        {
+          "text": "sto",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "$",
+      "readings": [
+        {
+          "text": "dolar",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "€",
+      "readings": [
+        {
+          "text": "euro",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "£",
+      "readings": [
+        {
+          "text": "funt",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "¥",
+      "readings": [
+        {
+          "text": "jen",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "₹",
+      "readings": [
+        {
+          "text": "rupia",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "%",
+      "readings": [
+        {
+          "text": "procent",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "+",
+      "readings": [
+        {
+          "text": "plus",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "=",
+      "readings": [
+        {
+          "text": "równe",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "☕",
+      "unicode_name": "HOT BEVERAGE",
+      "readings": [
+        {
+          "text": "kawa",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "☀",
+      "readings": [
+        {
+          "text": "słońce",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❄",
+      "readings": [
+        {
+          "text": "śnieg",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🍕",
+      "readings": [
+        {
+          "text": "pizza",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🎉",
+      "readings": [
+        {
+          "text": "impreza",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🏆",
+      "readings": [
+        {
+          "text": "trofeum",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "😘",
+      "readings": [
+        {
+          "text": "całus",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🙏",
+      "readings": [
+        {
+          "text": "proszę",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🚗",
+      "readings": [
+        {
+          "text": "samochód",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🤘",
+      "readings": [
+        {
+          "text": "rock",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    }
   ]
 }

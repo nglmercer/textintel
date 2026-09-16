@@ -57,6 +57,54 @@ struct EmbeddingInput {
     text: String,
 }
 
+/// Fraction of words present in the lexicon (any language), measuring the
+/// *intended* reading: when the top rebus candidate differs from the raw
+/// text, coverage runs over the candidate's words (`h3llo` counts through
+/// `hello`); otherwise it runs over the raw tokens. Segments without a
+/// letter (URLs, emoji, pure numbers) are not words and are excluded from
+/// both numerator and denominator; texts without words report 0.0. Each
+/// word also counts through its alphanumeric fold, so zero-width and
+/// punctuation noise (`co\u{200b}de`) does not fake invalidity.
+fn lexicon_coverage(
+    raw: &str,
+    tokens: &[String],
+    decoded_top: Option<&str>,
+    provider: &dyn LexiconProvider,
+) -> f64 {
+    let decoded_words: Vec<&str>;
+    let words: Vec<&str> = match decoded_top {
+        Some(top) if alphanumeric_fold(top) != alphanumeric_fold(raw) => {
+            decoded_words = top
+                .split_whitespace()
+                .filter(|token| token.chars().any(|ch| ch.is_alphabetic()))
+                .collect();
+            decoded_words
+        }
+        _ => tokens
+            .iter()
+            .map(String::as_str)
+            .filter(|token| token.chars().any(|ch| ch.is_alphabetic()))
+            .collect(),
+    };
+    if words.is_empty() {
+        return 0.0;
+    }
+    let known = words
+        .iter()
+        .filter(|token| {
+            provider.contains(token, None) || provider.contains(&alphanumeric_fold(token), None)
+        })
+        .count();
+    (known as f64 / words.len() as f64).clamp(0.0, 1.0)
+}
+
+fn alphanumeric_fold(text: &str) -> String {
+    crate::normalization::unicode::casefold_text(text)
+        .chars()
+        .filter(|ch| ch.is_alphanumeric())
+        .collect()
+}
+
 /// Main high-level API.  The default instance is local-only and model-free;
 /// optional providers can be injected through the `with_*` methods.
 pub struct TextIntelligence {
@@ -555,7 +603,7 @@ impl TextIntelligence {
                 "similarity",
                 "weighted deterministic scorer",
                 "trained similarity model",
-                "load models/similarity-v1.json through trained_similarity_model() for calibrated scoring",
+                "load models/similarity-v3.json through trained_similarity_model() for calibrated scoring",
             );
         }
         if capabilities
@@ -874,9 +922,33 @@ impl TextIntelligence {
         timings.normalization_micros += elapsed(started);
 
         // Configured hints override detected languages for decoding; hints
-        // never change detection itself.
+        // never change detection itself. Otherwise scope follows detection,
+        // ranked best-first: the long tail is noise that crowds the true
+        // language's readings out of the beam (`I ❤ NY` decoded to Hindi
+        // before English because eight tail languages outranked it), so
+        // scope stops at the three strongest substantive hypotheses, which
+        // covers monolingual and code-switched text. Two honest fallbacks:
+        // when nothing substantive was detected the remainder is empty and
+        // un-scopes decoding (the tokenizer treats empty as "all allowed"),
+        // and a single segment topped by `unknown` also decodes globally —
+        // with no confident detection and no surrounding context, scoping by
+        // the tail is pure gamble (short slang like `luv` detects as
+        // [unknown, fr, es, ...], cutting the true language's readings),
+        // while globally the true reading wins on its own probability.
         let decode_languages: Vec<String> = if self.config.language_hints.is_empty() {
-            language_names.clone()
+            let top_unknown = language_names
+                .first()
+                .is_some_and(|top| top.eq_ignore_ascii_case("unknown"));
+            if top_unknown && segments.len() == 1 {
+                Vec::new()
+            } else {
+                language_names
+                    .iter()
+                    .filter(|name| !name.eq_ignore_ascii_case("unknown"))
+                    .take(3)
+                    .cloned()
+                    .collect()
+            }
         } else {
             self.config.language_hints.clone()
         };
@@ -1036,6 +1108,15 @@ impl TextIntelligence {
             self.config.phonetic.to_string(),
         );
         metadata.insert("input_length".to_string(), text.chars().count().to_string());
+        // Coverage is computed after decoding so validity reflects the
+        // intended reading (`h3llo` counts through `hello`), not the raw
+        // obfuscation. See `lexicon_coverage`.
+        let lexicon_coverage = lexicon_coverage(
+            text,
+            &tokens,
+            rebus.first().map(|candidate| candidate.text.as_str()),
+            self.lexicon_provider.as_ref(),
+        );
         let embedding_inputs = if self.config.semantic {
             let mut values = vec![EmbeddingInput {
                 key: "default".to_string(),
@@ -1068,6 +1149,7 @@ impl TextIntelligence {
             normalized: Some(normalized),
             normalization_views,
             transliteration_confidence,
+            lexicon_coverage,
             transformations,
             language_candidates: languages,
             segments,

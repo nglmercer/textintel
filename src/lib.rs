@@ -31,9 +31,10 @@ pub use cache::{
 };
 pub use comparison::{
     balanced_sample_weights, language_agreement, logistic_step, logistic_step_weighted,
-    rerank_score, score_fingerprints_with_profile, sigmoid, training_features,
-    ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer, RerankerModelArtifact,
-    SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURES, TRAINING_FEATURE_SCHEMA_VERSION,
+    mean_channel_confidence, rerank_score, score_fingerprints_with_profile, sigmoid,
+    training_features, ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer,
+    RerankerModelArtifact, SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURES,
+    TRAINING_FEATURE_SCHEMA_VERSION,
 };
 pub use core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 pub use core::config::{CacheLimits, EngineConfig, RebusWeights, SimilarityWeights};

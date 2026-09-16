@@ -7,6 +7,14 @@ use crate::core::types::{ComparisonResult, MessageFingerprint};
 
 use super::scorer::score_fingerprints;
 
+mod features;
+mod optim;
+
+pub use features::{
+    language_agreement, mean_channel_confidence, training_features, TRAINING_FEATURES,
+};
+pub use optim::{balanced_sample_weights, logistic_step, logistic_step_weighted, sigmoid};
+
 /// A named deterministic calibration profile. The channel calculation stays
 /// explainable; calibration only maps its raw score to an operating-point
 /// probability.
@@ -154,18 +162,46 @@ impl LogisticSimilarityScorer {
 impl SimilarityScorer for LogisticSimilarityScorer {
     fn score(&self, left: &MessageFingerprint, right: &MessageFingerprint) -> ComparisonResult {
         let base = score_fingerprints(left, right, &SimilarityWeights::default());
+        // Every trained feature is applied: the eight channels plus mean
+        // channel confidence, top-language agreement, and the eleven
+        // confusable-separation features (see [`training_features`]).
         let values = [
-            ("semantic", base.semantic),
-            ("lexical", base.lexical),
-            ("character", base.character),
-            ("visual", base.visual),
-            ("phonetic", base.phonetic),
-            ("symbolic", base.symbolic),
-            ("decoded", base.decoded_similarity),
-            ("obfuscation", base.obfuscation_similarity),
+            ("semantic", base.semantic.unwrap_or(0.0)),
+            ("lexical", base.lexical.unwrap_or(0.0)),
+            ("character", base.character.unwrap_or(0.0)),
+            ("visual", base.visual.unwrap_or(0.0)),
+            ("phonetic", base.phonetic.unwrap_or(0.0)),
+            ("symbolic", base.symbolic.unwrap_or(0.0)),
+            ("decoded", base.decoded_similarity.unwrap_or(0.0)),
+            ("obfuscation", base.obfuscation_similarity.unwrap_or(0.0)),
+            ("channel_confidence", mean_channel_confidence(&base)),
+            ("language_agreement", language_agreement(left, right)),
+            ("lexicon_validity", base.lexicon_validity.clamp(0.0, 1.0)),
+            ("single_word_pair", base.single_word_pair.clamp(0.0, 1.0)),
+            (
+                "swapped_word_similarity",
+                base.swapped_word_similarity.clamp(0.0, 1.0),
+            ),
+            ("swapped_phonetic", base.swapped_phonetic.clamp(0.0, 1.0)),
+            ("confusable_swap", base.confusable_swap.clamp(0.0, 1.0)),
+            (
+                "normalized_identity",
+                base.normalized_identity.clamp(0.0, 1.0),
+            ),
+            ("cross_script_pair", base.cross_script_pair.clamp(0.0, 1.0)),
+            (
+                "cross_script_agreement",
+                base.cross_script_agreement.clamp(0.0, 1.0),
+            ),
+            (
+                "substring_containment",
+                base.substring_containment.clamp(0.0, 1.0),
+            ),
+            ("exact_decode", base.exact_decode.clamp(0.0, 1.0)),
+            ("single_word_exact", base.single_word_exact.clamp(0.0, 1.0)),
         ];
         let logit = values.iter().fold(self.bias, |total, (name, value)| {
-            total + value.unwrap_or(0.0) * self.weights.get(*name).copied().unwrap_or(0.0)
+            total + value * self.weights.get(*name).copied().unwrap_or(0.0)
         });
         let probability = (1.0 / (1.0 + (-logit).exp())).clamp(0.0, 1.0);
         let mut result = base;
@@ -190,165 +226,7 @@ impl SimilarityScorer for LogisticSimilarityScorer {
 
 /// Schema version of the interpretable training feature vector. Bump when
 /// [`training_features`] gains, drops, or reorders features.
-pub const TRAINING_FEATURE_SCHEMA_VERSION: u32 = 1;
-
-/// Interpretable features in fixed order: the eight evidence channels
-/// (missing channels read as 0.0, exactly as the scorer treats them),
-/// mean channel confidence, and top-language agreement.
-pub const TRAINING_FEATURES: &[&str] = &[
-    "semantic",
-    "lexical",
-    "character",
-    "visual",
-    "phonetic",
-    "symbolic",
-    "decoded",
-    "obfuscation",
-    "channel_confidence",
-    "language_agreement",
-];
-
-/// Extract the training feature vector for one comparison. `language_agreement`
-/// is 1.0 when both fingerprints agree on the top language, else 0.0.
-pub fn training_features(
-    result: &ComparisonResult,
-    language_agreement: f64,
-) -> BTreeMap<String, f64> {
-    let channels = [
-        ("semantic", result.semantic),
-        ("lexical", result.lexical),
-        ("character", result.character),
-        ("visual", result.visual),
-        ("phonetic", result.phonetic),
-        ("symbolic", result.symbolic),
-        ("decoded", result.decoded_similarity),
-        ("obfuscation", result.obfuscation_similarity),
-    ];
-    let mut features = BTreeMap::new();
-    for (name, value) in channels {
-        features.insert(name.to_string(), value.unwrap_or(0.0));
-    }
-    let confidence = if result.channel_confidence.is_empty() {
-        0.0
-    } else {
-        result.channel_confidence.values().sum::<f64>() / result.channel_confidence.len() as f64
-    };
-    features.insert("channel_confidence".to_string(), confidence.clamp(0.0, 1.0));
-    features.insert(
-        "language_agreement".to_string(),
-        language_agreement.clamp(0.0, 1.0),
-    );
-    features
-}
-
-/// Top-language agreement between two fingerprints: 1.0 when the first
-/// language candidates match (or both are empty), else 0.0.
-pub fn language_agreement(left: &MessageFingerprint, right: &MessageFingerprint) -> f64 {
-    let top = |fingerprint: &MessageFingerprint| {
-        fingerprint
-            .language_candidates
-            .first()
-            .map(|candidate| candidate.language.clone())
-            .unwrap_or_else(|| "unknown".to_string())
-    };
-    if top(left) == top(right) {
-        1.0
-    } else {
-        0.0
-    }
-}
-
-pub fn sigmoid(logit: f64) -> f64 {
-    (1.0 / (1.0 + (-logit.clamp(-60.0, 60.0)).exp())).clamp(0.0, 1.0)
-}
-
-/// One full-batch gradient step for L2-regularized logistic loss. Returns
-/// the mean loss. Deterministic: fixed order, no sampling.
-pub fn logistic_step(
-    features: &[Vec<f64>],
-    labels: &[bool],
-    weights: &mut [f64],
-    bias: &mut f64,
-    learning_rate: f64,
-    l2: f64,
-) -> f64 {
-    let uniform = vec![1.0; features.len()];
-    logistic_step_weighted(features, labels, weights, bias, learning_rate, l2, &uniform)
-}
-
-/// Weighted variant of [`logistic_step`]: each sample contributes
-/// proportionally to `sample_weights` (normalized by their sum), so class
-/// balancing is exact instead of approximate. Non-finite or negative sample
-/// weights are treated as zero; an all-zero weight vector leaves the
-/// parameters untouched and reports zero loss.
-pub fn logistic_step_weighted(
-    features: &[Vec<f64>],
-    labels: &[bool],
-    weights: &mut [f64],
-    bias: &mut f64,
-    learning_rate: f64,
-    l2: f64,
-    sample_weights: &[f64],
-) -> f64 {
-    let clean: Vec<f64> = sample_weights
-        .iter()
-        .map(|value| {
-            if value.is_finite() && *value > 0.0 {
-                *value
-            } else {
-                0.0
-            }
-        })
-        .collect();
-    let total: f64 = clean.iter().sum();
-    if total <= 0.0 {
-        return 0.0;
-    }
-    let mut loss = 0.0;
-    let mut gradient = vec![0.0; weights.len()];
-    let mut bias_gradient = 0.0;
-    for ((row, label), weight) in features.iter().zip(labels.iter()).zip(clean.iter()) {
-        let logit = row
-            .iter()
-            .zip(weights.iter())
-            .map(|(value, weight)| value * weight)
-            .sum::<f64>()
-            + *bias;
-        let predicted = sigmoid(logit).clamp(1e-12, 1.0 - 1e-12);
-        let target = if *label { 1.0 } else { 0.0 };
-        loss += weight * -(target * predicted.ln() + (1.0 - target) * (1.0 - predicted).ln());
-        let error = weight * (predicted - target);
-        for (index, value) in row.iter().enumerate() {
-            gradient[index] += error * value;
-        }
-        bias_gradient += error;
-    }
-    for (index, weight) in weights.iter_mut().enumerate() {
-        *weight -= learning_rate * (gradient[index] / total + l2 * *weight);
-    }
-    *bias -= learning_rate * bias_gradient / total;
-    loss / total
-}
-
-/// Balanced sample weights: positives and negatives each carry half the total
-/// mass, so a skewed training split cannot drag the operating point. Either
-/// class may be empty (all mass goes to the other side).
-pub fn balanced_sample_weights(labels: &[bool]) -> Vec<f64> {
-    let positive_count = labels.iter().filter(|label| **label).count();
-    let negative_count = labels.len().saturating_sub(positive_count);
-    let positives = positive_count.max(1) as f64;
-    let negatives = negative_count.max(1) as f64;
-    labels
-        .iter()
-        .map(|label| {
-            if *label {
-                0.5 / positives
-            } else {
-                0.5 / negatives
-            }
-        })
-        .collect()
-}
+pub const TRAINING_FEATURE_SCHEMA_VERSION: u32 = 6;
 
 /// Versioned trained-similarity artifact written by `tools/train_similarity.rs`.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
@@ -450,85 +328,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn gradient_steps_reduce_separable_loss() {
-        // Two clusters on one feature: repeated steps must drive loss down
-        // and orient the weight positively.
-        let features = vec![
-            vec![0.9, 0.1],
-            vec![0.8, 0.2],
-            vec![0.2, 0.8],
-            vec![0.1, 0.9],
-        ];
-        let labels = vec![true, true, false, false];
-        let mut weights = vec![0.0, 0.0];
-        let mut bias = 0.0;
-        let mut previous = f64::INFINITY;
-        for _ in 0..200 {
-            let loss = logistic_step(&features, &labels, &mut weights, &mut bias, 0.5, 1e-4);
-            assert!(loss <= previous + 1e-12, "loss must not increase");
-            previous = loss;
-        }
-        assert!(previous < 0.5);
-        assert!(weights[0] > 0.0);
-        assert!(weights[1] < 0.0);
-    }
-
-    #[test]
-    fn weighted_step_matches_uniform_and_balances_classes() {
-        let features = vec![vec![1.0], vec![1.0], vec![0.0], vec![0.0]];
-        let labels = vec![true, true, false, false];
-        let mut plain_weights = vec![0.0];
-        let mut plain_bias = 0.0;
-        let plain_loss = logistic_step(
-            &features,
-            &labels,
-            &mut plain_weights,
-            &mut plain_bias,
-            0.5,
-            0.0,
-        );
-        let mut weighted_weights = vec![0.0];
-        let mut weighted_bias = 0.0;
-        let weighted_loss = logistic_step_weighted(
-            &features,
-            &labels,
-            &mut weighted_weights,
-            &mut weighted_bias,
-            0.5,
-            0.0,
-            &[1.0, 1.0, 1.0, 1.0],
-        );
-        assert_eq!(plain_loss, weighted_loss);
-        assert_eq!(plain_weights, weighted_weights);
-        assert_eq!(plain_bias, weighted_bias);
-
-        // Nine negatives against one positive: balanced weights give the lone
-        // positive half the gradient mass instead of one tenth.
-        let skewed = vec![
-            true, false, false, false, false, false, false, false, false, false,
-        ];
-        let balanced = balanced_sample_weights(&skewed);
-        assert_eq!(balanced[0], 0.5);
-        assert!((balanced[1..].iter().sum::<f64>() - 0.5).abs() < 1e-12);
-
-        // Hostile weights degrade to zero instead of NaN.
-        let mut untouched_weights = vec![0.25];
-        let mut untouched_bias = 0.5;
-        let loss = logistic_step_weighted(
-            &features,
-            &labels,
-            &mut untouched_weights,
-            &mut untouched_bias,
-            0.5,
-            0.0,
-            &[f64::NAN, f64::INFINITY, -1.0, 0.0],
-        );
-        assert_eq!(loss, 0.0);
-        assert_eq!(untouched_weights, vec![0.25]);
-        assert_eq!(untouched_bias, 0.5);
-    }
-
-    #[test]
     fn artifact_round_trip_preserves_parameters() {
         let weights: BTreeMap<String, f64> = TRAINING_FEATURES
             .iter()
@@ -567,15 +366,5 @@ mod tests {
         let mut source = serde_json::to_value(&valid).unwrap();
         source["bias"] = serde_json::Value::Null;
         assert!(SimilarityModelArtifact::from_json(&source.to_string()).is_err());
-    }
-
-    #[test]
-    fn training_features_cover_schema_in_order() {
-        assert_eq!(TRAINING_FEATURES.len(), 10);
-        assert_eq!(TRAINING_FEATURE_SCHEMA_VERSION, 1);
-        let mut sorted = TRAINING_FEATURES.to_vec();
-        sorted.sort_unstable();
-        sorted.dedup();
-        assert_eq!(sorted.len(), TRAINING_FEATURES.len());
     }
 }

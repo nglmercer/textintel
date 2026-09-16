@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use sha2::{Digest, Sha256};
 use textintel::evaluation::{
-    evaluate, evaluate_with_options, EvaluateOptions, EvaluationCase, EvaluationDataset,
+    evaluate_with_options, EvaluateOptions, EvaluationCase, EvaluationDataset,
 };
 use textintel::phonetic::{articulatory_distance, parse_ipa};
 use textintel::{
@@ -164,9 +164,11 @@ fn resource_hashes_are_self_contained_and_format_independent() {
 fn evaluation_chunks_batches_larger_than_max_batch_size() {
     // Regression test: more pairs than `max_batch_size` (and more ranking
     // documents than the batch limit) must be evaluated in chunks instead of
-    // failing with `batch size N exceeds max_batch_size`.
+    // failing with `batch size N exceeds max_batch_size`. A tiny batch
+    // limit keeps this regression fast: 20 pairs over a limit of 8 still
+    // exercises multi-chunk pairwise and ranking evaluation.
     let mut cases = Vec::new();
-    for index in 0..300 {
+    for index in 0..20 {
         let similar = index % 2 == 0;
         cases.push(EvaluationCase {
             id: format!("chunk_{index:03}"),
@@ -189,13 +191,17 @@ fn evaluation_chunks_batches_larger_than_max_batch_size() {
         version: "chunk-test".to_string(),
         cases,
     };
+    let engine = TextIntelligence::new(EngineConfig {
+        max_batch_size: 8,
+        ..EngineConfig::default()
+    });
     let options = EvaluateOptions {
         split: None,
         ranking_queries: 5,
-        ranking_documents: 500,
+        ranking_documents: 20,
     };
-    let report = evaluate_with_options(&TextIntelligence::default(), &dataset, &options).unwrap();
-    assert_eq!(report.metrics.count, 300);
+    let report = evaluate_with_options(&engine, &dataset, &options).unwrap();
+    assert_eq!(report.metrics.count, 20);
     // `queries` counts relevant (similar-labelled) queries: indices 0, 2, 4.
     assert_eq!(report.ranking.queries, 3);
 }
@@ -205,7 +211,7 @@ fn trained_similarity_artifact_loads_and_separates_pairs() {
     use textintel::SimilarityModelArtifact;
     use textintel::SimilarityScorer;
 
-    let source = include_str!("../models/similarity-v1.json");
+    let source = include_str!("../models/similarity-v3.json");
     let artifact = SimilarityModelArtifact::from_json(source).unwrap();
     assert_eq!(artifact.kind, "logistic_similarity");
     assert_eq!(
@@ -264,12 +270,133 @@ fn trained_spam_artifact_loads_and_separates_messages() {
     assert!(!default.model.starts_with("trained-spam:"));
 }
 
+fn synthetic_metrics_case(id: &str, a: &str, b: &str, similar: bool) -> EvaluationCase {
+    EvaluationCase {
+        id: id.to_string(),
+        a: a.to_string(),
+        b: b.to_string(),
+        languages: Vec::new(),
+        split: "test".to_string(),
+        difficulty: "medium".to_string(),
+        category: String::new(),
+        labels: [(String::from("similar"), similar)].into_iter().collect(),
+        expected: Default::default(),
+        tags: Vec::new(),
+    }
+}
+
 #[test]
 fn evaluation_reports_ranking_and_calibration_metrics() {
-    let source = include_str!("../data/evaluation.json");
-    let dataset = EvaluationDataset::from_json(source).unwrap();
-    let report = evaluate(&TextIntelligence::default(), &dataset).unwrap();
-    assert_eq!(report.metrics.count, dataset.cases.len());
+    // Synthetic extremes (identical vs topically disjoint) keep this fast:
+    // the default engine scores identicals near 1.0 through lexical and
+    // character channels and disjoint pairs near 0.0, exercising binary,
+    // calibration, and ranking metrics without the full dataset (the
+    // real-data path is guarded by
+    // `evaluation_dataset_from_dir_loads_splits_and_evaluates`, and
+    // full-dataset production numbers come from the `eval` CLI).
+    // Similar cases come first so ranking queries 0..4 are all relevant.
+    let similar_texts = [
+        "the quick brown fox jumps over the lazy dog",
+        "pack my box with five dozen liquor jugs",
+        "how vexingly quick daft zebras jump",
+        "the five boxing wizards jump quickly",
+        "jackdaws love my big sphinx of quartz",
+        "weave a circle round him thrice",
+    ];
+    let mut cases = Vec::new();
+    for (index, text) in similar_texts.iter().enumerate() {
+        cases.push(synthetic_metrics_case(
+            &format!("syn_sim_{index:02}"),
+            text,
+            text,
+            true,
+        ));
+    }
+    let dissimilar_pairs = [
+        (
+            "quantum field theory renormalization lecture",
+            "medieval sourdough bread baking recipes",
+        ),
+        (
+            "orbital mechanics transfer window calculation",
+            "handmade ceramic pottery glazing techniques",
+        ),
+        (
+            "bayesian posterior sampling diagnostics report",
+            "vintage motorcycle carburetor restoration guide",
+        ),
+        (
+            "distributed consensus protocol safety proof",
+            "alpine wildflower meadow hiking itinerary",
+        ),
+        (
+            "phonetic transcription of tonal contrasts",
+            "deep sea hydrothermal vent ecosystems",
+        ),
+        (
+            "zero knowledge succinct argument circuits",
+            "heirloom tomato seed saving workshop",
+        ),
+    ];
+    for (index, (left, right)) in dissimilar_pairs.iter().enumerate() {
+        cases.push(synthetic_metrics_case(
+            &format!("syn_dis_{index:02}"),
+            left,
+            right,
+            false,
+        ));
+    }
+    let dataset = EvaluationDataset {
+        version: "synthetic-metrics".to_string(),
+        cases,
+    };
+    let options = EvaluateOptions {
+        split: None,
+        ranking_queries: 4,
+        ranking_documents: 12,
+    };
+    let report = evaluate_with_options(&TextIntelligence::default(), &dataset, &options).unwrap();
+    assert_eq!(report.metrics.count, 12);
+    assert_eq!(report.metrics.positives, 6);
+    assert_eq!(report.metrics.negatives, 6);
     assert!(report.metrics.roc_auc >= 0.0 && report.metrics.roc_auc <= 1.0);
+    assert!(report.metrics.expected_calibration_error >= 0.0);
+    assert!(report.metrics.brier >= 0.0);
+    assert_eq!(report.ranking.queries, 4);
     assert!(report.average_compare_micros.is_finite());
+}
+
+#[test]
+fn evaluation_dataset_from_dir_loads_splits_and_evaluates() {
+    // Integration guard for the real-data path: the sharded dataset loads
+    // with its version and splits intact, and a small slice evaluates.
+    let dataset = EvaluationDataset::from_dir("data/evaluation").unwrap();
+    assert_eq!(dataset.version, "0.7.0");
+    let mut splits = std::collections::BTreeSet::new();
+    for case in &dataset.cases {
+        splits.insert(case.split.as_str());
+    }
+    assert_eq!(
+        splits,
+        ["test", "train", "validation"].into_iter().collect()
+    );
+    assert!(dataset.cases.len() > 1000);
+    let slice = EvaluationDataset {
+        version: dataset.version.clone(),
+        cases: dataset
+            .cases
+            .iter()
+            .filter(|case| case.split == "test")
+            .take(10)
+            .cloned()
+            .collect(),
+    };
+    assert_eq!(slice.cases.len(), 10);
+    let options = EvaluateOptions {
+        split: None,
+        ranking_queries: 2,
+        ranking_documents: 10,
+    };
+    let report = evaluate_with_options(&TextIntelligence::default(), &slice, &options).unwrap();
+    assert_eq!(report.metrics.count, 10);
 }

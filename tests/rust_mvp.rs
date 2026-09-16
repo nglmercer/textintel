@@ -346,10 +346,11 @@ fn symbol_resources_are_split_by_language() {
     ];
     let expected_tokens = vec![
         "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "100", "$", "%", "+", "=", "£",
-        "¥", "€", "₹", "☕", "❤", "❤️", "🏠", "💰", "🔥",
+        "¥", "€", "₹", "☀", "☕", "❄", "❤", "❤️", "🍕", "🎉", "🏆", "🏠", "💰", "🔥", "😘", "🙏",
+        "🚗", "🤘",
     ];
 
-    assert_eq!(loader.symbol_count(), 26);
+    assert_eq!(loader.symbol_count(), 35);
     assert_eq!(loader.symbol_tokens(), expected_tokens);
     for token in &expected_tokens {
         let languages = loader.symbol_languages(token);

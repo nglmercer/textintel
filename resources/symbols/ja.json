@@ -5,31 +5,356 @@
   "source": "textintel-curated",
   "revision": "2026-09",
   "symbols": [
-    {"token": "🏠", "readings": [{"text": "いえ", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "🔥", "readings": [{"text": "ひ", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "💰", "readings": [{"text": "おかね", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "❤", "readings": [{"text": "あい", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "❤️", "readings": [{"text": "あい", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "0", "readings": [{"text": "ぜろ", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "1", "readings": [{"text": "いち", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "2", "readings": [{"text": "に", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "3", "readings": [{"text": "さん", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "4", "readings": [{"text": "よん", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "5", "readings": [{"text": "ご", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "6", "readings": [{"text": "ろく", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "7", "readings": [{"text": "なな", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "8", "readings": [{"text": "はち", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "9", "readings": [{"text": "きゅう", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "10", "readings": [{"text": "じゅう", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "100", "readings": [{"text": "ひゃく", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "$", "readings": [{"text": "ドル", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "€", "readings": [{"text": "ユーロ", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "£", "readings": [{"text": "ポンド", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "¥", "readings": [{"text": "えん", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "₹", "readings": [{"text": "ルピー", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "%", "readings": [{"text": "パーセント", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "+", "readings": [{"text": "プラス", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "イコール", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "コーヒー", "probability": 0.80, "reading_type": "symbol_reading"}]}
+    {
+      "token": "🏠",
+      "readings": [
+        {
+          "text": "いえ",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🔥",
+      "readings": [
+        {
+          "text": "ひ",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "💰",
+      "readings": [
+        {
+          "text": "おかね",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤",
+      "readings": [
+        {
+          "text": "あい",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤️",
+      "readings": [
+        {
+          "text": "あい",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "0",
+      "readings": [
+        {
+          "text": "ぜろ",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "1",
+      "readings": [
+        {
+          "text": "いち",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "2",
+      "readings": [
+        {
+          "text": "に",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "3",
+      "readings": [
+        {
+          "text": "さん",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "4",
+      "readings": [
+        {
+          "text": "よん",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "5",
+      "readings": [
+        {
+          "text": "ご",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "6",
+      "readings": [
+        {
+          "text": "ろく",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "7",
+      "readings": [
+        {
+          "text": "なな",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "8",
+      "readings": [
+        {
+          "text": "はち",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "9",
+      "readings": [
+        {
+          "text": "きゅう",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "10",
+      "readings": [
+        {
+          "text": "じゅう",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "100",
+      "readings": [
+        {
+          "text": "ひゃく",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "$",
+      "readings": [
+        {
+          "text": "ドル",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "€",
+      "readings": [
+        {
+          "text": "ユーロ",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "£",
+      "readings": [
+        {
+          "text": "ポンド",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "¥",
+      "readings": [
+        {
+          "text": "えん",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "₹",
+      "readings": [
+        {
+          "text": "ルピー",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "%",
+      "readings": [
+        {
+          "text": "パーセント",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "+",
+      "readings": [
+        {
+          "text": "プラス",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "=",
+      "readings": [
+        {
+          "text": "イコール",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "☕",
+      "unicode_name": "HOT BEVERAGE",
+      "readings": [
+        {
+          "text": "コーヒー",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "☀",
+      "readings": [
+        {
+          "text": "太陽",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❄",
+      "readings": [
+        {
+          "text": "雪",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🍕",
+      "readings": [
+        {
+          "text": "ピザ",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🎉",
+      "readings": [
+        {
+          "text": "パーティー",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🏆",
+      "readings": [
+        {
+          "text": "トロフィー",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "😘",
+      "readings": [
+        {
+          "text": "キス",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🙏",
+      "readings": [
+        {
+          "text": "お願い",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🚗",
+      "readings": [
+        {
+          "text": "車",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🤘",
+      "readings": [
+        {
+          "text": "ロック",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    }
   ]
 }

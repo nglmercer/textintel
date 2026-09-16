@@ -1,1 +1,874 @@
-{"entries": [{"readings": [{"probability": 0.55, "text": "you", "type": "chat_abbreviation"}], "token": "u"}, {"readings": [{"probability": 0.55, "text": "are", "type": "chat_abbreviation"}], "token": "r"}, {"readings": [{"probability": 0.55, "text": "your", "type": "chat_abbreviation"}, {"probability": 0.4, "text": "you're", "type": "chat_abbreviation"}], "token": "ur"}, {"readings": [{"probability": 0.6, "text": "before", "type": "chat_abbreviation"}], "token": "b4"}, {"readings": [{"probability": 0.65, "text": "great", "type": "chat_abbreviation"}], "token": "gr8"}, {"readings": [{"probability": 0.65, "text": "later", "type": "chat_abbreviation"}], "token": "l8r"}, {"readings": [{"probability": 0.65, "text": "mate", "type": "chat_abbreviation"}], "token": "m8"}], "language": "en", "name": "English chat abbreviations", "revision": "2026-09", "schema_version": 1, "source": "textintel-curated"}
+{
+  "entries": [
+    {
+      "readings": [
+        {
+          "probability": 0.55,
+          "text": "you",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "u"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.55,
+          "text": "are",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "r"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.55,
+          "text": "your",
+          "type": "chat_abbreviation"
+        },
+        {
+          "probability": 0.4,
+          "text": "you're",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "ur"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "before",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "b4"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "great",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "gr8"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "later",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "l8r"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "mate",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "m8"
+    },
+    {
+      "token": "luv",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "love",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "nite",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "night",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "thru",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "through",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "tho",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "though",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "lite",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "light",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "foto",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "photo",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "enuf",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "enough",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "ya",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "you",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "cuz",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "because",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "grey",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "gray",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "rumour",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "rumor",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "cheque",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "check",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "donut",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "doughnut",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "okay",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "ok",
+          "type": "spelling_variant"
+        }
+      ]
+    },
+    {
+      "token": "gonna",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "going to",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "wanna",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "want to",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "gimme",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "give me",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "lemme",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "let me",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "kinda",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "kind of",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "sorta",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "sort of",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "outta",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "out of",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "gotta",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "got to",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "probly",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "probably",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "dunno",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "don't know",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "yall",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "you all",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "maam",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "madam",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "idk",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "I don't know",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "tbh",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "to be honest",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "imo",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "in my opinion",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "smh",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "shaking my head",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "nvm",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "never mind",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "brb",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "be right back",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "plz",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "please",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "thx",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "thanks",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "np",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "no problem",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "omw",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "on my way",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "asap",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "as soon as possible",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "dm",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "direct message",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "yw",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "you're welcome",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "btw",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "by the way",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "fyi",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "for your information",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "aka",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "also known as",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "diy",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "do it yourself",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "faq",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "frequently asked questions",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "eta",
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "estimated time of arrival",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "boyz",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "boys",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "token": "girlz",
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "girls",
+          "type": "chat_abbreviation"
+        }
+      ]
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "this",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "dis"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "that",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "dat"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "come on",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "cmon"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "goodbye",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "bye"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "sorry",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "sry"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "please",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "pls"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "message",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "msg"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "picture",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "pic"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "obviously",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "obvi"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "definitely",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "def"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "probably",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "probs"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "seriously",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "srsly"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "biography",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "bio"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "demonstration",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "demo"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "laboratory",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "lab"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "examination",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "exam"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "mathematics",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "math"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "gymnasium",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "gym"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "phone",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "fone"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "color",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "colour"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "favor",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "favour"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "program",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "programme"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "tire",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "tyre"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "mom",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "mum"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "airplane",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "aeroplane"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "behavior",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "behaviour"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "neighbor",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "neighbour"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "honor",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "honour"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "center",
+          "type": "spelling_variant"
+        }
+      ],
+      "token": "centre"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "wait",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "w8"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "hate",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "h8"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "photograph",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "photo"
+    }
+  ],
+  "language": "en",
+  "name": "English chat abbreviations",
+  "revision": "2026-09",
+  "schema_version": 1,
+  "source": "textintel-curated"
+}

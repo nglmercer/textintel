@@ -3,61 +3,510 @@
   "language": "es",
   "name": "Español",
   "entries": [
-    {"word": "a", "lemma": "a", "stop_word": true},
-    {"word": "el", "lemma": "el", "stop_word": true},
-    {"word": "la", "lemma": "la", "stop_word": true},
-    {"word": "los", "lemma": "el", "stop_word": true},
-    {"word": "las", "lemma": "la", "stop_word": true},
-    {"word": "de", "lemma": "de", "stop_word": true},
-    {"word": "que", "lemma": "que", "stop_word": true},
-    {"word": "y", "lemma": "y", "stop_word": true},
-    {"word": "en", "lemma": "en", "stop_word": true},
-    {"word": "un", "lemma": "uno", "stop_word": true},
-    {"word": "una", "lemma": "uno", "stop_word": true},
-    {"word": "es", "lemma": "ser", "stop_word": true},
-    {"word": "por", "lemma": "por", "stop_word": true},
-    {"word": "con", "lemma": "con", "stop_word": true},
-    {"word": "para", "lemma": "para", "stop_word": true},
-    {"word": "compra", "lemma": "comprar"},
-    {"word": "comprar", "lemma": "comprar"},
-    {"word": "ahora", "lemma": "ahora"},
-    {"word": "gana", "lemma": "ganar"},
-    {"word": "ganar", "lemma": "ganar"},
-    {"word": "dinero", "lemma": "dinero"},
-    {"word": "paypal", "lemma": "paypal"},
-    {"word": "cash", "lemma": "cash"},
-    {"word": "saludo", "lemma": "saludo"},
-    {"word": "saludos", "lemma": "saludo"},
-    {"word": "salud", "lemma": "salud"},
-    {"word": "hola", "lemma": "hola"},
-    {"word": "hello", "lemma": "hello"},
-    {"word": "si", "lemma": "si", "stop_word": true},
-    {"word": "sí", "lemma": "sí", "stop_word": true},
-    {"word": "siempre", "lemma": "siempre"},
-    {"word": "siem", "lemma": "siem"},
-    {"word": "cien", "lemma": "cien"},
-    {"word": "pre", "lemma": "pre"},
-    {"word": "premio", "lemma": "premio"},
-    {"word": "reclama", "lemma": "reclamar"},
-    {"word": "tu", "lemma": "tu", "stop_word": true},
-    {"word": "fuego", "lemma": "fuego"},
-    {"word": "amor", "lemma": "amor"},
-    {"word": "fracasado", "lemma": "fracasar"},
-    {"word": "fracasada", "lemma": "fracasar"},
-    {"word": "fracasar", "lemma": "fracasar"},
-    {"word": "vivienda", "lemma": "vivienda"},
-    {"word": "plata", "lemma": "plata"},
-    {"word": "dos", "lemma": "dos"},
-    {"word": "uno", "lemma": "uno"},
-    {"word": "tres", "lemma": "tres"},
-    {"word": "ferrocarril", "lemma": "ferrocarril"},
-    {"word": "cansado", "lemma": "cansar"},
-    {"word": "camino", "lemma": "camino"},
-    {"word": "gracias", "lemma": "gracias"}
+    {
+      "word": "a",
+      "lemma": "a",
+      "stop_word": true
+    },
+    {
+      "word": "el",
+      "lemma": "el",
+      "stop_word": true
+    },
+    {
+      "word": "la",
+      "lemma": "la",
+      "stop_word": true
+    },
+    {
+      "word": "los",
+      "lemma": "el",
+      "stop_word": true
+    },
+    {
+      "word": "las",
+      "lemma": "la",
+      "stop_word": true
+    },
+    {
+      "word": "de",
+      "lemma": "de",
+      "stop_word": true
+    },
+    {
+      "word": "que",
+      "lemma": "que",
+      "stop_word": true
+    },
+    {
+      "word": "y",
+      "lemma": "y",
+      "stop_word": true
+    },
+    {
+      "word": "en",
+      "lemma": "en",
+      "stop_word": true
+    },
+    {
+      "word": "un",
+      "lemma": "uno",
+      "stop_word": true
+    },
+    {
+      "word": "una",
+      "lemma": "uno",
+      "stop_word": true
+    },
+    {
+      "word": "es",
+      "lemma": "ser",
+      "stop_word": true
+    },
+    {
+      "word": "por",
+      "lemma": "por",
+      "stop_word": true
+    },
+    {
+      "word": "con",
+      "lemma": "con",
+      "stop_word": true
+    },
+    {
+      "word": "para",
+      "lemma": "para",
+      "stop_word": true
+    },
+    {
+      "word": "compra",
+      "lemma": "comprar"
+    },
+    {
+      "word": "comprar",
+      "lemma": "comprar"
+    },
+    {
+      "word": "ahora",
+      "lemma": "ahora"
+    },
+    {
+      "word": "gana",
+      "lemma": "ganar"
+    },
+    {
+      "word": "ganar",
+      "lemma": "ganar"
+    },
+    {
+      "word": "dinero",
+      "lemma": "dinero"
+    },
+    {
+      "word": "paypal",
+      "lemma": "paypal"
+    },
+    {
+      "word": "cash",
+      "lemma": "cash"
+    },
+    {
+      "word": "saludo",
+      "lemma": "saludo"
+    },
+    {
+      "word": "saludos",
+      "lemma": "saludo"
+    },
+    {
+      "word": "salud",
+      "lemma": "salud"
+    },
+    {
+      "word": "hola",
+      "lemma": "hola"
+    },
+    {
+      "word": "hello",
+      "lemma": "hello"
+    },
+    {
+      "word": "si",
+      "lemma": "si",
+      "stop_word": true
+    },
+    {
+      "word": "sí",
+      "lemma": "sí",
+      "stop_word": true
+    },
+    {
+      "word": "siempre",
+      "lemma": "siempre"
+    },
+    {
+      "word": "siem",
+      "lemma": "siem"
+    },
+    {
+      "word": "cien",
+      "lemma": "cien"
+    },
+    {
+      "word": "pre",
+      "lemma": "pre"
+    },
+    {
+      "word": "premio",
+      "lemma": "premio"
+    },
+    {
+      "word": "reclama",
+      "lemma": "reclamar"
+    },
+    {
+      "word": "tu",
+      "lemma": "tu",
+      "stop_word": true
+    },
+    {
+      "word": "fuego",
+      "lemma": "fuego"
+    },
+    {
+      "word": "amor",
+      "lemma": "amor"
+    },
+    {
+      "word": "fracasado",
+      "lemma": "fracasar"
+    },
+    {
+      "word": "fracasada",
+      "lemma": "fracasar"
+    },
+    {
+      "word": "fracasar",
+      "lemma": "fracasar"
+    },
+    {
+      "word": "vivienda",
+      "lemma": "vivienda"
+    },
+    {
+      "word": "plata",
+      "lemma": "plata"
+    },
+    {
+      "word": "dos",
+      "lemma": "dos"
+    },
+    {
+      "word": "uno",
+      "lemma": "uno"
+    },
+    {
+      "word": "tres",
+      "lemma": "tres"
+    },
+    {
+      "word": "ferrocarril",
+      "lemma": "ferrocarril"
+    },
+    {
+      "word": "cansado",
+      "lemma": "cansar"
+    },
+    {
+      "word": "camino",
+      "lemma": "camino"
+    },
+    {
+      "word": "gracias",
+      "lemma": "gracias"
+    }
   ],
   "examples": [
     "este es un ejemplo",
     "buen ejemplo",
-    "gana dinero ahora"
+    "gana dinero ahora",
+    "buenos días",
+    "muchas gracias",
+    "hasta mañana",
+    "te amo",
+    "compra ahora",
+    "saludos amigo",
+    "cómo estás hoy",
+    "feliz cumpleaños"
+  ],
+  "words": [
+    "yo",
+    "tú",
+    "usted",
+    "él",
+    "ella",
+    "nosotros",
+    "vosotros",
+    "ellos",
+    "ellas",
+    "me",
+    "te",
+    "se",
+    "nos",
+    "lo",
+    "mi",
+    "su",
+    "nuestro",
+    "vuestro",
+    "unos",
+    "unas",
+    "sin",
+    "sobre",
+    "entre",
+    "hasta",
+    "desde",
+    "ser",
+    "estar",
+    "son",
+    "era",
+    "eran",
+    "sido",
+    "estoy",
+    "estás",
+    "está",
+    "estamos",
+    "están",
+    "hay",
+    "he",
+    "has",
+    "ha",
+    "hemos",
+    "han",
+    "tener",
+    "hacer",
+    "decir",
+    "ir",
+    "venir",
+    "ver",
+    "dar",
+    "saber",
+    "querer",
+    "llegar",
+    "pasar",
+    "deber",
+    "poner",
+    "parecer",
+    "quedar",
+    "creer",
+    "hablar",
+    "llevar",
+    "dejar",
+    "seguir",
+    "encontrar",
+    "llamar",
+    "volver",
+    "salir",
+    "vender",
+    "pagar",
+    "enviar",
+    "recibir",
+    "reclamar",
+    "ofrecer",
+    "visitar",
+    "leer",
+    "escribir",
+    "amar",
+    "buenos",
+    "días",
+    "tardes",
+    "noches",
+    "adiós",
+    "favor",
+    "perdón",
+    "bienvenido",
+    "hoy",
+    "mañana",
+    "ayer",
+    "luego",
+    "pronto",
+    "semana",
+    "mes",
+    "año",
+    "lunes",
+    "martes",
+    "miércoles",
+    "jueves",
+    "viernes",
+    "sábado",
+    "domingo",
+    "efectivo",
+    "gratis",
+    "regalo",
+    "oferta",
+    "descuento",
+    "precio",
+    "barato",
+    "urgente",
+    "nuevo",
+    "casa",
+    "corazón",
+    "tiempo",
+    "día",
+    "hombre",
+    "mujer",
+    "niño",
+    "niña",
+    "mundo",
+    "noche",
+    "agua",
+    "comida",
+    "coche",
+    "trabajo",
+    "amo",
+    "eres",
+    "fracaso",
+    "bueno",
+    "malo",
+    "grande",
+    "pequeño",
+    "viejo",
+    "alto",
+    "bajo",
+    "largo",
+    "mucho",
+    "muy",
+    "más",
+    "menos",
+    "pero",
+    "porque",
+    "como",
+    "cuando",
+    "donde",
+    "qué",
+    "quién",
+    "hora",
+    "horas",
+    "comparar",
+    "compara",
+    "entra",
+    "sale",
+    "viene",
+    "llega",
+    "mira",
+    "escucha",
+    "habla",
+    "escribe",
+    "lee",
+    "cobra",
+    "cuesta",
+    "vale",
+    "vida",
+    "gente",
+    "cosa",
+    "parte",
+    "vez",
+    "calle",
+    "ciudad",
+    "país",
+    "foto",
+    "música",
+    "película",
+    "juego",
+    "deporte",
+    "hospital",
+    "médico",
+    "escuela",
+    "oficina",
+    "puerta",
+    "ventana",
+    "del",
+    "al",
+    "tengo",
+    "tiene",
+    "tienen",
+    "hago",
+    "hace",
+    "dice",
+    "dicen",
+    "voy",
+    "vamos",
+    "van",
+    "veo",
+    "ven",
+    "sé",
+    "sabe",
+    "quiero",
+    "quiere",
+    "llego",
+    "paso",
+    "debo",
+    "pongo",
+    "creo",
+    "hablo",
+    "dejo",
+    "sigo",
+    "llamo",
+    "salgo",
+    "compro",
+    "vendo",
+    "pago",
+    "gano",
+    "buena",
+    "buenas",
+    "malas",
+    "grandes",
+    "pequeños",
+    "nueva",
+    "nuevos",
+    "vieja",
+    "altos",
+    "bajos",
+    "largas",
+    "muchas",
+    "pocos",
+    "todas",
+    "todo",
+    "esto",
+    "eso",
+    "aquí",
+    "ahí",
+    "allí",
+    "aunque",
+    "nunca",
+    "también",
+    "tampoco",
+    "quizás",
+    "casi",
+    "bastante",
+    "demasiado",
+    "bis",
+    "temprano",
+    "tarde",
+    "rato",
+    "veces",
+    "primera",
+    "última",
+    "próxima",
+    "cada",
+    "esta",
+    "ese",
+    "misma",
+    "mientras",
+    "durante",
+    "según",
+    "contra",
+    "hacia",
+    "anoche",
+    "mediodía",
+    "medianoche",
+    "no",
+    "amiga",
+    "museo",
+    "novela",
+    "vino",
+    "guitarra",
+    "carpeta",
+    "té",
+    "posible"
   ]
 }

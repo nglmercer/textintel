@@ -78,8 +78,7 @@ fn legacy_cases_without_category_are_inferred_from_labels() {
 
 #[test]
 fn production_dataset_covers_all_twelve_categories() {
-    let source = std::fs::read_to_string("data/evaluation.json").unwrap();
-    let dataset = EvaluationDataset::from_json(&source).unwrap();
+    let dataset = EvaluationDataset::from_dir("data/evaluation").unwrap();
     assert_eq!(
         EVALUATION_CATEGORIES.len(),
         12,

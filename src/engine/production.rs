@@ -71,24 +71,48 @@ pub struct EngineDiagnostics {
     pub store_capabilities: crate::core::providers::VectorStoreCapabilities,
 }
 
-/// Production similarity artifact within `dir`: `similarity-v2` (trained on
-/// dataset 0.5.0 with semantic and phonetic evidence) wins when present;
-/// otherwise fall back to `similarity-v1` so older checkouts keep working.
-/// Diagnostics always report the loaded revision, so the active artifact is
-/// explicit.
+/// Production similarity artifact within `dir`: newest revision wins
+/// (`similarity-v3`, schema 6 with confusable-separation features), falling
+/// back to `similarity-v2` and then `similarity-v1` by existence. Loading
+/// stays strict: a selected artifact whose feature schema does not match
+/// this build is rejected with an explicit error (old revisions predate
+/// schema 6 and must be retrained, never silently loaded). Diagnostics
+/// always report the loaded revision, so the active artifact is explicit.
 pub fn preferred_similarity_artifact_in(dir: &std::path::Path) -> PathBuf {
-    let v2 = dir.join("similarity-v2.json");
-    if v2.exists() {
-        v2
-    } else {
-        dir.join("similarity-v1.json")
+    for name in [
+        "similarity-v3.json",
+        "similarity-v2.json",
+        "similarity-v1.json",
+    ] {
+        let candidate = dir.join(name);
+        if candidate.exists() {
+            return candidate;
+        }
     }
+    dir.join("similarity-v1.json")
 }
 
 /// [`preferred_similarity_artifact_in`] for the conventional `./models`
 /// directory.
 pub fn preferred_similarity_artifact() -> PathBuf {
     preferred_similarity_artifact_in(std::path::Path::new("models"))
+}
+
+/// Production spam artifact within `dir`: `spam-v2` (realistic corpus)
+/// wins when present, otherwise `spam-v1` (synthetic corpus). Both share
+/// feature schema 1, so the fallback loads cleanly.
+pub fn preferred_spam_artifact_in(dir: &std::path::Path) -> PathBuf {
+    let v2 = dir.join("spam-v2.json");
+    if v2.exists() {
+        v2
+    } else {
+        dir.join("spam-v1.json")
+    }
+}
+
+/// [`preferred_spam_artifact_in`] for the conventional `./models` directory.
+pub fn preferred_spam_artifact() -> PathBuf {
+    preferred_spam_artifact_in(std::path::Path::new("models"))
 }
 
 /// Ergonomic engine construction. All providers are optional; anything left
@@ -370,7 +394,7 @@ impl EngineBuilder {
             self.similarity_model_path = Some(preferred_similarity_artifact());
         }
         if self.spam_model_path.is_none() {
-            self.spam_model_path = Some(PathBuf::from("models/spam-v1.json"));
+            self.spam_model_path = Some(preferred_spam_artifact());
         }
         if self.reranker_model_path.is_none() && self.reranker.is_none() {
             self.reranker_model_path = Some(PathBuf::from("models/reranker-v1.json"));

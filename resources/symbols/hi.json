@@ -5,31 +5,356 @@
   "source": "textintel-curated",
   "revision": "2026-09",
   "symbols": [
-    {"token": "🏠", "readings": [{"text": "घर", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "🔥", "readings": [{"text": "आग", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "💰", "readings": [{"text": "पैसा", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "❤", "readings": [{"text": "प्यार", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "❤️", "readings": [{"text": "प्यार", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "0", "readings": [{"text": "शून्य", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "1", "readings": [{"text": "एक", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "2", "readings": [{"text": "दो", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "3", "readings": [{"text": "तीन", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "4", "readings": [{"text": "चार", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "5", "readings": [{"text": "पाँच", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "6", "readings": [{"text": "छह", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "7", "readings": [{"text": "सात", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "8", "readings": [{"text": "आठ", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "9", "readings": [{"text": "नौ", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "10", "readings": [{"text": "दस", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "100", "readings": [{"text": "सौ", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "$", "readings": [{"text": "डॉलर", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "€", "readings": [{"text": "यूरो", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "£", "readings": [{"text": "पाउंड", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "¥", "readings": [{"text": "येन", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "₹", "readings": [{"text": "रुपया", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "%", "readings": [{"text": "प्रतिशत", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "+", "readings": [{"text": "प्लस", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "बराबर", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "कॉफ़ी", "probability": 0.80, "reading_type": "symbol_reading"}]}
+    {
+      "token": "🏠",
+      "readings": [
+        {
+          "text": "घर",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🔥",
+      "readings": [
+        {
+          "text": "आग",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "💰",
+      "readings": [
+        {
+          "text": "पैसा",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤",
+      "readings": [
+        {
+          "text": "प्यार",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤️",
+      "readings": [
+        {
+          "text": "प्यार",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "0",
+      "readings": [
+        {
+          "text": "शून्य",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "1",
+      "readings": [
+        {
+          "text": "एक",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "2",
+      "readings": [
+        {
+          "text": "दो",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "3",
+      "readings": [
+        {
+          "text": "तीन",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "4",
+      "readings": [
+        {
+          "text": "चार",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "5",
+      "readings": [
+        {
+          "text": "पाँच",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "6",
+      "readings": [
+        {
+          "text": "छह",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "7",
+      "readings": [
+        {
+          "text": "सात",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "8",
+      "readings": [
+        {
+          "text": "आठ",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "9",
+      "readings": [
+        {
+          "text": "नौ",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "10",
+      "readings": [
+        {
+          "text": "दस",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "100",
+      "readings": [
+        {
+          "text": "सौ",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "$",
+      "readings": [
+        {
+          "text": "डॉलर",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "€",
+      "readings": [
+        {
+          "text": "यूरो",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "£",
+      "readings": [
+        {
+          "text": "पाउंड",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "¥",
+      "readings": [
+        {
+          "text": "येन",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "₹",
+      "readings": [
+        {
+          "text": "रुपया",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "%",
+      "readings": [
+        {
+          "text": "प्रतिशत",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "+",
+      "readings": [
+        {
+          "text": "प्लस",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "=",
+      "readings": [
+        {
+          "text": "बराबर",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "☕",
+      "unicode_name": "HOT BEVERAGE",
+      "readings": [
+        {
+          "text": "कॉफ़ी",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "☀",
+      "readings": [
+        {
+          "text": "सूरज",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❄",
+      "readings": [
+        {
+          "text": "बर्फ",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🍕",
+      "readings": [
+        {
+          "text": "पिज़्ज़ा",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🎉",
+      "readings": [
+        {
+          "text": "पार्टी",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🏆",
+      "readings": [
+        {
+          "text": "ट्रॉफी",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "😘",
+      "readings": [
+        {
+          "text": "चुम्बन",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🙏",
+      "readings": [
+        {
+          "text": "कृपया",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🚗",
+      "readings": [
+        {
+          "text": "गाड़ी",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🤘",
+      "readings": [
+        {
+          "text": "रॉक",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    }
   ]
 }

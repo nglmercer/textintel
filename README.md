@@ -184,7 +184,7 @@ cargo run -- spam "ganaste un premio https://example.test"
 cargo run -- batch messages.jsonl
 cargo run -- resources resources
 cargo run -- diagnostics
-cargo run -- evaluate data/evaluation.json
+cargo run -- evaluate data/evaluation/
 cargo run -- index store.json id-1 "a message"
 cargo run -- search store.json "similar message" 5
 ```
@@ -211,13 +211,13 @@ cargo test --locked --all-features --all-targets
 cargo clippy --all-targets --all-features -- -D warnings
 cargo doc --no-deps --all-features
 cargo bench --locked --no-run --all-features
-cargo run --locked --all-features --bin textintel -- eval data/evaluation.json --split test --gates data/quality-gates.json
+cargo run --locked --all-features --bin textintel -- eval data/evaluation/ --split test --gates data/quality-gates.json
 ```
 
 Then the production preset separately:
 
 ```text
-cargo run --locked --all-features --bin textintel -- eval data/evaluation.json --split test --production --gates data/quality-gates-production.json
+cargo run --locked --all-features --bin textintel -- eval data/evaluation/ --split test --production --gates data/quality-gates-production.json
 ```
 
 The integration suite covers the plan's MVP examples plus provider injection,
@@ -225,7 +225,7 @@ batch APIs, persistence, multilingual segmentation, IPA features, patterns,
 spam, duplicate detection, and indexed search behavior. A versioned seed
 evaluation set (currently `0.5.0`, 1314 cases over train/validation/test)
 with ranking and calibration metrics is available at
-`data/evaluation.json`; `data/quality-gates.json` pins the default-engine
+`data/evaluation/`; `data/quality-gates.json` pins the default-engine
 bars and `data/quality-gates-production.json` the stronger production bars,
 both calibrated on the held-out test split.
 

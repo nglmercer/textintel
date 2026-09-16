@@ -3,23 +3,296 @@
   "language": "fr",
   "name": "Lectures des symboles en français",
   "symbols": [
-    {"token": "🏠", "readings": [{"text": "maison", "probability": 0.90, "reading_type": "symbol_reading"}, {"text": "foyer", "probability": 0.50, "reading_type": "symbol_reading"}]},
-    {"token": "🔥", "readings": [{"text": "feu", "probability": 0.70, "reading_type": "symbol_reading"}, {"text": "chaud", "probability": 0.40, "reading_type": "symbol_reading"}]},
-    {"token": "💰", "readings": [{"text": "argent", "probability": 0.90, "reading_type": "symbol_reading"}]},
-    {"token": "❤", "readings": [{"text": "amour", "probability": 0.80, "reading_type": "symbol_reading"}, {"text": "cœur", "probability": 0.50, "reading_type": "symbol_reading"}]},
-    {"token": "❤️", "readings": [{"text": "amour", "probability": 0.80, "reading_type": "symbol_reading"}, {"text": "cœur", "probability": 0.50, "reading_type": "symbol_reading"}]},
-    {"token": "0", "readings": [{"text": "zéro", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "1", "readings": [{"text": "un", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "2", "readings": [{"text": "deux", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "3", "readings": [{"text": "trois", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "4", "readings": [{"text": "quatre", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "5", "readings": [{"text": "cinq", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "6", "readings": [{"text": "six", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "7", "readings": [{"text": "sept", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "8", "readings": [{"text": "huit", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "9", "readings": [{"text": "neuf", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "10", "readings": [{"text": "dix", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "100", "readings": [{"text": "cent", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "café", "probability": 0.80, "reading_type": "symbol_reading"}]}
+    {
+      "token": "🏠",
+      "readings": [
+        {
+          "text": "maison",
+          "probability": 0.9,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "foyer",
+          "probability": 0.5,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🔥",
+      "readings": [
+        {
+          "text": "feu",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "chaud",
+          "probability": 0.4,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "💰",
+      "readings": [
+        {
+          "text": "argent",
+          "probability": 0.9,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤",
+      "readings": [
+        {
+          "text": "amour",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "cœur",
+          "probability": 0.5,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤️",
+      "readings": [
+        {
+          "text": "amour",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "cœur",
+          "probability": 0.5,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "0",
+      "readings": [
+        {
+          "text": "zéro",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "1",
+      "readings": [
+        {
+          "text": "un",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "2",
+      "readings": [
+        {
+          "text": "deux",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "3",
+      "readings": [
+        {
+          "text": "trois",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "4",
+      "readings": [
+        {
+          "text": "quatre",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "5",
+      "readings": [
+        {
+          "text": "cinq",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "6",
+      "readings": [
+        {
+          "text": "six",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "7",
+      "readings": [
+        {
+          "text": "sept",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "8",
+      "readings": [
+        {
+          "text": "huit",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "9",
+      "readings": [
+        {
+          "text": "neuf",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "10",
+      "readings": [
+        {
+          "text": "dix",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "100",
+      "readings": [
+        {
+          "text": "cent",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "☕",
+      "unicode_name": "HOT BEVERAGE",
+      "readings": [
+        {
+          "text": "café",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "☀",
+      "readings": [
+        {
+          "text": "soleil",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❄",
+      "readings": [
+        {
+          "text": "neige",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🍕",
+      "readings": [
+        {
+          "text": "pizza",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🎉",
+      "readings": [
+        {
+          "text": "fête",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🏆",
+      "readings": [
+        {
+          "text": "trophée",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "😘",
+      "readings": [
+        {
+          "text": "bisou",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🙏",
+      "readings": [
+        {
+          "text": "s'il vous plaît",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🚗",
+      "readings": [
+        {
+          "text": "voiture",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🤘",
+      "readings": [
+        {
+          "text": "rock",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    }
   ]
 }

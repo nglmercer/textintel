@@ -3,23 +3,311 @@
   "language": "pt",
   "name": "Leituras de símbolos em português",
   "symbols": [
-    {"token": "🏠", "readings": [{"text": "casa", "probability": 0.90, "reading_type": "symbol_reading"}, {"text": "lar", "probability": 0.55, "reading_type": "symbol_reading"}]},
-    {"token": "🔥", "readings": [{"text": "fogo", "probability": 0.70, "reading_type": "symbol_reading"}, {"text": "quente", "probability": 0.40, "reading_type": "symbol_reading"}]},
-    {"token": "💰", "readings": [{"text": "dinheiro", "probability": 0.90, "reading_type": "symbol_reading"}, {"text": "grana", "probability": 0.45, "reading_type": "symbol_reading"}]},
-    {"token": "❤", "readings": [{"text": "amor", "probability": 0.80, "reading_type": "symbol_reading"}, {"text": "coração", "probability": 0.50, "reading_type": "symbol_reading"}]},
-    {"token": "❤️", "readings": [{"text": "amor", "probability": 0.80, "reading_type": "symbol_reading"}, {"text": "coração", "probability": 0.50, "reading_type": "symbol_reading"}]},
-    {"token": "0", "readings": [{"text": "zero", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "1", "readings": [{"text": "um", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "2", "readings": [{"text": "dois", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "3", "readings": [{"text": "três", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "4", "readings": [{"text": "quatro", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "5", "readings": [{"text": "cinco", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "6", "readings": [{"text": "seis", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "7", "readings": [{"text": "sete", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "8", "readings": [{"text": "oito", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "9", "readings": [{"text": "nove", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "10", "readings": [{"text": "dez", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "100", "readings": [{"text": "cem", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "café", "probability": 0.80, "reading_type": "symbol_reading"}]}
+    {
+      "token": "🏠",
+      "readings": [
+        {
+          "text": "casa",
+          "probability": 0.9,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "lar",
+          "probability": 0.55,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🔥",
+      "readings": [
+        {
+          "text": "fogo",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "quente",
+          "probability": 0.4,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "💰",
+      "readings": [
+        {
+          "text": "dinheiro",
+          "probability": 0.9,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "grana",
+          "probability": 0.45,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤",
+      "readings": [
+        {
+          "text": "amo",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "amor",
+          "probability": 0.6,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "coração",
+          "probability": 0.5,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤️",
+      "readings": [
+        {
+          "text": "amo",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "amor",
+          "probability": 0.6,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "coração",
+          "probability": 0.5,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "0",
+      "readings": [
+        {
+          "text": "zero",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "1",
+      "readings": [
+        {
+          "text": "um",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "2",
+      "readings": [
+        {
+          "text": "dois",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "3",
+      "readings": [
+        {
+          "text": "três",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "4",
+      "readings": [
+        {
+          "text": "quatro",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "5",
+      "readings": [
+        {
+          "text": "cinco",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "6",
+      "readings": [
+        {
+          "text": "seis",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "7",
+      "readings": [
+        {
+          "text": "sete",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "8",
+      "readings": [
+        {
+          "text": "oito",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "9",
+      "readings": [
+        {
+          "text": "nove",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "10",
+      "readings": [
+        {
+          "text": "dez",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "100",
+      "readings": [
+        {
+          "text": "cem",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "☕",
+      "unicode_name": "HOT BEVERAGE",
+      "readings": [
+        {
+          "text": "café",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "☀",
+      "readings": [
+        {
+          "text": "sol",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❄",
+      "readings": [
+        {
+          "text": "neve",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🍕",
+      "readings": [
+        {
+          "text": "pizza",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🎉",
+      "readings": [
+        {
+          "text": "festa",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🏆",
+      "readings": [
+        {
+          "text": "troféu",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "😘",
+      "readings": [
+        {
+          "text": "beijo",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🙏",
+      "readings": [
+        {
+          "text": "por favor",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🚗",
+      "readings": [
+        {
+          "text": "carro",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🤘",
+      "readings": [
+        {
+          "text": "rock",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    }
   ]
 }

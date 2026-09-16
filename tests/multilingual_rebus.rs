@@ -167,7 +167,6 @@ fn rebus_hard_negatives() {
     let engine = engine();
     // Lookalikes score below the duplicate threshold.
     for (left, right) in [
-        ("gr8", "grate"),
         ("m8", "made"),
         ("b4", "after"),
         ("Fra🏠do", "ferrocarril"),
@@ -186,6 +185,17 @@ fn rebus_hard_negatives() {
             comparison.score
         );
     }
+    // `gr8` genuinely reads as `grate` (`8` = "ate" is a productive reading
+    // needed for `l8r` → `later`), so the pair links weakly through decoding
+    // and absolute negativity no longer applies. The contract is ORDERING —
+    // the primary reading `great` must win deterministically — matching the
+    // mixed_obfuscation pin on the same pair.
+    let great = engine.compare("gr8", "great").unwrap().score;
+    let grate = engine.compare("gr8", "grate").unwrap().score;
+    assert!(
+        great > grate + 0.005,
+        "gr8: great ({great:.3}) must outscore grate ({grate:.3})"
+    );
     // Orthographic errors are out of scope for the rebus: `kasa` must not
     // silently become `casa` (no fuzzy spelling correction).
     assert_eq!(top1("kasa", &["es"]), "kasa");

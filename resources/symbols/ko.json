@@ -5,31 +5,356 @@
   "source": "textintel-curated",
   "revision": "2026-09",
   "symbols": [
-    {"token": "🏠", "readings": [{"text": "집", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "🔥", "readings": [{"text": "불", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "💰", "readings": [{"text": "돈", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "❤", "readings": [{"text": "사랑", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "❤️", "readings": [{"text": "사랑", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "0", "readings": [{"text": "영", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "1", "readings": [{"text": "일", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "2", "readings": [{"text": "이", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "3", "readings": [{"text": "삼", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "4", "readings": [{"text": "사", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "5", "readings": [{"text": "오", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "6", "readings": [{"text": "육", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "7", "readings": [{"text": "칠", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "8", "readings": [{"text": "팔", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "9", "readings": [{"text": "구", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "10", "readings": [{"text": "십", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "100", "readings": [{"text": "백", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "$", "readings": [{"text": "달러", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "€", "readings": [{"text": "유로", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "£", "readings": [{"text": "파운드", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "¥", "readings": [{"text": "엔", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "₹", "readings": [{"text": "루피", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "%", "readings": [{"text": "퍼센트", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "+", "readings": [{"text": "플러스", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "같다", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "커피", "probability": 0.80, "reading_type": "symbol_reading"}]}
+    {
+      "token": "🏠",
+      "readings": [
+        {
+          "text": "집",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🔥",
+      "readings": [
+        {
+          "text": "불",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "💰",
+      "readings": [
+        {
+          "text": "돈",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤",
+      "readings": [
+        {
+          "text": "사랑",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤️",
+      "readings": [
+        {
+          "text": "사랑",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "0",
+      "readings": [
+        {
+          "text": "영",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "1",
+      "readings": [
+        {
+          "text": "일",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "2",
+      "readings": [
+        {
+          "text": "이",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "3",
+      "readings": [
+        {
+          "text": "삼",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "4",
+      "readings": [
+        {
+          "text": "사",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "5",
+      "readings": [
+        {
+          "text": "오",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "6",
+      "readings": [
+        {
+          "text": "육",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "7",
+      "readings": [
+        {
+          "text": "칠",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "8",
+      "readings": [
+        {
+          "text": "팔",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "9",
+      "readings": [
+        {
+          "text": "구",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "10",
+      "readings": [
+        {
+          "text": "십",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "100",
+      "readings": [
+        {
+          "text": "백",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "$",
+      "readings": [
+        {
+          "text": "달러",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "€",
+      "readings": [
+        {
+          "text": "유로",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "£",
+      "readings": [
+        {
+          "text": "파운드",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "¥",
+      "readings": [
+        {
+          "text": "엔",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "₹",
+      "readings": [
+        {
+          "text": "루피",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "%",
+      "readings": [
+        {
+          "text": "퍼센트",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "+",
+      "readings": [
+        {
+          "text": "플러스",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "=",
+      "readings": [
+        {
+          "text": "같다",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "☕",
+      "unicode_name": "HOT BEVERAGE",
+      "readings": [
+        {
+          "text": "커피",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "☀",
+      "readings": [
+        {
+          "text": "태양",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❄",
+      "readings": [
+        {
+          "text": "눈",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🍕",
+      "readings": [
+        {
+          "text": "피자",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🎉",
+      "readings": [
+        {
+          "text": "파티",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🏆",
+      "readings": [
+        {
+          "text": "트로피",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "😘",
+      "readings": [
+        {
+          "text": "키스",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🙏",
+      "readings": [
+        {
+          "text": "제발",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🚗",
+      "readings": [
+        {
+          "text": "자동차",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🤘",
+      "readings": [
+        {
+          "text": "록",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    }
   ]
 }

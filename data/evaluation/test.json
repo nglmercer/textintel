@@ -1,0 +1,9287 @@
+{
+  "version": "0.7.0",
+  "split": "test",
+  "cases": [
+    {
+      "id": "en_0102",
+      "a": "see you tomorrow",
+      "b": "see you tomorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0105",
+      "a": "see you tomorrow",
+      "b": "see you tomorrow!",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0106",
+      "a": "see you tomorrow",
+      "b": "see xou tomorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0107",
+      "a": "see you tomorrow",
+      "b": "see you otmorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0108",
+      "a": "see you tomorrow",
+      "b": "see you tomorow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0109",
+      "a": "see you tomorrow",
+      "b": "sее you tomorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "homoglyph": true,
+        "obfuscated": true,
+        "visual": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "homoglyph",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0110",
+      "a": "see you tomorrow",
+      "b": "ｓｅｅ ｙｏｕ ｔｏｍｏｒｒｏｗ",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "fullwidth",
+        "unicode",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0111",
+      "a": "see you tomorrow",
+      "b": "see you tomo​rrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "zero-width",
+        "unicode",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0112",
+      "a": "see you tomorrow",
+      "b": "533 y0u 70m0rr0w",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0113",
+      "a": "see you tomorrow",
+      "b": "see you tommmorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "repetition",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0114",
+      "a": "see you tomorrow",
+      "b": "thank you very much",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0128",
+      "a": "thank you very much",
+      "b": "thank you very much",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0131",
+      "a": "thank you very much",
+      "b": "thank you very much!",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0132",
+      "a": "thank you very much",
+      "b": "thamk you very much",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0133",
+      "a": "thank you very much",
+      "b": "thnak you very much",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0134",
+      "a": "thank you very much",
+      "b": "tank you very much",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0135",
+      "a": "thank you very much",
+      "b": "thank yоu verу much",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "homoglyph": true,
+        "obfuscated": true,
+        "visual": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "homoglyph",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0136",
+      "a": "thank you very much",
+      "b": "ｔｈａｎｋ ｙｏｕ ｖｅｒｙ ｍｕｃｈ",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "fullwidth",
+        "unicode",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0137",
+      "a": "thank you very much",
+      "b": "th​ank you very much",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "zero-width",
+        "unicode",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0138",
+      "a": "thank you very much",
+      "b": "7h4nk y0u v3ry much",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0139",
+      "a": "thank you very much",
+      "b": "thannnk you vvveeery muuuccch",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "repetition",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0140",
+      "a": "thank you very much",
+      "b": "happy birthday",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0154",
+      "a": "happy birthday",
+      "b": "happy birthday",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0157",
+      "a": "happy birthday",
+      "b": "happy birthday!",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0158",
+      "a": "happy birthday",
+      "b": "heppy birthday",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0159",
+      "a": "happy birthday",
+      "b": "happy brithday",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0160",
+      "a": "happy birthday",
+      "b": "happy birthay",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0161",
+      "a": "happy birthday",
+      "b": "hаpрy birthday",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "homoglyph": true,
+        "obfuscated": true,
+        "visual": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "homoglyph",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0162",
+      "a": "happy birthday",
+      "b": "ｈａｐｐｙ ｂｉｒｔｈｄａｙ",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "fullwidth",
+        "unicode",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0163",
+      "a": "happy birthday",
+      "b": "happy birt​hday",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "zero-width",
+        "unicode",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0164",
+      "a": "happy birthday",
+      "b": "h4ppy b1r7hd4y",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0165",
+      "a": "happy birthday",
+      "b": "haaappy birthday",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "repetition",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0166",
+      "a": "happy birthday",
+      "b": "see you tomorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0180",
+      "a": "see you tomorrow",
+      "b": "see you tomorrow morning",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "semantic": true
+      },
+      "expected": {
+        "min_similarity": 0.45
+      },
+      "tags": [
+        "paraphrase",
+        "semantic",
+        "en"
+      ]
+    },
+    {
+      "id": "en_0181",
+      "a": "see you tomorrow",
+      "b": "good morning to you",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "semantic": true
+      },
+      "expected": {
+        "min_similarity": 0.45
+      },
+      "tags": [
+        "paraphrase",
+        "semantic",
+        "en"
+      ]
+    },
+    {
+      "id": "es_0182",
+      "a": "nos vemos mañana",
+      "b": "nos vemos mañana",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0185",
+      "a": "nos vemos mañana",
+      "b": "nos vemos mañana!",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0186",
+      "a": "nos vemos mañana",
+      "b": "nos vemosxmañana",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0187",
+      "a": "nos vemos mañana",
+      "b": "nos vemos maañna",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0188",
+      "a": "nos vemos mañana",
+      "b": "nos vemos mañaa",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0189",
+      "a": "nos vemos mañana",
+      "b": "nos vemos manana",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "accents",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0190",
+      "a": "nos vemos mañana",
+      "b": "nоs vemos mаñana",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "homoglyph": true,
+        "obfuscated": true,
+        "visual": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "homoglyph",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0191",
+      "a": "nos vemos mañana",
+      "b": "ｎｏｓ ｖｅｍｏｓ ｍａñａｎａ",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "fullwidth",
+        "unicode",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0192",
+      "a": "nos vemos mañana",
+      "b": "nos vemos mañ​ana",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "zero-width",
+        "unicode",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0193",
+      "a": "nos vemos mañana",
+      "b": "n05 v3m05 m4ñ4n4",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0194",
+      "a": "nos vemos mañana",
+      "b": "nosss vemooos mañana",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "repetition",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0195",
+      "a": "nos vemos mañana",
+      "b": "muchas gracias",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0212",
+      "a": "muchas gracias",
+      "b": "  muchas   gracias ",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "whitespace",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0213",
+      "a": "muchas gracias",
+      "b": "muchas gracias!",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0214",
+      "a": "muchas gracias",
+      "b": "muchaz gracias",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0215",
+      "a": "muchas gracias",
+      "b": "muchas gracisa",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0216",
+      "a": "muchas gracias",
+      "b": "muchas grcias",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0217",
+      "a": "muchas gracias",
+      "b": "muchas grасias",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "homoglyph": true,
+        "obfuscated": true,
+        "visual": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "homoglyph",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0218",
+      "a": "muchas gracias",
+      "b": "ｍｕｃｈａｓ ｇｒａｃｉａｓ",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "fullwidth",
+        "unicode",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0219",
+      "a": "muchas gracias",
+      "b": "muchas gra​cias",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "zero-width",
+        "unicode",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0220",
+      "a": "muchas gracias",
+      "b": "much45 gr4c145",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0221",
+      "a": "muchas gracias",
+      "b": "mmmuchaaas gracias",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "repetition",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0222",
+      "a": "muchas gracias",
+      "b": "feliz cumpleaños",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0236",
+      "a": "feliz cumpleaños",
+      "b": "feliz cumpleaños",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0239",
+      "a": "feliz cumpleaños",
+      "b": "feliz cumpleaños!",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0240",
+      "a": "feliz cumpleaños",
+      "b": "feliz cumplaaños",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0241",
+      "a": "feliz cumpleaños",
+      "b": "feliz ucmpleaños",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0242",
+      "a": "feliz cumpleaños",
+      "b": "feliz cupleaños",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0243",
+      "a": "feliz cumpleaños",
+      "b": "feliz cumpleanos",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "accents",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0244",
+      "a": "feliz cumpleaños",
+      "b": "feliz сumрleaños",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "homoglyph": true,
+        "obfuscated": true,
+        "visual": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "homoglyph",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0245",
+      "a": "feliz cumpleaños",
+      "b": "ｆｅｌｉｚ ｃｕｍｐｌｅａñｏｓ",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "fullwidth",
+        "unicode",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0246",
+      "a": "feliz cumpleaños",
+      "b": "feliz cumpl​eaños",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "zero-width",
+        "unicode",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0247",
+      "a": "feliz cumpleaños",
+      "b": "f3l1z cumpl34ñ05",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0248",
+      "a": "feliz cumpleaños",
+      "b": "feeellliiizzz cumpppleaños",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "repetition",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0249",
+      "a": "feliz cumpleaños",
+      "b": "nos vemos mañana",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0264",
+      "a": "nos vemos mañana",
+      "b": "nos vemos mañana por la mañana",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "semantic": true
+      },
+      "expected": {
+        "min_similarity": 0.45
+      },
+      "tags": [
+        "paraphrase",
+        "semantic",
+        "es"
+      ]
+    },
+    {
+      "id": "es_0265",
+      "a": "nos vemos mañana",
+      "b": "buenos días para ti",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "semantic": true
+      },
+      "expected": {
+        "min_similarity": 0.45
+      },
+      "tags": [
+        "paraphrase",
+        "semantic",
+        "es"
+      ]
+    },
+    {
+      "id": "hi_0342",
+      "a": "सुप्रभात",
+      "b": "सुप्रभात",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0345",
+      "a": "सुप्रभात",
+      "b": "सुप्रभात.",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0346",
+      "a": "सुप्रभात",
+      "b": "सxप्रभात",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0347",
+      "a": "सुप्रभात",
+      "b": "सु्परभात",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0348",
+      "a": "सुप्रभात",
+      "b": "सुप्रभत",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0349",
+      "a": "सुप्रभात",
+      "b": "अभी खरीदें",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0358",
+      "a": "अभी खरीदें",
+      "b": "अभी खरीदें",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0361",
+      "a": "अभी खरीदें",
+      "b": "अभी खरीदें.",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0362",
+      "a": "अभी खरीदें",
+      "b": "अभी खरीxें",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0363",
+      "a": "अभी खरीदें",
+      "b": "अभी खीरदें",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0364",
+      "a": "अभी खरीदें",
+      "b": "अभी खीदें",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "hi"
+      ]
+    },
+    {
+      "id": "ja_0510",
+      "a": "おはよう",
+      "b": "おはよう",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0513",
+      "a": "おはよう",
+      "b": "おはよう.",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0514",
+      "a": "おはよう",
+      "b": "おはxう",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0515",
+      "a": "おはよう",
+      "b": "はおよう",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0516",
+      "a": "おはよう",
+      "b": "おはう",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0517",
+      "a": "おはよう",
+      "b": "今すぐ購入",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0526",
+      "a": "今すぐ購入",
+      "b": "今すぐ購入",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0529",
+      "a": "今すぐ購入",
+      "b": "今すぐ購入.",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0530",
+      "a": "今すぐ購入",
+      "b": "今xぐ購入",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0531",
+      "a": "今すぐ購入",
+      "b": "今すぐ入購",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0532",
+      "a": "今すぐ購入",
+      "b": "今ぐ購入",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "ja"
+      ]
+    },
+    {
+      "id": "ko_0544",
+      "a": "좋은 아침",
+      "b": "좋은 아침",
+      "languages": [
+        "ko"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "ko"
+      ]
+    },
+    {
+      "id": "ko_0547",
+      "a": "좋은 아침",
+      "b": "좋은 아침.",
+      "languages": [
+        "ko"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "ko"
+      ]
+    },
+    {
+      "id": "ko_0548",
+      "a": "좋은 아침",
+      "b": "좋은 x침",
+      "languages": [
+        "ko"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "ko"
+      ]
+    },
+    {
+      "id": "ko_0562",
+      "a": "지금 구매",
+      "b": "  지금   구매 ",
+      "languages": [
+        "ko"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "whitespace",
+        "ko"
+      ]
+    },
+    {
+      "id": "ko_0563",
+      "a": "지금 구매",
+      "b": "지금 구매.",
+      "languages": [
+        "ko"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "ko"
+      ]
+    },
+    {
+      "id": "ko_0564",
+      "a": "지금 구매",
+      "b": "지x 구매",
+      "languages": [
+        "ko"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "ko"
+      ]
+    },
+    {
+      "id": "ko_0567",
+      "a": "지금 구매",
+      "b": "좋은 아침",
+      "languages": [
+        "ko"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "ko"
+      ]
+    },
+    {
+      "id": "ru_0775",
+      "a": "увидимся завтра",
+      "b": "увидимся завтра",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0778",
+      "a": "увидимся завтра",
+      "b": "увидимся завтра!",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0779",
+      "a": "увидимся завтра",
+      "b": "увидимсяxзавтра",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0780",
+      "a": "увидимся завтра",
+      "b": "уивдимся завтра",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0781",
+      "a": "увидимся завтра",
+      "b": "увидимя завтра",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0791",
+      "a": "спасибо большое",
+      "b": "спасибо большое",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.85
+      },
+      "tags": [
+        "identical",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0794",
+      "a": "спасибо большое",
+      "b": "спасибо большое!",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.8
+      },
+      "tags": [
+        "punctuation",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0795",
+      "a": "спасибо большое",
+      "b": "спасиxо большое",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "typo",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0796",
+      "a": "спасибо большое",
+      "b": "спсаибо большое",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "transposition",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0797",
+      "a": "спасибо большое",
+      "b": "спсибо большое",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.55
+      },
+      "tags": [
+        "missing-char",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0798",
+      "a": "спасибо большое",
+      "b": "увидимся завтра",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "lexical-negative",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0807",
+      "a": "увидимся завтра",
+      "b": "увидимся завтра утром",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "semantic": true
+      },
+      "expected": {
+        "min_similarity": 0.45
+      },
+      "tags": [
+        "paraphrase",
+        "semantic",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0808",
+      "a": "увидимся завтра",
+      "b": "доброе утро тебе",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "semantic": true
+      },
+      "expected": {
+        "min_similarity": 0.45
+      },
+      "tags": [
+        "paraphrase",
+        "semantic",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0909",
+      "a": "spasibo",
+      "b": "спасибо",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0910",
+      "a": "спасибо",
+      "b": "spasibo",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0911",
+      "a": "privet",
+      "b": "привет",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0912",
+      "a": "привет",
+      "b": "privet",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0913",
+      "a": "uveedimsya zavtra",
+      "b": "увидимся завтра",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "ru"
+      ]
+    },
+    {
+      "id": "ru_0914",
+      "a": "увидимся завтра",
+      "b": "uveedimsya zavtra",
+      "languages": [
+        "ru"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "ru"
+      ]
+    },
+    {
+      "id": "hi_0919",
+      "a": "dhanyavad",
+      "b": "धन्यवाद",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0920",
+      "a": "धन्यवाद",
+      "b": "dhanyavad",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0921",
+      "a": "suprabhat",
+      "b": "सुप्रभात",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "hi"
+      ]
+    },
+    {
+      "id": "hi_0922",
+      "a": "सुप्रभात",
+      "b": "suprabhat",
+      "languages": [
+        "hi"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "hi"
+      ]
+    },
+    {
+      "id": "ja_0927",
+      "a": "ohayou",
+      "b": "おはよう",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "ja"
+      ]
+    },
+    {
+      "id": "ja_0928",
+      "a": "おはよう",
+      "b": "ohayou",
+      "languages": [
+        "ja"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": true,
+        "transliteration": true
+      },
+      "expected": {
+        "min_similarity": 0.4
+      },
+      "tags": [
+        "transliteration",
+        "ja"
+      ]
+    },
+    {
+      "id": "es_0939",
+      "a": "te ❤",
+      "b": "te amo",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "te amo"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "spanish",
+        "emoji"
+      ]
+    },
+    {
+      "id": "es_0940",
+      "a": "kasa",
+      "b": "casa",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "spanish"
+      ]
+    },
+    {
+      "id": "en_0943",
+      "a": "4 you",
+      "b": "for you",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "phonetic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "for you"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "english",
+        "number"
+      ]
+    },
+    {
+      "id": "en_0946",
+      "a": "m8",
+      "b": "mate",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "phonetic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "mate"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "english",
+        "number"
+      ]
+    },
+    {
+      "id": "fr_0954",
+      "a": "slt",
+      "b": "salut",
+      "languages": [
+        "fr"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "salut"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "abbreviation",
+        "french"
+      ]
+    },
+    {
+      "id": "tr_0959",
+      "a": "seni ❤",
+      "b": "seni seviyorum",
+      "languages": [
+        "tr"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "seni seviyorum"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "turkish",
+        "emoji"
+      ]
+    },
+    {
+      "id": "id_0960",
+      "a": "aku ❤ kamu",
+      "b": "aku cinta kamu",
+      "languages": [
+        "id"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "aku cinta kamu"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "indonesian",
+        "emoji"
+      ]
+    },
+    {
+      "id": "en_0980",
+      "a": "for you",
+      "b": "for tea",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.6
+      },
+      "tags": [
+        "hard-negative",
+        "en"
+      ]
+    },
+    {
+      "id": "legit_0998",
+      "a": "meeting notes are at https://notes.example.com/q3 planning",
+      "b": "see you tomorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "en"
+      ]
+    },
+    {
+      "id": "legit_0999",
+      "a": "your order number 12345 has shipped, track it in your account",
+      "b": "see you tomorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "en"
+      ]
+    },
+    {
+      "id": "legit_1000",
+      "a": "happy birthday! hope you have a great day with family",
+      "b": "see you tomorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "en"
+      ]
+    },
+    {
+      "id": "legit_1001",
+      "a": "las actas están en https://notas.example.com/reunión de hoy",
+      "b": "see you tomorrow",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "es"
+      ]
+    },
+    {
+      "id": "legit_1002",
+      "a": "tu pedido número 12345 ha sido enviado, gracias por tu compra",
+      "b": "see you tomorrow",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "es"
+      ]
+    },
+    {
+      "id": "legit_1003",
+      "a": "New phone sale: 20% off this weekend at our downtown store",
+      "b": "see you tomorrow",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "en"
+      ]
+    },
+    {
+      "id": "legit_1004",
+      "a": "sua encomenda número 12345 foi enviada, obrigado pela compra",
+      "b": "see you tomorrow",
+      "languages": [
+        "pt"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "pt"
+      ]
+    },
+    {
+      "id": "legit_1005",
+      "a": "votre commande numéro 12345 a été expédiée, merci",
+      "b": "see you tomorrow",
+      "languages": [
+        "fr"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "fr"
+      ]
+    },
+    {
+      "id": "legit_1006",
+      "a": "Ihre Bestellung Nummer 12345 wurde versandt, danke",
+      "b": "see you tomorrow",
+      "languages": [
+        "de"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "de"
+      ]
+    },
+    {
+      "id": "legit_1007",
+      "a": "pesanan nomor 12345 telah dikirim, terima kasih",
+      "b": "see you tomorrow",
+      "languages": [
+        "id"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "labels": {
+        "similar": false,
+        "spam": false
+      },
+      "expected": {},
+      "tags": [
+        "legit",
+        "id"
+      ]
+    },
+    {
+      "id": "short_1010",
+      "a": "🔥",
+      "b": "🔥",
+      "languages": [
+        "unknown"
+      ],
+      "split": "test",
+      "difficulty": "easy",
+      "labels": {
+        "similar": true,
+        "short": true
+      },
+      "expected": {
+        "min_similarity": 0.7
+      },
+      "tags": [
+        "short",
+        "url"
+      ]
+    },
+    {
+      "id": "semantic_002",
+      "a": "claim your free prize now",
+      "b": "claim your free prize today",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_003",
+      "a": "the quick brown fox",
+      "b": "quick brown fox",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_004",
+      "a": "meeting at noon tomorrow",
+      "b": "meeting at noon today",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_006",
+      "a": "the cat sat down",
+      "b": "quantum physics lecture",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_007",
+      "a": "I love apples",
+      "b": "I love oranges",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_008",
+      "a": "open the door",
+      "b": "close the window",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "xlang_001",
+      "a": "information",
+      "b": "información",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_002",
+      "a": "Paris",
+      "b": "París",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_004",
+      "a": "internet",
+      "b": "internet",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_006",
+      "a": "see you later",
+      "b": "guten Morgen allerseits",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_007",
+      "a": "I love programming",
+      "b": "j'adore la peinture",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_008",
+      "a": "thank you very much",
+      "b": "gracias por nada",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "translit_003",
+      "a": "salam",
+      "b": "سلام",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "translit_004",
+      "a": "Moskva",
+      "b": "Москва",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "translit_005",
+      "a": "privet",
+      "b": "пока",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "hn_003",
+      "a": "salam",
+      "b": "salami",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "translit_008",
+      "a": "hello",
+      "b": "привет",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "cs_004",
+      "a": "I ❤️ casa",
+      "b": "I love casa",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "phon_003",
+      "a": "house",
+      "b": "haus",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "phon_004",
+      "a": "phone",
+      "b": "fone",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "phon_008",
+      "a": "hello",
+      "b": "yellow",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "leet_001",
+      "a": "h3llo",
+      "b": "hello",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_002",
+      "a": "c0mpr4",
+      "b": "compra",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_003",
+      "a": "l33t",
+      "b": "leet",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_004",
+      "a": "Fr4nc3",
+      "b": "France",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_005",
+      "a": "h3llo",
+      "b": "hollow",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_007",
+      "a": "c0mpr4",
+      "b": "compara",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_008",
+      "a": "w1n",
+      "b": "wine",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "homo_002",
+      "a": "аpple",
+      "b": "apple",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_003",
+      "a": "gооgle",
+      "b": "google",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_004",
+      "a": "microsоft",
+      "b": "microsoft",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_005",
+      "a": "аpple",
+      "b": "apply",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_006",
+      "a": "gооgle",
+      "b": "goggle",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_007",
+      "a": "bаnk",
+      "b": "bonk",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_008",
+      "a": "аpple",
+      "b": "maple",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "uni_002",
+      "a": "ｈｅｌｌｏ",
+      "b": "hello",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "uni_003",
+      "a": "hello​world",
+      "b": "helloworld",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "uni_006",
+      "a": "ｐａｙ",
+      "b": "play",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "unicode",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "uni_007",
+      "a": "co​de",
+      "b": "coda",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "unicode",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "cs_001",
+      "a": "hello amigo",
+      "b": "hello amigo!",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_002",
+      "a": "I love mi casa",
+      "b": "I love my casa",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_003",
+      "a": "bonjour World",
+      "b": "bonjour world",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_005",
+      "a": "I ❤️ casa",
+      "b": "I hate casa",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_006",
+      "a": "hello amigo",
+      "b": "goodbye friend",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_007",
+      "a": "bonjour world",
+      "b": "au revoir lune",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_008",
+      "a": "Spanglish amigo test",
+      "b": "English friend exam",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "short_007",
+      "a": "en",
+      "b": "an",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "spam_001",
+      "a": "WIN FREE PRIZE claim now",
+      "b": "WIN FREE PRIZE claim today",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "spam_002",
+      "a": "cheap meds online buy now",
+      "b": "cheap meds online order now",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "spam_003",
+      "a": "URGENT wire transfer needed",
+      "b": "URGENT wire transfer required",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "spam_004",
+      "a": "congratulations you won lottery",
+      "b": "congratulations you have won lottery",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "spam_005",
+      "a": "WIN FREE PRIZE claim now",
+      "b": "meeting notes from today",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "spam_006",
+      "a": "cheap meds online",
+      "b": "cheap flights online",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "spam_007",
+      "a": "you won lottery",
+      "b": "you lost keys",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "spam_008",
+      "a": "free prize",
+      "b": "free coffee",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "hn_002",
+      "a": "privet",
+      "b": "private",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "hn_006",
+      "a": "4 you",
+      "b": "4 me",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "hn_007",
+      "a": "m8",
+      "b": "made",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "hn_008",
+      "a": "slt",
+      "b": "salt",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "semantic_014",
+      "a": "the doctor advised complete rest",
+      "b": "the physician recommended full rest",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_015",
+      "a": "we booked flights for june",
+      "b": "we reserved plane tickets for june",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_016",
+      "a": "rain flooded the subway entrance",
+      "b": "the metro entrance flooded after rain",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_021",
+      "a": "birthday cake with strawberries",
+      "b": "diesel engine maintenance manual",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_022",
+      "a": "piano lessons every tuesday",
+      "b": "volcano eruption disrupts flights",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "semantic_023",
+      "a": "library closes at midnight",
+      "b": "shark spotted near the harbor",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "semantic"
+      ]
+    },
+    {
+      "id": "xlang_011",
+      "a": "music",
+      "b": "musica",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_012",
+      "a": "hospital",
+      "b": "hôpital",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_013",
+      "a": "chocolate",
+      "b": "chocolat",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_015",
+      "a": "guitar",
+      "b": "guitarra",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_021",
+      "a": "tennis court reservation",
+      "b": "o cachorro late alto",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_022",
+      "a": "spare tire in the trunk",
+      "b": "de bibliotheek is open",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "xlang_023",
+      "a": "candlelight dinner date",
+      "b": "a reunião foi adiada",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "cross_language"
+      ]
+    },
+    {
+      "id": "translit_014",
+      "a": "babushka",
+      "b": "бабушка",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "translit_016",
+      "a": "muhammad",
+      "b": "محمد",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "translit_021",
+      "a": "babushka",
+      "b": "до свидания",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "translit_023",
+      "a": "karl",
+      "b": "москва",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "transliteration"
+      ]
+    },
+    {
+      "id": "phon_011",
+      "a": "tonight",
+      "b": "tonite",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "phon_014",
+      "a": "cheque",
+      "b": "check",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "phon_015",
+      "a": "grey",
+      "b": "gray",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "phonetic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "phon_016",
+      "a": "rumour",
+      "b": "rumor",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "phon_021",
+      "a": "peace",
+      "b": "piece",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "phon_022",
+      "a": "cell",
+      "b": "sell",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "phon_023",
+      "a": "allowed",
+      "b": "aloud",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "phonetic"
+      ]
+    },
+    {
+      "id": "leet_013",
+      "a": "fr13nd",
+      "b": "friend",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_014",
+      "a": "5p4m",
+      "b": "spam",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_015",
+      "a": "7r4ck",
+      "b": "track",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_016",
+      "a": "c4sh",
+      "b": "cash",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_019",
+      "a": "c00l",
+      "b": "school",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_020",
+      "a": "b4d",
+      "b": "bed",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_021",
+      "a": "5p4m",
+      "b": "spain",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "leet_022",
+      "a": "d0g",
+      "b": "dig",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "leetspeak"
+      ]
+    },
+    {
+      "id": "homo_014",
+      "a": "twіtter",
+      "b": "twitter",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_015",
+      "a": "netflіx",
+      "b": "netflix",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_016",
+      "a": "pаssword",
+      "b": "password",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_021",
+      "a": "twіtter",
+      "b": "twitch",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_022",
+      "a": "netflіx",
+      "b": "necklace",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "homo_023",
+      "a": "pаssword",
+      "b": "passphrase",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "homoglyph"
+      ]
+    },
+    {
+      "id": "uni_009",
+      "a": "ｗｏｒｌｄ",
+      "b": "world",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "uni_014",
+      "a": "ｐａｓｓｗｏｒｄ",
+      "b": "password",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "uni_015",
+      "a": "Zürich",
+      "b": "Zürich",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "uni_016",
+      "a": "now⁠",
+      "b": "now",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "uni_017",
+      "a": "ｗｏｒｌｄ",
+      "b": "goodbye",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "unicode",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "uni_023",
+      "a": "resume",
+      "b": "presume",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "unicode",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "unicode"
+      ]
+    },
+    {
+      "id": "cs_014",
+      "a": "merci beaucoup mate",
+      "b": "merci beaucoup, mate!",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_015",
+      "a": "ciao bella, how are you",
+      "b": "ciao bella how are you?",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_016",
+      "a": "hola, comment ça va",
+      "b": "hola comment ça va!",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_021",
+      "a": "feliz navidad y'all",
+      "b": "tax return deadline",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_022",
+      "a": "dobry den friends",
+      "b": "lunar eclipse tonight",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "cs_023",
+      "a": "salam my brother",
+      "b": "engine failure warning",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "code_switching"
+      ]
+    },
+    {
+      "id": "short_012",
+      "a": "pls",
+      "b": "pls!",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "short_016",
+      "a": "gg",
+      "b": "gg!",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "short_018",
+      "a": "me",
+      "b": "we",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "short_020",
+      "a": "on",
+      "b": "off",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "short_022",
+      "a": "in",
+      "b": "it",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "short_text"
+      ]
+    },
+    {
+      "id": "spam_016",
+      "a": "hot deal just for you",
+      "b": "exclusive deal only for you",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true,
+        "spam": true
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "spam_022",
+      "a": "meet singles tonight",
+      "b": "meet the team tonight",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "spam_023",
+      "a": "password reset required",
+      "b": "password manager setup guide",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "spam"
+      ]
+    },
+    {
+      "id": "hn_018",
+      "a": "principal",
+      "b": "principle",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "hn_019",
+      "a": "stationary",
+      "b": "stationery",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "hn_020",
+      "a": "elicit",
+      "b": "illicit",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "hn_021",
+      "a": "ensure",
+      "b": "insure",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "hn_022",
+      "a": "council",
+      "b": "counsel",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "hn_023",
+      "a": "allusion",
+      "b": "illusion",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "hard_negatives"
+      ]
+    },
+    {
+      "id": "rebus_sim_012",
+      "a": "h4te",
+      "b": "hate",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true
+      },
+      "expected": {},
+      "tags": [
+        "rebus"
+      ]
+    },
+    {
+      "id": "rebus_sim_015",
+      "a": "2nite",
+      "b": "dinner",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "rebus",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "rebus"
+      ]
+    },
+    {
+      "id": "rebus_sim_017",
+      "a": "d4y",
+      "b": "supper",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "rebus",
+      "labels": {
+        "similar": false
+      },
+      "expected": {},
+      "tags": [
+        "rebus"
+      ]
+    },
+    {
+      "id": "rebus_dec_010",
+      "a": "I ❤ NY",
+      "b": "I love NY",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "I love NY"
+        ]
+      },
+      "tags": [
+        "rebus"
+      ]
+    },
+    {
+      "id": "rebus_dec_011",
+      "a": "mi 🏠",
+      "b": "mi casa",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "mi casa",
+          "mi vivienda"
+        ]
+      },
+      "tags": [
+        "rebus"
+      ]
+    },
+    {
+      "id": "hnv2_003",
+      "a": "altar",
+      "b": "alter",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:single-altar-alter"
+      ]
+    },
+    {
+      "id": "hnv2_004",
+      "a": "ascent",
+      "b": "assent",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:single-ascent-assent"
+      ]
+    },
+    {
+      "id": "hnv2_012",
+      "a": "dairy",
+      "b": "diary",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:single-dairy-diary"
+      ]
+    },
+    {
+      "id": "hnv2_014",
+      "a": "device",
+      "b": "devise",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:single-device-devise"
+      ]
+    },
+    {
+      "id": "hnv2_028",
+      "a": "holy",
+      "b": "wholly",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:single-holy-wholly"
+      ]
+    },
+    {
+      "id": "hnv2_030",
+      "a": "idle",
+      "b": "idol",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:single-idle-idol"
+      ]
+    },
+    {
+      "id": "hnv2_036",
+      "a": "marshal",
+      "b": "martial",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:single-marshal-martial"
+      ]
+    },
+    {
+      "id": "hnv2_043",
+      "a": "pedal",
+      "b": "peddle",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:single-pedal-peddle"
+      ]
+    },
+    {
+      "id": "hnv2_046",
+      "a": "precede",
+      "b": "proceed",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:single-precede-proceed"
+      ]
+    },
+    {
+      "id": "hnv2_typo_017",
+      "a": "recomend",
+      "b": "recommend",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:typo-recommend"
+      ]
+    },
+    {
+      "id": "hnv2_typo_018",
+      "a": "refered",
+      "b": "referred",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:typo-referred"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-accept_neg",
+      "a": "she accepted the award with grace",
+      "b": "she excepted the award with grace",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-accept"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-accept_pos",
+      "a": "she accepted the award with grace",
+      "b": "she accepted the prize with grace",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-accept"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-right_neg",
+      "a": "he chose the right path through the forest",
+      "b": "he chose the rite path through the forest",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-right"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-right_pos",
+      "a": "he chose the right path through the forest",
+      "b": "he chose the correct path through the forest",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-right"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-dairy_neg",
+      "a": "the dairy farm sells fresh milk daily",
+      "b": "the diary farm sells fresh milk daily",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-dairy"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-dairy_pos",
+      "a": "the dairy farm sells fresh milk daily",
+      "b": "the dairy farm sells fresh cheese daily",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-dairy"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-morning_neg",
+      "a": "morning meetings start at nine sharp",
+      "b": "mourning meetings start at nine sharp",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-morning"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-morning_pos",
+      "a": "morning meetings start at nine sharp",
+      "b": "morning meetings begin at nine sharp",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-morning"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-horse_neg",
+      "a": "his horse won the race by a nose",
+      "b": "his hoarse won the race by a nose",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-horse"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-horse_pos",
+      "a": "his horse won the race by a nose",
+      "b": "his horse won the derby by a nose",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-horse"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-naval_neg",
+      "a": "the naval officer saluted smartly",
+      "b": "the navel officer saluted smartly",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-naval"
+      ]
+    },
+    {
+      "id": "hnv2_ctx-naval_pos",
+      "a": "the naval officer saluted smartly",
+      "b": "the naval commander saluted smartly",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "hard_negatives",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "hard_negatives",
+        "family:ctx-naval"
+      ]
+    },
+    {
+      "id": "phonv2_002",
+      "a": "tho",
+      "b": "though",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-same-tho-though"
+      ]
+    },
+    {
+      "id": "phonv2_008",
+      "a": "foto",
+      "b": "photo",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-same-foto-photo"
+      ]
+    },
+    {
+      "id": "phonv2_013",
+      "a": "yall",
+      "b": "you all",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-near-yall-you_all"
+      ]
+    },
+    {
+      "id": "phonv2_023",
+      "a": "pin",
+      "b": "pen",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-near-pin-pen"
+      ]
+    },
+    {
+      "id": "phonv2_024",
+      "a": "ship",
+      "b": "sheep",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-near-ship-sheep"
+      ]
+    },
+    {
+      "id": "phonv2_027",
+      "a": "bad",
+      "b": "bed",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-near-bad-bed"
+      ]
+    },
+    {
+      "id": "phonv2_029",
+      "a": "pull",
+      "b": "pool",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-near-pull-pool"
+      ]
+    },
+    {
+      "id": "phonv2_031",
+      "a": "bit",
+      "b": "beat",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-near-bit-beat"
+      ]
+    },
+    {
+      "id": "phonv2_034",
+      "a": "cot",
+      "b": "caught",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-near-cot-caught"
+      ]
+    },
+    {
+      "id": "phonv2_043",
+      "a": "Anna",
+      "b": "Ana",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-names-anna-ana"
+      ]
+    },
+    {
+      "id": "phonv2_049",
+      "a": "Pablo",
+      "b": "Paul",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-names-pablo-paul"
+      ]
+    },
+    {
+      "id": "phonv2_050",
+      "a": "Jose",
+      "b": "Josh",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-names-jose-josh"
+      ]
+    },
+    {
+      "id": "phonv2_051",
+      "a": "kewl",
+      "b": "cool",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-obf-kewl-cool"
+      ]
+    },
+    {
+      "id": "phonv2_052",
+      "a": "skool",
+      "b": "school",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-obf-skool-school"
+      ]
+    },
+    {
+      "id": "phonv2_053",
+      "a": "boyz",
+      "b": "boys",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-obf-boyz-boys"
+      ]
+    },
+    {
+      "id": "phonv2_054",
+      "a": "girlz",
+      "b": "girls",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-obf-girlz-girls"
+      ]
+    },
+    {
+      "id": "phonv2_059",
+      "a": "cmon",
+      "b": "come on",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-obf-cmon-come_on"
+      ]
+    },
+    {
+      "id": "phonv2_060",
+      "a": "a.m.",
+      "b": "am",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-short-a.m.-am"
+      ]
+    },
+    {
+      "id": "phonv2_061",
+      "a": "e.g.",
+      "b": "eg",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "phonetic",
+      "labels": {
+        "similar": true,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-short-e.g.-eg"
+      ]
+    },
+    {
+      "id": "phonv2_066",
+      "a": "in",
+      "b": "on",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-short-in-on"
+      ]
+    },
+    {
+      "id": "phonv2_067",
+      "a": "it",
+      "b": "if",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-short-it-if"
+      ]
+    },
+    {
+      "id": "phonv2_070",
+      "a": "or",
+      "b": "ore",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-short-or-ore"
+      ]
+    },
+    {
+      "id": "phonv2_071",
+      "a": "an",
+      "b": "ant",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-short-an-ant"
+      ]
+    },
+    {
+      "id": "phonv2_072",
+      "a": "am",
+      "b": "aim",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-short-am-aim"
+      ]
+    },
+    {
+      "id": "phonv2_073",
+      "a": "is",
+      "b": "his",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-short-is-his"
+      ]
+    },
+    {
+      "id": "phonv2_074",
+      "a": "we",
+      "b": "wee",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-short-we-wee"
+      ]
+    },
+    {
+      "id": "phonv2_076",
+      "a": "male",
+      "b": "mail",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-homo-male-mail"
+      ]
+    },
+    {
+      "id": "phonv2_077",
+      "a": "main",
+      "b": "mane",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-homo-main-mane"
+      ]
+    },
+    {
+      "id": "phonv2_080",
+      "a": "oar",
+      "b": "ore",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-homo-oar-ore"
+      ]
+    },
+    {
+      "id": "phonv2_081",
+      "a": "pail",
+      "b": "pale",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-homo-pail-pale"
+      ]
+    },
+    {
+      "id": "phonv2_083",
+      "a": "passed",
+      "b": "past",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-homo-passed-past"
+      ]
+    },
+    {
+      "id": "phonv2_084",
+      "a": "patience",
+      "b": "patients",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-homo-patience-patients"
+      ]
+    },
+    {
+      "id": "phonv2_089",
+      "a": "read",
+      "b": "red",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-homo-read-red"
+      ]
+    },
+    {
+      "id": "phonv2_092",
+      "a": "ring",
+      "b": "wring",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-homo-ring-wring"
+      ]
+    },
+    {
+      "id": "phonv2_094",
+      "a": "role",
+      "b": "roll",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "phonetic",
+      "labels": {
+        "similar": false,
+        "phonetic": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:phon-homo-role-roll"
+      ]
+    },
+    {
+      "id": "transv2_003",
+      "a": "habibi",
+      "b": "حبيبي",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-ar-003"
+      ]
+    },
+    {
+      "id": "transv2_007",
+      "a": "layl",
+      "b": "ليل",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-ar-007"
+      ]
+    },
+    {
+      "id": "transv2_019",
+      "a": "zai",
+      "b": "在",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-han-019"
+      ]
+    },
+    {
+      "id": "transv2_020",
+      "a": "men",
+      "b": "们",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-han-020"
+      ]
+    },
+    {
+      "id": "transv2_024",
+      "a": "zhe",
+      "b": "这",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-han-024"
+      ]
+    },
+    {
+      "id": "transv2_026",
+      "a": "pozhaluysta",
+      "b": "пожалуйста",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-cyr-026"
+      ]
+    },
+    {
+      "id": "transv2_027",
+      "a": "do svidaniya",
+      "b": "до свидания",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-cyr-027"
+      ]
+    },
+    {
+      "id": "transv2_031",
+      "a": "poka",
+      "b": "пока",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-cyr-031"
+      ]
+    },
+    {
+      "id": "transv2_035",
+      "a": "say privet",
+      "b": "say привет",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-mixed-035"
+      ]
+    },
+    {
+      "id": "transv2_041",
+      "a": "most",
+      "b": "мост",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-amb-041"
+      ]
+    },
+    {
+      "id": "transv2_044",
+      "a": "list",
+      "b": "лист",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-amb-044"
+      ]
+    },
+    {
+      "id": "transv2_045",
+      "a": "post",
+      "b": "пост",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-amb-045"
+      ]
+    },
+    {
+      "id": "transv2_048",
+      "a": "halal",
+      "b": "hollow",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-same-048"
+      ]
+    },
+    {
+      "id": "transv2_049",
+      "a": "falafel",
+      "b": "waffle",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-same-049"
+      ]
+    },
+    {
+      "id": "transv2_052",
+      "a": "naan",
+      "b": "none",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-same-052"
+      ]
+    },
+    {
+      "id": "transv2_054",
+      "a": "spasibo",
+      "b": "пожалуйста",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-cyrneg-054"
+      ]
+    },
+    {
+      "id": "transv2_057",
+      "a": "poka",
+      "b": "спасибо",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-cyrneg-057"
+      ]
+    },
+    {
+      "id": "transv2_059",
+      "a": "privet",
+      "b": "до свидания",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-cyrneg-059"
+      ]
+    },
+    {
+      "id": "transv2_060",
+      "a": "salam",
+      "b": "وداعا",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-arneg-060"
+      ]
+    },
+    {
+      "id": "transv2_063",
+      "a": "layl",
+      "b": "نهار",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:trans-arneg-063"
+      ]
+    },
+    {
+      "id": "rebusv2_005",
+      "a": "tu 🏠",
+      "b": "tu casa",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "tu casa"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-tu-🏠"
+      ]
+    },
+    {
+      "id": "rebusv2_009",
+      "a": "2nite",
+      "b": "tonight",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "phonetic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "tonight"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-2nite"
+      ]
+    },
+    {
+      "id": "rebusv2_010",
+      "a": "h8",
+      "b": "hate",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "phonetic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "hate"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-h8"
+      ]
+    },
+    {
+      "id": "rebusv2_012",
+      "a": "w0rld",
+      "b": "world",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "world"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-w0rld"
+      ]
+    },
+    {
+      "id": "rebusv2_016",
+      "a": "ch34p",
+      "b": "cheap",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "cheap"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-ch34p"
+      ]
+    },
+    {
+      "id": "rebusv2_017",
+      "a": "tqm",
+      "b": "te quiero mucho",
+      "languages": [
+        "es"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "te quiero mucho"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-tqm"
+      ]
+    },
+    {
+      "id": "rebusv2_040",
+      "a": "red 🚗",
+      "b": "red car",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "red car"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-red-🚗"
+      ]
+    },
+    {
+      "id": "rebusv2_045",
+      "a": "plz",
+      "b": "please",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "please"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-plz"
+      ]
+    },
+    {
+      "id": "rebusv2_056",
+      "a": "eu ❤ vc",
+      "b": "eu amo você",
+      "languages": [
+        "pt"
+      ],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "eu amo você"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-eu-amo-voce"
+      ]
+    },
+    {
+      "id": "rebusv2_058",
+      "a": "new 🚗",
+      "b": "new car",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "new car"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-new-🚗"
+      ]
+    },
+    {
+      "id": "rebusv2_061",
+      "a": "my 🏆",
+      "b": "my trophy",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "my trophy"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-my-🏆"
+      ]
+    },
+    {
+      "id": "rebusv2_063",
+      "a": "summer ☀",
+      "b": "summer sun",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "summer sun"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-summer-☀"
+      ]
+    },
+    {
+      "id": "rebusv2_066",
+      "a": "cash 💰",
+      "b": "cash money",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "cash money"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-cash-💰"
+      ]
+    },
+    {
+      "id": "rebusv2_075",
+      "a": "drive 🚗",
+      "b": "drive car",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "drive car"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-drive-🚗"
+      ]
+    },
+    {
+      "id": "rebusv2_076",
+      "a": "wash 🚗",
+      "b": "wash car",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "wash car"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-wash-🚗"
+      ]
+    },
+    {
+      "id": "rebusv2_078",
+      "a": "free 🍕",
+      "b": "free pizza",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "free pizza"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-free-🍕"
+      ]
+    },
+    {
+      "id": "rebusv2_079",
+      "a": "cold 🍕",
+      "b": "cold pizza",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true,
+        "symbolic": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "cold pizza"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-cold-🍕"
+      ]
+    },
+    {
+      "id": "rebusv2_091",
+      "a": "h4ve",
+      "b": "have",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "have"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-h4ve"
+      ]
+    },
+    {
+      "id": "rebusv2_099",
+      "a": "btw",
+      "b": "by the way",
+      "languages": [
+        "en"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "rebus",
+      "labels": {
+        "similar": true,
+        "rebus": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "decoded_contains": [
+          "by the way"
+        ],
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "rebus",
+        "family:rebus-btw"
+      ]
+    },
+    {
+      "id": "v2_0009",
+      "a": "click here to collect winnings",
+      "b": "click now to collect winnings",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true,
+        "spam": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-pos-0009"
+      ]
+    },
+    {
+      "id": "v2_0010",
+      "a": "hot singles near you",
+      "b": "local singles near you",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true,
+        "spam": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-pos-0010"
+      ]
+    },
+    {
+      "id": "v2_0016",
+      "a": "increase your credit score",
+      "b": "boost your credit score fast",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true,
+        "spam": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-pos-0016"
+      ]
+    },
+    {
+      "id": "v2_0021",
+      "a": "meet lonely singles tonight",
+      "b": "meet bored singles tonight",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true,
+        "spam": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-pos-0021"
+      ]
+    },
+    {
+      "id": "v2_0023",
+      "a": "password expiring reset now",
+      "b": "password expired reset here",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true,
+        "spam": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-pos-0023"
+      ]
+    },
+    {
+      "id": "v2_0025",
+      "a": "bank alert unusual activity",
+      "b": "bank warning unusual activity",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "spam",
+      "labels": {
+        "similar": true,
+        "spam": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-pos-0025"
+      ]
+    },
+    {
+      "id": "v2_0026",
+      "a": "cheap meds online today",
+      "b": "cheap books online today",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-neg-0026"
+      ]
+    },
+    {
+      "id": "v2_0027",
+      "a": "win a free prize now",
+      "b": "win free praise now",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-neg-0027"
+      ]
+    },
+    {
+      "id": "v2_0028",
+      "a": "urgent wire transfer needed",
+      "b": "urgent wire repair needed",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-neg-0028"
+      ]
+    },
+    {
+      "id": "v2_0029",
+      "a": "congratulations you won big",
+      "b": "congratulations you lost big",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-neg-0029"
+      ]
+    },
+    {
+      "id": "v2_0035",
+      "a": "hot singles near you",
+      "b": "hot shingles near you",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-neg-0035"
+      ]
+    },
+    {
+      "id": "v2_0045",
+      "a": "meet me tonight please",
+      "b": "meet meat tonight please",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-neg-0045"
+      ]
+    },
+    {
+      "id": "v2_0046",
+      "a": "earn cash daily online",
+      "b": "earn cache daily online",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-neg-0046"
+      ]
+    },
+    {
+      "id": "v2_0051",
+      "a": "claim your free prize now",
+      "b": "the meeting moved to room five",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0051"
+      ]
+    },
+    {
+      "id": "v2_0052",
+      "a": "urgent wire transfer needed",
+      "b": "the cat sleeps on the sofa",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0052"
+      ]
+    },
+    {
+      "id": "v2_0055",
+      "a": "hot singles near you",
+      "b": "the library closes at eight",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0055"
+      ]
+    },
+    {
+      "id": "v2_0062",
+      "a": "bank alert unusual activity",
+      "b": "bank holiday next monday",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0062"
+      ]
+    },
+    {
+      "id": "v2_0065",
+      "a": "meet lonely singles tonight",
+      "b": "meet the neighbors tonight",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0065"
+      ]
+    },
+    {
+      "id": "v2_0067",
+      "a": "subscription expires today",
+      "b": "subscription renewed yesterday",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0067"
+      ]
+    },
+    {
+      "id": "v2_0068",
+      "a": "act fast only three left",
+      "b": "walk slowly mind the gap",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0068"
+      ]
+    },
+    {
+      "id": "v2_0073",
+      "a": "increase your credit score",
+      "b": "increase your daily steps",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0073"
+      ]
+    },
+    {
+      "id": "v2_0074",
+      "a": "single mom makes money",
+      "b": "single origin coffee beans",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0074"
+      ]
+    },
+    {
+      "id": "v2_0075",
+      "a": "password reset required",
+      "b": "password strength is good",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "spam",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "spam",
+        "family:sp-easy-0075"
+      ]
+    },
+    {
+      "id": "v2_0081",
+      "a": "we walked through the park",
+      "b": "we strolled through the park",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "semantic",
+        "family:sem-pos-0081"
+      ]
+    },
+    {
+      "id": "v2_0088",
+      "a": "the dog barked loudly",
+      "b": "the dog barked noisily",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "semantic",
+        "family:sem-pos-0088"
+      ]
+    },
+    {
+      "id": "v2_0089",
+      "a": "we ate lunch together",
+      "b": "we had lunch together",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "semantic",
+        "family:sem-pos-0089"
+      ]
+    },
+    {
+      "id": "v2_0105",
+      "a": "he left in a hurry",
+      "b": "he rushed out the door",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "semantic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "semantic",
+        "family:sem-pos-0105"
+      ]
+    },
+    {
+      "id": "v2_0108",
+      "a": "council meeting notes here",
+      "b": "counsel meeting notes here",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "semantic",
+        "family:sem-med-0108"
+      ]
+    },
+    {
+      "id": "v2_0112",
+      "a": "complement the chef tonight",
+      "b": "compliment the chef tonight",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "semantic",
+        "family:sem-med-0112"
+      ]
+    },
+    {
+      "id": "v2_0120",
+      "a": "the cat sat down",
+      "b": "quantum physics rocks hard",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "semantic",
+        "family:sem-easy-0120"
+      ]
+    },
+    {
+      "id": "v2_0121",
+      "a": "I love warm soup",
+      "b": "satellites orbit the earth",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "semantic",
+        "family:sem-easy-0121"
+      ]
+    },
+    {
+      "id": "v2_0130",
+      "a": "he fixed the old chair",
+      "b": "she broke the world record",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "semantic",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "semantic",
+        "family:sem-easy-0130"
+      ]
+    },
+    {
+      "id": "v2_0134",
+      "a": "music",
+      "b": "música",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0134"
+      ]
+    },
+    {
+      "id": "v2_0138",
+      "a": "hospital",
+      "b": "hospital",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0138"
+      ]
+    },
+    {
+      "id": "v2_0142",
+      "a": "possible",
+      "b": "posible",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0142"
+      ]
+    },
+    {
+      "id": "v2_0147",
+      "a": "social",
+      "b": "social",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0147"
+      ]
+    },
+    {
+      "id": "v2_0149",
+      "a": "radio",
+      "b": "radio",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0149"
+      ]
+    },
+    {
+      "id": "v2_0153",
+      "a": "chocolate",
+      "b": "chocolate",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0153"
+      ]
+    },
+    {
+      "id": "v2_0155",
+      "a": "tea",
+      "b": "té",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0155"
+      ]
+    },
+    {
+      "id": "v2_0156",
+      "a": "wine",
+      "b": "vino",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0156"
+      ]
+    },
+    {
+      "id": "v2_0161",
+      "a": "novel",
+      "b": "novela",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0161"
+      ]
+    },
+    {
+      "id": "v2_0163",
+      "a": "actor",
+      "b": "actor",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0163"
+      ]
+    },
+    {
+      "id": "v2_0165",
+      "a": "banana",
+      "b": "banana",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "cross_language",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-pos-0165"
+      ]
+    },
+    {
+      "id": "v2_0168",
+      "a": "red",
+      "b": "red",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-neg-0168"
+      ]
+    },
+    {
+      "id": "v2_0169",
+      "a": "pie",
+      "b": "pie",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-neg-0169"
+      ]
+    },
+    {
+      "id": "v2_0171",
+      "a": "rope",
+      "b": "ropa",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-neg-0171"
+      ]
+    },
+    {
+      "id": "v2_0175",
+      "a": "carpet",
+      "b": "carpeta",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-neg-0175"
+      ]
+    },
+    {
+      "id": "v2_0176",
+      "a": "soap",
+      "b": "sopa",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-neg-0176"
+      ]
+    },
+    {
+      "id": "v2_0181",
+      "a": "advertisement",
+      "b": "advertencia",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-neg-0181"
+      ]
+    },
+    {
+      "id": "v2_0184",
+      "a": "music",
+      "b": "mesa",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-neg-0184"
+      ]
+    },
+    {
+      "id": "v2_0186",
+      "a": "radio",
+      "b": "sopa",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "cross_language",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "cross_language",
+        "family:xl-neg-0186"
+      ]
+    },
+    {
+      "id": "v2_0187",
+      "a": "w0w",
+      "b": "wow",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-pos-0187"
+      ]
+    },
+    {
+      "id": "v2_0188",
+      "a": "c00l",
+      "b": "cool",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-pos-0188"
+      ]
+    },
+    {
+      "id": "v2_0195",
+      "a": "p4rty",
+      "b": "party",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-pos-0195"
+      ]
+    },
+    {
+      "id": "v2_0203",
+      "a": "s1s",
+      "b": "sis",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "leetspeak",
+      "labels": {
+        "similar": true,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-pos-0203"
+      ]
+    },
+    {
+      "id": "v2_0208",
+      "a": "h4te",
+      "b": "have",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-neg-0208"
+      ]
+    },
+    {
+      "id": "v2_0210",
+      "a": "fr13nd",
+      "b": "fiend",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-neg-0210"
+      ]
+    },
+    {
+      "id": "v2_0212",
+      "a": "ch34p",
+      "b": "cheep",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-neg-0212"
+      ]
+    },
+    {
+      "id": "v2_0213",
+      "a": "w0rld",
+      "b": "wild",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-neg-0213"
+      ]
+    },
+    {
+      "id": "v2_0214",
+      "a": "c00l",
+      "b": "coal",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-neg-0214"
+      ]
+    },
+    {
+      "id": "v2_0218",
+      "a": "sh33p",
+      "b": "sheet",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "leetspeak",
+      "labels": {
+        "similar": false,
+        "obfuscated": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "leetspeak",
+        "family:leet-neg-0218"
+      ]
+    },
+    {
+      "id": "v2_0224",
+      "a": "mіcrosoft",
+      "b": "microsoft",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "homoglyph",
+        "family:homo-pos-0224"
+      ]
+    },
+    {
+      "id": "v2_0231",
+      "a": "nеtflix",
+      "b": "netflix",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "homoglyph",
+        "family:homo-pos-0231"
+      ]
+    },
+    {
+      "id": "v2_0239",
+      "a": "tеsla",
+      "b": "tesla",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "homoglyph",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "homoglyph",
+        "family:homo-pos-0239"
+      ]
+    },
+    {
+      "id": "v2_0243",
+      "a": "mоon",
+      "b": "moan",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "homoglyph",
+        "family:homo-neg-0243"
+      ]
+    },
+    {
+      "id": "v2_0246",
+      "a": "hеllo",
+      "b": "hollow",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "homoglyph",
+        "family:homo-neg-0246"
+      ]
+    },
+    {
+      "id": "v2_0247",
+      "a": "wоrld",
+      "b": "would",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "homoglyph",
+        "family:homo-neg-0247"
+      ]
+    },
+    {
+      "id": "v2_0249",
+      "a": "chеар",
+      "b": "cheep",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "homoglyph",
+        "family:homo-neg-0249"
+      ]
+    },
+    {
+      "id": "v2_0253",
+      "a": "dаy",
+      "b": "dry",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "homoglyph",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "homoglyph",
+        "family:homo-neg-0253"
+      ]
+    },
+    {
+      "id": "v2_0265",
+      "a": "ﬁne",
+      "b": "fine",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "unicode",
+        "family:uni-pos-0265"
+      ]
+    },
+    {
+      "id": "v2_0269",
+      "a": "hel​lo",
+      "b": "hello",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "unicode",
+        "family:uni-pos-0269"
+      ]
+    },
+    {
+      "id": "v2_0270",
+      "a": "wo​rld",
+      "b": "world",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "unicode",
+        "family:uni-pos-0270"
+      ]
+    },
+    {
+      "id": "v2_0271",
+      "a": "hello!",
+      "b": "hello",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "unicode",
+        "family:uni-pos-0271"
+      ]
+    },
+    {
+      "id": "v2_0275",
+      "a": "HELLO",
+      "b": "hello",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "unicode",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "unicode",
+        "family:uni-pos-0275"
+      ]
+    },
+    {
+      "id": "v2_0278",
+      "a": "ﬁne",
+      "b": "find",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "unicode",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "unicode",
+        "family:uni-neg-0278"
+      ]
+    },
+    {
+      "id": "v2_0279",
+      "a": "ｈｅｌｌｏ",
+      "b": "hollow",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "unicode",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "unicode",
+        "family:uni-neg-0279"
+      ]
+    },
+    {
+      "id": "v2_0280",
+      "a": "ｗｏｒｌｄ",
+      "b": "would",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "unicode",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "unicode",
+        "family:uni-neg-0280"
+      ]
+    },
+    {
+      "id": "v2_0294",
+      "a": "I love mi familia",
+      "b": "I love my family",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-pos-0294"
+      ]
+    },
+    {
+      "id": "v2_0297",
+      "a": "La casa is very big",
+      "b": "The house is very big",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-pos-0297"
+      ]
+    },
+    {
+      "id": "v2_0300",
+      "a": "Hasta mañana my friend",
+      "b": "See you tomorrow my friend",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-pos-0300"
+      ]
+    },
+    {
+      "id": "v2_0304",
+      "a": "Merci for your help",
+      "b": "Thanks for your help",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-pos-0304"
+      ]
+    },
+    {
+      "id": "v2_0305",
+      "a": "Bonjour mon ami today",
+      "b": "Hello my friend today",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-pos-0305"
+      ]
+    },
+    {
+      "id": "v2_0306",
+      "a": "S'il vous plaît sit down",
+      "b": "Please sit down now",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "code_switching",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-pos-0306"
+      ]
+    },
+    {
+      "id": "v2_0313",
+      "a": "Vamos to the beach now",
+      "b": "quantum physics rocks hard",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-easy-0313"
+      ]
+    },
+    {
+      "id": "v2_0317",
+      "a": "Merci for your help",
+      "b": "satellites orbit the earth",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-easy-0317"
+      ]
+    },
+    {
+      "id": "v2_0318",
+      "a": "Danke for coming here",
+      "b": "the library closes at eight",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-easy-0318"
+      ]
+    },
+    {
+      "id": "v2_0319",
+      "a": "Terima kasih friend",
+      "b": "please water the plants",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "code_switching",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "code_switching",
+        "family:cs-easy-0319"
+      ]
+    },
+    {
+      "id": "v2_0330",
+      "a": "bye",
+      "b": "goodbye",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:sh-pos-0330"
+      ]
+    },
+    {
+      "id": "v2_0335",
+      "a": "cool",
+      "b": "cool!",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:sh-pos-0335"
+      ]
+    },
+    {
+      "id": "v2_0336",
+      "a": "wow",
+      "b": "wow!",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:sh-pos-0336"
+      ]
+    },
+    {
+      "id": "v2_0338",
+      "a": "good night",
+      "b": "night night",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:sh-pos-0338"
+      ]
+    },
+    {
+      "id": "v2_0350",
+      "a": "bye",
+      "b": "byte",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:sh-neg-0350"
+      ]
+    },
+    {
+      "id": "v2_0355",
+      "a": "me",
+      "b": "men",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:sh-neg-0355"
+      ]
+    },
+    {
+      "id": "v2_0356",
+      "a": "we",
+      "b": "web",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:sh-neg-0356"
+      ]
+    },
+    {
+      "id": "v2_0360",
+      "a": "by",
+      "b": "buy",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:sh-neg-0360"
+      ]
+    },
+    {
+      "id": "v2_0361",
+      "a": "an",
+      "b": "and",
+      "languages": [],
+      "split": "test",
+      "difficulty": "hard",
+      "category": "short_text",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:sh-neg-0361"
+      ]
+    },
+    {
+      "id": "v2_0364",
+      "a": "Der schnelle braune Fuchs springt über den faulen Hund",
+      "b": "Ein flinker brauner Fuchs hüpft über den trägen Hund",
+      "languages": [
+        "de"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "language_detection",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "language_detection",
+        "family:lang-de-0364"
+      ]
+    },
+    {
+      "id": "v2_0365",
+      "a": "Le renard brun rapide saute par-dessus le chien paresseux",
+      "b": "Un vif renard brun bondit par-dessus le chien indolent",
+      "languages": [
+        "fr"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "language_detection",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "language_detection",
+        "family:lang-fr-0365"
+      ]
+    },
+    {
+      "id": "v2_0366",
+      "a": "La volpe marrone veloce salta sopra il cane pigro",
+      "b": "Una rapida volpe bruna balza sopra il cane ozioso",
+      "languages": [
+        "it"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "language_detection",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "language_detection",
+        "family:lang-it-0366"
+      ]
+    },
+    {
+      "id": "v2_0370",
+      "a": "Rubah cokelat yang cepat melompati anjing yang malas",
+      "b": "Rubah pirang yang lincah melompat over anjing lesu",
+      "languages": [
+        "id"
+      ],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "language_detection",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "language_detection",
+        "family:lang-id-0370"
+      ]
+    },
+    {
+      "id": "swe_t_002",
+      "a": "pls",
+      "b": "please",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:swe-t-002"
+      ]
+    },
+    {
+      "id": "swe_v_006",
+      "a": "photo",
+      "b": "photograph",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "phonetic",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "phonetic",
+        "family:swe-v-006"
+      ]
+    },
+    {
+      "id": "xsn_t_001",
+      "a": "hello",
+      "b": "北京",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:xsn-t-001",
+        "cross_script_negative"
+      ]
+    },
+    {
+      "id": "xsn_t_005",
+      "a": "hello",
+      "b": "Москва",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:xsn-t-005",
+        "cross_script_negative"
+      ]
+    },
+    {
+      "id": "xsn_v_003",
+      "a": "friend",
+      "b": "敌人",
+      "languages": [],
+      "split": "test",
+      "difficulty": "medium",
+      "category": "transliteration",
+      "labels": {
+        "similar": false
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "transliteration",
+        "family:xsn-v-003",
+        "cross_script_negative"
+      ]
+    },
+    {
+      "id": "punc_t_005",
+      "a": "on",
+      "b": "on?",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:punc-t-005"
+      ]
+    },
+    {
+      "id": "punc_t_007",
+      "a": "we",
+      "b": "we!",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:punc-t-007"
+      ]
+    },
+    {
+      "id": "punc_t_009",
+      "a": "it",
+      "b": "it?",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:punc-t-009"
+      ]
+    },
+    {
+      "id": "punc_t_010",
+      "a": "is",
+      "b": "is?",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:punc-t-010"
+      ]
+    },
+    {
+      "id": "punc_t_011",
+      "a": "or",
+      "b": "or?",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:punc-t-011"
+      ]
+    },
+    {
+      "id": "punc_t_012",
+      "a": "me",
+      "b": "me!",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:punc-t-012"
+      ]
+    },
+    {
+      "id": "punc_v_003",
+      "a": "an",
+      "b": "an?",
+      "languages": [],
+      "split": "test",
+      "difficulty": "easy",
+      "category": "short_text",
+      "labels": {
+        "similar": true
+      },
+      "expected": {
+        "min_similarity": 0.5
+      },
+      "tags": [
+        "short_text",
+        "family:punc-v-003"
+      ]
+    }
+  ]
+}

@@ -3,24 +3,306 @@
   "language": "it",
   "name": "Letture dei simboli in italiano",
   "symbols": [
-    {"token": "🏠", "readings": [{"text": "casa", "probability": 0.90, "reading_type": "symbol_reading"}, {"text": "abitazione", "probability": 0.50, "reading_type": "symbol_reading"}]},
-    {"token": "🔥", "readings": [{"text": "fuoco", "probability": 0.70, "reading_type": "symbol_reading"}, {"text": "caldo", "probability": 0.40, "reading_type": "symbol_reading"}]},
-    {"token": "💰", "readings": [{"text": "denaro", "probability": 0.90, "reading_type": "symbol_reading"}, {"text": "soldi", "probability": 0.45, "reading_type": "symbol_reading"}]},
-    {"token": "❤", "readings": [{"text": "amore", "probability": 0.80, "reading_type": "symbol_reading"}, {"text": "cuore", "probability": 0.50, "reading_type": "symbol_reading"}]},
-    {"token": "❤️", "readings": [{"text": "amore", "probability": 0.80, "reading_type": "symbol_reading"}, {"text": "cuore", "probability": 0.50, "reading_type": "symbol_reading"}]},
-    {"token": "0", "readings": [{"text": "zero", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "1", "readings": [{"text": "uno", "probability": 0.80, "reading_type": "number_reading"}, {"text": "un", "probability": 0.50, "reading_type": "number_reading"}]},
-    {"token": "2", "readings": [{"text": "due", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "3", "readings": [{"text": "tre", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "4", "readings": [{"text": "quattro", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "5", "readings": [{"text": "cinque", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "6", "readings": [{"text": "sei", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "7", "readings": [{"text": "sette", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "8", "readings": [{"text": "otto", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "9", "readings": [{"text": "nove", "probability": 0.75, "reading_type": "number_reading"}]},
-    {"token": "10", "readings": [{"text": "dieci", "probability": 0.80, "reading_type": "number_reading"}]},
-    {"token": "100", "readings": [{"text": "cento", "probability": 0.80, "reading_type": "number_reading"}]
+    {
+      "token": "🏠",
+      "readings": [
+        {
+          "text": "casa",
+          "probability": 0.9,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "abitazione",
+          "probability": 0.5,
+          "reading_type": "symbol_reading"
+        }
+      ]
     },
-    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "caffè", "probability": 0.80, "reading_type": "symbol_reading"}]}
+    {
+      "token": "🔥",
+      "readings": [
+        {
+          "text": "fuoco",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "caldo",
+          "probability": 0.4,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "💰",
+      "readings": [
+        {
+          "text": "denaro",
+          "probability": 0.9,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "soldi",
+          "probability": 0.45,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤",
+      "readings": [
+        {
+          "text": "amore",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "cuore",
+          "probability": 0.5,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤️",
+      "readings": [
+        {
+          "text": "amore",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        },
+        {
+          "text": "cuore",
+          "probability": 0.5,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "0",
+      "readings": [
+        {
+          "text": "zero",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "1",
+      "readings": [
+        {
+          "text": "uno",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        },
+        {
+          "text": "un",
+          "probability": 0.5,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "2",
+      "readings": [
+        {
+          "text": "due",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "3",
+      "readings": [
+        {
+          "text": "tre",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "4",
+      "readings": [
+        {
+          "text": "quattro",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "5",
+      "readings": [
+        {
+          "text": "cinque",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "6",
+      "readings": [
+        {
+          "text": "sei",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "7",
+      "readings": [
+        {
+          "text": "sette",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "8",
+      "readings": [
+        {
+          "text": "otto",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "9",
+      "readings": [
+        {
+          "text": "nove",
+          "probability": 0.75,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "10",
+      "readings": [
+        {
+          "text": "dieci",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "100",
+      "readings": [
+        {
+          "text": "cento",
+          "probability": 0.8,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "☕",
+      "unicode_name": "HOT BEVERAGE",
+      "readings": [
+        {
+          "text": "caffè",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "☀",
+      "readings": [
+        {
+          "text": "sole",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❄",
+      "readings": [
+        {
+          "text": "neve",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🍕",
+      "readings": [
+        {
+          "text": "pizza",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🎉",
+      "readings": [
+        {
+          "text": "festa",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🏆",
+      "readings": [
+        {
+          "text": "trofeo",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "😘",
+      "readings": [
+        {
+          "text": "bacio",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🙏",
+      "readings": [
+        {
+          "text": "per favore",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🚗",
+      "readings": [
+        {
+          "text": "auto",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🤘",
+      "readings": [
+        {
+          "text": "rock",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    }
   ]
 }

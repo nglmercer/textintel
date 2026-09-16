@@ -5,31 +5,356 @@
   "source": "textintel-curated",
   "revision": "2026-09",
   "symbols": [
-    {"token": "🏠", "readings": [{"text": "بيت", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "🔥", "readings": [{"text": "نار", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "💰", "readings": [{"text": "مال", "probability": 0.8, "reading_type": "symbol_reading"}]},
-    {"token": "❤", "readings": [{"text": "حب", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "❤️", "readings": [{"text": "حب", "probability": 0.85, "reading_type": "symbol_reading"}]},
-    {"token": "0", "readings": [{"text": "صفر", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "1", "readings": [{"text": "واحد", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "2", "readings": [{"text": "اثنان", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "3", "readings": [{"text": "ثلاثة", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "4", "readings": [{"text": "أربعة", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "5", "readings": [{"text": "خمسة", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "6", "readings": [{"text": "ستة", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "7", "readings": [{"text": "سبعة", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "8", "readings": [{"text": "ثمانية", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "9", "readings": [{"text": "تسعة", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "10", "readings": [{"text": "عشرة", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "100", "readings": [{"text": "مائة", "probability": 0.7, "reading_type": "number_reading"}]},
-    {"token": "$", "readings": [{"text": "دولار", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "€", "readings": [{"text": "يورو", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "£", "readings": [{"text": "جنيه", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "¥", "readings": [{"text": "ين", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "₹", "readings": [{"text": "روبية", "probability": 0.7, "reading_type": "currency"}]},
-    {"token": "%", "readings": [{"text": "في المئة", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "+", "readings": [{"text": "زائد", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "=", "readings": [{"text": "يساوي", "probability": 0.7, "reading_type": "math"}]},
-    {"token": "☕", "unicode_name": "HOT BEVERAGE", "readings": [{"text": "قهوة", "probability": 0.80, "reading_type": "symbol_reading"}]}
+    {
+      "token": "🏠",
+      "readings": [
+        {
+          "text": "بيت",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🔥",
+      "readings": [
+        {
+          "text": "نار",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "💰",
+      "readings": [
+        {
+          "text": "مال",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤",
+      "readings": [
+        {
+          "text": "حب",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❤️",
+      "readings": [
+        {
+          "text": "حب",
+          "probability": 0.85,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "0",
+      "readings": [
+        {
+          "text": "صفر",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "1",
+      "readings": [
+        {
+          "text": "واحد",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "2",
+      "readings": [
+        {
+          "text": "اثنان",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "3",
+      "readings": [
+        {
+          "text": "ثلاثة",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "4",
+      "readings": [
+        {
+          "text": "أربعة",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "5",
+      "readings": [
+        {
+          "text": "خمسة",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "6",
+      "readings": [
+        {
+          "text": "ستة",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "7",
+      "readings": [
+        {
+          "text": "سبعة",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "8",
+      "readings": [
+        {
+          "text": "ثمانية",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "9",
+      "readings": [
+        {
+          "text": "تسعة",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "10",
+      "readings": [
+        {
+          "text": "عشرة",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "100",
+      "readings": [
+        {
+          "text": "مائة",
+          "probability": 0.7,
+          "reading_type": "number_reading"
+        }
+      ]
+    },
+    {
+      "token": "$",
+      "readings": [
+        {
+          "text": "دولار",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "€",
+      "readings": [
+        {
+          "text": "يورو",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "£",
+      "readings": [
+        {
+          "text": "جنيه",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "¥",
+      "readings": [
+        {
+          "text": "ين",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "₹",
+      "readings": [
+        {
+          "text": "روبية",
+          "probability": 0.7,
+          "reading_type": "currency"
+        }
+      ]
+    },
+    {
+      "token": "%",
+      "readings": [
+        {
+          "text": "في المئة",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "+",
+      "readings": [
+        {
+          "text": "زائد",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "=",
+      "readings": [
+        {
+          "text": "يساوي",
+          "probability": 0.7,
+          "reading_type": "math"
+        }
+      ]
+    },
+    {
+      "token": "☕",
+      "unicode_name": "HOT BEVERAGE",
+      "readings": [
+        {
+          "text": "قهوة",
+          "probability": 0.8,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "☀",
+      "readings": [
+        {
+          "text": "شمس",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "❄",
+      "readings": [
+        {
+          "text": "ثلج",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🍕",
+      "readings": [
+        {
+          "text": "بيتزا",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🎉",
+      "readings": [
+        {
+          "text": "حفلة",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🏆",
+      "readings": [
+        {
+          "text": "كأس",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "😘",
+      "readings": [
+        {
+          "text": "قبلة",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🙏",
+      "readings": [
+        {
+          "text": "من فضلك",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🚗",
+      "readings": [
+        {
+          "text": "سيارة",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    },
+    {
+      "token": "🤘",
+      "readings": [
+        {
+          "text": "روك",
+          "probability": 0.7,
+          "reading_type": "symbol_reading"
+        }
+      ]
+    }
   ]
 }

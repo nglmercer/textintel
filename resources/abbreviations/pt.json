@@ -1,1 +1,59 @@
-{"entries": [{"readings": [{"probability": 0.7, "text": "você", "type": "chat_abbreviation"}], "token": "vc"}, {"readings": [{"probability": 0.55, "text": "também", "type": "chat_abbreviation"}], "token": "tb"}, {"readings": [{"probability": 0.6, "text": "porque", "type": "chat_abbreviation"}], "token": "pq"}, {"readings": [{"probability": 0.5, "text": "que", "type": "chat_abbreviation"}], "token": "q"}, {"readings": [{"probability": 0.65, "text": "beijo", "type": "chat_abbreviation"}], "token": "bj"}], "language": "pt", "name": "Abreviações de chat em português", "revision": "2026-09", "schema_version": 1, "source": "textintel-curated"}
+{
+  "entries": [
+    {
+      "readings": [
+        {
+          "probability": 0.7,
+          "text": "você",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "vc"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.55,
+          "text": "também",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "tb"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.6,
+          "text": "porque",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "pq"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.5,
+          "text": "que",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "q"
+    },
+    {
+      "readings": [
+        {
+          "probability": 0.65,
+          "text": "beijo",
+          "type": "chat_abbreviation"
+        }
+      ],
+      "token": "bj"
+    }
+  ],
+  "language": "pt",
+  "name": "Abreviações de chat em português",
+  "revision": "2026-09",
+  "schema_version": 1,
+  "source": "textintel-curated"
+}

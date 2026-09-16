@@ -7,7 +7,7 @@ locally on the held-out **test** split; nothing is projected or aspirational.
 ## Quality-gate status: PASS (both engines)
 
 Default engine
-(`textintel eval data/evaluation.json --split test --gates data/quality-gates.json`):
+(`textintel eval data/evaluation/ --split test --gates data/quality-gates.json`):
 
 ```
 similarity: accuracy=0.816 precision=0.853 recall=0.891 f1=0.871
@@ -216,9 +216,9 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo doc --no-deps --all-features
 cargo bench --locked --no-run --all-features
 cargo run --locked --all-features --bin textintel -- \
-  eval data/evaluation.json --split test --gates data/quality-gates.json
+  eval data/evaluation/ --split test --gates data/quality-gates.json
 cargo run --locked --all-features --bin textintel -- eval \
-  data/evaluation.json --split test --production \
+  data/evaluation/ --split test --production \
   --gates data/quality-gates-production.json
 ```
 

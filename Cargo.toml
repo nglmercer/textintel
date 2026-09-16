@@ -14,11 +14,11 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "textintel"
-path = "src/bin/textintel.rs"
+path = "src/bin/textintel/main.rs"
 
 [[bin]]
 name = "textintel-train"
-path = "tools/train_similarity.rs"
+path = "tools/train_similarity/main.rs"
 
 [features]
 default = []

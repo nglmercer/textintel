@@ -14,16 +14,26 @@
 //!
 //! The HNSW graph itself is **never persisted**. Only `(document id, whole-text
 //! vector)` pairs persist, inside the fingerprint store (JSON/redb). On
-//! startup the index is rebuilt deterministically by re-inserting those pairs
-//! in id-sorted order ([`HnswVectorIndex::rebuild`],
+//! startup the index is rebuilt by re-inserting those pairs in id-sorted
+//! order ([`HnswVectorIndex::rebuild`],
 //! [`MemoryStore::rebuild_ann`](crate::storage::MemoryStore::rebuild_ann)).
-//! There is no background persister, no WAL, and no version skew to migrate:
-//! a restart always converges to the same graph for the same records.
+//! There is no background persister, no WAL, and no version skew to migrate.
 //!
 //! Rationale: HNSW graphs are append-only with tombstoned removals, so a
 //! persisted graph would accumulate dead entries and hinge on an exact
 //! `hnsw_rs` version. Rebuilds compact tombstones for free and keep one
 //! source of truth (the fingerprint store).
+//!
+//! # Determinism scope
+//!
+//! `hnsw_rs` draws per-point graph levels from OS entropy with no seed API,
+//! so two HNSW graphs built from the same records can differ structurally
+//! and large-index search stays approximate across rebuilds (top hits are
+//! stable; see the recall anchors in `tests/ann_search.rs`). Small indexes
+//! (at most [`EXACT_SEARCH_MAX_LIVE`] live entries) answer queries by an
+//! exhaustive cosine scan over stored vectors instead, which is exact and
+//! bit-deterministic across rebuilds — and cheaper than graph traversal at
+//! that scale.
 
 use std::sync::RwLock;
 
@@ -34,6 +44,13 @@ const MAX_CONNECTIONS: usize = 16;
 const MAX_LAYER: usize = 16;
 const EF_CONSTRUCTION: usize = 200;
 
+/// Live-entry ceiling for the exact brute-force search path. At most this
+/// many live entries, [`HnswVectorIndex::search`] scans stored vectors
+/// exhaustively (exact, deterministic); beyond it, queries use the HNSW
+/// graph. The ceiling sits below the 2K-vector recall benchmark so that
+/// benchmark keeps measuring the approximate path.
+const EXACT_SEARCH_MAX_LIVE: usize = 1024;
+
 /// Append-only HNSW index over whole-text embedding vectors.
 pub struct HnswVectorIndex {
     index: Hnsw<'static, f32, DistCosine>,
@@ -41,6 +58,10 @@ pub struct HnswVectorIndex {
     max_elements: usize,
     next_id: RwLock<usize>,
     ids: RwLock<Vec<Option<String>>>,
+    /// Stored vectors mirroring `ids` positionally (tombstones are `None`
+    /// in both) for the exact small-index search path. Lock order is
+    /// always `ids`, then `vectors`, then `next_id`.
+    vectors: RwLock<Vec<Option<Vec<f32>>>>,
 }
 
 impl std::fmt::Debug for HnswVectorIndex {
@@ -76,6 +97,7 @@ impl HnswVectorIndex {
             max_elements,
             next_id: RwLock::new(0),
             ids: RwLock::new(Vec::new()),
+            vectors: RwLock::new(Vec::new()),
         })
     }
 
@@ -99,10 +121,11 @@ impl HnswVectorIndex {
         self.len() == 0
     }
 
-    /// Rough memory footprint in bytes: raw vectors plus a constant per-entry
-    /// graph overhead estimate. Documented as an estimate, not a measurement.
+    /// Rough memory footprint in bytes: two stored vector copies (graph +
+    /// exact-scan mirror) plus a constant per-entry graph overhead estimate.
+    /// Documented as an estimate, not a measurement.
     pub fn estimate_bytes(&self) -> usize {
-        self.len() * (self.dimensions * 4 + 64)
+        self.len() * (self.dimensions * 8 + 64)
     }
 
     /// Insert `vector` under `id`. Rejects wrong dimensions and non-finite
@@ -118,19 +141,25 @@ impl HnswVectorIndex {
         if vector.iter().any(|value| !value.is_finite()) {
             return Err(format!("{PROVIDER}: vector for {id:?} is not finite"));
         }
+        // Fixed lock order (`ids`, `vectors`, `next_id`) everywhere.
         let mut ids = self
             .ids
             .write()
             .map_err(|_| format!("{PROVIDER}: id lock poisoned"))?;
-        for entry in ids.iter_mut() {
-            if entry.as_deref() == Some(id) {
-                *entry = None;
-            }
-        }
+        let mut vectors = self
+            .vectors
+            .write()
+            .map_err(|_| format!("{PROVIDER}: id lock poisoned"))?;
         let mut next = self
             .next_id
             .write()
             .map_err(|_| format!("{PROVIDER}: id lock poisoned"))?;
+        for (entry, stored) in ids.iter_mut().zip(vectors.iter_mut()) {
+            if entry.as_deref() == Some(id) {
+                *entry = None;
+                *stored = None;
+            }
+        }
         if *next >= self.max_elements {
             return Err(format!(
                 "{PROVIDER}: index is full ({max} elements)",
@@ -139,19 +168,23 @@ impl HnswVectorIndex {
         }
         let point = *next;
         *next += 1;
-        ids.push(Some(id.to_string()));
-        drop(ids);
-        drop(next);
         let owned = vector.to_vec();
+        ids.push(Some(id.to_string()));
+        vectors.push(Some(owned.clone()));
+        drop(ids);
+        drop(vectors);
+        drop(next);
         self.index.insert((&owned, point));
         Ok(())
     }
 
-    /// Deterministic rebuild from `(id, vector)` pairs: entries are
-    /// inserted in id-sorted order so the same records always produce the
-    /// same graph. Pairs with the wrong dimension or non-finite values are
-    /// skipped (mixed-dimension stores stay loadable); everything else that
-    /// fails to insert aborts the rebuild with an error.
+    /// Rebuild from `(id, vector)` pairs: entries are inserted in id-sorted
+    /// order so the same records always replay the same insertion sequence
+    /// regardless of input order. Small-index search over the rebuilt index
+    /// is exact and deterministic; large-index search stays approximate (see
+    /// the module determinism notes). Pairs with the wrong dimension or
+    /// non-finite values are skipped (mixed-dimension stores stay loadable);
+    /// everything else that fails to insert aborts the rebuild with an error.
     pub fn rebuild(
         dimensions: usize,
         max_elements: usize,
@@ -204,7 +237,8 @@ impl HnswVectorIndex {
     }
 
     /// Top-`k` nearest `(id, cosine_distance)` pairs, lower distance first.
-    /// Tombstones are filtered out.
+    /// Tombstones are filtered out. Small indexes scan exhaustively (exact,
+    /// deterministic); larger ones use the HNSW graph (approximate).
     pub fn search(&self, vector: &[f32], k: usize) -> Result<Vec<(String, f64)>, String> {
         if vector.len() != self.dimensions {
             return Err(format!(
@@ -215,6 +249,9 @@ impl HnswVectorIndex {
         }
         if k == 0 {
             return Ok(Vec::new());
+        }
+        if self.len() <= EXACT_SEARCH_MAX_LIVE {
+            return self.search_exact(vector, k);
         }
         let ef = (k * 4).clamp(50, 500);
         let neighbours = self.index.search(vector, k, ef);
@@ -231,6 +268,52 @@ impl HnswVectorIndex {
             })
             .collect())
     }
+
+    /// Exhaustive top-`k` cosine scan over live vectors. Total ordering by
+    /// `(distance, id)` keeps ties deterministic; zero vectors score the
+    /// maximum distance so they sort last, deterministically.
+    fn search_exact(&self, vector: &[f32], k: usize) -> Result<Vec<(String, f64)>, String> {
+        let ids = self
+            .ids
+            .read()
+            .map_err(|_| format!("{PROVIDER}: id lock poisoned"))?;
+        let vectors = self
+            .vectors
+            .read()
+            .map_err(|_| format!("{PROVIDER}: id lock poisoned"))?;
+        let mut scored: Vec<(String, f64)> = ids
+            .iter()
+            .zip(vectors.iter())
+            .filter_map(|(entry, stored)| match (entry, stored) {
+                (Some(id), Some(stored)) => Some((id.clone(), cosine_distance_f64(vector, stored))),
+                _ => None,
+            })
+            .collect();
+        scored.sort_by(|left, right| {
+            left.1
+                .total_cmp(&right.1)
+                .then_with(|| left.0.cmp(&right.0))
+        });
+        scored.truncate(k);
+        Ok(scored)
+    }
+}
+
+/// Cosine distance `1 - cos(a, b)` in `f64`. Zero vectors score `1.0`.
+fn cosine_distance_f64(left: &[f32], right: &[f32]) -> f64 {
+    let mut dot = 0.0f64;
+    let mut left_norm = 0.0f64;
+    let mut right_norm = 0.0f64;
+    for (a, b) in left.iter().zip(right.iter()) {
+        let (a, b) = (*a as f64, *b as f64);
+        dot += a * b;
+        left_norm += a * a;
+        right_norm += b * b;
+    }
+    if left_norm == 0.0 || right_norm == 0.0 {
+        return 1.0;
+    }
+    1.0 - dot / (left_norm.sqrt() * right_norm.sqrt())
 }
 
 #[cfg(test)]

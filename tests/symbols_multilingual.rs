@@ -6,9 +6,8 @@ use textintel::core::providers::SymbolKnowledgeProvider;
 use textintel::engine::TextIntelligence;
 use textintel::resources::ResourceLoader;
 
-fn readings(language: &str, token: &str) -> Vec<String> {
-    let loader = ResourceLoader::embedded().expect("embedded resources must load");
-    SymbolKnowledgeProvider::readings_in_languages(&loader, token, 8, Some(&[language.to_string()]))
+fn readings(loader: &ResourceLoader, language: &str, token: &str) -> Vec<String> {
+    SymbolKnowledgeProvider::readings_in_languages(loader, token, 8, Some(&[language.to_string()]))
         .into_iter()
         .map(|item| item.text)
         .collect()
@@ -75,8 +74,11 @@ fn all_supported_languages_cover_the_baseline_set() {
         ("it", "🏠", "casa"),
         ("pt", "🏠", "casa"),
     ];
+    // One shared loader: rebuilding the embedded resources per assertion
+    // dominated this test's runtime without changing its coverage.
+    let loader = ResourceLoader::embedded().expect("embedded resources must load");
     for (language, token, wanted) in expected {
-        let found = readings(language, token);
+        let found = readings(&loader, language, token);
         assert!(
             found.iter().any(|item| item == wanted),
             "{language} {token:?}: expected {wanted:?} in {found:?}"

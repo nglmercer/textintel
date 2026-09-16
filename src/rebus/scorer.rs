@@ -6,6 +6,20 @@ fn known(text: &str, languages: Option<&[String]>, provider: &dyn LexiconProvide
     provider.contains(text, languages)
 }
 
+/// Scripts that never delimit words with spaces (Han ideographs and kana).
+/// Hangul is deliberately excluded: Korean writes spaces between words, so
+/// whitespace segmentation stays meaningful evidence there.
+fn is_spaceless_cjk(character: char) -> bool {
+    matches!(
+        character,
+        '\u{3400}'..='\u{4dbf}'
+            | '\u{4e00}'..='\u{9fff}'
+            | '\u{3040}'..='\u{309f}'
+            | '\u{30a0}'..='\u{30ff}'
+            | '\u{ff66}'..='\u{ff9f}'
+    )
+}
+
 fn can_split_known(
     text: &str,
     depth: usize,
@@ -51,7 +65,13 @@ pub fn lexical_plausibility_with_provider(
         .iter()
         .filter(|part| known(part, languages, provider))
         .count();
-    if !parts.is_empty() && hits > 0 {
+    // Whitespace segmentation is not evidence for spaceless scripts: a
+    // spaced CJK candidate (`我 爱 你`) is orthographically wrong, so per-part
+    // lexicon hits must not let it outscore the unspaced form (`我爱你`).
+    // Skipping the parts branch restores the tie that word-boundary costs
+    // (spaces cost extra transformations) break toward the correct form.
+    let spaceless = compact.chars().all(is_spaceless_cjk);
+    if !parts.is_empty() && hits > 0 && !spaceless {
         return 0.4 + 0.6 * hits as f64 / parts.len() as f64;
     }
     if provider.starts_with(&compact, languages) {

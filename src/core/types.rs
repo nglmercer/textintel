@@ -378,6 +378,15 @@ pub struct MessageFingerprint {
     /// pre-v1.0 stored payloads score at face value (1.0).
     #[serde(default)]
     pub transliteration_confidence: BTreeMap<String, f64>,
+    /// Fraction of words found in the lexicon (any language), in
+    /// `[0.0, 1.0]`, measured on the intended reading: when the top rebus
+    /// candidate differs from the raw text, coverage runs over the
+    /// candidate's words. URLs, emoji, and number-only tokens are not words
+    /// and never count. Payloads predating coverage recording read 0.0,
+    /// which the scorer treats as "no validity evidence" (graceful
+    /// degradation to pre-validity behavior, never a false claim).
+    #[serde(default)]
+    pub lexicon_coverage: f64,
     #[serde(default)]
     pub transformations: Vec<Transformation>,
     pub language_candidates: Vec<LanguageCandidate>,
@@ -460,6 +469,87 @@ pub struct ComparisonResult {
     pub obfuscation_similarity: Option<f64>,
     /// Short alias retained for callers from the Python MVP.
     pub obfuscation: Option<f64>,
+    /// Lexicon validity of the pair: the weaker side's `lexicon_coverage`.
+    /// Confusable pairs (`their`/`there`) score near 1.0 while typo pairs
+    /// (`bonjour`/`binjour`) score near 0.0, letting the trained model
+    /// separate "both valid, different words" from "one side misspelled".
+    #[serde(default)]
+    pub lexicon_validity: f64,
+    /// 1.0 when both sides are exactly one alphabetic token, else 0.0.
+    /// Scopes the validity evidence: single-word near-duplicates are usually
+    /// distinct words, while multi-word near-duplicates are usually matches.
+    #[serde(default)]
+    pub single_word_pair: f64,
+    /// Character similarity of the swapped words when both sides carry the
+    /// same number (≥ 2) of alphabetic tokens differing in exactly one
+    /// position, else 0.0. Contextual confusables (`ensure`/`insure` in the
+    /// same sentence) score high while near-duplicate sentences with an
+    /// unrelated word swap (`now`/`today`) score low.
+    #[serde(default)]
+    pub swapped_word_similarity: f64,
+    /// 1.0 when both sides reduce to the same non-empty alphanumeric string
+    /// (casefolded, punctuation and spacing stripped), else 0.0. Catches
+    /// punctuation-only variants (`yes`/`yes!`) that confusable penalties
+    /// would otherwise reject: both sides are valid words, yet the pair is
+    /// a genuine match.
+    #[serde(default)]
+    pub normalized_identity: f64,
+    /// 1.0 when both sides use alphabetic scripts and share none (e.g.
+    /// Latin vs Cyrillic), else 0.0. Separates cross-script positives
+    /// (`da`/`да`) from same-script confusables: validity evidence applies
+    /// within a script, while cross-script pairs route through decoded and
+    /// transliteration evidence instead.
+    #[serde(default)]
+    pub cross_script_pair: f64,
+    /// Strongest confidence among exact cross-side matches (rebus
+    /// candidate or transliteration view equal to the other side's raw,
+    /// normalized, candidate, or view text), else 0.0. Exact decoding
+    /// (`cheque`→`check`, `привет`→`privet`) far outweighs fuzzy
+    /// resemblance, so this separates genuine variants from confusables
+    /// that merely look alike; ambiguous low-rank decodes (e.g. `gr8`→
+    /// `grate`) contribute only their weak confidence.
+    #[serde(default)]
+    pub exact_decode: f64,
+    /// Phonetic similarity of the swapped words under the same gating as
+    /// `swapped_word_similarity` (equal token counts ≥ 2, exactly one
+    /// differing position), scaled by pair lexicon validity and suppressed
+    /// to 0.0 on cross-language switches, else 0.0. Contextual confusables
+    /// swap same-sounding words (`dairy`/`diary`); near-duplicate sentences
+    /// swap unrelated words (`package`/`parcel`).
+    #[serde(default)]
+    pub swapped_phonetic: f64,
+    /// Confusable-swap interaction: `swapped_word_similarity` × ungated
+    /// swapped-word phonetic similarity, kept only when every word on both
+    /// sides is lexicon-valid, else 0.0. This is the contextual-hard-negative
+    /// signature — an otherwise identical sentence pair whose one differing
+    /// word is real, look-alike, and sound-alike on both sides
+    /// (`right`/`rite`, `complement`/`compliment`). Typo pairs fail the
+    /// all-valid test (`thamk` is not a word), paraphrases fail the swap
+    /// gate, and language switches (`mi`/`my` in known-different-language
+    /// segments) are suppressed outright — none of them pays the confusable
+    /// penalty.
+    #[serde(default)]
+    pub confusable_swap: f64,
+    /// Single-word exact decoding: `single_word_pair` × `exact_decode`.
+    /// A lone exact read (`cheque`→`check`) is the variant signature, while
+    /// single-word confusables (`their`/`there`) decode to nothing; the
+    /// interaction lets the linear model acquit decoded singles without
+    /// acquitting undecodable ones.
+    #[serde(default)]
+    pub single_word_exact: f64,
+    /// Cross-script agreement: `cross_script_pair` × top-language
+    /// agreement. A cross-script pair whose sides detect as the SAME
+    /// language (pinyin `hao` and `好` both read as Chinese) is
+    /// transliteration-shaped; cross-script pairs in different languages
+    /// (`net`/`нет`) stay at 0. Lets the model trust same-language
+    /// cross-script evidence without trusting cross-language look-alikes.
+    #[serde(default)]
+    pub cross_script_agreement: f64,
+    /// Substring containment between the alphanumeric folds (see
+    /// scorer): 1.0 when one side contains the other with enough
+    /// substance (`morning` in `good morning`, `早上` in `早上好`).
+    #[serde(default)]
+    pub substring_containment: f64,
     pub explanations: Vec<String>,
     pub evidence: Vec<String>,
     pub weights_used: BTreeMap<String, f64>,

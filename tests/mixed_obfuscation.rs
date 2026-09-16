@@ -59,6 +59,13 @@ fn mixed_obfuscation_comparison_orders_correctly() {
             "{obfuscated}: {plain} ({good:.3}) must outscore {decoy} ({bad:.3})"
         );
     }
+    // Low-rank exact readings grade below the asserted top reading: `gr8`
+    // decodes to both `great` (rank 0) and `grate` (rank 1), so only the
+    // top reading may link at 1.0.
+    let top = engine.compare("gr8", "great").unwrap();
+    let low = engine.compare("gr8", "grate").unwrap();
+    assert_eq!(top.decoded_similarity, Some(1.0));
+    assert!(low.decoded_similarity.is_some_and(|value| value < 1.0));
 }
 
 #[test]
