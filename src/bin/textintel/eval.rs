@@ -2,7 +2,9 @@
 //! and quality-gate enforcement.
 
 use textintel::comparison::SimilarityProfile;
-use textintel::evaluation::{EvaluateOptions, EvaluationDataset, EvaluationReport, SpamCorpus};
+use textintel::evaluation::{
+    check_gates, EvaluateOptions, EvaluationDataset, EvaluationReport, SpamCorpus,
+};
 
 use super::{build_engine, flag_value, print_json};
 
@@ -97,128 +99,6 @@ fn print_eval_human(report: &EvaluationReport) {
             report.expectations_met, report.expectations_total
         );
     }
-}
-
-/// Quality-gate file shape: `{ "<section>": { "<metric>_min": f64,
-/// "<metric>_max": f64 } }`. Unknown sections and metrics are ignored so
-/// gates stay forwards compatible.
-fn check_gates(report: &EvaluationReport, gates: &serde_json::Value) -> Vec<String> {
-    let mut observed: Vec<(&str, &str, f64)> = vec![
-        ("similarity", "roc_auc", report.metrics.roc_auc),
-        ("similarity", "pr_auc", report.metrics.pr_auc),
-        ("similarity", "f1", report.metrics.f1),
-        ("similarity", "accuracy", report.metrics.accuracy),
-        ("similarity", "brier", report.metrics.brier),
-        (
-            "similarity",
-            "ece",
-            report.metrics.expected_calibration_error,
-        ),
-        ("rebus", "top1", report.rebus.top1_accuracy),
-        ("rebus", "top3", report.rebus.top3_accuracy),
-        ("rebus", "top5", report.rebus.top_k_accuracy),
-        ("language", "top1", report.language.top1_accuracy),
-        ("language", "top3", report.language.top3_accuracy),
-        ("search", "recall_at_1", report.ranking.recall_at_1),
-        ("search", "recall_at_5", report.ranking.recall_at_5),
-        ("search", "recall_at_10", report.ranking.recall_at_10),
-        ("search", "mrr", report.ranking.mrr),
-    ];
-    if let Some(spam) = &report.spam {
-        observed.extend([
-            ("spam", "roc_auc", spam.metrics.roc_auc),
-            ("spam", "pr_auc", spam.metrics.pr_auc),
-            ("spam", "f1", spam.metrics.f1),
-            ("spam", "accuracy", spam.metrics.accuracy),
-            ("spam", "brier", spam.metrics.brier),
-            ("spam", "ece", spam.metrics.expected_calibration_error),
-        ]);
-    }
-    let mut failures = Vec::new();
-    let Some(sections) = gates.as_object() else {
-        return failures;
-    };
-    // Spam gates fail closed when the corpus was not measured (missing
-    // file): `spam` is the only conditionally-measured section, so it is
-    // the only one checked here; genuinely unknown sections stay ignored.
-    if report.spam.is_none() && sections.contains_key("spam") {
-        failures.push("spam: no metrics measured (missing spam corpus?)".to_string());
-    }
-    for (section, metric, value) in observed {
-        let section_gates = sections.get(section);
-        let key = format!("{metric}_min");
-        if let Some(minimum) = section_gates
-            .and_then(|value| value.get(&key))
-            .and_then(serde_json::Value::as_f64)
-        {
-            if value < minimum {
-                failures.push(format!(
-                    "{section}.{metric}={value:.3} below minimum {minimum:.3}"
-                ));
-            }
-        }
-        let key = format!("{metric}_max");
-        if let Some(maximum) = section_gates
-            .and_then(|value| value.get(&key))
-            .and_then(serde_json::Value::as_f64)
-        {
-            if value > maximum {
-                failures.push(format!(
-                    "{section}.{metric}={value:.3} above maximum {maximum:.3}"
-                ));
-            }
-        }
-    }
-    // Per-category gates: `{ "categories": { "<name>": { "<metric>_min": f64,
-    // "count_min": n } } }`. Missing categories fail only when `count_min`
-    // is positive, so gates can require coverage without pinning metrics.
-    if let Some(categories) = sections
-        .get("categories")
-        .and_then(|value| value.as_object())
-    {
-        for (name, thresholds) in categories {
-            let Some(thresholds) = thresholds.as_object() else {
-                continue;
-            };
-            let observed = report.categories.get(name);
-            if let Some(count_min) = thresholds.get("count_min").and_then(|v| v.as_u64()) {
-                let count = observed.map(|metrics| metrics.count as u64).unwrap_or(0);
-                if count < count_min {
-                    failures.push(format!(
-                        "categories.{name}.count={count} below minimum {count_min}"
-                    ));
-                    continue;
-                }
-            }
-            let Some(metrics) = observed else { continue };
-            for (metric, value) in [
-                ("accuracy", metrics.accuracy),
-                ("f1", metrics.f1),
-                ("roc_auc", metrics.roc_auc),
-                ("pr_auc", metrics.pr_auc),
-                ("brier", metrics.brier),
-                ("ece", metrics.expected_calibration_error),
-            ] {
-                let key = format!("{metric}_min");
-                if let Some(minimum) = thresholds.get(&key).and_then(|v| v.as_f64()) {
-                    if value < minimum {
-                        failures.push(format!(
-                            "categories.{name}.{metric}={value:.3} below minimum {minimum:.3}"
-                        ));
-                    }
-                }
-                let key = format!("{metric}_max");
-                if let Some(maximum) = thresholds.get(&key).and_then(|v| v.as_f64()) {
-                    if value > maximum {
-                        failures.push(format!(
-                            "categories.{name}.{metric}={value:.3} above maximum {maximum:.3}"
-                        ));
-                    }
-                }
-            }
-        }
-    }
-    failures
 }
 
 pub(crate) fn run_eval(
