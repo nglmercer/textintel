@@ -3,7 +3,7 @@
 //! Pure scoring helpers shared by every evaluation entry point; the runners
 //! in the parent module own batching and latency accounting.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::core::error::TextIntelError;
 use crate::engine::TextIntelligence;
@@ -273,9 +273,20 @@ pub(crate) fn ranking_metrics(
     cases: &[&EvaluationCase],
     options: &EvaluateOptions,
 ) -> Result<RankingMetrics, TextIntelError> {
-    // Retrieval probe: every distinct `b` text is a document and a sample of
-    // `a` texts are queries. A query is relevant to its own paired document
-    // when the case is labelled similar.
+    // Retrieval probe: every distinct `b` text is a document and distinct
+    // `a` texts are queries. A query group (all cases sharing one `a`) is
+    // relevant to every similar-labelled `b` in the group — the standard
+    // graded-relevance setup where near-duplicate variants are
+    // interchangeable targets.
+    //
+    // One query per case would be a broken instrument here, not a quality
+    // bar: the first 100 test cases share 12 distinct `a` texts, so cases
+    // sharing one `a` also share one ranking and their paired documents are
+    // forced onto distinct ranks 1..k no matter how good the ranker is. A
+    // perfect ranker then scores MRR = H_k/k per family (~0.34 overall) and
+    // recall@10 <= 0.935 — the gates would measure family sizes, not
+    // retrieval quality. Grouping by distinct `a` restores a real signal:
+    // the rank of the FIRST relevant variant.
     let mut documents: Vec<String> = Vec::new();
     let mut seen = BTreeSet::new();
     for case in cases {
@@ -286,8 +297,32 @@ pub(crate) fn ranking_metrics(
             documents.push(case.b.clone());
         }
     }
-    // Every query's own target must be indexed or recall is meaningless.
-    let queries: Vec<&&EvaluationCase> = cases.iter().take(options.ranking_queries).collect();
+    // Query groups in first-occurrence order across the whole slice:
+    // grouping must see every case or the probe would only ever query the
+    // first slice families. The `ranking_queries` cap counts measurable
+    // queries (groups with at least one similar-labelled `b`); all-negative
+    // groups can never be retrieved and must not consume the budget. A
+    // measurable group counts when at least one of its relevant documents
+    // is indexed — otherwise recall is meaningless for it by construction
+    // (only possible when the document cap truncates the corpus).
+    let mut groups: Vec<(&str, Vec<&str>)> = Vec::new();
+    let mut group_index: BTreeMap<&str, usize> = BTreeMap::new();
+    for case in cases {
+        let position = *group_index.entry(case.a.as_str()).or_insert_with(|| {
+            groups.push((case.a.as_str(), Vec::new()));
+            groups.len() - 1
+        });
+        if case.is_similar() {
+            groups[position].1.push(case.b.as_str());
+        }
+    }
+    let indexed = |text: &str| documents.iter().any(|doc| same_text(doc, text));
+    let queries: Vec<(&str, Vec<&str>)> = groups
+        .into_iter()
+        .filter(|(_, relevant)| !relevant.is_empty())
+        .take(options.ranking_queries)
+        .filter(|(_, relevant)| relevant.iter().any(|target| indexed(target)))
+        .collect();
     if queries.is_empty() || documents.is_empty() {
         return Ok(RankingMetrics::default());
     }
@@ -303,8 +338,8 @@ pub(crate) fn ranking_metrics(
     let mut reciprocal_sum = 0.0;
     let mut ndcg_sum = 0.0;
     let mut relevant_queries = 0usize;
-    for query_case in queries {
-        let query = engine.analyze(&query_case.a)?;
+    for (query_text, relevant) in &queries {
+        let query = engine.analyze(query_text)?;
         let mut scored = doc_fingerprints
             .iter()
             .enumerate()
@@ -317,12 +352,11 @@ pub(crate) fn ranking_metrics(
                 .total_cmp(&left.1)
                 .then_with(|| documents[left.0].cmp(&documents[right.0]))
         });
-        let rank = scored
-            .iter()
-            .position(|(index, _)| same_text(&documents[*index], &query_case.b));
-        if !query_case.is_similar() {
-            continue;
-        }
+        let rank = scored.iter().position(|(index, _)| {
+            relevant
+                .iter()
+                .any(|target| same_text(&documents[*index], target))
+        });
         relevant_queries += 1;
         match rank {
             Some(0) => {

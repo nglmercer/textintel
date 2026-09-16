@@ -17,7 +17,13 @@ use crate::core::types::{ComparisonResult, MessageFingerprint};
 /// pairs, the cross-script indicator and its agreement interaction,
 /// confidence-weighted exact decoding, and the single-word exact
 /// interaction), and the fuzzy-decode mismatch interaction (close decoded
-/// overlap without exact decoding: a confusable signature).
+/// overlap without exact decoding: a confusable signature). (Validation
+/// history: single-word typo, cross-script transliteration, cross-script
+/// fuzzy-decoded, and single-word cross-language interactions were all
+/// tried and removed — every rescue is zero-sum against a matched negative
+/// phenomenon (rare-word confusables, exact Cyrillic false friends,
+/// leet-confusables), and no candidate beat the schema-8 validation F1 of
+/// 0.943. See PRODUCTION_GAP_ANALYSIS.md.)
 pub const TRAINING_FEATURES: &[&str] = &[
     "semantic",
     "lexical",

@@ -35,6 +35,7 @@ jobs:
       - run: cargo check --locked --all-features --all-targets
       - run: cargo bench --locked --no-run --all-features
       - run: cargo run --locked --no-default-features --bin textintel -- eval data/evaluation --split test --gates data/quality-gates.json
+      - run: cargo run --locked --all-features --bin textintel -- eval data/evaluation/ --split test --production --gates data/quality-gates-production.json
 
   coverage:
     runs-on: ubuntu-latest

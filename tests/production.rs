@@ -203,8 +203,9 @@ fn evaluation_chunks_batches_larger_than_max_batch_size() {
     };
     let report = evaluate_with_options(&engine, &dataset, &options).unwrap();
     assert_eq!(report.metrics.count, 20);
-    // `queries` counts relevant (similar-labelled) queries: indices 0, 2, 4.
-    assert_eq!(report.ranking.queries, 3);
+    // The `ranking_queries` cap counts measurable queries (groups with a
+    // similar-labelled `b`): the first five are indices 0, 2, 4, 6, 8.
+    assert_eq!(report.ranking.queries, 5);
 }
 
 #[test]
@@ -366,6 +367,71 @@ fn evaluation_reports_ranking_and_calibration_metrics() {
     assert!(report.metrics.brier >= 0.0);
     assert_eq!(report.ranking.queries, 4);
     assert!(report.average_compare_micros.is_finite());
+}
+
+#[test]
+fn ranking_groups_duplicate_queries_with_graded_relevance() {
+    // Regression test: cases sharing one `a` text share one ranking, so they
+    // must form ONE query whose relevant set is every similar-labelled `b`.
+    // One-query-per-case would force the k variants onto ranks 1..k and cap
+    // a perfect ranker at MRR = H_k/k — measuring family size, not quality.
+    let mut cases = Vec::new();
+    let variants = [
+        "the quick brown fox jumps over",
+        "the quick brown fox jumps over!",
+        "the quick brown fox jumps ovver",
+        "the quick brown fox jumps  over",
+        "the quick brown fox jumps over.",
+        "the quick brown fox jumps oveer",
+        "the quick brown fox jumps ovre",
+        "the quick brown fox jumps overr",
+        "the quick brown fox jumps ove",
+        "the quick brown fox jumps overr!",
+        "the quick brown fox jumps over!!",
+        "the quick brown fox jumps over?",
+    ];
+    for (index, variant) in variants.iter().enumerate() {
+        cases.push(synthetic_metrics_case(
+            &format!("dup_{index:02}"),
+            "the quick brown fox jumps over",
+            variant,
+            true,
+        ));
+    }
+    for (index, (left, right)) in [
+        (
+            "quantum field theory renormalization lecture",
+            "medieval sourdough bread baking recipes",
+        ),
+        (
+            "orbital mechanics transfer window calculation",
+            "handmade ceramic pottery glazing techniques",
+        ),
+    ]
+    .iter()
+    .enumerate()
+    {
+        cases.push(synthetic_metrics_case(
+            &format!("dis_{index:02}"),
+            left,
+            right,
+            false,
+        ));
+    }
+    let dataset = EvaluationDataset {
+        version: "dup-query-test".to_string(),
+        cases,
+    };
+    let options = EvaluateOptions {
+        split: None,
+        ranking_queries: 12,
+        ranking_documents: 20,
+        spam_corpus: None,
+    };
+    let report = evaluate_with_options(&TextIntelligence::default(), &dataset, &options).unwrap();
+    assert_eq!(report.ranking.queries, 1);
+    assert_eq!(report.ranking.recall_at_10, 1.0);
+    assert_eq!(report.ranking.mrr, 1.0);
 }
 
 #[test]
