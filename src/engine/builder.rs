@@ -1,6 +1,6 @@
-//! Engine construction: [`TextIntelligence`](super::TextIntelligence)
-//! constructors, [`EngineBuilder`](super::EngineBuilder) assembly, the
-//! `with_*` provider setters, and cache installation.
+//! Engine construction: [`TextIntelligence`] constructors,
+//! [`EngineBuilder`] assembly, the `with_*` provider setters, and cache
+//! installation.
 
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, RwLock};

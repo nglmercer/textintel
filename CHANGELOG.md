@@ -5,6 +5,25 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions
 match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 `schema-version` CLI output.
 
+## [Unreleased]
+
+### Fixed
+
+- Retrieval evaluation grouped duplicate queries with graded relevance:
+  cases sharing one query text used to occupy forced distinct ranks, which
+  capped even a perfect ranker at MRR ~0.34. Production search now measures
+  the rank of the first relevant variant (MRR 0.88 on the held-out split).
+
+### Changed
+
+- Internal modularization with no public API changes: the engine split
+  into builder/analyzer/comparison/search/patterns/diagnostics modules,
+  evaluation split into dataset/report/gates modules (quality gates moved
+  from the CLI into the library with unit tests), and the core engine
+  coverage suite split by behavior area.
+- CI quality job additionally runs the production evaluation gate
+  (`eval --production --gates data/quality-gates-production.json`).
+
 ## [0.2.0] - 2026-09-16
 
 First tagged release: local-first multilingual text intelligence as a Rust

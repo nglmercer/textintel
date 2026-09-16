@@ -5,9 +5,9 @@
 //! `split` defaulting to `"test"`.
 //!
 //! One module per responsibility: [`dataset`] parses cases and corpora,
-//! [`metrics`] scores them, [`gates`] checks threshold files, and [`report`]
+//! `metrics` scores them, [`gates`] checks threshold files, and [`report`]
 //! carries the aggregates. The runners below (`evaluate`, …) coordinate the
-//! pipeline; per-slice scoring stays in [`metrics`].
+//! pipeline; per-slice scoring stays in `metrics`.
 
 pub mod dataset;
 pub mod gates;
