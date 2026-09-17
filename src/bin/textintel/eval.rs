@@ -3,7 +3,7 @@
 
 use textintel::comparison::SimilarityProfile;
 use textintel::evaluation::{
-    check_gates, EvaluateOptions, EvaluationDataset, EvaluationReport, SpamCorpus,
+    EvaluateOptions, EvaluationDataset, EvaluationReport, SpamCorpus, check_gates,
 };
 
 use super::{build_engine, flag_value, print_json};

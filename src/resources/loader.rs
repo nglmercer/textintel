@@ -233,15 +233,15 @@ impl ResourceLoader {
                             ),
                         });
                     }
-                    if let Some(default) = default_language.as_deref() {
-                        if language != default {
-                            return Err(ResourceError::Validation {
-                                path: source_path.as_ref().to_path_buf(),
-                                message: format!(
-                                    "reading language {language:?} conflicts with symbol pack language {default:?}"
-                                ),
-                            });
-                        }
+                    if let Some(default) = default_language.as_deref()
+                        && language != default
+                    {
+                        return Err(ResourceError::Validation {
+                            path: source_path.as_ref().to_path_buf(),
+                            message: format!(
+                                "reading language {language:?} conflicts with symbol pack language {default:?}"
+                            ),
+                        });
                     }
                 } else {
                     reading.language = default_language.clone();

@@ -11,9 +11,11 @@ and [`CHANGELOG.md`](CHANGELOG.md) for release notes.
 
 ## Installation
 
-Requires Rust 1.71 or later (see `rust-version` in `Cargo.toml`).
-The default build is offline and dependency-light; no model download
-and no network access.
+Requires Rust 1.90 or later (see `rust-version` in `Cargo.toml`).
+The default build is offline and ships the full modern local stack
+(transformer embeddings, espeak-ng phonetics when installed, HNSW
+retrieval, redb persistence); no model download and no network access.
+A minimal build stays available via `--no-default-features`.
 
 As a library:
 
@@ -29,10 +31,10 @@ cargo build --locked
 cargo run --locked --bin textintel -- analyze "Fra🏠do" --json
 ```
 
-Optional backends are Cargo features (see below); for example:
+Extra backends are Cargo features (see below); for example:
 
 ```text
-cargo build --locked --features production-local-lite
+cargo build --locked --features semantic-http
 ```
 
 ## Quick start
@@ -74,19 +76,28 @@ The default engine requires no model download and provides:
   `load_patterns_from`). Stored fingerprints migrate across schema versions
   through an explicit version-checked path instead of failing or guessing.
 - Trained artifacts: an interpretable logistic similarity scorer
-  (`models/similarity-v4.json`, feature schema 8, dataset 0.7.0; retrain
+  (`models/similarity-v5.json`, feature schema 9, dataset 0.8.0; retrain
   with `cargo run --bin textintel-train -- similarity data/evaluation
-  --output <artifact.json>`) and calibrated spam predictors
-  (`models/spam-v1.json`, `models/spam-v2.json`; v2 preferred).
+  --output <artifact.json>`) and a calibrated spam predictor
+  (`models/spam-v2.json`).
+- A curated modern model catalog (`textintel::semantic::catalog`):
+  multilingual-e5-small embeddings by default, Arctic-XS / MXBAI-XSmall for
+  English CPU deployments, and Liquid LFM2.5-230M/350M for local
+  instruction-following generation. See `models/README.md` for manual
+  download commands (the crate never downloads).
 
-Optional production backends (off by default, no automatic network access):
+Production backends (all in the default build, no automatic network access):
 
-- `semantic-candle`: real local multilingual embeddings via the Candle
-  runtime (explicit local model path).
-- `semantic-transformer`: contextual BERT-family sentence embeddings on the
-  CPU from explicit local files (`config.json`, `vocab.txt`,
-  `model.safetensors`), with batching, dimension validation, normalization,
-  and truncation reporting. No new dependencies beyond Candle.
+- `semantic-transformer`: modern BERT-wiring sentence embeddings on the
+  CPU from explicit local files (`config.json`, `tokenizer.json`
+  (Unigram, e5-style) or `vocab.txt` (WordPiece), `model.safetensors`),
+  with pooling selection, model-card text prefixes, batching, dimension
+  validation, normalization, and truncation reporting. No new dependencies
+  beyond Candle.
+- Liquid generation (core, no feature gate): `LiquidInstructProvider`
+  talks to an explicit local OpenAI-compatible server (llama-server with
+  an LFM2.5 GGUF, Ollama, vLLM) over std-only HTTP; see the `generate`
+  CLI command and `examples/liquid_generate.rs`.
 - `phonetic-espeak`: production G2P backed by a local `espeak-ng` binary,
   with the rule-based provider as deterministic fallback. Supports voice
   detection (`installed_voices`), per-call timeouts, syllables, recovered
@@ -126,7 +137,7 @@ let engine = TextIntelligence::production_local()?;
 // Ergonomic builder with the same preset plus explicit configuration.
 let engine = TextIntelligence::builder()
     .production_local()
-    .trained_similarity_model("models/similarity-v4.json")
+    .trained_similarity_model("models/similarity-v5.json")
     .trained_spam_model("models/spam-v2.json")
     .build()?;
 # Ok::<(), textintel::TextIntelError>(())
@@ -163,15 +174,15 @@ and model token length are bounded by `EngineConfig`, `CacheLimits`, and the
 provider constructors. Non-finite model parameters are rejected at load;
 user text is never fetched as a URL and never executed as a shell command.
 
-Optional feature names are available for packaging integrations:
-`lang-profile`, `semantic-local`, `semantic-candle`, `semantic-http`,
-`phonetic-ipa`, `phonetic-espeak`, `ann-hnsw`, `persist`, `persist-redb`,
-`semantic`, `phonetic`, `ml`, `production-local-lite`, `production-local`,
-`semantic-transformer`, and `all`. The default build stays local and
-lightweight; `semantic-http` is the explicit remote-provider adapter and
-`semantic-local` provides the deterministic feature-hash embedding baseline.
-`production-local` is the full local stack (transformer embeddings, espeak-ng
-phonetics, HNSW retrieval, redb persistence; no network access);
+Feature names are available for packaging integrations:
+`lang-profile`, `semantic-local`, `semantic-http`, `phonetic-ipa`,
+`phonetic-espeak`, `ann-hnsw`, `persist`, `persist-redb`, `semantic`,
+`phonetic`, `ml`, `production-local-lite`, `production-local`,
+`semantic-transformer`, and `all`. The default build is the full modern
+local stack (the old `production-local` contents); `semantic-http` is the
+explicit remote-provider adapter, `semantic-local` provides the
+deterministic feature-hash embedding baseline, and
+`--no-default-features` selects the minimal dependency-light build.
 `production-local-lite` is the same preset without the heavy native
 dependencies.
 

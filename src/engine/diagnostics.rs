@@ -7,8 +7,8 @@ use crate::cache::CacheDiagnostics;
 use crate::core::capabilities::ProviderCapabilities;
 use crate::core::config::EngineConfig;
 use crate::core::error::TextIntelError;
-use crate::engine::production::{DegradedCapability, EngineDiagnostics};
 use crate::engine::TextIntelligence;
+use crate::engine::production::{DegradedCapability, EngineDiagnostics};
 
 impl TextIntelligence {
     pub fn config(&self) -> &EngineConfig {
@@ -55,6 +55,9 @@ impl TextIntelligence {
         );
         if let Some(reranker) = &self.reranker_provider {
             capabilities.insert("reranker".to_string(), reranker.capabilities());
+        }
+        if let Some(generative) = &self.generative_provider {
+            capabilities.insert("generative".to_string(), generative.capabilities());
         }
         if let Some(scorer) = &self.similarity_scorer {
             capabilities.insert("similarity".to_string(), scorer.capabilities());
@@ -113,6 +116,7 @@ impl TextIntelligence {
             spam: get("spam"),
             similarity: capabilities.get("similarity").cloned(),
             reranker: capabilities.get("reranker").cloned(),
+            generative: capabilities.get("generative").cloned(),
             store: get("store"),
             ann_enabled: store_capabilities.ann_enabled,
             degraded: self.degraded_capabilities(&capabilities),
@@ -195,7 +199,12 @@ impl TextIntelligence {
                 "espeak_ng_g2p",
                 "install espeak-ng and use EspeakNgG2PProvider::auto_detect for production phonetics",
             ),
-            None => note("phonetic", "none", "espeak_ng_g2p", "no G2P backend configured"),
+            None => note(
+                "phonetic",
+                "none",
+                "espeak_ng_g2p",
+                "no G2P backend configured",
+            ),
         }
         if !capabilities.contains_key("similarity") {
             note(
@@ -214,7 +223,7 @@ impl TextIntelligence {
                 "spam",
                 "heuristic",
                 "trained spam model",
-                "load models/spam-v1.json through trained_spam_model() for the trained predictor",
+                "load models/spam-v2.json through trained_spam_model() for the trained predictor",
             );
         }
         if !capabilities.contains_key("reranker") {

@@ -155,13 +155,11 @@ impl VectorStore for JsonFileStore {
     fn remove(&mut self, id: &str) -> Result<bool, String> {
         let previous = self.inner.get(id).cloned();
         let removed = self.inner.remove(id)?;
-        if removed {
-            if let Err(error) = self.flush() {
-                if let Some(previous) = previous {
-                    self.inner.upsert(id.to_string(), previous)?;
-                }
-                return Err(error);
+        if removed && let Err(error) = self.flush() {
+            if let Some(previous) = previous {
+                self.inner.upsert(id.to_string(), previous)?;
             }
+            return Err(error);
         }
         Ok(removed)
     }

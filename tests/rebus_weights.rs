@@ -1,7 +1,7 @@
 //! Configurable rebus weights: scoring blends, penalties, and JSON loading.
 
 use textintel::rebus::scorer::{
-    score_candidate_with_evidence, score_candidate_with_evidence_and_weights, RebusEvidence,
+    RebusEvidence, score_candidate_with_evidence, score_candidate_with_evidence_and_weights,
 };
 use textintel::{EngineConfig, RebusWeights, TextIntelligence};
 

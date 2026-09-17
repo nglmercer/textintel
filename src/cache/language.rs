@@ -6,7 +6,7 @@ use crate::core::error::ProviderError;
 use crate::core::providers::LanguageDetectionProvider as LanguageDetectionTrait;
 use crate::core::types::LanguageCandidate;
 
-use super::core::{lock_error, CacheDiagnostics, RevisionCache};
+use super::core::{CacheDiagnostics, RevisionCache, lock_error};
 
 /// Revision-aware language-detection cache keyed by
 /// `(provider, revision, text)`.

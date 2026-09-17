@@ -1,6 +1,8 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
 
-use textintel::{TextIntelligence, FINGERPRINT_SCHEMA_VERSION};
+use criterion::{Criterion, criterion_group, criterion_main};
+
+use textintel::{FINGERPRINT_SCHEMA_VERSION, TextIntelligence};
 
 fn deterministic_core(c: &mut Criterion) {
     let engine = TextIntelligence::default();

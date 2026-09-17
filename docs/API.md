@@ -139,7 +139,8 @@ inject it. Engine methods take `self` (`with_*`); the builder mirrors them:
 
 | Concern | Trait | Built-in backends |
 |---|---|---|
-| Embeddings | `EmbeddingProvider` | `Null` (default), `FeatureHash` (local baseline), `Static`, `Cached`, `Candle` (`semantic-candle`), `Transformer` (`semantic-transformer`), `Http` (`semantic-http`) |
+| Embeddings | `EmbeddingProvider` | `Null` (default), `FeatureHash` (local baseline), `Static`, `Cached`, `Transformer` (modern default; e5-small / Arctic-XS / MXBAI-XSmall), `Http` (`semantic-http`) |
+| Generation | `GenerativeProvider` | `LiquidInstructProvider` (local LFM2.5 server, explicit endpoint) |
 | G2P | `G2PProvider` | `Null` (default), `RuleBased`, `Cached`, `EspeakNg` (`phonetic-espeak`) |
 | Language | `LanguageDetectionProvider` | n-gram detector over resource packs, `Cached`, profile |
 | Lexicon / lemmatizer | `LexiconProvider` / `LemmatizerProvider` | `DefaultLexiconProvider` from resource packs |
@@ -169,36 +170,45 @@ and `cache: CacheLimits`.
 
 ## Features
 
-Default build is dependency-light and offline. Opt-in features:
-`lang-profile`, `semantic-local`, `semantic-candle`,
+Default build is the full modern local stack, still offline.
+`--no-default-features` selects the minimal dependency-light build.
+Feature names: `lang-profile`, `semantic-local`,
 `semantic-transformer`, `semantic-http`, `phonetic-ipa`,
 `phonetic-espeak`, `ann-hnsw`, `persist`, `persist-redb`, `semantic`,
 `phonetic`, `ml`, `production-local-lite`, `production-local`, `all`.
 `semantic-http` is the only remote adapter and is never enabled
-implicitly. Minimum supported Rust version is 1.71 (see `rust-version` in
-`Cargo.toml` and the MSRV CI job).
+implicitly; generation needs an explicit local endpoint too. Minimum
+supported Rust version is 1.90 (see `rust-version` in `Cargo.toml` and
+the MSRV CI job).
 
 ## CLI contract
 
 The `textintel` binary mirrors the library: `analyze`, `explain`,
 `decode`, `compare`, `duplicate`, `spam`, `batch`, `resources`,
 `diagnostics`, `provider-info`, `schema-version`, `eval` (`evaluate`
-alias), `index`, `search`. Global flags: `--json`, `--production`,
-`--resource-root <dir>`, `--model-path <dir>`, `--language <code>`.
+alias), `index`, `search`, `generate`. Global flags: `--json`,
+`--production`, `--resource-root <dir>`, `--model-path <dir>`,
+`--language <code>`; `generate` adds `--liquid-endpoint <url>`,
+`--liquid-model <id>`, `--max-tokens <n>`, `--temperature <f>`,
+`--system <text>`.
 Every `--json` payload follows `API_VERSION` (see `schema-version`) and
 evolves additively within a major version. `--version` prints the crate
 version.
 
 ## Trained artifacts
 
-- `models/similarity-v4.json` — logistic similarity scorer, feature
-  schema 8, trained on evaluation dataset 0.7.0 (`train` split, bias
+- `models/similarity-v5.json` — logistic similarity scorer, feature
+  schema 9, trained on evaluation dataset 0.8.0 (`train` split, bias
   calibrated on `validation`, metrics reported on held-out `test`).
   Retrain: `cargo run --bin textintel-train -- similarity data/evaluation
-  --output models/similarity-v4.json`.
-- `models/spam-v1.json` / `models/spam-v2.json` — calibrated logistic
-  spam predictors (v2 preferred). Retrain: `cargo run --bin
-  textintel-train -- spam --output <artifact.json>`.
+  --output models/similarity-v5.json`.
+- `models/spam-v2.json` — calibrated logistic spam predictor. Retrain:
+  `cargo run --bin textintel-train -- spam --output <artifact.json>`.
+- Curated checkpoints live outside the repo (see `models/README.md`):
+  `intfloat/multilingual-e5-small` (multilingual embedding default),
+  `Snowflake/snowflake-arctic-embed-xs` and
+  `mixedbread-ai/mxbai-embed-xsmall-v1` (English CPU embeddings),
+  `LiquidAI/LFM2.5-230M` / `LFM2.5-350M` (local generation via GGUF).
 - Loading is strict: a present-but-invalid artifact fails loudly; only a
   missing preset path falls back (with a `degraded` note).
 

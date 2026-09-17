@@ -3,7 +3,7 @@
 //! Usage:
 //!
 //! ```text
-//! textintel-train similarity data/evaluation --output models/similarity-v2.json
+//! textintel-train similarity data/evaluation --output models/similarity-v5.json
 //! ```
 //!
 //! The tool trains on the `train` split only, calibrates the bias on the

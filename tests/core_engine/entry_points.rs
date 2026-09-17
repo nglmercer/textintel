@@ -3,8 +3,8 @@
 
 use textintel::lexical::tokenizer::tokenize;
 use textintel::{
-    EngineConfig, ProviderError, StageTimings, TextIntelError, TextIntelligence, API_VERSION,
-    FINGERPRINT_SCHEMA_VERSION,
+    API_VERSION, EngineConfig, FINGERPRINT_SCHEMA_VERSION, ProviderError, StageTimings,
+    TextIntelError, TextIntelligence,
 };
 
 #[test]
@@ -315,9 +315,11 @@ fn decode_recovers_leet_and_symbol_readings() {
         candidates.iter().map(|c| &c.text).collect::<Vec<_>>()
     );
     let candidates = engine.decode("salU2").unwrap();
-    assert!(candidates
-        .iter()
-        .any(|c| c.text.eq_ignore_ascii_case("saludos")));
+    assert!(
+        candidates
+            .iter()
+            .any(|c| c.text.eq_ignore_ascii_case("saludos"))
+    );
 }
 
 #[test]
@@ -343,10 +345,12 @@ fn decode_with_explicit_languages_runs_language_pinned() {
         .unwrap();
     assert!(!candidates.is_empty());
     let empty: Vec<String> = Vec::new();
-    assert!(!engine
-        .decode_with_languages("h3llo", Some(&empty), None)
-        .unwrap()
-        .is_empty());
+    assert!(
+        !engine
+            .decode_with_languages("h3llo", Some(&empty), None)
+            .unwrap()
+            .is_empty()
+    );
 }
 
 #[test]

@@ -9,7 +9,7 @@ fn valid_date(year: u32, month: u32, day: u32) -> bool {
 }
 
 fn valid_time(hour: u32, minute: u32, second: Option<u32>) -> bool {
-    hour <= 23 && minute <= 59 && second.map_or(true, |value| value <= 59)
+    hour <= 23 && minute <= 59 && second.is_none_or(|value| value <= 59)
 }
 
 pub(crate) fn scan_dates_times(

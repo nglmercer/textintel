@@ -73,14 +73,12 @@ pub(crate) fn swapped_words(
             let position = if index >= skip { index + 1 } else { index };
             differing = Some((position, (*long_word).clone(), (*short_word).clone()));
         }
-        if aligned {
-            if let Some((position, long_word, short_word)) = differing {
-                return Some(if swapped {
-                    (position, short_word, long_word)
-                } else {
-                    (position, long_word, short_word)
-                });
-            }
+        if aligned && let Some((position, long_word, short_word)) = differing {
+            return Some(if swapped {
+                (position, short_word, long_word)
+            } else {
+                (position, long_word, short_word)
+            });
         }
     }
     None

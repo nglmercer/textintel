@@ -48,7 +48,7 @@ fn production_local_builds_and_reports_graceful_fallbacks() {
     assert_eq!(
         diagnostics.spam.provider.as_str(),
         "trained_spam",
-        "preset should load models/spam-v1.json, got {:?}",
+        "preset should load models/spam-v2.json, got {:?}",
         diagnostics.spam
     );
 }
@@ -56,8 +56,7 @@ fn production_local_builds_and_reports_graceful_fallbacks() {
 #[test]
 fn production_preset_prefers_similarity_v5() {
     // similarity-v5 (dataset 0.8.0, semantic + phonetic + entity evidence)
-    // is the production artifact; older revisions remain only as a fallback
-    // for old checkouts (their schemas no longer load).
+    // is the single production artifact; legacy revisions were removed.
     let engine = TextIntelligence::production_local().expect("production_local must not fail");
     let diagnostics = engine.diagnostics();
     let similarity = diagnostics
@@ -133,9 +132,11 @@ fn diagnostics_cover_resources_and_missing_channels() {
     let engine = TextIntelligence::default();
     let diagnostics = engine.diagnostics();
     assert!(diagnostics.resource_languages.contains(&"es".to_string()));
-    assert!(diagnostics
-        .abbreviation_languages
-        .contains(&"en".to_string()));
+    assert!(
+        diagnostics
+            .abbreviation_languages
+            .contains(&"en".to_string())
+    );
     for language in [
         "ar", "de", "en", "es", "fr", "hi", "id", "it", "ja", "ko", "nl", "pl", "pt", "ru", "tr",
         "zh",
@@ -220,11 +221,13 @@ fn builder_rejects_invalid_configuration_without_panic() {
         ..Default::default()
     };
     assert!(TextIntelligence::builder().config(config).build().is_err());
-    assert!(TextIntelligence::try_new(textintel::EngineConfig {
-        max_input_length: 0,
-        ..Default::default()
-    })
-    .is_err());
+    assert!(
+        TextIntelligence::try_new(textintel::EngineConfig {
+            max_input_length: 0,
+            ..Default::default()
+        })
+        .is_err()
+    );
 }
 
 #[test]
@@ -249,7 +252,7 @@ fn builder_model_paths_are_strict() {
     // Valid explicit paths load trained backends.
     let engine = TextIntelligence::builder()
         .trained_similarity_model("models/similarity-v5.json")
-        .trained_spam_model("models/spam-v1.json")
+        .trained_spam_model("models/spam-v2.json")
         .build()
         .expect("valid models must load");
     let diagnostics = engine.diagnostics();

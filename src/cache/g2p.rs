@@ -6,7 +6,7 @@ use crate::core::error::ProviderError;
 use crate::core::providers::G2PProvider as G2PProviderTrait;
 use crate::core::types::PhoneticCandidate;
 
-use super::core::{lock_error, CacheDiagnostics, RevisionCache};
+use super::core::{CacheDiagnostics, RevisionCache, lock_error};
 
 /// Revision-aware G2P cache. Keys are `(provider, revision, language, text)`;
 /// a provider that reports a new `model_revision` invalidates prior entries.

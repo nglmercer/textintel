@@ -65,9 +65,11 @@ fn explicit_embedding_provider_wins_over_preset() {
         .unwrap();
     // Explicit DI is respected: no transformer fallback is recorded because
     // the preset never attempts embedding selection.
-    assert!(engine
-        .diagnostics()
-        .degraded
-        .iter()
-        .all(|note| note.wanted != "transformer_embedding"));
+    assert!(
+        engine
+            .diagnostics()
+            .degraded
+            .iter()
+            .all(|note| note.wanted != "transformer_embedding")
+    );
 }

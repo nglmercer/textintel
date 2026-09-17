@@ -143,24 +143,23 @@ pub(crate) fn kana_to_latin(text: &str) -> String {
         };
         // Yoon: an -i kana plus small ya/yu/yo contracts (`きゃ` → `kya`);
         // sibilant stems absorb the glide (`しゃ` → `sha`, not `shya`).
-        if base.ends_with('i') {
-            if let Some(small) = chars.get(index + 1) {
-                let glide = match small {
-                    'ゃ' | 'ャ' => Some("ya"),
-                    'ゅ' | 'ュ' => Some("yu"),
-                    'ょ' | 'ョ' => Some("yo"),
-                    _ => None,
-                };
-                if let Some(glide) = glide {
-                    let stem = base.strip_suffix('i').unwrap_or(base);
-                    if !stem.is_empty() {
-                        output.push_str(stem);
-                        let contracted =
-                            stem.ends_with("sh") || stem.ends_with("ch") || stem == "j";
-                        output.push_str(if contracted { &glide[1..] } else { glide });
-                        index += 2;
-                        continue;
-                    }
+        if base.ends_with('i')
+            && let Some(small) = chars.get(index + 1)
+        {
+            let glide = match small {
+                'ゃ' | 'ャ' => Some("ya"),
+                'ゅ' | 'ュ' => Some("yu"),
+                'ょ' | 'ョ' => Some("yo"),
+                _ => None,
+            };
+            if let Some(glide) = glide {
+                let stem = base.strip_suffix('i').unwrap_or(base);
+                if !stem.is_empty() {
+                    output.push_str(stem);
+                    let contracted = stem.ends_with("sh") || stem.ends_with("ch") || stem == "j";
+                    output.push_str(if contracted { &glide[1..] } else { glide });
+                    index += 2;
+                    continue;
                 }
             }
         }

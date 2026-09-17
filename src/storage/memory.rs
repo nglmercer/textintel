@@ -216,10 +216,9 @@ impl MemoryStore {
         // compatibility with pre-revision payloads).
         if let (Some(index_model), Some(record_model)) =
             (ann.model(), embedding_model_of(fingerprint))
+            && index_model != record_model
         {
-            if index_model != record_model {
-                return Ok(());
-            }
+            return Ok(());
         }
         ann.insert(id, vector)
     }

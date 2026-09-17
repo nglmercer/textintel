@@ -11,7 +11,7 @@
 //! deserialization — recorded in [`MigratedFingerprint::migrated_from`]
 //! rather than hidden by serde.
 
-use crate::core::types::{MessageFingerprint, FINGERPRINT_SCHEMA_VERSION};
+use crate::core::types::{FINGERPRINT_SCHEMA_VERSION, MessageFingerprint};
 
 const PROVIDER: &str = "fingerprint_migration";
 

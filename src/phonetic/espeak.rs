@@ -564,7 +564,9 @@ mod tests {
         .unwrap();
         std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o755)).unwrap();
         let log = directory.join("argv.log");
-        std::env::set_var("ESPEAK_MOCK_LOG", &log);
+        unsafe {
+            std::env::set_var("ESPEAK_MOCK_LOG", &log);
+        }
         let provider = EspeakNgG2PProvider::new()
             .with_binary(&script)
             .for_voice("es");
@@ -579,7 +581,9 @@ mod tests {
         assert!(argv.contains("-v"), "voice flag forwarded: {argv}");
         assert!(argv.contains("\nes\n"), "mapped voice forwarded: {argv}");
         assert!(argv.contains("--ipa=3"), "ipa flag forwarded: {argv}");
-        std::env::remove_var("ESPEAK_MOCK_LOG");
+        unsafe {
+            std::env::remove_var("ESPEAK_MOCK_LOG");
+        }
         let _ = std::fs::remove_dir_all(&directory);
     }
 }

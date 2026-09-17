@@ -92,10 +92,12 @@ fn empty_input_stays_empty() {
     let query = engine.analyze("hola").expect("analyze query");
     let reranker =
         ChannelScoreReranker::new(ChannelRerankWeights::default(), 10).expect("valid weights");
-    assert!(reranker
-        .rerank(&query, Vec::new())
-        .expect("rerank")
-        .is_empty());
+    assert!(
+        reranker
+            .rerank(&query, Vec::new())
+            .expect("rerank")
+            .is_empty()
+    );
 }
 
 #[test]

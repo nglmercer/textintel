@@ -2,9 +2,9 @@
 //! persistence, and ANN status from [`VectorStoreCapabilities`], never by
 //! inferring from provider names.
 
+use textintel::TextIntelligence;
 use textintel::core::providers::VectorStore;
 use textintel::storage::{JsonFileStore, MemoryStore};
-use textintel::TextIntelligence;
 
 #[test]
 fn memory_store_reports_type_and_channels_without_ann() {
@@ -15,9 +15,11 @@ fn memory_store_reports_type_and_channels_without_ann() {
     assert!(!capabilities.ann_enabled);
     assert_eq!(capabilities.ann_dimensions, None);
     assert_eq!(capabilities.ann_entries, 0);
-    assert!(capabilities
-        .indexed_channels
-        .contains(&"lexical".to_string()));
+    assert!(
+        capabilities
+            .indexed_channels
+            .contains(&"lexical".to_string())
+    );
     assert!(
         !capabilities
             .indexed_channels

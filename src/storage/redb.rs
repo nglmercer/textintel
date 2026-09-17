@@ -16,7 +16,7 @@ use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
 
 use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::providers::{VectorStore, VectorStoreCapabilities};
-use crate::core::types::{MessageFingerprint, SearchCandidateSet, FINGERPRINT_SCHEMA_VERSION};
+use crate::core::types::{FINGERPRINT_SCHEMA_VERSION, MessageFingerprint, SearchCandidateSet};
 
 use super::MemoryStore;
 
@@ -245,13 +245,11 @@ impl VectorStore for RedbStore {
     fn remove(&mut self, id: &str) -> Result<bool, String> {
         let previous = self.inner.get(id).cloned();
         let removed = self.inner.remove(id)?;
-        if removed {
-            if let Err(error) = self.delete_record(id) {
-                if let Some(previous) = previous {
-                    self.inner.upsert(id.to_string(), previous)?;
-                }
-                return Err(error);
+        if removed && let Err(error) = self.delete_record(id) {
+            if let Some(previous) = previous {
+                self.inner.upsert(id.to_string(), previous)?;
             }
+            return Err(error);
         }
         Ok(removed)
     }

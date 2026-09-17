@@ -6,19 +6,20 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, RwLock};
 
 use crate::cache::{
-    resource_revision, CachedG2PProvider, CachedLanguageDetectionProvider, RevisionCache,
+    CachedG2PProvider, CachedLanguageDetectionProvider, RevisionCache, resource_revision,
 };
 use crate::comparison::model::SimilarityProfile;
 use crate::core::config::EngineConfig;
 use crate::core::error::TextIntelError;
 use crate::core::providers::{
-    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
-    LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
-    SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider, GeneratedText,
+    GenerationOptions, GenerativeProvider, LanguageDetectionProvider, LemmatizerProvider,
+    LexiconProvider, RerankerProvider, SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider,
+    TransliterationProvider, VectorStore,
 };
 use crate::detection::spam::HeuristicSpamPredictor;
-use crate::engine::production::EngineBuilder;
 use crate::engine::TextIntelligence;
+use crate::engine::production::EngineBuilder;
 use crate::language::NgramLanguageDetector;
 use crate::phonetic::g2p::RuleBasedG2PProvider;
 use crate::resources::ResourceLoader;
@@ -64,6 +65,7 @@ impl TextIntelligence {
                 crate::entities::RuleBasedEntityProvider::default().with_lexicon(resources.clone()),
             )),
             reranker_provider: None,
+            generative_provider: None,
             spam_predictor: Arc::new(HeuristicSpamPredictor),
             similarity_scorer: None,
             similarity_profile: None,
@@ -122,10 +124,10 @@ impl TextIntelligence {
     /// Drop all cached rebus decodings (used after provider swaps that change
     /// decoding behavior without changing the resource revision).
     fn invalidate_rebus_cache(&mut self) {
-        if let Some(cache) = &self.rebus_cache {
-            if let Ok(mut guard) = cache.lock() {
-                guard.invalidate();
-            }
+        if let Some(cache) = &self.rebus_cache
+            && let Ok(mut guard) = cache.lock()
+        {
+            guard.invalidate();
         }
     }
 
@@ -185,6 +187,9 @@ impl TextIntelligence {
         if let Some(provider) = builder.reranker {
             engine.reranker_provider = Some(provider);
         }
+        if let Some(provider) = builder.generative {
+            engine.generative_provider = Some(provider);
+        }
         if let Some(predictor) = builder.spam {
             engine.spam_predictor = predictor;
         }
@@ -195,29 +200,28 @@ impl TextIntelligence {
             engine.similarity_profile = Some(profile);
         }
         engine.preset_fallbacks = builder.preset_fallbacks;
-        if let Some(path) = builder.similarity_model_path {
-            if let Some(scorer) = crate::engine::production::load_similarity_scorer(
+        if let Some(path) = builder.similarity_model_path
+            && let Some(scorer) = crate::engine::production::load_similarity_scorer(
                 &path,
                 builder.similarity_model_required,
-            )? {
-                engine.similarity_scorer = Some(Arc::new(scorer));
-            }
+            )?
+        {
+            engine.similarity_scorer = Some(Arc::new(scorer));
         }
-        if let Some(path) = builder.spam_model_path {
-            if let Some(predictor) =
+        if let Some(path) = builder.spam_model_path
+            && let Some(predictor) =
                 crate::engine::production::load_spam_predictor(&path, builder.spam_model_required)?
-            {
-                engine.spam_predictor = Arc::new(predictor);
-            }
+        {
+            engine.spam_predictor = Arc::new(predictor);
         }
-        if let Some(path) = builder.reranker_model_path {
-            if let Some(reranker) = crate::engine::production::load_reranker(
+        if let Some(path) = builder.reranker_model_path
+            && let Some(reranker) = crate::engine::production::load_reranker(
                 &path,
                 builder.reranker_model_required,
                 builder.reranker_max_candidates,
-            )? {
-                engine.reranker_provider = Some(Arc::new(reranker));
-            }
+            )?
+        {
+            engine.reranker_provider = Some(Arc::new(reranker));
         }
         if let Some(path) = builder.json_store_path {
             #[cfg(feature = "ann-hnsw")]
@@ -361,6 +365,36 @@ impl TextIntelligence {
     pub fn with_reranker_provider<P: RerankerProvider + 'static>(mut self, provider: P) -> Self {
         self.reranker_provider = Some(Arc::new(provider));
         self
+    }
+
+    pub fn with_generative_provider<P: GenerativeProvider + 'static>(
+        mut self,
+        provider: P,
+    ) -> Self {
+        self.generative_provider = Some(Arc::new(provider));
+        self
+    }
+
+    /// Generate a completion with the configured generative provider
+    /// (Liquid LFM2.5 over an explicit local endpoint). Errors when no
+    /// generative provider is configured; analysis never calls this
+    /// implicitly.
+    pub fn generate(
+        &self,
+        prompt: &str,
+        options: &GenerationOptions,
+    ) -> Result<GeneratedText, TextIntelError> {
+        let provider = self.generative_provider.as_ref().ok_or_else(|| {
+            TextIntelError::InvalidConfiguration(
+                "no generative provider configured; attach one with \
+                 with_generative_provider() pointing at a local server (see \
+                 LiquidInstructProvider::local_default)"
+                    .to_string(),
+            )
+        })?;
+        provider
+            .generate(prompt, options)
+            .map_err(TextIntelError::from)
     }
 
     pub fn with_spam_predictor<P: SpamPredictor + 'static>(mut self, predictor: P) -> Self {

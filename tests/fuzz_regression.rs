@@ -73,9 +73,11 @@ fn resource_parser_rejects_hostile_packs_without_panicking() {
         max_resource_bytes: 16,
         ..Default::default()
     });
-    assert!(loader
-        .load_language_json(&big, std::path::PathBuf::from("<regression>"))
-        .is_err());
+    assert!(
+        loader
+            .load_language_json(&big, std::path::PathBuf::from("<regression>"))
+            .is_err()
+    );
 }
 
 #[test]

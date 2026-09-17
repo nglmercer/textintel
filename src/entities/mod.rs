@@ -23,7 +23,7 @@ mod provider;
 mod url;
 
 pub use provider::{
-    entity_agreement, entity_conflict, entity_evidence_lines, RuleBasedEntityProvider,
+    RuleBasedEntityProvider, entity_agreement, entity_conflict, entity_evidence_lines,
 };
 
 /// Default cap on mentions per text.

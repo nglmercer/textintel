@@ -53,11 +53,14 @@ impl HttpEmbeddingProvider {
                 "model cannot be empty",
             ));
         }
-        let agent = ureq::AgentBuilder::new()
-            .timeout_connect(Duration::from_secs(10))
-            .timeout_read(Duration::from_secs(60))
-            .timeout_write(Duration::from_secs(60))
-            .build();
+        let agent: ureq::Agent = ureq::Agent::config_builder()
+            .timeout_connect(Some(Duration::from_secs(10)))
+            .timeout_send_request(Some(Duration::from_secs(60)))
+            .timeout_send_body(Some(Duration::from_secs(60)))
+            .timeout_recv_response(Some(Duration::from_secs(60)))
+            .timeout_recv_body(Some(Duration::from_secs(60)))
+            .build()
+            .into();
         Ok(Self {
             endpoint,
             model,
@@ -84,13 +87,14 @@ impl HttpEmbeddingProvider {
     fn request(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
         let mut request = self.agent.post(&self.endpoint);
         if let Some(api_key) = &self.api_key {
-            request = request.set("Authorization", &format!("Bearer {api_key}"));
+            request = request.header("Authorization", &format!("Bearer {api_key}"));
         }
-        let response = request
-            .send_json(ureq::json!({"model": self.model, "input": texts}))
+        let mut response = request
+            .send_json(serde_json::json!({"model": self.model, "input": texts}))
             .map_err(|error| ProviderError::new("http_embedding", error.to_string()))?;
         let payload: EmbeddingResponse = response
-            .into_json()
+            .body_mut()
+            .read_json()
             .map_err(|error| ProviderError::new("http_embedding", error.to_string()))?;
         let mut values = payload
             .data

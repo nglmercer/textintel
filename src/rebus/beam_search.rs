@@ -166,16 +166,15 @@ pub fn beam_decode_with_abbreviation_provider(
                 // monolingual derivations slightly.
                 let mut path_languages = node.languages.clone();
                 let mut switch = 1.0;
-                if let Some(reading) = &reading_language {
-                    if !path_languages
+                if let Some(reading) = &reading_language
+                    && !path_languages
                         .iter()
                         .any(|known| known.eq_ignore_ascii_case(reading))
-                    {
-                        if !path_languages.is_empty() {
-                            switch = switch_discount;
-                        }
-                        path_languages.push(reading.clone());
+                {
+                    if !path_languages.is_empty() {
+                        switch = switch_discount;
                     }
+                    path_languages.push(reading.clone());
                 }
                 let language = reading_language.or_else(|| node.language.clone());
                 let base_score = node.score * contextual.max(0.05) * switch;

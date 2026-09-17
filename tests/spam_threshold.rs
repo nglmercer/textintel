@@ -3,7 +3,7 @@
 
 use textintel::core::providers::SpamPredictor;
 use textintel::detection::spam::SpamModelArtifact;
-use textintel::{TextIntelligence, SPAM_FEATURES};
+use textintel::{SPAM_FEATURES, TextIntelligence};
 
 fn zero_weights() -> std::collections::BTreeMap<String, f64> {
     SPAM_FEATURES

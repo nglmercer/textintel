@@ -58,10 +58,10 @@ fn is_symbol_character(ch: char) -> bool {
 pub fn scripts_in(text: &str) -> Vec<String> {
     let mut scripts = std::collections::BTreeSet::new();
     for ch in text.chars() {
-        if let Some(script) = script_name(ch) {
-            if !matches!(script, "Common" | "Inherited" | "Symbol") {
-                scripts.insert(script.to_string());
-            }
+        if let Some(script) = script_name(ch)
+            && !matches!(script, "Common" | "Inherited" | "Symbol")
+        {
+            scripts.insert(script.to_string());
         }
     }
     scripts.into_iter().collect()

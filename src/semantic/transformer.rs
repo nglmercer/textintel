@@ -1,15 +1,25 @@
-//! Local transformer sentence embeddings (BERT family) on the CPU.
+//! Local transformer sentence embeddings (modern BERT-wiring family) on CPU.
 //!
-//! [`TransformerEmbeddingProvider`] loads explicit local model files —
-//! `config.json`, `vocab.txt` (WordPiece), `model.safetensors` — and runs a
-//! BERT-compatible encoder with Candle tensors. No network access, no model
+//! [`TransformerEmbeddingProvider`] loads explicit local model files and runs
+//! a BERT-compatible encoder with Candle tensors. No network access, no model
 //! download: the directory must already exist.
 //!
-//! Supported checkpoints are BERT-wiring models with a WordPiece vocabulary
-//! (`bert-base-multilingual-cased`, `paraphrase-multilingual-MiniLM-L12-v2`,
-//! LaBSE-style encoders). Checkpoints using SentencePiece/BPE tokenizers
-//! (multilingual-e5, BGE-M3) are rejected with a clear error: their
-//! tokenizer is a different format, not a different quality tier.
+//! Curated modern checkpoints (see [`crate::semantic::catalog`]):
+//!
+//! - `intfloat/multilingual-e5-small` (118M, 384 dims): multilingual default.
+//!   Mean pooling with `query: ` / `passage: ` prefixes per the model card.
+//! - `Snowflake/snowflake-arctic-embed-xs` (22M, 384 dims): English CPU pick.
+//!   CLS pooling, retrieval queries carry the card's `Represent this ...` prefix.
+//! - `mixedbread-ai/mxbai-embed-xsmall-v1` (24M, 384 dims): English CPU pick.
+//!   Mean pooling, no prefix.
+//!
+//! Two tokenizer layouts load: `tokenizer.json` (SentencePiece-Unigram,
+//! e5-style, preferred when present) and `vocab.txt` (WordPiece, BERT-style).
+//! `model.safetensors` accepts Hugging Face `bert.`-prefixed tensor names as
+//! well as bare names, and F16/BF16 weights are cast to F32 once at load.
+//! Encoder wiring must be BERT (`model_type: "bert"`); other wirings
+//! (XLM-RoBERTa layers, T5, decoder-only models) are rejected with a clear
+//! error.
 //!
 //! Sentence vectors are CLS-pooled (or mean-pooled) encoder outputs,
 //! L2-normalized. The GELU activation uses the standard tanh approximation.
@@ -31,11 +41,12 @@ mod tokenizer;
 mod weights;
 
 use forward::{encoder_layer, layer_norm};
-use tokenizer::WordPieceTokenizer;
-use weights::{load_weights, BertWeights};
+use tokenizer::{UnigramTokenizer, WordPieceTokenizer};
+use weights::{BertWeights, load_weights};
 const PROVIDER: &str = "transformer_embedding";
 pub(crate) const CONFIG_FILE: &str = "config.json";
 pub(crate) const VOCAB_FILE: &str = "vocab.txt";
+pub(crate) const TOKENIZER_FILE: &str = "tokenizer.json";
 pub(crate) const WEIGHTS_FILE: &str = "model.safetensors";
 /// Additive attention-mask value for padded positions (underflows to zero).
 const MASKED_LOGIT: f64 = -1e9;
@@ -93,8 +104,9 @@ fn parse_config(source: &str, directory: &Path) -> Result<EncoderConfig, Provide
     if model_type != "bert" {
         return Err(invalid(format!(
             "{CONFIG_FILE}: unsupported model_type `{model_type}`: this provider runs \
-             BERT-wiring WordPiece encoders only (multilingual-e5 and BGE-M3 use \
-             SentencePiece tokenizers and are not loadable here)"
+             BERT-wiring encoders only — multilingual-e5-small, \
+             snowflake-arctic-embed-xs, and mxbai-embed-xsmall-v1 all qualify \
+             (their configs declare model_type `bert`)"
         )));
     }
     let hidden_act = config
@@ -170,33 +182,78 @@ fn parse_config(source: &str, directory: &Path) -> Result<EncoderConfig, Provide
 #[derive(Debug, Clone)]
 pub struct EncodedBatch {
     pub vectors: Vec<Vec<f32>>,
-    /// True when word pieces were dropped to fit `max_token_length`.
+    /// True when pieces were dropped to fit `max_token_length`.
     pub truncated: Vec<bool>,
-    /// Word-piece counts actually encoded (including `[CLS]`/`[SEP]`).
+    /// Piece counts actually encoded (including the wrapping pair).
     pub token_counts: Vec<usize>,
 }
 
-/// Local transformer sentence-embedding provider (BERT family).
+/// Tokenizer backing an encoder: Unigram (`tokenizer.json`, e5-style) or
+/// WordPiece (`vocab.txt`, BERT-style). Both encode to a wrapped id sequence
+/// with truncation reporting; only the vocabulary format differs.
+#[derive(Debug, Clone)]
+enum EncoderTokenizer {
+    Unigram(UnigramTokenizer),
+    WordPiece(WordPieceTokenizer),
+}
+
+impl EncoderTokenizer {
+    fn encode(&self, text: &str, max_len: usize) -> (Vec<u32>, bool) {
+        match self {
+            Self::Unigram(tokenizer) => tokenizer.encode(text, max_len),
+            Self::WordPiece(tokenizer) => tokenizer.encode(text, max_len),
+        }
+    }
+
+    fn vocab_len(&self) -> usize {
+        match self {
+            Self::Unigram(tokenizer) => tokenizer.vocab_len(),
+            Self::WordPiece(tokenizer) => tokenizer.vocab.len(),
+        }
+    }
+
+    fn pad_id(&self) -> u32 {
+        match self {
+            Self::Unigram(tokenizer) => tokenizer.pad_id(),
+            Self::WordPiece(tokenizer) => tokenizer.pad_id,
+        }
+    }
+
+    fn kind(&self) -> &'static str {
+        match self {
+            Self::Unigram(_) => "unigram (tokenizer.json)",
+            Self::WordPiece(_) => "wordpiece (vocab.txt)",
+        }
+    }
+}
+
+/// Local transformer sentence-embedding provider (modern BERT-wiring family).
 ///
 /// Open an explicit model directory; everything runs offline on the CPU.
-/// Use [`Self::encode_detailed`] when truncation must be reported.
+/// Use [`Self::encode_detailed`] when truncation must be reported, and match
+/// pooling plus text prefix to the checkpoint's model card (see the module
+/// documentation): e5-small needs mean pooling with `query: ` / `passage: `
+/// prefixes, Arctic-XS needs CLS pooling with its query prefix, MXBAI-XSmall
+/// needs mean pooling with no prefix.
 #[derive(Debug)]
 pub struct TransformerEmbeddingProvider {
     directory: PathBuf,
     config: EncoderConfig,
-    tokenizer: WordPieceTokenizer,
+    tokenizer: EncoderTokenizer,
     weights: BertWeights,
     pooling: TransformerPooling,
     max_batch: usize,
+    text_prefix: Option<String>,
     model_id: String,
     revision: Option<String>,
     languages: Vec<String>,
 }
 
 impl TransformerEmbeddingProvider {
-    /// Load `config.json`, `vocab.txt`, and `model.safetensors` from
-    /// `directory`. Shapes and dtypes are validated eagerly: incompatible
-    /// checkpoints fail here, never with a silent wrong-shaped inference.
+    /// Load `config.json`, a tokenizer (`tokenizer.json` when present,
+    /// otherwise `vocab.txt`), and `model.safetensors` from `directory`.
+    /// Shapes and dtypes are validated eagerly: incompatible checkpoints
+    /// fail here, never with a silent wrong-shaped inference.
     pub fn open(directory: impl AsRef<Path>) -> Result<Self, ProviderError> {
         let directory = directory.as_ref().to_path_buf();
         let read = |file: &str| {
@@ -208,13 +265,37 @@ impl TransformerEmbeddingProvider {
             })
         };
         let config = parse_config(&read(CONFIG_FILE)?, &directory)?;
-        let tokenizer =
-            WordPieceTokenizer::from_vocab_txt(&read(VOCAB_FILE)?, config.do_lower_case)?;
-        if tokenizer.vocab.len() != config.vocab_size {
+        let has_unigram = directory.join(TOKENIZER_FILE).is_file();
+        let has_wordpiece = directory.join(VOCAB_FILE).is_file();
+        if !has_unigram && !has_wordpiece {
             return Err(invalid(format!(
-                "{VOCAB_FILE}: {} entries but {CONFIG_FILE} declares vocab_size {}; \
+                "no tokenizer found in {}: expected {TOKENIZER_FILE} \
+                 (Unigram, e5-style) or {VOCAB_FILE} (WordPiece, BERT-style); \
+                 copy the checkpoint's tokenizer file next to {CONFIG_FILE}",
+                directory.display()
+            )));
+        }
+        let tokenizer = if has_unigram {
+            EncoderTokenizer::Unigram(UnigramTokenizer::from_tokenizer_json(&read(
+                TOKENIZER_FILE,
+            )?)?)
+        } else {
+            EncoderTokenizer::WordPiece(WordPieceTokenizer::from_vocab_txt(
+                &read(VOCAB_FILE)?,
+                config.do_lower_case,
+            )?)
+        };
+        // The tokenizer may cover fewer rows than `vocab_size` (real
+        // multilingual-e5-small ships 250002 pieces for 250037 embedding
+        // rows; the extra rows stay unused, as in Hugging Face
+        // transformers). A larger tokenizer would index out of bounds and
+        // is rejected: it does not belong to this checkpoint.
+        if tokenizer.vocab_len() > config.vocab_size {
+            return Err(invalid(format!(
+                "tokenizer ({}): {} entries but {CONFIG_FILE} declares vocab_size {}; \
                  the tokenizer does not match this checkpoint",
-                tokenizer.vocab.len(),
+                tokenizer.kind(),
+                tokenizer.vocab_len(),
                 config.vocab_size
             )));
         }
@@ -222,7 +303,7 @@ impl TransformerEmbeddingProvider {
             candle_core::safetensors::load(directory.join(WEIGHTS_FILE), &Device::Cpu).map_err(
                 |error| {
                     invalid(format!(
-                        "cannot load {WEIGHTS_FILE}: {error} (F32 safetensors expected)"
+                        "cannot load {WEIGHTS_FILE}: {error} (F32/F16/BF16 safetensors expected)"
                     ))
                 },
             )?;
@@ -237,6 +318,7 @@ impl TransformerEmbeddingProvider {
             weights,
             pooling: TransformerPooling::default(),
             max_batch: 32,
+            text_prefix: None,
         })
     }
 
@@ -247,6 +329,19 @@ impl TransformerEmbeddingProvider {
 
     pub fn with_max_batch(mut self, max_batch: usize) -> Self {
         self.max_batch = max_batch.max(1);
+        self
+    }
+
+    /// Prepend `prefix` to every input before tokenization (e.g. `query: `
+    /// or `passage: ` for multilingual-e5, the `Represent this ...` prefix
+    /// for Arctic retrieval queries). Empty prefixes are ignored.
+    pub fn with_text_prefix(mut self, prefix: impl Into<String>) -> Self {
+        let prefix = prefix.into();
+        self.text_prefix = if prefix.is_empty() {
+            None
+        } else {
+            Some(prefix)
+        };
         self
     }
 
@@ -273,13 +368,21 @@ impl TransformerEmbeddingProvider {
         self.config.hidden_size
     }
 
-    /// Absolute token cap including `[CLS]`/`[SEP]`.
+    /// Absolute token cap including the wrapping pair.
     pub fn max_token_length(&self) -> usize {
         self.config.max_positions
     }
 
     pub fn vocabulary_size(&self) -> usize {
-        self.tokenizer.vocab.len()
+        self.tokenizer.vocab_len()
+    }
+
+    /// Tokenizer layout backing this provider (`unigram` or `wordpiece`).
+    pub fn tokenizer_kind(&self) -> &'static str {
+        match self.tokenizer {
+            EncoderTokenizer::Unigram(_) => "unigram",
+            EncoderTokenizer::WordPiece(_) => "wordpiece",
+        }
     }
 
     pub fn model_id(&self) -> &str {
@@ -371,7 +474,8 @@ impl TransformerEmbeddingProvider {
     }
 
     /// Encode with per-input truncation reporting. Inputs are chunked to
-    /// `max_batch` texts; every chunk pads to its own longest sequence.
+    /// `max_batch` texts; every chunk pads to its own longest sequence. The
+    /// configured [`Self::with_text_prefix`] is prepended before tokenizing.
     pub fn encode_detailed(&self, texts: &[String]) -> Result<EncodedBatch, ProviderError> {
         let mut vectors = Vec::with_capacity(texts.len());
         let mut truncated = Vec::with_capacity(texts.len());
@@ -379,13 +483,23 @@ impl TransformerEmbeddingProvider {
         for chunk in texts.chunks(self.max_batch) {
             let encoded: Vec<(Vec<u32>, bool)> = chunk
                 .iter()
-                .map(|text| self.tokenizer.encode(text, self.config.max_positions))
+                .map(|text| {
+                    let prefixed;
+                    let input = match &self.text_prefix {
+                        Some(prefix) => {
+                            prefixed = format!("{prefix}{text}");
+                            prefixed.as_str()
+                        }
+                        None => text.as_str(),
+                    };
+                    self.tokenizer.encode(input, self.config.max_positions)
+                })
                 .collect();
             let width = encoded.iter().map(|(ids, _)| ids.len()).max().unwrap_or(0);
             for (ids, was_truncated) in &encoded {
                 let mut padded = ids.clone();
                 let mut mask = vec![1.0f32; ids.len()];
-                padded.resize(width, self.tokenizer.pad_id);
+                padded.resize(width, self.tokenizer.pad_id());
                 mask.resize(width, 0.0);
                 vectors.push(self.forward(&padded, &mask, width)?);
                 truncated.push(*was_truncated);
@@ -452,19 +566,23 @@ mod tests {
     #[test]
     fn bad_configs_fail_loudly() {
         assert!(parse_config(r#"{"hidden_size": 0}"#, Path::new("m")).is_err());
-        assert!(parse_config(
-            r#"{"model_type": "gpt2", "hidden_size": 8, "num_hidden_layers": 1,
+        assert!(
+            parse_config(
+                r#"{"model_type": "gpt2", "hidden_size": 8, "num_hidden_layers": 1,
                 "num_attention_heads": 2, "intermediate_size": 8,
                 "max_position_embeddings": 8, "vocab_size": 8}"#,
-            Path::new("m")
-        )
-        .is_err());
-        assert!(parse_config(
-            r#"{"hidden_size": 8, "num_hidden_layers": 1, "num_attention_heads": 3,
+                Path::new("m")
+            )
+            .is_err()
+        );
+        assert!(
+            parse_config(
+                r#"{"hidden_size": 8, "num_hidden_layers": 1, "num_attention_heads": 3,
                 "intermediate_size": 8, "max_position_embeddings": 8, "vocab_size": 8}"#,
-            Path::new("m")
-        )
-        .is_err());
+                Path::new("m")
+            )
+            .is_err()
+        );
         assert!(WordPieceTokenizer::from_vocab_txt("[PAD]\n[UNK]\n", false).is_err());
     }
 }

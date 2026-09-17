@@ -18,7 +18,7 @@ use crate::core::capabilities::ProviderCapabilities;
 use crate::core::config::EngineConfig;
 use crate::core::error::TextIntelError;
 use crate::core::providers::{
-    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider, GenerativeProvider,
     LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
     SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider,
 };
@@ -74,6 +74,8 @@ pub struct EngineDiagnostics {
     pub spam: ProviderCapabilities,
     pub similarity: Option<ProviderCapabilities>,
     pub reranker: Option<ProviderCapabilities>,
+    #[serde(default)]
+    pub generative: Option<ProviderCapabilities>,
     pub store: ProviderCapabilities,
     pub ann_enabled: bool,
     pub degraded: Vec<DegradedCapability>,
@@ -91,28 +93,14 @@ pub struct EngineDiagnostics {
     pub candidate_budgets: CandidateBudgets,
 }
 
-/// Production similarity artifact within `dir`: newest revision wins
-/// (`similarity-v5`, schema 9 with contextual/entity features), falling
-/// back to `similarity-v4` and then `similarity-v3`, `similarity-v2`, and
-/// `similarity-v1` by existence. Loading stays strict: a selected artifact
-/// whose feature schema does not match this build is rejected with an
-/// explicit error (old revisions predate schema 9 and must be retrained,
-/// never silently loaded). Diagnostics always report the loaded revision,
-/// so the active artifact is explicit.
+/// Production similarity artifact within `dir`: the single modern revision
+/// (`similarity-v5`, schema 9 with contextual/entity features). There is no
+/// fallback chain: legacy revisions are removed, and an artifact whose
+/// feature schema does not match this build is rejected with an explicit
+/// error (never silently loaded). Diagnostics always report the loaded
+/// revision, so the active artifact is explicit.
 pub fn preferred_similarity_artifact_in(dir: &std::path::Path) -> PathBuf {
-    for name in [
-        "similarity-v5.json",
-        "similarity-v4.json",
-        "similarity-v3.json",
-        "similarity-v2.json",
-        "similarity-v1.json",
-    ] {
-        let candidate = dir.join(name);
-        if candidate.exists() {
-            return candidate;
-        }
-    }
-    dir.join("similarity-v1.json")
+    dir.join("similarity-v5.json")
 }
 
 /// [`preferred_similarity_artifact_in`] for the conventional `./models`
@@ -121,16 +109,11 @@ pub fn preferred_similarity_artifact() -> PathBuf {
     preferred_similarity_artifact_in(std::path::Path::new("models"))
 }
 
-/// Production spam artifact within `dir`: `spam-v2` (realistic corpus)
-/// wins when present, otherwise `spam-v1` (synthetic corpus). Both share
-/// feature schema 1, so the fallback loads cleanly.
+/// Production spam artifact within `dir`: the single modern revision
+/// (`spam-v2`, realistic corpus). The legacy synthetic `spam-v1` revision is
+/// removed; there is no fallback chain.
 pub fn preferred_spam_artifact_in(dir: &std::path::Path) -> PathBuf {
-    let v2 = dir.join("spam-v2.json");
-    if v2.exists() {
-        v2
-    } else {
-        dir.join("spam-v1.json")
-    }
+    dir.join("spam-v2.json")
 }
 
 /// [`preferred_spam_artifact_in`] for the conventional `./models` directory.
@@ -156,6 +139,7 @@ pub struct EngineBuilder {
     pub(crate) entity: Option<Arc<dyn EntityProvider>>,
     pub(crate) entity_disabled: bool,
     pub(crate) reranker: Option<Arc<dyn RerankerProvider>>,
+    pub(crate) generative: Option<Arc<dyn GenerativeProvider>>,
     /// Explicit local transformer directory for [`Self::production_local`].
     pub(crate) transformer_model_path: Option<PathBuf>,
     /// Fallback notes recorded while assembling the preset (surfaced via
@@ -264,6 +248,14 @@ impl EngineBuilder {
         self
     }
 
+    /// Attach an explicit generative provider (Liquid LFM2.5 over a local
+    /// endpoint). Never configured by [`Self::production_local`]: generation
+    /// always needs an explicit endpoint.
+    pub fn generative_provider<P: GenerativeProvider + 'static>(mut self, provider: P) -> Self {
+        self.generative = Some(Arc::new(provider));
+        self
+    }
+
     pub fn spam_predictor<P: SpamPredictor + 'static>(mut self, predictor: P) -> Self {
         self.spam = Some(Arc::new(predictor));
         self
@@ -355,10 +347,10 @@ impl EngineBuilder {
         self.config.cache = std::mem::take(&mut self.config.cache).with_production_defaults();
         #[cfg(feature = "phonetic-espeak")]
         {
-            if self.g2p.is_none() {
-                if let Ok(provider) = crate::phonetic::EspeakNgG2PProvider::auto_detect() {
-                    self.g2p = Some(Arc::new(provider));
-                }
+            if self.g2p.is_none()
+                && let Ok(provider) = crate::phonetic::EspeakNgG2PProvider::auto_detect()
+            {
+                self.g2p = Some(Arc::new(provider));
             }
         }
         if self.embedding.is_none() {
@@ -428,10 +420,10 @@ impl EngineBuilder {
                     });
                 }
             }
-            if !used_transformer {
-                if let Ok(provider) = crate::semantic::FeatureHashEmbeddingProvider::new(256) {
-                    self.embedding = Some(Arc::new(provider));
-                }
+            if !used_transformer
+                && let Ok(provider) = crate::semantic::FeatureHashEmbeddingProvider::new(256)
+            {
+                self.embedding = Some(Arc::new(provider));
             }
         }
         if self.similarity_model_path.is_none() {

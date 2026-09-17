@@ -12,7 +12,7 @@ mod g2p;
 mod language;
 mod rebus;
 
-pub use core::{resource_revision, CacheDiagnostics, RevisionCache};
+pub use core::{CacheDiagnostics, RevisionCache, resource_revision};
 pub use g2p::CachedG2PProvider;
 pub use language::CachedLanguageDetectionProvider;
-pub use rebus::{rebus_cache_key, CachedRebusDecoder};
+pub use rebus::{CachedRebusDecoder, rebus_cache_key};

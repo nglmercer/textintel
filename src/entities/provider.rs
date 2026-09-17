@@ -317,9 +317,11 @@ mod tests {
         assert!(types.contains(&"url"));
         assert!(types.contains(&"date"));
         // The `42` inside the URL and the date parts are claimed, not numbers.
-        assert!(!mentions
-            .iter()
-            .any(|mention| mention.entity_type == "number" && mention.value == "42"));
+        assert!(
+            !mentions
+                .iter()
+                .any(|mention| mention.entity_type == "number" && mention.value == "42")
+        );
         for mention in &mentions {
             assert!(mention.start < mention.end);
             assert_eq!(mention.provider, "rule_based_entities");
@@ -330,9 +332,11 @@ mod tests {
     #[test]
     fn currency_and_mentions_normalize() {
         let mentions = extract("send $1,200 to @Ada_Lovelace before 14:30");
-        assert!(mentions
-            .iter()
-            .any(|mention| mention.entity_type == "currency"));
+        assert!(
+            mentions
+                .iter()
+                .any(|mention| mention.entity_type == "currency")
+        );
         assert!(mentions
             .iter()
             .any(|mention| mention.entity_type == "mention" && mention.value == "@ada_lovelace"));
@@ -376,8 +380,10 @@ mod tests {
             None,
         );
         assert!(mentions.len() <= 2);
-        assert!(mentions
-            .iter()
-            .all(|mention| mention.value.chars().count() <= 8));
+        assert!(
+            mentions
+                .iter()
+                .all(|mention| mention.value.chars().count() <= 8)
+        );
     }
 }

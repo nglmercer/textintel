@@ -209,11 +209,7 @@ pub fn language_agreement(left: &MessageFingerprint, right: &MessageFingerprint)
             .map(|candidate| candidate.language.clone())
             .unwrap_or_else(|| "unknown".to_string())
     };
-    if top(left) == top(right) {
-        1.0
-    } else {
-        0.0
-    }
+    if top(left) == top(right) { 1.0 } else { 0.0 }
 }
 
 #[cfg(test)]

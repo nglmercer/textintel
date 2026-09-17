@@ -4,9 +4,9 @@
 use std::collections::BTreeMap;
 
 use textintel::{
-    ChannelAvailability, DecodedCandidate, DuplicateMode, LanguageCandidate, ProviderError,
-    StageTimings, SymbolConcept, SymbolReading, TextIntelError, TextIntelligence, Transformation,
-    FINGERPRINT_SCHEMA_VERSION,
+    ChannelAvailability, DecodedCandidate, DuplicateMode, FINGERPRINT_SCHEMA_VERSION,
+    LanguageCandidate, ProviderError, StageTimings, SymbolConcept, SymbolReading, TextIntelError,
+    TextIntelligence, Transformation,
 };
 
 #[test]

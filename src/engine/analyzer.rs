@@ -6,7 +6,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::time::Instant;
 
-use crate::cache::{rebus_cache_key, CacheDiagnostics};
+use crate::cache::{CacheDiagnostics, rebus_cache_key};
 use crate::core::error::{ProviderError, TextIntelError};
 use crate::core::providers::LexiconProvider;
 use crate::core::types::{

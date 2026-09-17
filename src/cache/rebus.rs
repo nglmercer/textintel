@@ -143,10 +143,10 @@ impl CachedRebusDecoder {
         max_candidates: Option<usize>,
     ) -> Vec<DecodedCandidate> {
         let key = self.key(text, languages, max_candidates);
-        if let Ok(mut cache) = self.cache.lock() {
-            if let Some(hit) = cache.get(&key) {
-                return hit;
-            }
+        if let Ok(mut cache) = self.cache.lock()
+            && let Some(hit) = cache.get(&key)
+        {
+            return hit;
         }
         let candidates = self.decoder.decode_with_abbreviations(
             text,

@@ -57,23 +57,21 @@ pub fn check_gates(report: &EvaluationReport, gates: &serde_json::Value) -> Vec<
         if let Some(minimum) = section_gates
             .and_then(|value| value.get(&key))
             .and_then(serde_json::Value::as_f64)
+            && value < minimum
         {
-            if value < minimum {
-                failures.push(format!(
-                    "{section}.{metric}={value:.3} below minimum {minimum:.3}"
-                ));
-            }
+            failures.push(format!(
+                "{section}.{metric}={value:.3} below minimum {minimum:.3}"
+            ));
         }
         let key = format!("{metric}_max");
         if let Some(maximum) = section_gates
             .and_then(|value| value.get(&key))
             .and_then(serde_json::Value::as_f64)
+            && value > maximum
         {
-            if value > maximum {
-                failures.push(format!(
-                    "{section}.{metric}={value:.3} above maximum {maximum:.3}"
-                ));
-            }
+            failures.push(format!(
+                "{section}.{metric}={value:.3} above maximum {maximum:.3}"
+            ));
         }
     }
     // Per-category gates: `{ "categories": { "<name>": { "<metric>_min": f64,
@@ -107,20 +105,20 @@ pub fn check_gates(report: &EvaluationReport, gates: &serde_json::Value) -> Vec<
                 ("ece", metrics.expected_calibration_error),
             ] {
                 let key = format!("{metric}_min");
-                if let Some(minimum) = thresholds.get(&key).and_then(|v| v.as_f64()) {
-                    if value < minimum {
-                        failures.push(format!(
-                            "categories.{name}.{metric}={value:.3} below minimum {minimum:.3}"
-                        ));
-                    }
+                if let Some(minimum) = thresholds.get(&key).and_then(|v| v.as_f64())
+                    && value < minimum
+                {
+                    failures.push(format!(
+                        "categories.{name}.{metric}={value:.3} below minimum {minimum:.3}"
+                    ));
                 }
                 let key = format!("{metric}_max");
-                if let Some(maximum) = thresholds.get(&key).and_then(|v| v.as_f64()) {
-                    if value > maximum {
-                        failures.push(format!(
-                            "categories.{name}.{metric}={value:.3} above maximum {maximum:.3}"
-                        ));
-                    }
+                if let Some(maximum) = thresholds.get(&key).and_then(|v| v.as_f64())
+                    && value > maximum
+                {
+                    failures.push(format!(
+                        "categories.{name}.{metric}={value:.3} above maximum {maximum:.3}"
+                    ));
                 }
             }
         }
@@ -185,12 +183,16 @@ mod tests {
         });
         let failures = check_gates(&report, &gates);
         assert_eq!(failures.len(), 2);
-        assert!(failures
-            .iter()
-            .any(|failure| failure.contains("similarity.f1")));
-        assert!(failures
-            .iter()
-            .any(|failure| failure.contains("similarity.ece")));
+        assert!(
+            failures
+                .iter()
+                .any(|failure| failure.contains("similarity.f1"))
+        );
+        assert!(
+            failures
+                .iter()
+                .any(|failure| failure.contains("similarity.ece"))
+        );
     }
 
     #[test]

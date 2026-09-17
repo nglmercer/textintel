@@ -195,10 +195,10 @@ impl RebusEvidence {
             .iter()
             .map(String::as_str)
             .collect();
-        if observed.is_empty() {
-            if let Some(single) = self.candidate_language.as_deref() {
-                observed.push(single);
-            }
+        if observed.is_empty()
+            && let Some(single) = self.candidate_language.as_deref()
+        {
+            observed.push(single);
         }
         observed.retain(|language| {
             !language.eq_ignore_ascii_case("und") && !language.eq_ignore_ascii_case("unknown")

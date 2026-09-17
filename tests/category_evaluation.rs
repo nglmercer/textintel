@@ -1,7 +1,7 @@
 //! Category-level evaluation: per-slice metrics, legacy label inference,
 //! and dataset coverage of all twelve production categories.
 
-use textintel::evaluation::{evaluate, EvaluationCase, EvaluationDataset, EVALUATION_CATEGORIES};
+use textintel::evaluation::{EVALUATION_CATEGORIES, EvaluationCase, EvaluationDataset, evaluate};
 use textintel::{EngineConfig, TextIntelligence};
 
 fn case(id: &str, category: &str, a: &str, b: &str, similar: bool) -> EvaluationCase {

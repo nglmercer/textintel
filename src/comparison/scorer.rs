@@ -133,11 +133,7 @@ fn substring_containment(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 
     let non_latin = shorter
         .chars()
         .any(|ch| ch.is_alphanumeric() && !ch.is_ascii());
-    if long_enough || non_latin {
-        1.0
-    } else {
-        0.0
-    }
+    if long_enough || non_latin { 1.0 } else { 0.0 }
 }
 
 fn normalized_identity(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
@@ -236,11 +232,7 @@ pub fn combine_scores(
 /// (non-finite confidences, NaN vectors) yield 0/absent instead of NaN.
 /// Engine-built inputs are unaffected.
 fn finite_or_zero(value: f64) -> f64 {
-    if value.is_finite() {
-        value
-    } else {
-        0.0
-    }
+    if value.is_finite() { value } else { 0.0 }
 }
 
 fn finite_or_absent(value: Option<f64>) -> Option<f64> {

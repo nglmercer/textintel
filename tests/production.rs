@@ -1,15 +1,25 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use sha2::{Digest, Sha256};
 use textintel::evaluation::{
-    evaluate_with_options, EvaluateOptions, EvaluationCase, EvaluationDataset,
+    EvaluateOptions, EvaluationCase, EvaluationDataset, evaluate_with_options,
 };
 use textintel::phonetic::{articulatory_distance, parse_ipa};
 use textintel::{
     EmbeddingProvider, EngineConfig, Pattern, ProviderCapabilities, ProviderError, ResourceLimits,
     ResourceLoader, SimilarityProfile, TextIntelligence,
 };
+
+fn hex_encode(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        out.push(HEX[(byte >> 4) as usize] as char);
+        out.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    out
+}
 
 #[derive(Debug, Clone)]
 struct CountingEmbedding {
@@ -151,7 +161,7 @@ fn resource_hashes_are_self_contained_and_format_independent() {
         "revision": "test"
     });
     let canonical = serde_json::to_vec(&pack).unwrap();
-    let digest = format!("{:x}", Sha256::digest(canonical));
+    let digest = hex_encode(&Sha256::digest(canonical));
     pack["sha256"] = serde_json::Value::String(digest);
     let source = serde_json::to_string_pretty(&pack).unwrap();
 
@@ -240,7 +250,7 @@ fn trained_spam_artifact_loads_and_separates_messages() {
     use textintel::SpamModelArtifact;
     use textintel::SpamPredictor;
 
-    let source = include_str!("../models/spam-v1.json");
+    let source = include_str!("../models/spam-v2.json");
     let artifact = SpamModelArtifact::from_json(source).unwrap();
     assert_eq!(artifact.kind, "logistic_spam");
     assert_eq!(

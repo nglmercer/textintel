@@ -10,8 +10,8 @@ use crate::normalization::unicode::casefold_text;
 use crate::normalization::whitespace::normalize_whitespace;
 use crate::phonetic::g2p::RuleBasedG2PProvider;
 use crate::rebus::beam_search::beam_decode_with_abbreviation_provider;
-use crate::rebus::scorer::{score_candidate_with_evidence_and_weights, RebusEvidence};
-use crate::resources::{embedded_resources, DefaultLexiconProvider};
+use crate::rebus::scorer::{RebusEvidence, score_candidate_with_evidence_and_weights};
+use crate::resources::{DefaultLexiconProvider, embedded_resources};
 use crate::symbols::knowledge::DefaultSymbolKnowledge;
 
 #[derive(Debug, Clone, Default)]
@@ -200,7 +200,7 @@ impl RebusDecoder {
             };
             if candidates
                 .get(&key)
-                .map_or(true, |old| candidate.score > old.score)
+                .is_none_or(|old| candidate.score > old.score)
             {
                 candidates.insert(key, candidate);
             }
@@ -255,10 +255,10 @@ impl RebusDecoder {
                     if let Some((start, end)) = span {
                         step = step.with_span(start, end, word);
                     }
-                    if let Some(language) = reading.language.clone() {
-                        if language != "und" {
-                            step = step.with_language(language);
-                        }
+                    if let Some(language) = reading.language.clone()
+                        && language != "und"
+                    {
+                        step = step.with_language(language);
                     }
                     let candidate = DecodedCandidate {
                         text: reading.text.clone(),
@@ -275,7 +275,7 @@ impl RebusDecoder {
                     let key = casefold_text(&reading.text);
                     if candidates
                         .get(&key)
-                        .map_or(true, |old| candidate.score > old.score)
+                        .is_none_or(|old| candidate.score > old.score)
                     {
                         candidates.insert(key, candidate);
                     }
@@ -325,7 +325,7 @@ impl RebusDecoder {
             let key = casefold_text(&value);
             if candidates
                 .get(&key)
-                .map_or(true, |old| candidate.score > old.score)
+                .is_none_or(|old| candidate.score > old.score)
             {
                 candidates.insert(key, candidate);
             }

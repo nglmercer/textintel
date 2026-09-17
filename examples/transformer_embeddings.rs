@@ -1,12 +1,14 @@
-//! Local transformer sentence embeddings (BERT family, offline CPU).
+//! Local transformer sentence embeddings (modern BERT-wiring family, offline CPU).
 //!
 //! ```sh
-//! cargo run --features semantic-transformer --example transformer_embeddings
+//! cargo run --example transformer_embeddings
 //! ```
-//! Point `TransformerEmbeddingProvider::open` at any BERT-wiring WordPiece
-//! checkpoint directory (`config.json`, `vocab.txt`, `model.safetensors`).
-//! The demo below uses the tiny mechanics fixture; quality evaluation needs
-//! a real checkpoint (paraphrase-multilingual-MiniLM, LaBSE, ...).
+//! Point `TransformerEmbeddingProvider::open` at a curated checkpoint
+//! directory (`config.json`, `tokenizer.json` or `vocab.txt`,
+//! `model.safetensors`): multilingual-e5-small (multilingual default),
+//! snowflake-arctic-embed-xs or mxbai-embed-xsmall-v1 (English CPU).
+//! The demo below uses the tiny mechanics fixtures; quality evaluation
+//! needs a real checkpoint (see `models/README.md`).
 #![cfg(feature = "semantic-transformer")]
 
 use textintel::core::providers::EmbeddingProvider;
@@ -17,10 +19,11 @@ fn main() -> Result<(), textintel::TextIntelError> {
     let provider = TransformerEmbeddingProvider::open("tests/fixtures/mini-transformer")
         .map_err(|error| textintel::TextIntelError::InvalidConfiguration(error.to_string()))?;
     println!(
-        "model: {} ({} dims, {} tokens max)",
+        "model: {} ({} dims, {} tokens max, {} tokenizer)",
         provider.model_id(),
         provider.dimensions(),
-        provider.max_token_length()
+        provider.max_token_length(),
+        provider.tokenizer_kind(),
     );
     let texts = vec![
         "buy the ticket now".to_string(),
@@ -46,6 +49,20 @@ fn main() -> Result<(), textintel::TextIntelError> {
     println!(
         "mean-pooled cosine = {:.4}",
         cosine(&mean_vectors[0], &mean_vectors[1])
+    );
+    // Modern e5-style layout: Unigram tokenizer.json, mean pooling, and the
+    // model-card query prefix.
+    let modern = TransformerEmbeddingProvider::open("tests/fixtures/mini-unigram")
+        .map_err(|error| textintel::TextIntelError::InvalidConfiguration(error.to_string()))?
+        .with_pooling(TransformerPooling::Mean)
+        .with_text_prefix("query: ");
+    println!("modern fixture tokenizer: {}", modern.tokenizer_kind());
+    let modern_vectors = modern
+        .embed(&texts)
+        .map_err(textintel::TextIntelError::from)?;
+    println!(
+        "modern-layout cosine = {:.4}",
+        cosine(&modern_vectors[0], &modern_vectors[1])
     );
     Ok(())
 }

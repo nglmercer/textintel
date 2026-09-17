@@ -1,13 +1,13 @@
 [package]
 name = "textintel"
 version = "0.2.0"
-edition = "2021"
+edition = "2024"
 build = "build.rs"
 description = "Multilingual text intelligence with independent, explainable analysis channels"
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/nglmercer/textintel"
-rust-version = "1.71"
+rust-version = "1.90"
 
 [lib]
 name = "textintel"
@@ -21,12 +21,19 @@ path = "src/bin/textintel/main.rs"
 name = "textintel-train"
 path = "tools/train_similarity/main.rs"
 
+[[example]]
+name = "espeak"
+required-features = ["phonetic-espeak"]
+
+[[example]]
+name = "transformer_embeddings"
+required-features = ["semantic-transformer"]
+
 [features]
-default = []
+default = ["lang-profile", "semantic-local", "semantic-transformer", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb"]
 lang-profile = []
 semantic = ["semantic-local"]
 semantic-local = []
-semantic-candle = ["dep:candle-core"]
 semantic-transformer = ["dep:candle-core"]
 phonetic-espeak = []
 ann-hnsw = ["dep:hnsw_rs"]
@@ -38,25 +45,25 @@ persist = []
 ml = ["lang-profile", "semantic-local", "phonetic-ipa"]
 production-local-lite = ["lang-profile", "semantic-local", "phonetic-ipa"]
 production-local = ["lang-profile", "semantic-local", "semantic-transformer", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb"]
-all = ["lang-profile", "semantic-local", "semantic-candle", "semantic-transformer", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb", "ml", "production-local-lite", "production-local"]
+all = ["lang-profile", "semantic-local", "semantic-transformer", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb", "ml", "production-local-lite", "production-local"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sha2 = "0.10"
+sha2 = "0.11"
 unicode-normalization = "0.1"
 unicode-segmentation = "1.12"
 unicode-properties = { version = "0.1.4", features = ["emoji", "general-category"] }
 unicode-script = "0.5"
-ureq = { version = "2.12.1", optional = true, default-features = false, features = ["json", "tls"] }
+ureq = { version = "3", optional = true, default-features = false, features = ["json", "rustls", "rustls-webpki-roots"] }
 candle-core = { version = "0.11", optional = true, default-features = false }
 hnsw_rs = { version = "0.3", optional = true }
 redb = { version = "4", optional = true }
 
 [dev-dependencies]
-criterion = "=0.5.1"
+criterion = "0.8"
 pretty_assertions = "1"
-proptest = "=1.6.0"
+proptest = "1"
 
 [[bench]]
 name = "core"

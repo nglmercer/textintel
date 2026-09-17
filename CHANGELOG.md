@@ -36,6 +36,24 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
   (`tests/transformer_semantics.rs`), store-path recall
   (`tests/search_recall.rs`), diagnostics budgets and no-raw-text
   guarantees.
+- Modern model catalog (`textintel::semantic::catalog`): multilingual-e5-small
+  (multilingual embedding default), snowflake-arctic-embed-xs and
+  mxbai-embed-xsmall-v1 (English CPU embeddings), LiquidAI LFM2.5-230M/350M
+  (local generation). See `models/README.md` for manual download commands.
+- `GenerativeProvider` trait plus `LiquidInstructProvider`: local Liquid
+  LFM2.5 instruction generation over an explicit OpenAI-compatible endpoint
+  (llama-server GGUF, Ollama, vLLM) with a std-only `http://` client —
+  core API, no feature gate. Wired into `TextIntelligence::generate`,
+  `EngineBuilder::generative_provider`, diagnostics, the `generate` CLI
+  command, and `examples/liquid_generate.rs`.
+- `TransformerEmbeddingProvider` loads SentencePiece-Unigram `tokenizer.json`
+  vocabularies (multilingual-e5 layout, preferred when present) alongside
+  WordPiece `vocab.txt`, accepts Hugging Face `bert.`-prefixed tensor names
+  and F16/BF16 weights (cast to F32 at load), and supports model-card text
+  prefixes (`with_text_prefix`) plus a `tokenizer_kind` accessor.
+- `tests/fixtures/mini-unigram/`: deterministic Unigram/`bert.`-prefixed
+  mechanics fixture with `tests/transformer_unigram.rs` coverage; mock-server
+  generation coverage in `tests/liquid_generate.rs`.
 
 ### Fixed
 
@@ -55,6 +73,34 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
   email, mention, numeric, currency, datetime, names).
 - CI quality job additionally runs the production evaluation gate
   (`eval --production --gates data/quality-gates-production.json`).
+- Default build is the full modern local stack (previous `production-local`
+  feature contents); `--no-default-features` selects the minimal build.
+  Remote adapters (`semantic-http`) and generation still need explicit
+  endpoints and are never enabled implicitly.
+- `TransformerEmbeddingProvider` docs and errors recommend the curated
+  modern checkpoints instead of the MiniLM/LaBSE-era defaults.
+- `preferred_similarity_artifact*` / `preferred_spam_artifact*` resolve to
+  the single modern revisions (`similarity-v5`, `spam-v2`).
+- Latest dependency majors across the board: `ureq` 2 → 3 (rewritten
+  `HttpEmbeddingProvider` on the v3 `ConfigBuilder` API), `sha2` 0.10 →
+  0.11, `criterion` 0.5 → 0.8, `proptest` pinned `=1.6.0` → `1`
+  (currently 1.11), plus refreshed patch lockfile.
+- Edition 2021 → 2024 and MSRV 1.71 → 1.90 (required by the latest
+  `redb`/`criterion`/`ureq` releases); edition fallout fixed (unsafe
+  `set_var`/`remove_var` in tests, digest hex formatting, let-chain
+  collapses, `std::hint::black_box` in benches).
+- CI migrated to current actions: `actions/checkout@v6`,
+  `actions/upload-artifact@v7`, `actions-rust-lang/setup-rust-toolchain@v1`
+  (replacing `dtolnay/rust-toolchain`), `taiki-e/install-action@v2`, and
+  the MSRV job now pins Rust 1.90.
+
+### Removed
+
+- Legacy `semantic-candle` static-embedding backend (`CandleEmbeddingProvider`
+  and its Cargo feature).
+- Legacy trained artifacts `models/similarity-v1..v4.json` and
+  `models/spam-v1.json` (tests and presets now pin `similarity-v5` /
+  `spam-v2` only).
 
 ## [0.2.0] - 2026-09-16
 

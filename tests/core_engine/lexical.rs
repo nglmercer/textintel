@@ -215,9 +215,11 @@ fn tokenize_preserves_words_emoji_and_urls() {
     }
     assert!(tokenize("").is_empty());
     assert!(tokenize("hi 👋").iter().any(|t| t.contains('👋')));
-    assert!(tokenize("see https://example.test/x")
-        .iter()
-        .any(|t| t.contains("example.test")));
+    assert!(
+        tokenize("see https://example.test/x")
+            .iter()
+            .any(|t| t.contains("example.test"))
+    );
 }
 
 #[test]

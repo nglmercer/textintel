@@ -238,11 +238,7 @@ pub(crate) fn latin_to_han(text: &str) -> String {
             output.push_str(word);
         }
     }
-    if mapped_any {
-        output
-    } else {
-        text.to_string()
-    }
+    if mapped_any { output } else { text.to_string() }
 }
 
 #[cfg(test)]

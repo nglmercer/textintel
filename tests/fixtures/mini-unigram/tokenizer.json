@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "model": {
+    "type": "Unigram",
+    "unk_id": 3,
+    "byte_fallback": false,
+    "vocab": [
+      [
+        "<s>",
+        0.0
+      ],
+      [
+        "<pad>",
+        0.0
+      ],
+      [
+        "</s>",
+        0.0
+      ],
+      [
+        "<unk>",
+        0.0
+      ],
+      [
+        "▁",
+        -1.0
+      ],
+      [
+        "▁hello",
+        5.0
+      ],
+      [
+        "▁world",
+        4.0
+      ],
+      [
+        "he",
+        1.0
+      ],
+      [
+        "llo",
+        1.0
+      ],
+      [
+        "s",
+        0.5
+      ]
+    ]
+  },
+  "added_tokens": [
+    {
+      "id": 0,
+      "content": "<s>",
+      "special": true
+    },
+    {
+      "id": 1,
+      "content": "<pad>",
+      "special": true
+    },
+    {
+      "id": 2,
+      "content": "</s>",
+      "special": true
+    }
+  ]
+}

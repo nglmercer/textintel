@@ -176,8 +176,8 @@ use han::{han_to_latin, latin_to_han};
 use kana::kana_to_latin;
 
 pub use evidence::{
-    effective_transliteration_evidence, transliteration_compatibility, transliteration_evidence,
-    transliteration_similarity, TransliterationEvidence,
+    TransliterationEvidence, effective_transliteration_evidence, transliteration_compatibility,
+    transliteration_evidence, transliteration_similarity,
 };
 
 #[cfg(test)]
@@ -213,16 +213,20 @@ mod tests {
 
     #[test]
     fn views_emit_only_for_covered_scripts() {
-        assert!(RuleBasedTransliterationProvider
-            .transliterate("hello world")
-            .iter()
-            .any(|view| view.target_script == "Cyrl"));
+        assert!(
+            RuleBasedTransliterationProvider
+                .transliterate("hello world")
+                .iter()
+                .any(|view| view.target_script == "Cyrl")
+        );
         // Pure ASCII gets no Latin view (nothing changed).
         assert!(latin_views("hello world").is_empty());
         // Emoji-only input yields no views rather than junk.
-        assert!(RuleBasedTransliterationProvider
-            .transliterate("🏠🔥")
-            .is_empty());
+        assert!(
+            RuleBasedTransliterationProvider
+                .transliterate("🏠🔥")
+                .is_empty()
+        );
     }
 
     #[test]

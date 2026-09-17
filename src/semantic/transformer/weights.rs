@@ -6,7 +6,7 @@ use candle_core::{DType, Tensor};
 
 use crate::core::error::ProviderError;
 
-use super::{invalid, EncoderConfig, CONFIG_FILE, WEIGHTS_FILE};
+use super::{CONFIG_FILE, EncoderConfig, WEIGHTS_FILE, invalid};
 
 fn debug_shapes(tensors: &[&Tensor]) -> Vec<Vec<usize>> {
     tensors
@@ -81,17 +81,34 @@ fn take_f32(
     name: &str,
     shape: &[usize],
 ) -> Result<Tensor, ProviderError> {
-    let tensor = tensors.remove(name).ok_or_else(|| {
-        invalid(format!(
-            "{WEIGHTS_FILE}: missing tensor `{name}` (not a BERT checkpoint?)"
-        ))
-    })?;
-    if tensor.dtype() != DType::F32 {
-        return Err(invalid(format!(
-            "{WEIGHTS_FILE}: tensor `{name}` has dtype {:?}, only F32 is supported",
-            tensor.dtype()
-        )));
-    }
+    // Real Hugging Face checkpoints nest BERT tensors under `bert.`; the
+    // mechanics fixture stores them bare. Accept both layouts.
+    let prefixed = format!("bert.{name}");
+    let tensor = tensors
+        .remove(&prefixed)
+        .or_else(|| tensors.remove(name))
+        .ok_or_else(|| {
+            invalid(format!(
+                "{WEIGHTS_FILE}: missing tensor `{prefixed}` (nor bare `{name}`): \
+                 not a BERT-wiring checkpoint?"
+            ))
+        })?;
+    let tensor = match tensor.dtype() {
+        DType::F32 => tensor,
+        // Modern checkpoints may ship half precision (mxbai-embed-xsmall is
+        // F16); CPU inference runs in F32, so cast once at load.
+        DType::F16 | DType::BF16 => tensor.to_dtype(DType::F32).map_err(|error| {
+            invalid(format!(
+                "{WEIGHTS_FILE}: tensor `{name}` half-precision cast failed: {error}"
+            ))
+        })?,
+        other => {
+            return Err(invalid(format!(
+                "{WEIGHTS_FILE}: tensor `{name}` has dtype {other:?}, \
+                 only F32/F16/BF16 are supported"
+            )));
+        }
+    };
     if tensor.dims() != shape {
         return Err(invalid(format!(
             "{WEIGHTS_FILE}: tensor `{name}` has shape {:?}, expected {shape:?} \

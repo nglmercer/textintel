@@ -16,8 +16,8 @@ pub mod report;
 mod metrics;
 
 pub use dataset::{
-    EvaluationCase, EvaluationDataset, ExpectedOutput, SpamCorpus, SpamCorpusItem,
-    EVALUATION_CATEGORIES,
+    EVALUATION_CATEGORIES, EvaluationCase, EvaluationDataset, ExpectedOutput, SpamCorpus,
+    SpamCorpusItem,
 };
 pub use gates::check_gates;
 pub use report::{

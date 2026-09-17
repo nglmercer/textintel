@@ -25,7 +25,7 @@ pub fn match_pattern(
             format!("lexical={lexical:.3}"),
             format!("visual={visual:.3}"),
         ];
-        if best.as_ref().map_or(true, |current| score > current.0) {
+        if best.as_ref().is_none_or(|current| score > current.0) {
             best = Some((score, example.clone(), explanations));
         }
     }
@@ -67,7 +67,7 @@ pub fn match_pattern_fingerprint(
     for (example_text, example) in examples {
         let result = score_fingerprints(query, example, weights);
         let score = enabled_fingerprint_score(pattern, &result);
-        if best.as_ref().map_or(true, |current| score > current.0) {
+        if best.as_ref().is_none_or(|current| score > current.0) {
             best = Some((score, example_text.clone(), result.explanations));
         }
     }

@@ -80,21 +80,27 @@ fn mvp_examples_preserve_raw_and_decode_rebus_candidates() {
     assert!(leet.score > 0.5);
 
     let decoded = e.decode("Fra🏠do").unwrap();
-    assert!(decoded
-        .iter()
-        .any(|candidate| candidate.text.eq_ignore_ascii_case("fracasado")));
+    assert!(
+        decoded
+            .iter()
+            .any(|candidate| candidate.text.eq_ignore_ascii_case("fracasado"))
+    );
     assert!(e.compare("Fra🏠do", "fracasado").unwrap().score > 0.45);
 
     let numeric = e.decode("salU2").unwrap();
-    assert!(numeric
-        .iter()
-        .any(|candidate| candidate.text.eq_ignore_ascii_case("saludos")));
+    assert!(
+        numeric
+            .iter()
+            .any(|candidate| candidate.text.eq_ignore_ascii_case("saludos"))
+    );
 
     // Word-boundary variants: symbol readings also hypothesize spaced forms.
     let spaced = e.decode("Fra🏠do").unwrap();
-    assert!(spaced
-        .iter()
-        .any(|candidate| candidate.text == "Fra casado"));
+    assert!(
+        spaced
+            .iter()
+            .any(|candidate| candidate.text == "Fra casado")
+    );
     // Abstention: nothing readable, nothing returned.
     assert!(e.decode("").unwrap().is_empty());
 
@@ -311,9 +317,11 @@ fn resource_loader_indexes_seed_languages_and_supports_custom_packs() {
     assert!(loader.word_count() > 100);
     assert!(loader.contains_in_language("A", "en"));
     assert!(loader.contains_in_language("ejemplo", "es"));
-    assert!(loader
-        .lookup_languages("example")
-        .contains(&"en".to_string()));
+    assert!(
+        loader
+            .lookup_languages("example")
+            .contains(&"en".to_string())
+    );
     let resource_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources");
     let from_disk = ResourceLoader::from_resource_root(resource_root).unwrap();
     assert_eq!(from_disk.languages(), loader.languages());
@@ -324,11 +332,13 @@ fn resource_loader_indexes_seed_languages_and_supports_custom_packs() {
         .analyze("this is a example")
         .unwrap();
     assert_eq!(fingerprint.top_language(), Some("en"));
-    assert!(fingerprint
-        .lexical_features
-        .stop_words
-        .iter()
-        .any(|word| word == "this"));
+    assert!(
+        fingerprint
+            .lexical_features
+            .stop_words
+            .iter()
+            .any(|word| word == "this")
+    );
 
     let mut custom = ResourceLoader::default();
     custom
@@ -425,9 +435,11 @@ fn symbol_pack_languages_are_normalized_and_scoped() {
             "<test:conflicting-symbols.json>",
         )
         .unwrap_err();
-    assert!(error
-        .to_string()
-        .contains("conflicts with symbol pack language"));
+    assert!(
+        error
+            .to_string()
+            .contains("conflicts with symbol pack language")
+    );
 }
 
 #[test]
@@ -459,18 +471,24 @@ fn resource_index_is_stable_and_tracks_ambiguous_terms() {
     assert_eq!(loader.lookup("missing").status, LookupStatus::NotFound);
     let ambiguous = loader.lookup("a");
     assert_eq!(ambiguous.status, LookupStatus::Ambiguous);
-    assert!(ambiguous
-        .matches
-        .iter()
-        .any(|record| record.language == "xx"));
-    assert!(ambiguous
-        .matches
-        .iter()
-        .any(|record| record.language == "yy"));
-    assert!(ambiguous
-        .matches
-        .iter()
-        .all(|record| record.source.starts_with("<test:")));
+    assert!(
+        ambiguous
+            .matches
+            .iter()
+            .any(|record| record.language == "xx")
+    );
+    assert!(
+        ambiguous
+            .matches
+            .iter()
+            .any(|record| record.language == "yy")
+    );
+    assert!(
+        ambiguous
+            .matches
+            .iter()
+            .all(|record| record.source.starts_with("<test:"))
+    );
     assert_eq!(
         loader.lookup_in_language("a", "xx").status,
         LookupStatus::Unique

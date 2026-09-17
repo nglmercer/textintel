@@ -51,10 +51,12 @@ fn engine_flags_flow_into_commands() {
     assert!(value["score"].as_f64().unwrap() > 0.9);
     // Resource roots load from disk.
     let value = run_json(&["diagnostics", "--resource-root", "resources", "--json"]);
-    assert!(value["providers"]["symbols"]["provider"]
-        .as_str()
-        .unwrap()
-        .contains("resource"));
+    assert!(
+        value["providers"]["symbols"]["provider"]
+            .as_str()
+            .unwrap()
+            .contains("resource")
+    );
     // Model paths attach trained artifacts (score differs from default).
     let plain = run_json(&["compare", "gr8", "great", "--json"]);
     let modeled = run_json(&[

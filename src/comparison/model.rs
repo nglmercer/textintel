@@ -11,8 +11,8 @@ mod features;
 mod optim;
 
 pub use features::{
-    fuzzy_decode_mismatch, language_agreement, mean_channel_confidence, training_features,
-    TRAINING_FEATURES,
+    TRAINING_FEATURES, fuzzy_decode_mismatch, language_agreement, mean_channel_confidence,
+    training_features,
 };
 pub use optim::{balanced_sample_weights, logistic_step, logistic_step_weighted, sigmoid};
 

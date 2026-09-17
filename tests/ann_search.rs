@@ -39,9 +39,11 @@ fn ann_channel_participates_and_ranking_wins() {
     }
     let results = engine.find_similar("compra ahora", 3).unwrap();
     assert_eq!(results[0].id, "doc-1");
-    assert!(results[0]
-        .retrieval_channels
-        .contains(&"semantic_ann".to_string()));
+    assert!(
+        results[0]
+            .retrieval_channels
+            .contains(&"semantic_ann".to_string())
+    );
     // Channel union caps candidates: no full scan of the 10 documents.
     assert!(results[0].candidate_count <= 5);
 }

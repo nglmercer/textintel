@@ -2,13 +2,13 @@
 
 use std::collections::BTreeMap;
 
+use textintel::SimilarityScorer;
 use textintel::evaluation::EvaluationDataset;
 use textintel::semantic::FeatureHashEmbeddingProvider;
-use textintel::SimilarityScorer;
 use textintel::{
-    balanced_sample_weights, language_agreement, logistic_step_weighted, training_features,
-    EngineConfig, LogisticSimilarityScorer, SimilarityModelArtifact, TextIntelligence,
-    TRAINING_FEATURES,
+    EngineConfig, LogisticSimilarityScorer, SimilarityModelArtifact, TRAINING_FEATURES,
+    TextIntelligence, balanced_sample_weights, language_agreement, logistic_step_weighted,
+    training_features,
 };
 
 use super::flag_value;
@@ -345,10 +345,10 @@ pub(crate) fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::
     if let Some(model) = engine.diagnostics().embedding_model {
         artifact = artifact.with_embedding_model(model);
     }
-    if let Some(parent) = std::path::Path::new(&output).parent() {
-        if !parent.as_os_str().is_empty() {
-            std::fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = std::path::Path::new(&output).parent()
+        && !parent.as_os_str().is_empty()
+    {
+        std::fs::create_dir_all(parent)?;
     }
     std::fs::write(
         &output,

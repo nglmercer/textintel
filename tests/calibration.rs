@@ -2,7 +2,7 @@
 //! and no probability is marked calibrated unless calibration ran.
 
 use textintel::detection::spam::SpamModelArtifact;
-use textintel::evaluation::{evaluate, EvaluationCase, EvaluationDataset};
+use textintel::evaluation::{EvaluationCase, EvaluationDataset, evaluate};
 use textintel::{EngineConfig, TextIntelligence};
 
 fn similar_case(id: &str, a: &str, b: &str, similar: bool) -> EvaluationCase {
@@ -112,7 +112,7 @@ fn artifact_calibrated_flag_round_trips_honestly() {
 
 #[test]
 fn shipped_spam_model_documents_its_calibration() {
-    let source = std::fs::read_to_string("models/spam-v1.json").unwrap();
+    let source = std::fs::read_to_string("models/spam-v2.json").unwrap();
     let artifact = SpamModelArtifact::from_json(&source).unwrap();
     // The flag is only truthful because textintel-train fits the bias on a
     // held-out validation split; the heldout metrics below are the receipt.

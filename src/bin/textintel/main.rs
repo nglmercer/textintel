@@ -6,7 +6,7 @@ mod eval;
 
 use eval::run_eval;
 fn usage() -> &'static str {
-    "Usage:\n  textintel analyze <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel explain <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel decode <text> [--languages <es,en>] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel compare <message-a> <message-b> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel duplicate <message-a> <message-b> [--threshold <0..1>] [--mode combined|near_exact|lexical|semantic|phonetic|decoded|visual] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel spam <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel batch <input.jsonl> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <dataset> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--spam-corpus <spam-eval.json>] [--no-ranking] [--json] [--production]\n  textintel evaluate <dataset> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--spam-corpus <spam-eval.json>] [--no-ranking] [--json] [--production]\n  textintel index <store.json> <id> <text> [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel search <store.json> <text> <limit> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n\nJSON output contract: every --json payload follows API_VERSION (see\nschema-version); payloads evolve additively only — fields are added, never\nrenamed or removed, within a major version."
+    "Usage:\n  textintel analyze <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel explain <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel decode <text> [--languages <es,en>] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel compare <message-a> <message-b> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel duplicate <message-a> <message-b> [--threshold <0..1>] [--mode combined|near_exact|lexical|semantic|phonetic|decoded|visual] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel spam <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel batch <input.jsonl> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <dataset> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--spam-corpus <spam-eval.json>] [--no-ranking] [--json] [--production]\n  textintel evaluate <dataset> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--spam-corpus <spam-eval.json>] [--no-ranking] [--json] [--production]\n  textintel index <store.json> <id> <text> [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel search <store.json> <text> <limit> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel generate <prompt> [--liquid-endpoint <url>] [--liquid-model <id>] [--max-tokens <n>] [--temperature <f>] [--system <text>] [--json]\n\nJSON output contract: every --json payload follows API_VERSION (see\nschema-version); payloads evolve additively only — fields are added, never\nrenamed or removed, within a major version."
 }
 
 fn print_json<T: serde::Serialize>(value: &T) -> Result<(), Box<dyn std::error::Error>> {
@@ -36,8 +36,8 @@ fn language_hints(args: &[String]) -> Option<Vec<String>> {
 
 /// Shared engine construction: default or `--production` preset, then
 /// `--language` hints (decode/G2P preference), `--resource-root` (custom
-/// packs), and `--model-path` (directory holding `similarity-v2.json` /
-/// `spam-v1.json` / `reranker-v1.json`; present-but-invalid artifacts fail
+/// packs), and `--model-path` (directory holding `similarity-v5.json` /
+/// `spam-v2.json` / `reranker-v1.json`; present-but-invalid artifacts fail
 /// loudly).
 fn build_engine(
     args: &[String],
@@ -72,7 +72,7 @@ fn build_engine(
                 })?;
             engine = engine.with_similarity_scorer(artifact.to_scorer());
         }
-        let spam = std::path::Path::new(&dir).join("spam-v1.json");
+        let spam = textintel::engine::preferred_spam_artifact_in(std::path::Path::new(&dir));
         if spam.is_file() {
             let source = std::fs::read_to_string(&spam)?;
             let artifact = textintel::SpamModelArtifact::from_json(&source)
@@ -414,6 +414,38 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             0
         }
+        "generate" => {
+            let prompt = positionals.get(1).ok_or("generate requires <prompt>")?;
+            let endpoint = flag_value(&args, "--liquid-endpoint")
+                .unwrap_or_else(|| textintel::LIQUID_DEFAULT_ENDPOINT.to_string());
+            let model = flag_value(&args, "--liquid-model")
+                .unwrap_or_else(|| textintel::LIQUID_DEFAULT_MODEL.to_string());
+            let mut options = textintel::GenerationOptions::default();
+            if let Some(max_tokens) = flag_value(&args, "--max-tokens") {
+                options = options.with_max_tokens(max_tokens.parse::<u32>()?);
+            }
+            if let Some(temperature) = flag_value(&args, "--temperature") {
+                options = options.with_temperature(temperature.parse::<f32>()?);
+            }
+            if let Some(system) = flag_value(&args, "--system") {
+                options = options.with_system_prompt(system);
+            }
+            let provider = textintel::LiquidInstructProvider::new(&endpoint, &model)
+                .map_err(|error| error.to_string())?;
+            let engine = build_engine(&args, production)?.with_generative_provider(provider);
+            let generated = engine.generate(prompt, &options)?;
+            if json {
+                print_json(&serde_json::json!({
+                    "text": generated.text,
+                    "model": generated.model,
+                    "prompt_tokens": generated.prompt_tokens,
+                    "completion_tokens": generated.completion_tokens,
+                }))?;
+            } else {
+                println!("{}", generated.text);
+            }
+            0
+        }
         _ => {
             eprintln!("{}", usage());
             std::process::exit(2);
@@ -446,6 +478,11 @@ fn positional_args(args: &[String]) -> Vec<String> {
                 || arg == "--threshold"
                 || arg == "--mode"
                 || arg == "--model-path"
+                || arg == "--liquid-endpoint"
+                || arg == "--liquid-model"
+                || arg == "--max-tokens"
+                || arg == "--temperature"
+                || arg == "--system"
                 || arg == "--resource-root")
         {
             skip_next = true;

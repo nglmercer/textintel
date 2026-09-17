@@ -14,11 +14,11 @@ mod providers;
 pub use error::ResourceError;
 pub use index::{LanguageIndex, LexiconLookup, LexiconRecord, LookupStatus};
 pub use loader::{ResourceLimits, ResourceLoader};
-pub use order::{normalize_key, IndexKey};
+pub use order::{IndexKey, normalize_key};
 pub use pack::{
-    canonical_concept_id, AbbreviationEntry, AbbreviationPack, AbbreviationReading, LanguagePack,
-    LexiconEntry, ResourcePackInfo, SymbolPack, SymbolResource, SUPPORTED_SCHEMA_VERSION,
+    AbbreviationEntry, AbbreviationPack, AbbreviationReading, LanguagePack, LexiconEntry,
+    ResourcePackInfo, SUPPORTED_SCHEMA_VERSION, SymbolPack, SymbolResource, canonical_concept_id,
 };
 pub use providers::{
-    embedded as embedded_common, embedded as embedded_resources, DefaultLexiconProvider,
+    DefaultLexiconProvider, embedded as embedded_common, embedded as embedded_resources,
 };

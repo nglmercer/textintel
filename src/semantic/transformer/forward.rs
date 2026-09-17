@@ -2,8 +2,8 @@
 
 use candle_core::Tensor;
 
-use super::weights::LayerWeights;
 use super::EncoderConfig;
+use super::weights::LayerWeights;
 
 const TANH_GELU_COEF: f64 = 0.7978845608; // sqrt(2/pi)
 const TANH_GELU_CUBIC: f64 = 0.044715;

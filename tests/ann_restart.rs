@@ -4,8 +4,8 @@
 #![cfg(feature = "ann-hnsw")]
 
 use textintel::core::providers::VectorStore;
-use textintel::storage::ann::HnswVectorIndex;
 use textintel::storage::MemoryStore;
+use textintel::storage::ann::HnswVectorIndex;
 use textintel::{EngineConfig, TextIntelligence};
 
 const DOCUMENTS: &[(&str, &str)] = &[
@@ -125,10 +125,12 @@ fn memory_ann_is_visible_in_diagnostics() {
         "dimensions must be reported"
     );
     assert_eq!(store.store_capabilities().ann_entries, DOCUMENTS.len());
-    assert!(store
-        .store_capabilities()
-        .indexed_channels
-        .contains(&"semantic_ann".to_string()));
+    assert!(
+        store
+            .store_capabilities()
+            .indexed_channels
+            .contains(&"semantic_ann".to_string())
+    );
     let engine = engine.with_store(store);
     let diagnostics = engine.diagnostics();
     assert!(

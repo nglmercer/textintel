@@ -49,59 +49,61 @@ pub mod transliteration;
 pub mod visual;
 
 pub use cache::{
-    rebus_cache_key, resource_revision, CacheDiagnostics, CachedG2PProvider,
-    CachedLanguageDetectionProvider, CachedRebusDecoder, RevisionCache,
+    CacheDiagnostics, CachedG2PProvider, CachedLanguageDetectionProvider, CachedRebusDecoder,
+    RevisionCache, rebus_cache_key, resource_revision,
 };
 pub use comparison::{
+    ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer, RerankerModelArtifact,
+    SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURE_SCHEMA_VERSION, TRAINING_FEATURES,
     balanced_sample_weights, language_agreement, logistic_step, logistic_step_weighted,
     mean_channel_confidence, rerank_score, score_fingerprints_with_profile, sigmoid,
-    training_features, ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer,
-    RerankerModelArtifact, SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURES,
-    TRAINING_FEATURE_SCHEMA_VERSION,
+    training_features,
 };
 pub use core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 pub use core::config::{CacheLimits, EngineConfig, RebusWeights, SimilarityWeights};
 pub use core::error::{ProviderError, TextIntelError};
 pub use core::providers::{
-    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
-    LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
-    SharedAbbreviationProvider, SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider,
-    Transliteration, TransliterationProvider, VectorStore, VectorStoreCapabilities,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider, GeneratedText,
+    GenerationOptions, GenerativeProvider, LanguageDetectionProvider, LemmatizerProvider,
+    LexiconProvider, RerankerProvider, SharedAbbreviationProvider, SimilarityScorer, SpamPredictor,
+    SymbolKnowledgeProvider, Transliteration, TransliterationProvider, VectorStore,
+    VectorStoreCapabilities,
 };
 pub use core::types::*;
 pub use detection::{
-    duplicate_result, match_pattern, predict_spam, spam_feature_vector, spam_features,
-    HeuristicSpamPredictor, SpamModelArtifact, TrainedSpamPredictor, SPAM_FEATURES,
-    SPAM_FEATURE_SCHEMA_VERSION,
+    HeuristicSpamPredictor, SPAM_FEATURE_SCHEMA_VERSION, SPAM_FEATURES, SpamModelArtifact,
+    TrainedSpamPredictor, duplicate_result, match_pattern, predict_spam, spam_feature_vector,
+    spam_features,
 };
+pub use engine::TextIntelligence;
 pub use engine::production::{
     CandidateBudgets, DegradedCapability, EngineBuilder, EngineDiagnostics,
 };
-pub use engine::TextIntelligence;
 pub use entities::{
-    entity_agreement, entity_conflict, RuleBasedEntityProvider, DEFAULT_MAX_ENTITIES,
-    DEFAULT_MAX_ENTITY_SPAN,
+    DEFAULT_MAX_ENTITIES, DEFAULT_MAX_ENTITY_SPAN, RuleBasedEntityProvider, entity_agreement,
+    entity_conflict,
 };
 pub use language::{NgramLanguageDetector, ProfileLanguageDetector};
 #[cfg(feature = "phonetic-espeak")]
 pub use phonetic::{
-    parse_espeak_ipa, parse_voices_table, primary_stress_syllables, EspeakNgG2PProvider,
-    EspeakVoice, DEFAULT_ESPEAK_TIMEOUT,
+    DEFAULT_ESPEAK_TIMEOUT, EspeakNgG2PProvider, EspeakVoice, parse_espeak_ipa, parse_voices_table,
+    primary_stress_syllables,
 };
 pub use phonetic::{NullG2PProvider, RuleBasedG2PProvider};
 pub use resources::{
-    embedded_common, embedded_resources, normalize_key, AbbreviationEntry, AbbreviationPack,
-    AbbreviationReading, DefaultLexiconProvider, IndexKey, LanguageIndex, LanguagePack,
-    LexiconEntry, LexiconLookup, LexiconRecord, LookupStatus, ResourceError, ResourceLimits,
-    ResourceLoader, ResourcePackInfo, SymbolPack, SymbolResource, SUPPORTED_SCHEMA_VERSION,
+    AbbreviationEntry, AbbreviationPack, AbbreviationReading, DefaultLexiconProvider, IndexKey,
+    LanguageIndex, LanguagePack, LexiconEntry, LexiconLookup, LexiconRecord, LookupStatus,
+    ResourceError, ResourceLimits, ResourceLoader, ResourcePackInfo, SUPPORTED_SCHEMA_VERSION,
+    SymbolPack, SymbolResource, embedded_common, embedded_resources, normalize_key,
 };
-#[cfg(feature = "semantic-candle")]
-pub use semantic::CandleEmbeddingProvider;
 #[cfg(feature = "semantic-http")]
 pub use semantic::HttpEmbeddingProvider;
 pub use semantic::{
-    CachedEmbeddingProvider, FallbackEmbeddingProvider, FeatureHashEmbeddingProvider,
-    NullEmbeddingProvider, StaticEmbeddingProvider,
+    ARCTIC_EMBED_XS, CachedEmbeddingProvider, FallbackEmbeddingProvider,
+    FeatureHashEmbeddingProvider, LFM2_5_230M, LFM2_5_350M, LIQUID_DEFAULT_ENDPOINT,
+    LIQUID_DEFAULT_MODEL, LiquidInstructProvider, MODERN_EMBEDDING_MODELS,
+    MODERN_GENERATIVE_MODELS, MULTILINGUAL_E5_SMALL, MXBAI_EMBED_XSMALL, NullEmbeddingProvider,
+    StaticEmbeddingProvider, embedding_model, generative_model,
 };
 #[cfg(feature = "semantic-transformer")]
 pub use semantic::{EncodedBatch, TransformerEmbeddingProvider, TransformerPooling};
@@ -110,11 +112,11 @@ pub use storage::HnswVectorIndex;
 #[cfg(feature = "persist-redb")]
 pub use storage::RedbStore;
 pub use storage::{
-    migrate_fingerprint_bytes, JsonFileStore, MemoryStore, MigratedFingerprint,
-    OLDEST_SUPPORTED_FINGERPRINT_VERSION, PATTERN_STORE_SCHEMA_VERSION,
+    JsonFileStore, MemoryStore, MigratedFingerprint, OLDEST_SUPPORTED_FINGERPRINT_VERSION,
+    PATTERN_STORE_SCHEMA_VERSION, migrate_fingerprint_bytes,
 };
 pub use symbols::DefaultSymbolKnowledge;
 pub use transliteration::{
-    effective_transliteration_evidence, transliteration_compatibility, transliteration_evidence,
-    transliteration_similarity, RuleBasedTransliterationProvider, TransliterationEvidence,
+    RuleBasedTransliterationProvider, TransliterationEvidence, effective_transliteration_evidence,
+    transliteration_compatibility, transliteration_evidence, transliteration_similarity,
 };

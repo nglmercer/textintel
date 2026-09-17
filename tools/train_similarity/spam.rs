@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use textintel::evaluation::EvaluationDataset;
-use textintel::{logistic_step, EngineConfig, TextIntelligence};
+use textintel::{EngineConfig, TextIntelligence, logistic_step};
 
 use super::flag_value;
 use super::metrics::logistic_report;
@@ -181,7 +181,7 @@ struct CorpusItem {
 }
 
 pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
-    use textintel::{spam_feature_vector, spam_features, SpamModelArtifact, SPAM_FEATURES};
+    use textintel::{SPAM_FEATURES, SpamModelArtifact, spam_feature_vector, spam_features};
 
     let output =
         flag_value(args, "--output").ok_or("spam training requires --output <artifact.json>")?;
@@ -426,10 +426,10 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
     .with_calibrated(true)
     .with_decision_threshold(decision_threshold)
     .with_metrics(metrics);
-    if let Some(parent) = std::path::Path::new(&output).parent() {
-        if !parent.as_os_str().is_empty() {
-            std::fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = std::path::Path::new(&output).parent()
+        && !parent.as_os_str().is_empty()
+    {
+        std::fs::create_dir_all(parent)?;
     }
     std::fs::write(
         &output,

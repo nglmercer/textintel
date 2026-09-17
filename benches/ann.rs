@@ -11,7 +11,10 @@
 //! when `ANN_BENCH_FULL` is set.
 
 #[cfg(feature = "ann-hnsw")]
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use std::hint::black_box;
+
+#[cfg(feature = "ann-hnsw")]
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 #[cfg(feature = "ann-hnsw")]
 use textintel::HnswVectorIndex;
 

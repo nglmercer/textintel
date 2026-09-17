@@ -7,8 +7,8 @@
 //! [`StaticEmbeddingProvider`] vectors so each signal is inspectable in
 //! isolation.
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use textintel::core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 use textintel::core::providers::{EmbeddingProvider, VectorStore};
@@ -95,11 +95,13 @@ fn fallback_serves_primary_until_it_errors() {
     // Degradation is explicit in capabilities and metadata.
     let capabilities = provider.capabilities();
     assert_eq!(capabilities.provider, "feature_hash_embedding");
-    assert!(capabilities
-        .fallback
-        .as_deref()
-        .unwrap_or_default()
-        .contains("failing_primary"));
+    assert!(
+        capabilities
+            .fallback
+            .as_deref()
+            .unwrap_or_default()
+            .contains("failing_primary")
+    );
     assert_eq!(
         provider.model_metadata().map(|metadata| metadata.model_id),
         Some("feature-hash-v1".to_string())
@@ -249,10 +251,11 @@ fn semantic_without_lexical_overlap_needs_low_overlap() {
 fn entities_agree_conflict_and_vanish_cleanly() {
     let engine = TextIntelligence::default();
     let left = engine.analyze("parcel 3310 arrived").unwrap();
-    assert!(left
-        .entities
-        .iter()
-        .any(|mention| mention.entity_type == "number" && mention.value == "3310"));
+    assert!(
+        left.entities
+            .iter()
+            .any(|mention| mention.entity_type == "number" && mention.value == "3310")
+    );
     let same = engine
         .compare("parcel 3310 arrived", "parcel 3310 arrived")
         .unwrap();
@@ -430,10 +433,12 @@ fn provider_degradation_is_explicit_in_diagnostics() {
         CapabilityLevel::Basic,
         "feature hash must report Basic, never Production"
     );
-    assert!(diagnostics
-        .degraded
-        .iter()
-        .any(|note| note.capability == "semantic"));
+    assert!(
+        diagnostics
+            .degraded
+            .iter()
+            .any(|note| note.capability == "semantic")
+    );
     assert!(diagnostics.entities.is_some());
     assert_eq!(
         diagnostics.entities.as_ref().map(|info| info.quality),
@@ -554,8 +559,8 @@ fn v5_scorer_prefers_genuine_transliteration_over_lookalikes() {
 #[cfg(feature = "semantic-transformer")]
 #[test]
 fn transformer_primary_serves_through_fallback_undegraded() {
-    use textintel::core::providers::EmbeddingProvider as _;
     use textintel::TransformerEmbeddingProvider;
+    use textintel::core::providers::EmbeddingProvider as _;
 
     let transformer =
         TransformerEmbeddingProvider::open("tests/fixtures/mini-transformer").unwrap();

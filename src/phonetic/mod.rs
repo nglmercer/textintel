@@ -7,8 +7,8 @@ pub mod similarity;
 
 #[cfg(feature = "phonetic-espeak")]
 pub use espeak::{
-    parse_espeak_ipa, parse_voices_table, primary_stress_syllables, EspeakNgG2PProvider,
-    EspeakVoice, DEFAULT_ESPEAK_TIMEOUT,
+    DEFAULT_ESPEAK_TIMEOUT, EspeakNgG2PProvider, EspeakVoice, parse_espeak_ipa, parse_voices_table,
+    primary_stress_syllables,
 };
 pub use features::{articulatory_distance, feature_label};
 pub use g2p::{G2PProvider, NullG2PProvider, RuleBasedG2PProvider};

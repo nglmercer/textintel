@@ -8,10 +8,20 @@ use serde_json;
 use sha2::{Digest, Sha256};
 
 use super::super::error::ResourceError;
-use super::super::pack::{AbbreviationPack, LanguagePack, SymbolPack, SUPPORTED_SCHEMA_VERSION};
+use super::super::pack::{AbbreviationPack, LanguagePack, SUPPORTED_SCHEMA_VERSION, SymbolPack};
 
 pub(crate) fn canonical_language(language: &str) -> String {
     language.trim().to_lowercase().replace('_', "-")
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut out = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        out.push(HEX[(byte >> 4) as usize] as char);
+        out.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    out
 }
 
 pub(crate) fn validate_file_size(path: &Path, maximum: usize) -> Result<(), ResourceError> {
@@ -67,7 +77,7 @@ pub(crate) fn validate_declared_hash(
         message: error.to_string(),
     })?;
     let digest = Sha256::digest(canonical);
-    let actual = format!("{digest:x}");
+    let actual = hex_encode(&digest);
     if actual != expected {
         return Err(ResourceError::Validation {
             path: path.to_path_buf(),

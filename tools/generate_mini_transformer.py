@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Generate the tiny deterministic BERT fixture for transformer mechanics tests.
+"""Generate tiny deterministic fixtures for transformer mechanics tests.
 
 Writes tests/fixtures/mini-transformer/{config.json,vocab.txt,model.safetensors}
-with fixed-seed pseudo-random F32 weights. No third-party packages required:
-the safetensors container is assembled with struct+json only.
+(bare tensor names, WordPiece) and
+tests/fixtures/mini-unigram/{config.json,tokenizer.json,model.safetensors}
+(`bert.`-prefixed tensor names, SentencePiece-Unigram) with fixed-seed
+pseudo-random F32 weights. No third-party packages required: the safetensors
+container is assembled with struct+json only.
 
 Regenerate from the repository root:
 
@@ -47,8 +50,30 @@ def rand_tensor(rng, shape):
     return [rng.gauss(0.0, 0.08) for _ in range(count)], shape
 
 
+def write_safetensors(path: Path, tensors: dict) -> None:
+    header = {"__metadata__": {"format": "textintel-mini-fixture"}}
+    offset = 0
+    payload = bytearray()
+    for name in sorted(tensors):
+        values, shape = tensors[name]
+        blob = struct.pack(f"<{len(values)}f", *values)
+        header[name] = {
+            "dtype": "F32",
+            "shape": shape,
+            "data_offsets": [offset, offset + len(blob)],
+        }
+        payload += blob
+        offset += len(blob)
+    header_bytes = json.dumps(header).encode("utf-8")
+    with open(path, "wb") as handle:
+        handle.write(struct.pack("<Q", len(header_bytes)))
+        handle.write(header_bytes)
+        handle.write(payload)
+
+
 def main() -> None:
-    root = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "mini-transformer"
+    fixtures = Path(__file__).resolve().parent.parent / "tests" / "fixtures"
+    root = fixtures / "mini-transformer"
     root.mkdir(parents=True, exist_ok=True)
     rng = random.Random(SEED)
 
@@ -93,25 +118,92 @@ def main() -> None:
         tensors[f"{base}.output.LayerNorm.weight"] = ([1.0] * HIDDEN, [HIDDEN])
         tensors[f"{base}.output.LayerNorm.bias"] = ([0.0] * HIDDEN, [HIDDEN])
 
-    header = {"__metadata__": {"format": "textintel-mini-fixture"}}
-    offset = 0
-    payload = bytearray()
-    for name in sorted(tensors):
-        values, shape = tensors[name]
-        blob = struct.pack(f"<{len(values)}f", *values)
-        header[name] = {
-            "dtype": "F32",
-            "shape": shape,
-            "data_offsets": [offset, offset + len(blob)],
-        }
-        payload += blob
-        offset += len(blob)
-    header_bytes = json.dumps(header).encode("utf-8")
-    with open(root / "model.safetensors", "wb") as handle:
-        handle.write(struct.pack("<Q", len(header_bytes)))
-        handle.write(header_bytes)
-        handle.write(payload)
+    write_safetensors(root / "model.safetensors", tensors)
     print(f"wrote {root} ({len(tensors)} tensors, {VOCAB_SIZE} vocab)")
+    write_unigram_fixture(fixtures / "mini-unigram")
+
+
+UNIGRAM_SEED = 20260917
+UNIGRAM_HIDDEN = 8
+UNIGRAM_LAYERS = 1
+UNIGRAM_HEADS = 2
+UNIGRAM_INTERMEDIATE = 16
+UNIGRAM_POSITIONS = 16
+UNIGRAM_VOCAB = [
+    ("<s>", 0.0), ("<pad>", 0.0), ("</s>", 0.0), ("<unk>", 0.0),
+    ("\u2581", -1.0), ("\u2581hello", 5.0), ("\u2581world", 4.0),
+    ("he", 1.0), ("llo", 1.0), ("s", 0.5),
+]
+
+
+def write_unigram_fixture(root: Path) -> None:
+    root.mkdir(parents=True, exist_ok=True)
+    rng = random.Random(UNIGRAM_SEED)
+    hidden, layers = UNIGRAM_HIDDEN, UNIGRAM_LAYERS
+    inter, positions = UNIGRAM_INTERMEDIATE, UNIGRAM_POSITIONS
+    vocab_size = len(UNIGRAM_VOCAB)
+
+    config = {
+        "model_type": "bert",
+        "hidden_size": hidden,
+        "num_hidden_layers": layers,
+        "num_attention_heads": UNIGRAM_HEADS,
+        "intermediate_size": inter,
+        "max_position_embeddings": positions,
+        "hidden_act": "gelu",
+        "layer_norm_eps": 1e-12,
+        "vocab_size": vocab_size,
+        "type_vocab_size": 2,
+        "model_id": "textintel-mini-unigram-fixture",
+        "revision": "fixture-1",
+        "languages": ["en"],
+        "do_lower_case": False,
+    }
+    (root / "config.json").write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    tokenizer = {
+        "version": "1.0",
+        "model": {
+            "type": "Unigram",
+            "unk_id": 3,
+            "byte_fallback": False,
+            "vocab": [[piece, score] for piece, score in UNIGRAM_VOCAB],
+        },
+        "added_tokens": [
+            {"id": 0, "content": "<s>", "special": True},
+            {"id": 1, "content": "<pad>", "special": True},
+            {"id": 2, "content": "</s>", "special": True},
+        ],
+    }
+    (root / "tokenizer.json").write_text(
+        json.dumps(tokenizer, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+
+    tensors = {}
+    prefix = "bert."
+    tensors[prefix + "embeddings.word_embeddings.weight"] = rand_tensor(rng, [vocab_size, hidden])
+    tensors[prefix + "embeddings.position_embeddings.weight"] = rand_tensor(
+        rng, [positions, hidden]
+    )
+    tensors[prefix + "embeddings.token_type_embeddings.weight"] = rand_tensor(rng, [2, hidden])
+    tensors[prefix + "embeddings.LayerNorm.weight"] = ([1.0] * hidden, [hidden])
+    tensors[prefix + "embeddings.LayerNorm.bias"] = ([0.0] * hidden, [hidden])
+    for layer in range(layers):
+        base = f"{prefix}encoder.layer.{layer}"
+        for name in ("query", "key", "value"):
+            tensors[f"{base}.attention.self.{name}.weight"] = rand_tensor(rng, [hidden, hidden])
+            tensors[f"{base}.attention.self.{name}.bias"] = rand_tensor(rng, [hidden])
+        tensors[f"{base}.attention.output.dense.weight"] = rand_tensor(rng, [hidden, hidden])
+        tensors[f"{base}.attention.output.dense.bias"] = rand_tensor(rng, [hidden])
+        tensors[f"{base}.attention.output.LayerNorm.weight"] = ([1.0] * hidden, [hidden])
+        tensors[f"{base}.attention.output.LayerNorm.bias"] = ([0.0] * hidden, [hidden])
+        tensors[f"{base}.intermediate.dense.weight"] = rand_tensor(rng, [inter, hidden])
+        tensors[f"{base}.intermediate.dense.bias"] = rand_tensor(rng, [inter])
+        tensors[f"{base}.output.dense.weight"] = rand_tensor(rng, [hidden, inter])
+        tensors[f"{base}.output.dense.bias"] = rand_tensor(rng, [hidden])
+        tensors[f"{base}.output.LayerNorm.weight"] = ([1.0] * hidden, [hidden])
+        tensors[f"{base}.output.LayerNorm.bias"] = ([0.0] * hidden, [hidden])
+    write_safetensors(root / "model.safetensors", tensors)
+    print(f"wrote {root} ({len(tensors)} tensors, {vocab_size} vocab)")
 
 
 if __name__ == "__main__":

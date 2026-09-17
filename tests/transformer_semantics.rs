@@ -16,8 +16,8 @@ use textintel::core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapa
 use textintel::core::providers::EmbeddingProvider;
 use textintel::semantic::FeatureHashEmbeddingProvider;
 use textintel::{
-    language_agreement, transliteration_evidence, EngineConfig, TextIntelligence,
-    TransformerEmbeddingProvider,
+    EngineConfig, TextIntelligence, TransformerEmbeddingProvider, language_agreement,
+    transliteration_evidence,
 };
 
 const FIXTURE: &str = "tests/fixtures/mini-transformer";

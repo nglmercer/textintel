@@ -7,7 +7,7 @@ use crate::core::types::LanguageCandidate;
 use crate::normalization::unicode::casefold_text;
 use crate::visual::scripts::scripts_in;
 
-use super::order::{normalize_key, IndexKey};
+use super::order::{IndexKey, normalize_key};
 use super::pack::{LanguagePack, SymbolResource};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

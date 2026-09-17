@@ -19,11 +19,11 @@ pub fn parse_ipa(ipa: &str) -> Vec<String> {
     let mut output = Vec::new();
     let mut remaining = ipa;
     while !remaining.is_empty() {
-        if let Some(ch) = remaining.chars().next() {
-            if SKIP_MARKS.contains(&ch) || is_combining_diacritic(ch) {
-                remaining = &remaining[ch.len_utf8()..];
-                continue;
-            }
+        if let Some(ch) = remaining.chars().next()
+            && (SKIP_MARKS.contains(&ch) || is_combining_diacritic(ch))
+        {
+            remaining = &remaining[ch.len_utf8()..];
+            continue;
         }
         if let Some(token) = MULTI_CHAR_TOKENS
             .iter()

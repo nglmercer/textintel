@@ -12,7 +12,7 @@ pub use ann::HnswVectorIndex;
 pub use json::JsonFileStore;
 pub use memory::MemoryStore;
 pub use migrate::{
-    migrate_fingerprint_bytes, MigratedFingerprint, OLDEST_SUPPORTED_FINGERPRINT_VERSION,
+    MigratedFingerprint, OLDEST_SUPPORTED_FINGERPRINT_VERSION, migrate_fingerprint_bytes,
 };
 pub use patterns::PATTERN_STORE_SCHEMA_VERSION;
 #[cfg(feature = "persist-redb")]

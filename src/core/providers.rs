@@ -165,6 +165,77 @@ pub trait LexiconProvider: Send + Sync {
     }
 }
 
+/// Bounded options for one local generation request.
+#[derive(Debug, Clone)]
+pub struct GenerationOptions {
+    /// Maximum new tokens to generate (server-enforced upper bound applies).
+    pub max_tokens: u32,
+    /// Sampling temperature in `[0.0, 2.0]`.
+    pub temperature: f32,
+    /// Optional system prompt prepended to the conversation.
+    pub system_prompt: Option<String>,
+}
+
+impl Default for GenerationOptions {
+    fn default() -> Self {
+        Self {
+            max_tokens: 256,
+            temperature: 0.7,
+            system_prompt: None,
+        }
+    }
+}
+
+impl GenerationOptions {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_max_tokens(mut self, max_tokens: u32) -> Self {
+        self.max_tokens = max_tokens.max(1);
+        self
+    }
+
+    pub fn with_temperature(mut self, temperature: f32) -> Self {
+        self.temperature = temperature.clamp(0.0, 2.0);
+        self
+    }
+
+    pub fn with_system_prompt(mut self, prompt: impl Into<String>) -> Self {
+        self.system_prompt = Some(prompt.into());
+        self
+    }
+}
+
+/// One generated completion. Counts only — never echoes the prompt.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeneratedText {
+    /// Generated text (prompt excluded).
+    pub text: String,
+    /// Model identifier reported by the server.
+    pub model: String,
+    /// Prompt tokens consumed, when the server reports usage.
+    pub prompt_tokens: Option<u32>,
+    /// Generated tokens, when the server reports usage.
+    pub completion_tokens: Option<u32>,
+}
+
+/// Provider boundary for local instruction-following generation (Liquid LFM2.5
+/// served over an OpenAI-compatible local endpoint). Generation is explicit:
+/// the engine never constructs a generative provider by itself, so analyzing
+/// a message can never send input to a model implicitly.
+pub trait GenerativeProvider: Send + Sync {
+    fn generate(
+        &self,
+        prompt: &str,
+        options: &GenerationOptions,
+    ) -> Result<GeneratedText, ProviderError>;
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new("generative")
+    }
+}
+
 /// Provider boundary for calibrated spam or abuse classification. The
 /// deterministic feature extractor remains usable without this provider.
 pub trait SpamPredictor: Send + Sync {
@@ -397,8 +468,23 @@ impl<T: LanguageDetectionProvider + ?Sized> LanguageDetectionProvider for Arc<T>
     }
 }
 
+impl<T: GenerativeProvider + ?Sized> GenerativeProvider for Arc<T> {
+    fn generate(
+        &self,
+        prompt: &str,
+        options: &GenerationOptions,
+    ) -> Result<GeneratedText, ProviderError> {
+        (**self).generate(prompt, options)
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        (**self).capabilities()
+    }
+}
+
 pub type SharedAbbreviationProvider = Arc<dyn AbbreviationProvider>;
 pub type SharedEmbeddingProvider = Arc<dyn EmbeddingProvider>;
+pub type SharedGenerativeProvider = Arc<dyn GenerativeProvider>;
 pub type SharedEntityProvider = Arc<dyn EntityProvider>;
 pub type SharedG2PProvider = Arc<dyn G2PProvider>;
 pub type SharedLanguageProvider = Arc<dyn LanguageDetectionProvider>;

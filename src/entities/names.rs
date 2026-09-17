@@ -187,12 +187,15 @@ mod tests {
     #[test]
     fn names_and_org_suffixes_classify() {
         let person = extract("Ada Lovelace wrote the notes");
-        assert!(person
-            .iter()
-            .any(|mention| mention.entity_type == "person" && mention.value == "ada lovelace"));
+        assert!(
+            person
+                .iter()
+                .any(|mention| mention.entity_type == "person" && mention.value == "ada lovelace")
+        );
         let org = extract("Ada Lovelace Bank approved the transfer");
-        assert!(org
-            .iter()
-            .any(|mention| mention.entity_type == "organization"));
+        assert!(
+            org.iter()
+                .any(|mention| mention.entity_type == "organization")
+        );
     }
 }

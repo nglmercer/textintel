@@ -87,24 +87,32 @@ fn decoding_follows_the_configured_abbreviation_provider() {
 fn invalid_abbreviation_packs_are_rejected() {
     let mut loader = ResourceLoader::default();
     let bad_schema = r#"{"schema_version": 99, "language": "en", "entries": []}"#;
-    assert!(loader
-        .load_abbreviation_json(bad_schema, "bad-schema.json")
-        .is_err());
+    assert!(
+        loader
+            .load_abbreviation_json(bad_schema, "bad-schema.json")
+            .is_err()
+    );
 
     let bad_probability = r#"{"schema_version": 1, "language": "en",
         "entries": [{"token": "u", "readings": [{"text": "you", "probability": 2.0}]}]}"#;
-    assert!(loader
-        .load_abbreviation_json(bad_probability, "bad-probability.json")
-        .is_err());
+    assert!(
+        loader
+            .load_abbreviation_json(bad_probability, "bad-probability.json")
+            .is_err()
+    );
 
     let empty_token = r#"{"schema_version": 1, "language": "en",
         "entries": [{"token": "  ", "readings": [{"text": "you"}]}]}"#;
-    assert!(loader
-        .load_abbreviation_json(empty_token, "empty-token.json")
-        .is_err());
+    assert!(
+        loader
+            .load_abbreviation_json(empty_token, "empty-token.json")
+            .is_err()
+    );
 
     let empty_language = r#"{"schema_version": 1, "language": "  ", "entries": []}"#;
-    assert!(loader
-        .load_abbreviation_json(empty_language, "empty-language.json")
-        .is_err());
+    assert!(
+        loader
+            .load_abbreviation_json(empty_language, "empty-language.json")
+            .is_err()
+    );
 }

@@ -2,8 +2,8 @@
 //! invalidation, and bounded eviction for embeddings, G2P, language
 //! detection, and rebus decoding.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use textintel::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use textintel::core::error::ProviderError;

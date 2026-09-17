@@ -19,7 +19,7 @@ use crate::cache::RevisionCache;
 use crate::comparison::model::SimilarityProfile;
 use crate::core::config::EngineConfig;
 use crate::core::providers::{
-    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider, GenerativeProvider,
     LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
     SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
 };
@@ -43,6 +43,7 @@ pub struct TextIntelligence {
     transliteration_provider: Option<Arc<dyn TransliterationProvider>>,
     entity_provider: Option<Arc<dyn EntityProvider>>,
     reranker_provider: Option<Arc<dyn RerankerProvider>>,
+    generative_provider: Option<Arc<dyn GenerativeProvider>>,
     spam_predictor: Arc<dyn SpamPredictor>,
     similarity_scorer: Option<Arc<dyn SimilarityScorer>>,
     similarity_profile: Option<SimilarityProfile>,
@@ -63,7 +64,7 @@ impl Default for TextIntelligence {
 }
 
 pub use production::{
+    CandidateBudgets, DegradedCapability, EngineBuilder, EngineDiagnostics,
     preferred_similarity_artifact, preferred_similarity_artifact_in, preferred_spam_artifact,
-    preferred_spam_artifact_in, CandidateBudgets, DegradedCapability, EngineBuilder,
-    EngineDiagnostics,
+    preferred_spam_artifact_in,
 };
