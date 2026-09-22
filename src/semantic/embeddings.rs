@@ -301,15 +301,16 @@ where
     }
 }
 
-/// Bounded, deterministic embedding cache keyed by model identity, model
-/// revision, and exact text. Keys must be exact: cased models assign
-/// different vectors to case variants, so folded keys would serve wrong
-/// vectors. Missing values are fetched in one batch from the wrapped
-/// provider. An observed revision change invalidates the cache instead of
-/// serving stale vectors.
+/// Bounded, deterministic embedding cache keyed by exact text and
+/// namespaced by the `model@revision` string (which already embeds the
+/// model identity, so model swaps invalidate). Keys must be exact: cased
+/// models assign different vectors to case variants, so folded keys
+/// would serve wrong vectors. Missing values are fetched in one batch
+/// from the wrapped provider. An observed revision change invalidates
+/// the cache instead of serving stale vectors.
 pub struct CachedEmbeddingProvider<P> {
     inner: P,
-    cache: Mutex<crate::cache::RevisionCache<(String, String, String), Vec<f32>>>,
+    cache: Mutex<crate::cache::RevisionCache<String, Vec<f32>>>,
 }
 
 impl<P> std::fmt::Debug for CachedEmbeddingProvider<P>
@@ -392,16 +393,7 @@ where
     P: EmbeddingProviderTrait,
 {
     fn embed(&self, texts: &[String]) -> Result<Vec<Vec<f32>>, ProviderError> {
-        let model = self
-            .inner
-            .model_metadata()
-            .map(|metadata| metadata.model_id)
-            .unwrap_or_else(|| self.inner.capabilities().provider);
         let revision = current_revision(&self.inner);
-        let keys = texts
-            .iter()
-            .map(|text| (model.clone(), revision.clone(), text.clone()))
-            .collect::<Vec<_>>();
         let mut output = vec![None; texts.len()];
         let mut missing = Vec::new();
         let mut missing_positions = Vec::new();
@@ -413,11 +405,11 @@ where
             // Revision changes invalidate before any read: stale vectors
             // across model revisions are a correctness bug.
             cache.set_revision(&revision);
-            for (index, key) in keys.iter().enumerate() {
-                if let Some(vector) = cache.get(key) {
-                    output[index] = Some(vector.clone());
+            for (index, text) in texts.iter().enumerate() {
+                if let Some(vector) = cache.get(text) {
+                    output[index] = Some(vector);
                 } else {
-                    missing.push(texts[index].clone());
+                    missing.push(text.clone());
                     missing_positions.push(index);
                 }
             }
@@ -440,7 +432,7 @@ where
                 .map_err(|_| ProviderError::new("embedding_cache", "cache lock poisoned"))?;
             cache.set_revision(&revision);
             for (position, vector) in missing_positions.into_iter().zip(values) {
-                cache.put(keys[position].clone(), vector.clone());
+                cache.put(texts[position].clone(), vector.clone());
                 output[position] = Some(vector);
             }
         }

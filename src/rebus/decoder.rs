@@ -1,8 +1,12 @@
+use std::collections::HashMap;
+use std::sync::Mutex;
+
 use crate::core::config::EngineConfig;
+use crate::core::error::ProviderError;
 use crate::core::providers::{
     AbbreviationProvider, G2PProvider, LexiconProvider, SymbolKnowledgeProvider,
 };
-use crate::core::types::{DecodedCandidate, Transformation};
+use crate::core::types::{DecodedCandidate, PhoneticCandidate, Transformation};
 use crate::normalization::confusables::skeleton;
 use crate::normalization::leetspeak::apply_leet;
 use crate::normalization::repetition::collapse_repetition;
@@ -17,6 +21,73 @@ use crate::symbols::knowledge::DefaultSymbolKnowledge;
 #[derive(Debug, Clone, Default)]
 pub struct RebusDecoder {
     pub config: EngineConfig,
+}
+
+/// Call-scoped G2P memo: phonemization is pure in (text, language) and
+/// candidate scoring re-requests the same source text for every
+/// candidate, so exact-input keys reuse the identical candidate. Errors
+/// are never cached (a retry re-calls the inner provider, as before).
+///
+/// Both maps nest by text, then language, so borrowed lookups never
+/// allocate.
+type TextLanguageMemo<V> = HashMap<String, HashMap<String, V>>;
+
+struct MemoizedG2p<'a> {
+    inner: &'a dyn G2PProvider,
+    cache: Mutex<TextLanguageMemo<PhoneticCandidate>>,
+    phoneme_cache: Mutex<TextLanguageMemo<(Vec<String>, f64)>>,
+}
+
+impl<'a> MemoizedG2p<'a> {
+    fn new(inner: &'a dyn G2PProvider) -> Self {
+        Self {
+            inner,
+            cache: Mutex::new(HashMap::new()),
+            phoneme_cache: Mutex::new(HashMap::new()),
+        }
+    }
+}
+
+impl G2PProvider for MemoizedG2p<'_> {
+    fn phonemize(&self, text: &str, language: &str) -> Result<PhoneticCandidate, ProviderError> {
+        if let Ok(guard) = self.cache.lock()
+            && let Some(hit) = guard
+                .get(text)
+                .and_then(|by_language| by_language.get(language))
+        {
+            return Ok(hit.clone());
+        }
+        let candidate = self.inner.phonemize(text, language)?;
+        if let Ok(mut guard) = self.cache.lock() {
+            guard
+                .entry(text.to_string())
+                .or_default()
+                .insert(language.to_string(), candidate.clone());
+        }
+        Ok(candidate)
+    }
+
+    fn phonemes(&self, text: &str, language: &str) -> Result<(Vec<String>, f64), ProviderError> {
+        if let Ok(guard) = self.phoneme_cache.lock()
+            && let Some(hit) = guard
+                .get(text)
+                .and_then(|by_language| by_language.get(language))
+        {
+            return Ok(hit.clone());
+        }
+        let lean = self.inner.phonemes(text, language)?;
+        if let Ok(mut guard) = self.phoneme_cache.lock() {
+            guard
+                .entry(text.to_string())
+                .or_default()
+                .insert(language.to_string(), lean.clone());
+        }
+        Ok(lean)
+    }
+
+    fn capabilities(&self) -> crate::core::capabilities::ProviderCapabilities {
+        self.inner.capabilities()
+    }
 }
 
 impl RebusDecoder {
@@ -131,6 +202,10 @@ impl RebusDecoder {
     ) -> Vec<DecodedCandidate> {
         let limit = max_candidates.unwrap_or(self.config.max_candidates).max(1);
         let weights = &self.config.rebus_weights;
+        // Scoring phonemizes the same source text per candidate; memoize
+        // for this call so each distinct (text, language) encodes once.
+        let memoized_g2p = MemoizedG2p::new(g2p_provider);
+        let g2p_provider: &dyn G2PProvider = &memoized_g2p;
         let nodes = beam_decode_with_abbreviation_provider(
             text,
             self.config.beam_width,
@@ -150,14 +225,18 @@ impl RebusDecoder {
                 .filter(|ch| !ch.is_whitespace())
                 .collect::<String>()
         };
+        // The ladder folds the same prefixes repeatedly; fold once and
+        // reuse — every view below is the same string as before.
+        let folded = casefold_text(text);
+        let leet = apply_leet(&folded);
         let extra_views = [
             normalize_whitespace(text),
-            casefold_text(text),
-            apply_leet(&casefold_text(text)),
-            collapse_repetition(&apply_leet(&casefold_text(text)), 1),
-            collapse_repetition(&casefold_text(text), 1),
+            folded.clone(),
+            leet.clone(),
+            collapse_repetition(&leet, 1),
+            collapse_repetition(&folded, 1),
             skeleton(text),
-            collapse_repetition(&skeleton(&apply_leet(&casefold_text(text))), 1),
+            collapse_repetition(&skeleton(&leet), 1),
         ];
         let mut candidates = std::collections::BTreeMap::<String, DecodedCandidate>::new();
         // Beam hypotheses often repeat exactly (same text, prior, languages,
@@ -165,7 +244,7 @@ impl RebusDecoder {
         // memoize by the full input key and reuse the identical candidate.
         // The key covers every value scoring reads plus every node field the
         // candidate constructor copies, so reuse is bit-identical.
-        let mut scored_nodes = std::collections::BTreeMap::<String, DecodedCandidate>::new();
+        let mut scored_nodes = HashMap::<String, DecodedCandidate>::new();
         for node in nodes {
             let node_key = format!(
                 "{:?}|{:?}|{:?}|{:?}|{:?}",
@@ -326,7 +405,7 @@ impl RebusDecoder {
         // Ladder rungs collapse (clean text folds several views onto one
         // string). Every rung scores with the same prior and evidence, so
         // the raw text alone keys memoization.
-        let mut scored_ladder = std::collections::BTreeMap::<String, DecodedCandidate>::new();
+        let mut scored_ladder = HashMap::<String, DecodedCandidate>::new();
         for value in ladder {
             if let Some(reused) = scored_ladder.get(&value) {
                 let key = casefold_text(&reused.text);

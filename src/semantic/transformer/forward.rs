@@ -8,9 +8,9 @@ use super::weights::LayerWeights;
 const TANH_GELU_COEF: f64 = 0.7978845608; // sqrt(2/pi)
 const TANH_GELU_CUBIC: f64 = 0.044715;
 
-/// `x @ w^T + b` with `w: [out, in]`.
+/// `x @ w + b` with `w: [in, out]` pre-transposed at load.
 fn linear(x: &Tensor, weight: &Tensor, bias: &Tensor) -> Result<Tensor, candle_core::Error> {
-    x.matmul(&weight.transpose(0, 1)?)?.broadcast_add(bias)
+    x.matmul(weight)?.broadcast_add(bias)
 }
 
 pub(crate) fn layer_norm(

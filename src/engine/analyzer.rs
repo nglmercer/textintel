@@ -175,7 +175,7 @@ impl TextIntelligence {
     pub fn analyze_cached(&self, text: &str) -> Result<MessageFingerprint, TextIntelError> {
         if let Some(cache) = self.decision_fp_cache.as_ref()
             && let Ok(mut guard) = cache.lock()
-            && let Some(hit) = guard.get(&text.to_string())
+            && let Some(hit) = guard.get(text)
         {
             return Ok(hit);
         }
@@ -196,7 +196,7 @@ impl TextIntelligence {
             .unwrap_or_else(CacheDiagnostics::disabled)
     }
 
-    fn check_length(&self, text: &str) -> Result<(), TextIntelError> {
+    fn check_length(&self, text: &str) -> Result<usize, TextIntelError> {
         let length = text.chars().count();
         if length > self.config.max_input_length {
             return Err(TextIntelError::InputTooLong {
@@ -204,7 +204,7 @@ impl TextIntelligence {
                 maximum: self.config.max_input_length,
             });
         }
-        Ok(())
+        Ok(length)
     }
 
     fn detect(
@@ -279,7 +279,7 @@ impl TextIntelligence {
         &self,
         text: &str,
     ) -> Result<(MessageFingerprint, Vec<EmbeddingInput>, StageTimings), TextIntelError> {
-        self.check_length(text)?;
+        let input_length = self.check_length(text)?;
         let total_started = Instant::now();
         let mut timings = StageTimings::default();
         let elapsed = |started: Instant| started.elapsed().as_secs_f64() * 1_000_000.0;
@@ -300,7 +300,17 @@ impl TextIntelligence {
             self.language_provider.as_ref(),
         )
         .map_err(TextIntelError::from)?;
-        let tokens = tokenize(text);
+        // Piece splits do not depend on the detector, so when segmentation
+        // was not truncated the segments already hold every token and the
+        // second segmentation pass is skipped; truncated runs fall back.
+        let tokens = if segments.len() < self.config.max_segments {
+            segments
+                .iter()
+                .map(|segment| segment.text.clone())
+                .collect()
+        } else {
+            tokenize(text)
+        };
         let lemmas = match &self.lemmatizer_provider {
             Some(provider) => provider
                 .lemmatize(&tokens, None)
@@ -545,7 +555,7 @@ impl TextIntelligence {
             "phonetic_enabled".to_string(),
             self.config.phonetic.to_string(),
         );
-        metadata.insert("input_length".to_string(), text.chars().count().to_string());
+        metadata.insert("input_length".to_string(), input_length.to_string());
         // Coverage is computed after decoding so validity reflects the
         // intended reading (`h3llo` counts through `hello`), not the raw
         // obfuscation. See `lexicon_coverage`.

@@ -128,6 +128,8 @@ fn packed_key(window: &[usize], distinct: usize) -> Option<u64> {
 }
 
 fn ngram_counts_packed(items: &[usize], distinct: usize, n: usize) -> BTreeMap<u64, usize> {
+    // Ordered, not hashed: these maps are small with integer keys, where
+    // BTree compares beat hashing (measured: HashMap<SipHash> is slower).
     let mut map = BTreeMap::new();
     for window in items.windows(n) {
         if let Some(key) = packed_key(window, distinct) {
@@ -211,14 +213,26 @@ pub fn phoneme_ngram_similarity(a: &[String], b: &[String], n: usize) -> f64 {
 }
 
 pub fn phonetic_similarity(a: &PhoneticCandidate, b: &PhoneticCandidate) -> f64 {
-    if a.phonemes.is_empty() || b.phonemes.is_empty() {
+    phonetic_similarity_raw(&a.phonemes, a.confidence, &b.phonemes, b.confidence)
+}
+
+/// [`phonetic_similarity`] over bare phoneme sequences plus confidences:
+/// the same channels, blend, and operation order for callers that never
+/// materialize full candidates.
+pub fn phonetic_similarity_raw(
+    a_phonemes: &[String],
+    a_confidence: f64,
+    b_phonemes: &[String],
+    b_confidence: f64,
+) -> f64 {
+    if a_phonemes.is_empty() || b_phonemes.is_empty() {
         return 0.0;
     }
-    let max_len = a.phonemes.len().max(b.phonemes.len()).max(1) as f64;
+    let max_len = a_phonemes.len().max(b_phonemes.len()).max(1) as f64;
     // One interning serves all four channels; each channel keeps its
     // original recurrence, so the blend below is unchanged.
-    let interned = intern_phones(&a.phonemes, &b.phonemes);
-    let sides_equal = a.phonemes == b.phonemes;
+    let interned = intern_phones(a_phonemes, b_phonemes);
+    let sides_equal = a_phonemes == b_phonemes;
     let edit =
         1.0 - weighted_distance_idx(&interned.left, &interned.right, &interned.features) / max_len;
     let exact = 1.0 - edit_distance_idx(&interned.left, &interned.right) as f64 / max_len;
@@ -239,13 +253,13 @@ pub fn phonetic_similarity(a: &PhoneticCandidate, b: &PhoneticCandidate) -> f64 
             );
     // Hostile fingerprints can carry non-finite confidences; sanitize so
     // the channel stays total.
-    let confidence_a = if a.confidence.is_finite() {
-        a.confidence
+    let confidence_a = if a_confidence.is_finite() {
+        a_confidence
     } else {
         0.0
     };
-    let confidence_b = if b.confidence.is_finite() {
-        b.confidence
+    let confidence_b = if b_confidence.is_finite() {
+        b_confidence
     } else {
         0.0
     };

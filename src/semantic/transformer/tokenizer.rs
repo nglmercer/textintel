@@ -1,7 +1,7 @@
 //! BERT-family tokenizers: WordPiece over `vocab.txt` and SentencePiece-Unigram
 //! over a Hugging Face `tokenizer.json` (the `tokenizers` Unigram subset).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
 use crate::core::error::ProviderError;
 
@@ -11,7 +11,8 @@ use super::{TOKENIZER_FILE, VOCAB_FILE, invalid};
 /// line, id = line number). Requires `[PAD]`, `[UNK]`, `[CLS]`, `[SEP]`.
 #[derive(Debug, Clone)]
 pub(crate) struct WordPieceTokenizer {
-    pub(crate) vocab: BTreeMap<String, u32>,
+    // Hashed lookups only (never iterated), so hashing changes no id.
+    pub(crate) vocab: HashMap<String, u32>,
     pub(crate) unk_id: u32,
     pub(crate) cls_id: u32,
     pub(crate) sep_id: u32,
@@ -20,7 +21,7 @@ pub(crate) struct WordPieceTokenizer {
 
 impl WordPieceTokenizer {
     pub(crate) fn from_vocab_txt(source: &str, lowercase: bool) -> Result<Self, ProviderError> {
-        let mut vocab = BTreeMap::new();
+        let mut vocab = HashMap::new();
         for (index, line) in source.lines().enumerate() {
             let token = line.trim_end_matches(['\n', '\r']);
             if token.is_empty() {
@@ -79,34 +80,34 @@ impl WordPieceTokenizer {
     }
 
     /// Greedy longest-match WordPiece segmentation of one basic token.
+    /// Candidates shrink one reusable buffer from the longest match down,
+    /// so the same longest-first attempts run with no per-attempt
+    /// allocation.
     fn word_pieces(&self, word: &str) -> Vec<u32> {
         if word.len() > 100 {
             return vec![self.unk_id];
         }
         let chars: Vec<char> = word.chars().collect();
         let mut pieces = Vec::new();
+        let mut candidate = String::new();
         let mut start = 0;
         while start < chars.len() {
-            let mut end = chars.len();
+            candidate.clear();
+            if start > 0 {
+                candidate.push_str("##");
+            }
+            candidate.extend(chars[start..].iter().copied());
             let mut found = None;
-            while end > start {
-                let candidate: String = chars[start..end].iter().collect();
-                let key = if start == 0 {
-                    candidate
-                } else {
-                    format!("##{candidate}")
-                };
-                if let Some(id) = self.vocab.get(&key) {
+            for end in (start + 1..=chars.len()).rev() {
+                if let Some(id) = self.vocab.get(candidate.as_str()) {
                     found = Some(*id);
+                    start = end;
                     break;
                 }
-                end -= 1;
+                candidate.pop();
             }
             match found {
-                Some(id) => {
-                    pieces.push(id);
-                    start = end;
-                }
+                Some(id) => pieces.push(id),
                 None => return vec![self.unk_id],
             }
         }
@@ -155,12 +156,17 @@ const FALLBACK_SCORE: f32 = -1e9;
 /// `byte_fallback` is set, otherwise the unknown id. No lowercasing.
 #[derive(Debug, Clone)]
 pub(crate) struct UnigramTokenizer {
-    pieces: BTreeMap<String, (u32, f32)>,
+    // Hashed lookups only (never iterated), so hashing changes no id.
+    pieces: HashMap<String, (u32, f32)>,
     max_piece_chars: usize,
     unk_id: u32,
     bos_id: u32,
     eos_id: u32,
     byte_fallback: bool,
+    /// `<0xHH>` piece id per byte value, resolved once at load so the
+    /// per-character fallback never formats or looks up. Boxed: the
+    /// table would otherwise bloat every `EncoderTokenizer` by 2KB.
+    byte_ids: Box<[Option<u32>; 256]>,
 }
 
 impl UnigramTokenizer {
@@ -184,7 +190,7 @@ impl UnigramTokenizer {
         if vocab.is_empty() {
             return Err(invalid(format!("{TOKENIZER_FILE}: vocabulary is empty")));
         }
-        let mut pieces = BTreeMap::new();
+        let mut pieces = HashMap::new();
         let mut max_piece_chars = 0usize;
         for (index, entry) in vocab.iter().enumerate() {
             let pair = entry.as_array().ok_or_else(|| {
@@ -254,6 +260,13 @@ impl UnigramTokenizer {
         let eos_id = special_id(&added, &pieces, "</s>")?;
         // Forwards run unpadded, but keep rejecting pad-less checkpoints.
         special_id(&added, &pieces, "<pad>")?;
+        let mut byte_ids = Box::new([None; 256]);
+        if byte_fallback {
+            for (byte, slot) in byte_ids.iter_mut().enumerate() {
+                let key = format!("<0x{byte:02X}>");
+                *slot = pieces.get(&key).map(|(id, _)| *id);
+            }
+        }
         Ok(Self {
             pieces,
             max_piece_chars: max_piece_chars.max(1),
@@ -261,6 +274,7 @@ impl UnigramTokenizer {
             bos_id,
             eos_id,
             byte_fallback,
+            byte_ids,
         })
     }
 
@@ -273,26 +287,24 @@ impl UnigramTokenizer {
     fn fallback_ids(&self, ch: char) -> Vec<u32> {
         if self.byte_fallback {
             let mut encoded = [0u8; 4];
-            let bytes = ch.encode_utf8(&mut encoded).as_bytes().to_vec();
+            let bytes = ch.encode_utf8(&mut encoded);
             let mut ids = Vec::with_capacity(bytes.len());
-            let mut complete = true;
-            for byte in bytes {
-                match self.pieces.get(&format!("<0x{byte:02X}>")) {
-                    Some((id, _)) => ids.push(*id),
-                    None => {
-                        complete = false;
-                        break;
-                    }
+            for byte in bytes.as_bytes() {
+                match self.byte_ids[*byte as usize] {
+                    Some(id) => ids.push(id),
+                    None => return vec![self.unk_id],
                 }
             }
-            if complete {
-                return ids;
-            }
+            return ids;
         }
         vec![self.unk_id]
     }
 
     /// Viterbi best-path segmentation of SentencePiece-framed text.
+    /// Candidates extend one reusable buffer per start (same attempts, same
+    /// order, one allocation instead of one per end), and the fallback path
+    /// compares its score before building ids — both rewrite the same
+    /// best/back entries as before.
     fn segment(&self, text: &str) -> Vec<u32> {
         let collapsed = text.split_whitespace().collect::<Vec<_>>().join(" ");
         let mut framed = String::with_capacity(collapsed.len() + 1);
@@ -305,28 +317,27 @@ impl UnigramTokenizer {
         let mut best = vec![f32::NEG_INFINITY; len + 1];
         let mut back: Vec<Option<(usize, Vec<u32>)>> = vec![None; len + 1];
         best[0] = 0.0;
+        let mut piece = String::new();
         for start in 0..len {
             if best[start].is_infinite() {
                 continue;
             }
             let limit = (start + self.max_piece_chars).min(len);
-            let mut end = start + 1;
-            while end <= limit {
-                let piece: String = chars[start..end].iter().collect();
-                if let Some((id, score)) = self.pieces.get(&piece) {
+            piece.clear();
+            for end in start + 1..=limit {
+                piece.push(chars[end - 1]);
+                if let Some((id, score)) = self.pieces.get(piece.as_str()) {
                     let candidate = best[start] + score;
                     if candidate > best[end] {
                         best[end] = candidate;
                         back[end] = Some((start, vec![*id]));
                     }
                 }
-                end += 1;
             }
-            let fallback = self.fallback_ids(chars[start]);
             let candidate = best[start] + FALLBACK_SCORE;
             if candidate > best[start + 1] {
                 best[start + 1] = candidate;
-                back[start + 1] = Some((start, fallback));
+                back[start + 1] = Some((start, self.fallback_ids(chars[start])));
             }
         }
         let mut steps = Vec::new();
@@ -366,7 +377,7 @@ impl UnigramTokenizer {
 /// vocabulary piece with the same text.
 fn special_id(
     added: &BTreeMap<String, u32>,
-    pieces: &BTreeMap<String, (u32, f32)>,
+    pieces: &HashMap<String, (u32, f32)>,
     name: &str,
 ) -> Result<u32, ProviderError> {
     added

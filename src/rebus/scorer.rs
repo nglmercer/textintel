@@ -325,13 +325,16 @@ fn g2p_similarity(
         .and_then(|values| values.iter().find(|value| value.as_str() != "unknown"))
         .map(String::as_str)
         .unwrap_or("und");
-    let candidate = provider.phonemize(surface, language).ok()?;
-    let source = provider.phonemize(source, language).ok()?;
-    if candidate.phonemes.is_empty() || source.phonemes.is_empty() {
+    let (candidate, candidate_confidence) = provider.phonemes(surface, language).ok()?;
+    let (source, source_confidence) = provider.phonemes(source, language).ok()?;
+    if candidate.is_empty() || source.is_empty() {
         return None;
     }
-    Some(crate::phonetic::similarity::phonetic_similarity(
-        &candidate, &source,
+    Some(crate::phonetic::similarity::phonetic_similarity_raw(
+        &candidate,
+        candidate_confidence,
+        &source,
+        source_confidence,
     ))
 }
 

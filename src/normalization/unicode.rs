@@ -43,6 +43,12 @@ pub fn strip_diacritics(text: &str) -> String {
 /// lowercase plus the small set of multi-scalar folds below gives a stable
 /// Unicode-aware matching view; raw/NFC/NFKC views remain available too.
 pub fn casefold_text(text: &str) -> String {
+    // Fast path: NFKC is the identity on ASCII (no ASCII character has a
+    // decomposition mapping) and the special folds below are all
+    // non-ASCII, so ASCII casefolds to plain lowercase.
+    if text.is_ascii() {
+        return text.to_ascii_lowercase();
+    }
     nfkc(text)
         .chars()
         .flat_map(|character| match character {

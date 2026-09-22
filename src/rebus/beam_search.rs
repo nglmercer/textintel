@@ -128,9 +128,13 @@ pub fn beam_decode_with_abbreviation_provider(
         let in_word_digit = is_digit_token[position]
             && ((position > 0 && is_letter_token[position - 1])
                 || (position + 1 < tokens.len() && is_letter_token[position + 1]));
+        // Lowercased once per token: the identity checks below run per
+        // beam node and realloced these strings every time.
+        let token_lower = token.to_lowercase();
         let mut next = Vec::new();
         for node in &beam {
             for (surface, probability, language, transform_type) in &readings {
+                let surface_lower = surface.to_lowercase();
                 // In-word digits discount multi-letter number names (`4` →
                 // `cuatro`); single-letter leet readings (`4` → `a`) and
                 // standalone digits are untouched.
@@ -144,7 +148,7 @@ pub fn beam_decode_with_abbreviation_provider(
                     *probability
                 };
                 let mut transforms = node.transforms.clone();
-                if transform_type != "identity" && surface.to_lowercase() != token.to_lowercase() {
+                if transform_type != "identity" && surface_lower != token_lower {
                     let mut step =
                         Transformation::new(token.clone(), surface.clone(), transform_type.clone())
                             .with_span(*start, *end, token.clone())
@@ -192,7 +196,7 @@ pub fn beam_decode_with_abbreviation_provider(
                 // (non-identity, surface-changing) readings; beam truncation
                 // caps the rest. No boundary is hypothesized next to literal
                 // input whitespace — that would only double spaces.
-                let substantive = surface.to_lowercase() != token.to_lowercase();
+                let substantive = surface_lower != token_lower;
                 if transform_type != "identity" && substantive {
                     let mut boundary = transforms;
                     boundary

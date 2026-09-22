@@ -92,6 +92,15 @@ pub trait TransliterationProvider: Send + Sync {
 pub trait G2PProvider: Send + Sync {
     fn phonemize(&self, text: &str, language: &str) -> Result<PhoneticCandidate, ProviderError>;
 
+    /// Lean phoneme sequence plus confidence for similarity scoring.
+    /// Values must equal `phonemize`'s `phonemes` and `confidence`
+    /// exactly; the default projects a full candidate, while providers
+    /// with expensive candidate assembly override with a direct path.
+    fn phonemes(&self, text: &str, language: &str) -> Result<(Vec<String>, f64), ProviderError> {
+        self.phonemize(text, language)
+            .map(|candidate| (candidate.phonemes, candidate.confidence))
+    }
+
     fn phonemize_batch(
         &self,
         texts: &[String],
