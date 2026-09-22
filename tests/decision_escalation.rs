@@ -7,6 +7,7 @@ use std::sync::Arc;
 use textintel::decision::{
     COVERAGE_LEVELS, Decision, DecisionExample, DecisionQuestion, DecisionRequest,
     SimilarityDecisionProvider, check_decision_gates, evaluate_decisions,
+    evaluate_decisions_with_jobs,
 };
 use textintel::{ProfileSimilarityScorer, TextIntelligence};
 
@@ -140,4 +141,52 @@ fn decision_gates_enforce_thresholds() {
     );
     // Non-object gates files pass vacuously (forwards compatible).
     assert!(check_decision_gates(&report, &serde_json::json!([])).is_empty());
+}
+
+#[test]
+fn parallel_eval_matches_sequential_except_latency() {
+    let engine = TextIntelligence::default();
+    let provider = SimilarityDecisionProvider::new(Arc::new(ProfileSimilarityScorer::default()));
+    let states = [
+        ("refund my duplicate payment now", "billing"),
+        ("invoice receipt subscription charge", "billing"),
+        ("the app crashes on login", "technical"),
+        ("error dialog crash bug report", "technical"),
+        ("please cancel my subscription", "billing"),
+        ("login screen freezes on start", "technical"),
+    ];
+    let examples = states
+        .into_iter()
+        .enumerate()
+        .map(|(index, (state, gold))| DecisionExample {
+            id: format!("parallel_{index}"),
+            state: state.to_string(),
+            question: DecisionQuestion::Choice {
+                instructions: "Which team?".to_string(),
+                criteria: routing_criteria(),
+            },
+            gold: gold.to_string(),
+            teacher_probabilities: None,
+            task: None,
+        })
+        .collect::<Vec<_>>();
+    let sequential =
+        evaluate_decisions(&engine, &provider, "test", "test", &examples).expect("eval");
+    for jobs in [0, 1, 2, 4, 32] {
+        let parallel =
+            evaluate_decisions_with_jobs(&engine, &provider, "test", "test", &examples, jobs)
+                .expect("parallel eval");
+        assert_eq!(parallel.count, sequential.count, "jobs={jobs}");
+        assert_eq!(parallel.skipped, sequential.skipped, "jobs={jobs}");
+        assert_eq!(parallel.accuracy, sequential.accuracy, "jobs={jobs}");
+        assert_eq!(parallel.macro_f1, sequential.macro_f1, "jobs={jobs}");
+        assert_eq!(parallel.micro_f1, sequential.micro_f1, "jobs={jobs}");
+        assert_eq!(parallel.nll, sequential.nll, "jobs={jobs}");
+        assert_eq!(parallel.brier, sequential.brier, "jobs={jobs}");
+        assert_eq!(parallel.ece, sequential.ece, "jobs={jobs}");
+        assert_eq!(parallel.confusion, sequential.confusion, "jobs={jobs}");
+        assert_eq!(parallel.coverage, sequential.coverage, "jobs={jobs}");
+        // Latencies legitimately differ (contention); they must still be sane.
+        assert!(parallel.mean_latency_micros > 0.0, "jobs={jobs}");
+    }
 }

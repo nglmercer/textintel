@@ -53,6 +53,22 @@ fn finite_or_zero(value: f64) -> f64 {
 
 /// Named fusion features for inspection and debugging.
 pub fn fusion_features(fingerprint: &MessageFingerprint) -> BTreeMap<String, f64> {
+    FUSION_FEATURES
+        .iter()
+        .zip(fusion_values(fingerprint))
+        .map(|(name, value)| ((*name).to_string(), value))
+        .collect()
+}
+
+/// Fusion features as a fixed-order vector for model input. Every entry is
+/// finite; the order matches [`FUSION_FEATURES`].
+pub fn fusion_feature_vector(fingerprint: &MessageFingerprint) -> Vec<f64> {
+    fusion_values(fingerprint).to_vec()
+}
+
+/// Shared value core: one pass over the fingerprint, no map. Both
+/// public constructors read from this so they can never disagree.
+fn fusion_values(fingerprint: &MessageFingerprint) -> [f64; 25] {
     let chars = &fingerprint.char_features;
     let unicode = &fingerprint.unicode_features;
     let obfuscation = &fingerprint.obfuscation_features;
@@ -111,16 +127,5 @@ pub fn fusion_features(fingerprint: &MessageFingerprint) -> BTreeMap<String, f64
         fingerprint.symbols.len() as f64,
     ];
     debug_assert_eq!(values.len(), FUSION_FEATURES.len());
-    FUSION_FEATURES
-        .iter()
-        .zip(values)
-        .map(|(name, value)| ((*name).to_string(), value))
-        .collect()
-}
-
-/// Fusion features as a fixed-order vector for model input. Every entry is
-/// finite; the order matches [`FUSION_FEATURES`].
-pub fn fusion_feature_vector(fingerprint: &MessageFingerprint) -> Vec<f64> {
-    let named = fusion_features(fingerprint);
-    FUSION_FEATURES.iter().map(|name| named[*name]).collect()
+    values
 }

@@ -158,37 +158,148 @@ pub fn evaluate_decisions(
     split: &str,
     examples: &[DecisionExample],
 ) -> Result<DecisionEvalReport, TextIntelError> {
+    evaluate_decisions_with_jobs(engine, provider, dataset_version, split, examples, 1)
+}
+
+/// [`evaluate_decisions`] with worker threads. Examples are scored on
+/// `jobs` threads sharing one engine (both engine and provider are
+/// `Sync`), then aggregated in example order, so every metric except
+/// `mean_latency_micros` is identical to the sequential run. Latencies
+/// under `jobs > 1` reflect shared-machine contention, not
+/// single-query latency — use the `decision` benchmarks for that.
+/// `jobs` below 2 runs the plain sequential path.
+pub fn evaluate_decisions_with_jobs(
+    engine: &TextIntelligence,
+    provider: &dyn DecisionProvider,
+    dataset_version: &str,
+    split: &str,
+    examples: &[DecisionExample],
+    jobs: usize,
+) -> Result<DecisionEvalReport, TextIntelError> {
+    if jobs < 2 || examples.len() < 2 {
+        return assemble_report(
+            dataset_version,
+            split,
+            &provider.capabilities().provider,
+            score_sequential(engine, provider, examples),
+        );
+    }
+    let workers = jobs.min(examples.len());
+    let chunk = examples.len().div_ceil(workers);
+    let mut outcomes: Vec<(usize, Result<ScoredExample, String>)> =
+        Vec::with_capacity(examples.len());
+    std::thread::scope(|scope| {
+        let mut handles = Vec::with_capacity(workers);
+        for (chunk_index, piece) in examples.chunks(chunk).enumerate() {
+            let offset = chunk_index * chunk;
+            handles.push(scope.spawn(move || {
+                piece
+                    .iter()
+                    .enumerate()
+                    .map(|(index, example)| {
+                        (offset + index, score_one_example(engine, provider, example))
+                    })
+                    .collect::<Vec<_>>()
+            }));
+        }
+        for handle in handles {
+            match handle.join() {
+                Ok(scored) => outcomes.extend(scored),
+                Err(_) => {
+                    // A panicking worker must not hang the run; its
+                    // examples count as failed below via the length gap.
+                }
+            }
+        }
+    });
+    outcomes.sort_by_key(|(index, _)| *index);
+    assemble_report(
+        dataset_version,
+        split,
+        &provider.capabilities().provider,
+        outcomes_with_gaps_filled(outcomes, examples.len()),
+    )
+}
+
+/// Restore example order after parallel scoring, treating examples a
+/// dead worker never returned as failures (skipped, never silent).
+fn outcomes_with_gaps_filled(
+    mut outcomes: Vec<(usize, Result<ScoredExample, String>)>,
+    total: usize,
+) -> Vec<Result<ScoredExample, String>> {
+    outcomes.sort_by_key(|(index, _)| *index);
+    let mut filled = Vec::with_capacity(total);
+    let mut cursor = 0usize;
+    for (index, outcome) in outcomes {
+        while cursor < index.min(total) {
+            filled.push(Err("worker failed to return this example".to_string()));
+            cursor += 1;
+        }
+        if index < total {
+            filled.push(outcome);
+            cursor = index + 1;
+        }
+    }
+    while cursor < total {
+        filled.push(Err("worker failed to return this example".to_string()));
+        cursor += 1;
+    }
+    filled
+}
+
+fn score_sequential(
+    engine: &TextIntelligence,
+    provider: &dyn DecisionProvider,
+    examples: &[DecisionExample],
+) -> Vec<Result<ScoredExample, String>> {
+    examples
+        .iter()
+        .map(|example| score_one_example(engine, provider, example))
+        .collect()
+}
+
+fn score_one_example(
+    engine: &TextIntelligence,
+    provider: &dyn DecisionProvider,
+    example: &DecisionExample,
+) -> Result<ScoredExample, String> {
+    let started = Instant::now();
+    let mut request = DecisionRequest::new(example.state.clone(), example.question.clone());
+    if let Some(task) = &example.task {
+        request = request.with_task(task.clone());
+    }
+    engine
+        .prepare_decision_request(&mut request)
+        .map_err(|error| error.to_string())?;
+    let response = provider
+        .decide(&request)
+        .map_err(|error| error.to_string())?;
+    response
+        .validate_against(&request)
+        .map_err(|error| format!("invalid provider answer: {error}"))?;
+    let gold_index = example
+        .gold_index()?
+        .ok_or_else(|| format!("unknown gold label {:?} for question", example.gold))?;
+    Ok(ScoredExample {
+        gold: example.gold.clone(),
+        predicted: response.answer.predicted_label(),
+        confidence: response.confidence(),
+        probabilities: response.answer.probabilities_in_order(),
+        gold_index,
+        latency_micros: started.elapsed().as_micros() as f64,
+    })
+}
+
+fn assemble_report(
+    dataset_version: &str,
+    split: &str,
+    provider_name: &str,
+    outcomes: Vec<Result<ScoredExample, String>>,
+) -> Result<DecisionEvalReport, TextIntelError> {
     let mut scored = Vec::new();
     let mut skipped = 0usize;
     let mut confusion: BTreeMap<String, BTreeMap<String, usize>> = BTreeMap::new();
-    for example in examples {
-        let started = Instant::now();
-        let mut request = DecisionRequest::new(example.state.clone(), example.question.clone());
-        if let Some(task) = &example.task {
-            request = request.with_task(task.clone());
-        }
-        let outcome = (|| -> Result<ScoredExample, String> {
-            engine
-                .prepare_decision_request(&mut request)
-                .map_err(|error| error.to_string())?;
-            let response = provider
-                .decide(&request)
-                .map_err(|error| error.to_string())?;
-            response
-                .validate_against(&request)
-                .map_err(|error| format!("invalid provider answer: {error}"))?;
-            let gold_index = example
-                .gold_index()?
-                .ok_or_else(|| format!("unknown gold label {:?} for question", example.gold))?;
-            Ok(ScoredExample {
-                gold: example.gold.clone(),
-                predicted: response.answer.predicted_label(),
-                confidence: response.confidence(),
-                probabilities: response.answer.probabilities_in_order(),
-                gold_index,
-                latency_micros: started.elapsed().as_micros() as f64,
-            })
-        })();
+    for outcome in outcomes {
         match outcome {
             Ok(record) => {
                 confusion
@@ -235,7 +346,7 @@ pub fn evaluate_decisions(
         dataset_version: dataset_version.to_string(),
         split: split.to_string(),
         task: None,
-        provider: provider.capabilities().provider,
+        provider: provider_name.to_string(),
         count,
         skipped,
         accuracy,

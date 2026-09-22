@@ -160,7 +160,31 @@ impl RebusDecoder {
             collapse_repetition(&skeleton(&apply_leet(&casefold_text(text))), 1),
         ];
         let mut candidates = std::collections::BTreeMap::<String, DecodedCandidate>::new();
+        // Beam hypotheses often repeat exactly (same text, prior, languages,
+        // and rewrite path). Scoring is a pure function of those inputs, so
+        // memoize by the full input key and reuse the identical candidate.
+        // The key covers every value scoring reads plus every node field the
+        // candidate constructor copies, so reuse is bit-identical.
+        let mut scored_nodes = std::collections::BTreeMap::<String, DecodedCandidate>::new();
         for node in nodes {
+            let node_key = format!(
+                "{:?}|{:?}|{:?}|{:?}|{:?}",
+                node.text,
+                node.score.to_bits(),
+                node.language,
+                node.languages,
+                node.transforms
+            );
+            if let Some(reused) = scored_nodes.get(&node_key) {
+                let key = casefold_text(&reused.text);
+                if candidates
+                    .get(&key)
+                    .is_none_or(|old| reused.score > old.score)
+                {
+                    candidates.insert(key, reused.clone());
+                }
+                continue;
+            }
             let evidence = RebusEvidence {
                 candidate_language: node.language.clone(),
                 candidate_languages: node.languages.clone(),
@@ -198,6 +222,7 @@ impl RebusDecoder {
                 confidence_gap: 0.0,
                 strong: false,
             };
+            scored_nodes.insert(node_key, candidate.clone());
             if candidates
                 .get(&key)
                 .is_none_or(|old| candidate.score > old.score)
@@ -298,7 +323,21 @@ impl RebusDecoder {
                 ladder.push(spaced);
             }
         }
+        // Ladder rungs collapse (clean text folds several views onto one
+        // string). Every rung scores with the same prior and evidence, so
+        // the raw text alone keys memoization.
+        let mut scored_ladder = std::collections::BTreeMap::<String, DecodedCandidate>::new();
         for value in ladder {
+            if let Some(reused) = scored_ladder.get(&value) {
+                let key = casefold_text(&reused.text);
+                if candidates
+                    .get(&key)
+                    .is_none_or(|old| reused.score > old.score)
+                {
+                    candidates.insert(key, reused.clone());
+                }
+                continue;
+            }
             let (score, lexical, phonetic, context) = score_candidate_with_evidence_and_weights(
                 &value,
                 text,
@@ -322,6 +361,7 @@ impl RebusDecoder {
                 confidence_gap: 0.0,
                 strong: false,
             };
+            scored_ladder.insert(value.clone(), candidate.clone());
             let key = casefold_text(&value);
             if candidates
                 .get(&key)

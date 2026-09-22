@@ -9,6 +9,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use textintel::core::parallel::map_chunks_ordered;
 use textintel::core::providers::EmbeddingProvider;
 use textintel::decision::{
     DecisionExample, FUSION_FEATURES, HeadTrainExample, HeadTrainer, InteractionArtifact,
@@ -73,6 +74,9 @@ fn cache_key(parts: &[String]) -> String {
 }
 
 /// Extract (or load cached) head-training features for `examples`.
+/// `jobs` shards the analysis/embedding chunk loops over worker
+/// threads; chunks rejoin in order, so features are identical to the
+/// sequential run. Values below 2 run sequentially.
 fn featurize(
     engine: &TextIntelligence,
     embeddings: &dyn EmbeddingProvider,
@@ -80,6 +84,7 @@ fn featurize(
     label: &str,
     files: &[String],
     cache_dir: Option<&str>,
+    jobs: usize,
 ) -> Result<Vec<HeadTrainExample>, String> {
     let mut examples = Vec::new();
     for file in files {
@@ -175,24 +180,17 @@ fn featurize(
     }
     println!("{label}: {} unique texts", texts.len());
     // `analyze_batch` enforces `max_batch_size`: chunk large corpora.
-    let mut fingerprints = Vec::with_capacity(texts.len());
-    for chunk in texts.chunks(256) {
-        fingerprints.extend(
-            engine
-                .analyze_batch(chunk)
-                .map_err(|error| format!("analysis failed: {error}"))?,
-        );
-    }
+    let fingerprints = map_chunks_ordered(&texts, 256, jobs, |chunk| {
+        engine
+            .analyze_batch(chunk)
+            .map_err(|error| format!("analysis failed: {error}"))
+    })?;
     // Embed in chunks to keep provider calls bounded.
-    let mut vectors: Vec<Vec<f32>> = Vec::with_capacity(texts.len());
-    for chunk in texts.chunks(64) {
-        let chunk: Vec<String> = chunk.to_vec();
-        vectors.extend(
-            embeddings
-                .embed(&chunk)
-                .map_err(|error| format!("embedding failed: {error}"))?,
-        );
-    }
+    let vectors = map_chunks_ordered(&texts, 64, jobs, |chunk| {
+        embeddings
+            .embed(chunk)
+            .map_err(|error| format!("embedding failed: {error}"))
+    })?;
     if vectors.len() != texts.len() {
         return Err("backbone returned a short embedding batch".to_string());
     }
@@ -275,6 +273,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let seed: u64 = get("seed").map_or(Ok(7), |value| value.parse())?;
     let max_train: usize = get("max-train").map_or(Ok(0), |value| value.parse())?;
     let cache_dir = get("cache");
+    let jobs: usize = get("jobs").map_or(Ok(1), |value| value.parse())?;
 
     let backbone = Arc::new(
         TransformerEmbeddingProvider::open(embeddings_dir).map_err(|error| error.to_string())?,
@@ -297,6 +296,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "train",
         &train_files,
         cache_dir.as_deref(),
+        jobs,
     )
     .map_err(|error| error.to_string())?;
     let valid = featurize(
@@ -306,6 +306,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "valid",
         &valid_files,
         cache_dir.as_deref(),
+        jobs,
     )
     .map_err(|error| error.to_string())?;
     let mut train = train;

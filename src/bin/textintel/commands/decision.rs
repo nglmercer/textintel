@@ -6,8 +6,8 @@ use std::sync::Arc;
 
 use textintel::decision::{
     DecisionDataset, DecisionProvider, DecisionQuestion, DecisionRequest,
-    SimilarityDecisionProvider, SpamDecisionProvider, check_decision_gates, evaluate_decisions,
-    selective_decision,
+    SimilarityDecisionProvider, SpamDecisionProvider, check_decision_gates,
+    evaluate_decisions_with_jobs, selective_decision,
 };
 
 use textintel::cli::ParsedArgs;
@@ -328,12 +328,17 @@ pub(crate) fn run_eval_decision(parsed: &ParsedArgs) -> Result<i32, Box<dyn std:
     let provider_name = parsed.value("provider").unwrap_or("similarity").to_string();
     let provider = decision_provider_named(parsed, &provider_name)?;
     let engine = build_engine(parsed)?;
-    let report = evaluate_decisions(
+    let jobs = parsed
+        .parsed_value::<usize>("jobs")
+        .map_err(|error| error.to_string())?
+        .unwrap_or(1);
+    let report = evaluate_decisions_with_jobs(
         &engine,
         provider.as_ref(),
         &dataset.version,
         split,
         dataset.split(split),
+        jobs,
     )
     .map_err(|error| error.to_string())?;
     if json {

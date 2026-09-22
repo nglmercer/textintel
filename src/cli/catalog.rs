@@ -152,6 +152,12 @@ const TEXTINTEL_ARGS: &[ArgSpec] = &[
         "DIR",
         "Embedding backbone directory.",
     ),
+    value(
+        "jobs",
+        "jobs",
+        "N",
+        "Eval worker threads (default 1; latencies under N>1 reflect contention).",
+    ),
 ];
 
 const TEXTINTEL_COMMANDS: &[CommandSpec] = &[
@@ -398,7 +404,7 @@ const TEXTINTEL_COMMANDS: &[CommandSpec] = &[
         name: "eval-decision",
         aliases: &[],
         summary: "Score a decision dataset and enforce decision gates.",
-        args: &["split", "provider", "gates", "head", "embeddings"],
+        args: &["split", "provider", "gates", "head", "embeddings", "jobs"],
         required_args: &[],
         positionals: &[positional(
             "dataset",
@@ -547,6 +553,12 @@ const TRAIN_DECISION_ARGS: &[ArgSpec] = &[
         "max-train",
         "N",
         "Cap training examples (0 = all).",
+    ),
+    value(
+        "jobs",
+        "jobs",
+        "N",
+        "Extraction worker threads (default 1; features rejoin in order).",
     ),
 ];
 

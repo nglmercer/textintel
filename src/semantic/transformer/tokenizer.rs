@@ -15,7 +15,6 @@ pub(crate) struct WordPieceTokenizer {
     pub(crate) unk_id: u32,
     pub(crate) cls_id: u32,
     pub(crate) sep_id: u32,
-    pub(crate) pad_id: u32,
     pub(crate) lowercase: bool,
 }
 
@@ -40,11 +39,13 @@ impl WordPieceTokenizer {
                 .copied()
                 .ok_or_else(|| invalid(format!("{VOCAB_FILE}: missing required token `{special}`")))
         };
+        // Forwards run unpadded, but a BERT vocab without [PAD] is
+        // malformed: keep rejecting it at load.
+        lookup("[PAD]")?;
         Ok(Self {
             unk_id: lookup("[UNK]")?,
             cls_id: lookup("[CLS]")?,
             sep_id: lookup("[SEP]")?,
-            pad_id: lookup("[PAD]")?,
             vocab,
             lowercase,
         })
@@ -159,7 +160,6 @@ pub(crate) struct UnigramTokenizer {
     unk_id: u32,
     bos_id: u32,
     eos_id: u32,
-    pad_id: u32,
     byte_fallback: bool,
 }
 
@@ -252,24 +252,20 @@ impl UnigramTokenizer {
             .unwrap_or_default();
         let bos_id = special_id(&added, &pieces, "<s>")?;
         let eos_id = special_id(&added, &pieces, "</s>")?;
-        let pad_id = special_id(&added, &pieces, "<pad>")?;
+        // Forwards run unpadded, but keep rejecting pad-less checkpoints.
+        special_id(&added, &pieces, "<pad>")?;
         Ok(Self {
             pieces,
             max_piece_chars: max_piece_chars.max(1),
             unk_id,
             bos_id,
             eos_id,
-            pad_id,
             byte_fallback,
         })
     }
 
     pub(crate) fn vocab_len(&self) -> usize {
         self.pieces.len()
-    }
-
-    pub(crate) fn pad_id(&self) -> u32 {
-        self.pad_id
     }
 
     /// Ids for one unmatchable character: `<0xHH>` byte pieces when enabled
@@ -443,7 +439,6 @@ mod tests {
     fn unigram_prefers_best_path_and_wraps_bos_eos() {
         let tokenizer = UnigramTokenizer::from_tokenizer_json(unigram_fixture()).unwrap();
         assert_eq!(tokenizer.vocab_len(), 10);
-        assert_eq!(tokenizer.pad_id(), 1);
         let (ids, truncated) = tokenizer.encode("hello world", 32);
         assert!(!truncated);
         // <s> ▁hello ▁world </s>: whole-word pieces beat he+llo on score.

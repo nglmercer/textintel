@@ -224,7 +224,7 @@ impl RebusWeights {
 /// wrapped provider would compute, keys always include the provider identity
 /// and model/resource revision, and an observed revision change invalidates
 /// instead of serving stale values.
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct CacheLimits {
     pub embeddings: usize,
@@ -233,8 +233,21 @@ pub struct CacheLimits {
     pub rebus: usize,
     /// Exact-text fingerprint cache for the decision path
     /// (`prepare_decision_request` re-analyzes static criterion
-    /// descriptions otherwise). Off (`0`) by default.
+    /// descriptions otherwise). On by default (256 entries, ≈6MB worst
+    /// case); set `0` to disable.
     pub decision: usize,
+}
+
+impl Default for CacheLimits {
+    fn default() -> Self {
+        Self {
+            embeddings: 0,
+            g2p: 0,
+            language: 0,
+            rebus: 0,
+            decision: 256,
+        }
+    }
 }
 
 impl CacheLimits {
@@ -328,8 +341,9 @@ pub struct EngineConfig {
     /// "use detected languages". Hints never change detection itself, only
     /// which readings the decoder and G2P prefer.
     pub language_hints: Vec<String>,
-    /// Bounded revision-aware caches. Disabled by default; the production
-    /// preset enables them (see [`CacheLimits::production`]).
+    /// Bounded revision-aware caches. Only the decision fingerprint
+    /// cache is enabled by default; the production preset enables the
+    /// rest (see [`CacheLimits::production`]).
     pub cache: CacheLimits,
 }
 

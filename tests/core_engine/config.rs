@@ -180,7 +180,14 @@ fn rebus_weights_json_roundtrip_and_reject_bad_payloads() {
 
 #[test]
 fn cache_limits_production_preset_and_defaults() {
-    assert!(!CacheLimits::default().any_enabled());
+    // Only the decision fingerprint cache is on by default; the rest
+    // stay off until the production preset (or explicit limits).
+    let default = CacheLimits::default();
+    assert_eq!(default.decision, 256);
+    assert_eq!(default.embeddings, 0);
+    assert_eq!(default.g2p, 0);
+    assert_eq!(default.language, 0);
+    assert_eq!(default.rebus, 0);
     assert!(CacheLimits::production().any_enabled());
 
     let filled = CacheLimits::default().with_production_defaults();

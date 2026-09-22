@@ -177,3 +177,28 @@ fn transformer_drives_engine_semantics() {
         "identical texts must be semantically identical"
     );
 }
+
+#[test]
+fn mixed_length_batches_are_batch_independent() {
+    // Forwards run unpadded at each text's own width, so a vector must
+    // never depend on its batch neighbors — for either pooling.
+    for pooling in [None, Some(TransformerPooling::Mean)] {
+        let mut provider = provider();
+        if let Some(pooling) = pooling {
+            provider = TransformerEmbeddingProvider::open(FIXTURE)
+                .expect("fixture must open")
+                .with_pooling(pooling);
+        }
+        let short = "hi".to_string();
+        let long = "the quick brown fox jumps over the lazy dog".to_string();
+        let alone = provider.embed(std::slice::from_ref(&short)).expect("alone");
+        let batched = provider
+            .embed(&[short.clone(), long.clone()])
+            .expect("batched");
+        let reversed = provider
+            .embed(&[long.clone(), short.clone()])
+            .expect("reversed");
+        assert_eq!(alone[0], batched[0], "pooling={pooling:?}");
+        assert_eq!(alone[0], reversed[1], "pooling={pooling:?}");
+    }
+}

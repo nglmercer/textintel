@@ -212,13 +212,6 @@ impl EncoderTokenizer {
         }
     }
 
-    fn pad_id(&self) -> u32 {
-        match self {
-            Self::Unigram(tokenizer) => tokenizer.pad_id(),
-            Self::WordPiece(tokenizer) => tokenizer.pad_id,
-        }
-    }
-
     fn kind(&self) -> &'static str {
         match self {
             Self::Unigram(_) => "unigram (tokenizer.json)",
@@ -474,8 +467,9 @@ impl TransformerEmbeddingProvider {
     }
 
     /// Encode with per-input truncation reporting. Inputs are chunked to
-    /// `max_batch` texts; every chunk pads to its own longest sequence. The
-    /// configured [`Self::with_text_prefix`] is prepended before tokenizing.
+    /// `max_batch` texts; each text runs at its own width (never padded),
+    /// so vectors never depend on batch neighbors. The configured
+    /// [`Self::with_text_prefix`] is prepended before tokenizing.
     pub fn encode_detailed(&self, texts: &[String]) -> Result<EncodedBatch, ProviderError> {
         let mut vectors = Vec::with_capacity(texts.len());
         let mut truncated = Vec::with_capacity(texts.len());
@@ -495,13 +489,14 @@ impl TransformerEmbeddingProvider {
                     self.tokenizer.encode(input, self.config.max_positions)
                 })
                 .collect();
-            let width = encoded.iter().map(|(ids, _)| ids.len()).max().unwrap_or(0);
+            // Each text runs at its own width: forwards are already
+            // per-text, so padding to the chunk longest only burns
+            // attention/FFN compute on pad rows that pooling ignores
+            // (CLS) or must exclude (mean). Tokenizers always emit at
+            // least the two boundary specials, so widths are nonzero.
             for (ids, was_truncated) in &encoded {
-                let mut padded = ids.clone();
-                let mut mask = vec![1.0f32; ids.len()];
-                padded.resize(width, self.tokenizer.pad_id());
-                mask.resize(width, 0.0);
-                vectors.push(self.forward(&padded, &mask, width)?);
+                let mask = vec![1.0f32; ids.len()];
+                vectors.push(self.forward(ids, &mask, ids.len())?);
                 truncated.push(*was_truncated);
                 token_counts.push(ids.len());
             }

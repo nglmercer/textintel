@@ -50,6 +50,7 @@ pub use calibration::{
 pub use dataset::{DecisionDataset, DecisionExample, DecisionSplit};
 pub use eval::{
     COVERAGE_LEVELS, CoveragePoint, DecisionEvalReport, check_decision_gates, evaluate_decisions,
+    evaluate_decisions_with_jobs,
 };
 pub use fusion::{
     FUSION_FEATURE_SCHEMA_VERSION, FUSION_FEATURES, fusion_feature_vector, fusion_features,
