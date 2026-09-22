@@ -175,6 +175,7 @@ use devanagari::devanagari_to_latin;
 use han::{han_to_latin, latin_to_han};
 use kana::kana_to_latin;
 
+pub(crate) use evidence::transliteration_evidence_with_raw;
 pub use evidence::{
     TransliterationEvidence, effective_transliteration_evidence, transliteration_compatibility,
     transliteration_evidence, transliteration_similarity,

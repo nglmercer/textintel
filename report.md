@@ -309,6 +309,63 @@ byte-compared compare pairs):
   `can_split_known` (it works on whitespace-stripped text, so the
   skip never fires).
 
+### Batch six (beam search, character metrics, scorer sharing)
+
+Stage timings (`analyze_with_timing`/`compare_with_timing`) showed
+rebus at 45–92% of every analyze, the language stage second, and the
+compare scoring step at ~310µs (short pair) / ~690µs (long pair) —
+each analyze re-ran per-node beam allocs, each of the six character
+metrics re-collected its own `Vec<char>`, and the scorer folded the
+same decoded keys three times per side. Criterion plus probes, same
+machine:
+
+| Path | Before | After | Speedup |
+|---|---|---|---|
+| `decision_similarity_end_to_end` bench | ~4.45ms | ~3.19ms | **1.40×** |
+| Compare scoring step, short pair (probe) | ~310µs | ~217µs | **1.43×** |
+| Compare scoring step, long pair (probe) | ~688µs | ~490µs | **1.40×** |
+| `compare_obfuscated` bench | ~2.18ms | ~1.94ms | 1.12× |
+| `decision_interaction_fresh_states` bench | ~69ms | ~61ms | 1.13× |
+| `decision_analyze_state` bench | ~1.46ms | ~1.36ms | 1.07× |
+| `analyze_rebus` bench | ~3.34ms | ~3.14ms | 1.06× |
+| Long-text analyze, rebus stage (probe) | ~1.35ms | ~1.07ms | 1.26× |
+| Short decode-text analyze (probe) | ~1.44ms | ~1.19ms | 1.20× |
+| Cold / hot decide, embeds | — | — | ~1× (forward- / cache-bound) |
+
+What changed (all bit-identical per the 8.2MB byte-compared dumps:
+482 eval pairs × analyze/compare, 59 edge texts × analyze/decode,
+68 edge pairs, direct character metrics including n = 0–5 n-grams,
+and similarity decisions):
+
+- `lexical/character.rs`: one char collection serves all six metrics
+  (private `*_chars` cores keep each original recurrence; the public
+  `&str` functions collect once and delegate). N-gram Jaccard counts
+  by packed `u64` key for n ≤ 3 (every `char` fits 21 bits, so three
+  pack exactly and key equality is sequence equality — no per-window
+  `String`); n > 3 keeps the string-keyed path over the same windows.
+  Either way the sums are exact integers, so values are unchanged.
+- `rebus/beam_search.rs`: per-reading lowercase, in-word digit gate,
+  substantive flag, and trailing-space check hoisted out of the
+  per-node loop; next-token whitespace lookahead hoisted per
+  position; `chars().next_back()` instead of `chars().last()` (O(1),
+  same value); transforms moved instead of double-cloned when no
+  boundary variants exist; `format!` replaced by `push_str` concat
+  (identical bytes, one allocation).
+- `comparison/scorer.rs` + `scorer/swap.rs`: word lists computed
+  once per side and shared by single-word scope, the swap probe, and
+  cross-language suppression (was three tokenizations per side).
+- `transliteration/evidence.rs`: `transliteration_evidence_with_raw`
+  inner variant lets the scorer pass its character channel's exact
+  `f64` instead of recomputing the same raw comparison; the public
+  function delegates with `None`.
+- `comparison/scorer/decoded.rs`: folded decoded keys (literals plus
+  candidates with confidences) built once per side and shared by the
+  overlap sets, both confidence maps, and the Phase-3 anchors (was
+  three fold passes plus a fourth for anchors).
+- `lexical/tokenizer.rs`: token and suffix char counts hoisted out
+  of the per-suffix strip loop (suffix lengths computed once per
+  call).
+
 Fresh-path floor: one e5-small forward is ~55ms on this CPU and the
 trained head needs its output plus the analysis features, so
 never-seen single queries cannot reach 100× without a model change

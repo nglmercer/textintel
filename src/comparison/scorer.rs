@@ -18,8 +18,8 @@ mod swap;
 
 use decoded::{best_decoded_overlap, exact_decode_confidence};
 use swap::{
-    same_language_swap, swapped_phonetic_similarity, swapped_validity, swapped_word_similarity,
-    swapped_words,
+    same_language_swap_with_words, swapped_phonetic_similarity, swapped_validity,
+    swapped_word_similarity, swapped_words_from,
 };
 pub(crate) fn compact(text: &str) -> String {
     text.chars().filter(|ch| !ch.is_whitespace()).collect()
@@ -91,8 +91,7 @@ fn is_cjk(character: char) -> bool {
 /// phrase or compound (`早上好`), not a word (CJK words run one or two
 /// characters). Without this, every short CJK pair would read as a
 /// single-word confusable.
-fn is_single_word(fingerprint: &MessageFingerprint) -> bool {
-    let words = word_tokens(fingerprint);
+fn is_single_word_from(words: &[String]) -> bool {
     if words.len() != 1 {
         return false;
     }
@@ -240,14 +239,18 @@ pub fn score_fingerprints(
     b: &MessageFingerprint,
     weights: &SimilarityWeights,
 ) -> ComparisonResult {
-    let character = finite_or_zero(combined_character_similarity(&a.raw, &b.raw));
+    let character_raw = combined_character_similarity(&a.raw, &b.raw);
+    let character = finite_or_zero(character_raw);
     let lexical = finite_or_zero(lexical_similarity(&a.raw, &b.raw));
     let visual = finite_or_zero(visual_similarity(&a.raw, &b.raw));
     // Shared transliteration inputs, computed once: the evidence (raw
     // similarity plus provider confidence), the language/context
     // compatibility discount, and the raw views. The channels below all
-    // derive from these same values instead of recomputing them.
-    let transliteration = crate::transliteration::transliteration_evidence(a, b);
+    // derive from these same values instead of recomputing them. The
+    // evidence reuses the unsanitized character value above — the exact
+    // `f64` it would compute itself.
+    let transliteration =
+        crate::transliteration::transliteration_evidence_with_raw(a, b, character_raw);
     let compatibility = crate::transliteration::transliteration_compatibility(a, b);
     let views_a = a.transliteration_views();
     let views_b = b.transliteration_views();
@@ -305,20 +308,25 @@ pub fn score_fingerprints(
         })
         .collect::<BTreeMap<_, _>>();
     let lexicon_validity = finite_or_zero(a.lexicon_coverage.min(b.lexicon_coverage));
-    let single_word_pair = if is_single_word(a) && is_single_word(b) {
+    // Word lists computed once per side: single-word scope, the swap
+    // probe, and cross-language suppression all read the same lists
+    // instead of re-tokenizing (three passes per side before).
+    let words_a = word_tokens(a);
+    let words_b = word_tokens(b);
+    let single_word_pair = if is_single_word_from(&words_a) && is_single_word_from(&words_b) {
         1.0
     } else {
         0.0
     };
     // The swap probe runs once; every swap channel reads the same probe.
-    let swap = swapped_words(a, b);
+    let swap = swapped_words_from(&words_a, &words_b);
     let swapped_word_similarity = finite_or_zero(swapped_word_similarity(&swap));
     let swapped_phonetic_raw = finite_or_zero(swapped_phonetic_similarity(&swap));
     // Cross-language swaps (`mi`/`my`) are switches, not confusables:
     // phonetic-suspicion evidence is meaningless across languages.
-    let same_language = swap
-        .as_ref()
-        .map_or(1.0, |(position, _, _)| same_language_swap(a, b, *position));
+    let same_language = swap.as_ref().map_or(1.0, |(position, _, _)| {
+        same_language_swap_with_words(a, b, *position, &words_a, &words_b)
+    });
     // Gate phonetic-swap evidence on pair lexicon validity: phonemizing
     // leetspeak tokens (`gr8`→"gr eight" vs `grate`) manufactures similarity
     // out of glyph accidents, so the signal only counts when both sides read

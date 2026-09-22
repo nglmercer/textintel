@@ -21,9 +21,12 @@ pub fn simple_lemmas_with_provider(
     languages: Option<&[String]>,
     provider: &dyn LexiconProvider,
 ) -> Vec<String> {
+    // Suffix char lengths computed once: the strip rule below used to
+    // recount the token (and the suffix) per candidate suffix.
     let suffixes = [
         "ing", "ed", "es", "s", "mente", "cion", "ción", "ando", "iendo",
-    ];
+    ]
+    .map(|suffix| (suffix, suffix.chars().count()));
     tokens
         .iter()
         .map(|token| {
@@ -31,13 +34,14 @@ pub fn simple_lemmas_with_provider(
             if let Some(lemma) = provider.lemma(&value, languages) {
                 return lemma;
             }
-            if value.chars().all(char::is_alphabetic) && value.chars().count() > 5 {
-                for suffix in suffixes {
-                    if value.ends_with(suffix)
-                        && value.chars().count() - suffix.chars().count() >= 3
-                    {
-                        value.truncate(value.len() - suffix.len());
-                        break;
+            if value.chars().all(char::is_alphabetic) {
+                let value_len = value.chars().count();
+                if value_len > 5 {
+                    for (suffix, suffix_len) in suffixes {
+                        if value.ends_with(suffix) && value_len - suffix_len >= 3 {
+                            value.truncate(value.len() - suffix.len());
+                            break;
+                        }
                     }
                 }
             }

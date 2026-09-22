@@ -51,6 +51,12 @@ fn count_ngrams(text: &str, n: usize) -> BTreeMap<String, usize> {
 pub fn levenshtein(a: &str, b: &str) -> usize {
     let a: Vec<char> = a.chars().collect();
     let b: Vec<char> = b.chars().collect();
+    levenshtein_chars(&a, &b)
+}
+
+/// [`levenshtein`] over pre-collected chars, so callers scoring several
+/// metrics pay for collection once. Same recurrence, same value.
+fn levenshtein_chars(a: &[char], b: &[char]) -> usize {
     if a == b {
         return 0;
     }
@@ -79,6 +85,12 @@ pub fn levenshtein(a: &str, b: &str) -> usize {
 pub fn damerau_levenshtein(a: &str, b: &str) -> usize {
     let a: Vec<char> = a.chars().collect();
     let b: Vec<char> = b.chars().collect();
+    damerau_levenshtein_chars(&a, &b)
+}
+
+/// [`damerau_levenshtein`] over pre-collected chars. Same recurrence,
+/// same value.
+fn damerau_levenshtein_chars(a: &[char], b: &[char]) -> usize {
     if a == b {
         return 0;
     }
@@ -113,6 +125,11 @@ fn normalized_edit(distance: usize, a: &[char], b: &[char]) -> f64 {
 pub fn jaro(a: &str, b: &str) -> f64 {
     let a: Vec<char> = a.chars().collect();
     let b: Vec<char> = b.chars().collect();
+    jaro_chars(&a, &b)
+}
+
+/// [`jaro`] over pre-collected chars. Same matching pass, same value.
+fn jaro_chars(a: &[char], b: &[char]) -> f64 {
     if a == b {
         return 1.0;
     }
@@ -161,15 +178,18 @@ pub fn jaro(a: &str, b: &str) -> f64 {
 }
 
 pub fn jaro_winkler(a: &str, b: &str) -> f64 {
-    jaro_winkler_from(jaro(a, b), a, b)
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    jaro_winkler_from_chars(jaro_chars(&a, &b), &a, &b)
 }
 
-/// [`jaro_winkler`] over a precomputed Jaro score, so callers that need
-/// both pay for the matching pass once. Identical formula, same value.
-fn jaro_winkler_from(jaro_score: f64, a: &str, b: &str) -> f64 {
+/// [`jaro_winkler`] over a precomputed Jaro score and pre-collected
+/// chars, so callers that need both pay for collection and the matching
+/// pass once. Identical formula, same value.
+fn jaro_winkler_from_chars(jaro_score: f64, a: &[char], b: &[char]) -> f64 {
     let prefix = a
-        .chars()
-        .zip(b.chars())
+        .iter()
+        .zip(b.iter())
         .take_while(|(left, right)| left == right)
         .take(4)
         .count();
@@ -177,30 +197,72 @@ fn jaro_winkler_from(jaro_score: f64, a: &str, b: &str) -> f64 {
 }
 
 pub fn ngram_similarity(a: &str, b: &str, n: usize) -> f64 {
-    let left = character_ngrams(a, n);
-    let right = character_ngrams(b, n);
-    if left.is_empty() && right.is_empty() {
-        return if a == b { 1.0 } else { 0.0 };
+    let a_chars: Vec<char> = a.chars().collect();
+    let b_chars: Vec<char> = b.chars().collect();
+    ngram_similarity_chars(&a_chars, &b_chars, n, a == b)
+}
+
+/// Packed n-gram key for `n <= 3`: every `char` fits 21 bits
+/// (`char::MAX` is `0x10FFFF`), so three chars pack into a `u64` with
+/// room to spare. Packed equality is exactly sequence equality, and
+/// `n` is fixed per call, so no length tag is needed.
+fn packed_ngram(window: &[char]) -> u64 {
+    let mut key = 0u64;
+    for (position, ch) in window.iter().enumerate() {
+        key |= (*ch as u64) << (21 * position);
     }
-    // Hashed counts in one pass (no union key-set): intersection and
-    // union are exact integer sums, so iteration order cannot change
-    // the result.
+    key
+}
+
+/// [`ngram_similarity`] over pre-collected chars. Short n-grams count by
+/// packed integer key instead of per-gram `String`s (no allocation per
+/// window); longer n-grams keep the string-keyed path over the same
+/// windows. Either way intersection and union are exact integer sums,
+/// so the value matches the string-based computation bit for bit.
+fn ngram_similarity_chars(a: &[char], b: &[char], n: usize, sides_equal: bool) -> f64 {
+    if n == 0 || (a.len() < n && b.len() < n) {
+        return if sides_equal { 1.0 } else { 0.0 };
+    }
+    if n <= 3 {
+        let mut left_counts = HashMap::new();
+        let mut right_counts = HashMap::new();
+        for window in a.windows(n) {
+            *left_counts.entry(packed_ngram(window)).or_insert(0usize) += 1;
+        }
+        for window in b.windows(n) {
+            *right_counts.entry(packed_ngram(window)).or_insert(0usize) += 1;
+        }
+        return jaccard_counts(&left_counts, &right_counts);
+    }
     let mut left_counts = HashMap::new();
     let mut right_counts = HashMap::new();
-    for gram in left {
-        *left_counts.entry(gram).or_insert(0usize) += 1;
+    for window in a.windows(n) {
+        *left_counts
+            .entry(window.iter().collect::<String>())
+            .or_insert(0usize) += 1;
     }
-    for gram in right {
-        *right_counts.entry(gram).or_insert(0usize) += 1;
+    for window in b.windows(n) {
+        *right_counts
+            .entry(window.iter().collect::<String>())
+            .or_insert(0usize) += 1;
     }
+    jaccard_counts(&left_counts, &right_counts)
+}
+
+/// Jaccard index over count maps: intersection and union are exact
+/// integer sums, so iteration order cannot change the result.
+fn jaccard_counts<K: Eq + std::hash::Hash>(
+    left_counts: &HashMap<K, usize>,
+    right_counts: &HashMap<K, usize>,
+) -> f64 {
     let mut intersection = 0usize;
     let mut union = 0usize;
-    for (gram, left_count) in &left_counts {
+    for (gram, left_count) in left_counts {
         let right_count = right_counts.get(gram).copied().unwrap_or(0);
         intersection += left_count.min(&right_count);
         union += left_count.max(&right_count);
     }
-    for (gram, right_count) in &right_counts {
+    for (gram, right_count) in right_counts {
         if !left_counts.contains_key(gram) {
             union += right_count;
         }
@@ -215,12 +277,17 @@ pub fn ngram_similarity(a: &str, b: &str, n: usize) -> f64 {
 pub fn lcs_len(a: &str, b: &str) -> usize {
     let a: Vec<char> = a.chars().collect();
     let b: Vec<char> = b.chars().collect();
+    lcs_len_chars(&a, &b)
+}
+
+/// [`lcs_len`] over pre-collected chars. Same recurrence, same value.
+fn lcs_len_chars(a: &[char], b: &[char]) -> usize {
     if a.is_empty() || b.is_empty() {
         return 0;
     }
     let mut previous = vec![0usize; b.len() + 1];
     let mut current = vec![0usize; b.len() + 1];
-    for ca in a {
+    for ca in a.iter().copied() {
         // Pre-sized row (same recurrence, no per-row growth reallocations).
         for (j, cb) in b.iter().enumerate() {
             current[j + 1] = if ca == *cb {
@@ -235,7 +302,9 @@ pub fn lcs_len(a: &str, b: &str) -> usize {
 }
 
 pub fn lcs_similarity(a: &str, b: &str) -> f64 {
-    lcs_len(a, b) as f64 / a.chars().count().max(b.chars().count()).max(1) as f64
+    let a_chars: Vec<char> = a.chars().collect();
+    let b_chars: Vec<char> = b.chars().collect();
+    lcs_len_chars(&a_chars, &b_chars) as f64 / a_chars.len().max(b_chars.len()).max(1) as f64
 }
 
 pub fn character_similarity(a: &str, b: &str) -> CharacterSimilarity {
@@ -243,12 +312,15 @@ pub fn character_similarity(a: &str, b: &str) -> CharacterSimilarity {
     let bb = strip_diacritics(&casefold_text(b));
     let ac: Vec<char> = aa.chars().collect();
     let bc: Vec<char> = bb.chars().collect();
-    let lev = normalized_edit(levenshtein(&aa, &bb), &ac, &bc);
-    let dam = normalized_edit(damerau_levenshtein(&aa, &bb), &ac, &bc);
-    let ja = jaro(&aa, &bb);
-    let jw = jaro_winkler_from(ja, &aa, &bb);
-    let ng = 0.5 * ngram_similarity(&aa, &bb, 2) + 0.5 * ngram_similarity(&aa, &bb, 3);
-    let lcs = lcs_similarity(&aa, &bb);
+    // One collection serves all six metrics; each core keeps its
+    // original recurrence, so the blend below is unchanged.
+    let lev = normalized_edit(levenshtein_chars(&ac, &bc), &ac, &bc);
+    let dam = normalized_edit(damerau_levenshtein_chars(&ac, &bc), &ac, &bc);
+    let ja = jaro_chars(&ac, &bc);
+    let jw = jaro_winkler_from_chars(ja, &ac, &bc);
+    let ng = 0.5 * ngram_similarity_chars(&ac, &bc, 2, aa == bb)
+        + 0.5 * ngram_similarity_chars(&ac, &bc, 3, aa == bb);
+    let lcs = lcs_len_chars(&ac, &bc) as f64 / ac.len().max(bc.len()).max(1) as f64;
     let combined = 0.2 * lev + 0.15 * dam + 0.15 * ja + 0.2 * jw + 0.15 * ng + 0.15 * lcs;
     CharacterSimilarity {
         levenshtein: lev,
