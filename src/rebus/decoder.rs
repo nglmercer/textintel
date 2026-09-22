@@ -38,6 +38,14 @@ struct MemoizedG2p<'a> {
     phoneme_cache: Mutex<TextLanguageMemo<(Vec<String>, f64)>>,
 }
 
+/// Beam-node identity beyond its surface text: prior-score bits plus
+/// language scope. Transforms compare separately (see below).
+struct NodeSig {
+    score_bits: u64,
+    language: Option<String>,
+    languages: Vec<String>,
+}
+
 impl<'a> MemoizedG2p<'a> {
     fn new(inner: &'a dyn G2PProvider) -> Self {
         Self {
@@ -241,20 +249,31 @@ impl RebusDecoder {
         let mut candidates = std::collections::BTreeMap::<String, DecodedCandidate>::new();
         // Beam hypotheses often repeat exactly (same text, prior, languages,
         // and rewrite path). Scoring is a pure function of those inputs, so
-        // memoize by the full input key and reuse the identical candidate.
-        // The key covers every value scoring reads plus every node field the
-        // candidate constructor copies, so reuse is bit-identical.
-        let mut scored_nodes = HashMap::<String, DecodedCandidate>::new();
+        // memoize and reuse the identical candidate. Buckets key on the
+        // surface text (borrowed, allocation-free lookups); entries confirm
+        // score bits plus language scope, and transforms compare by Debug
+        // exactly like the old key — dedup verdicts, including NaN/±0.0
+        // float corners, are unchanged while the per-node format disappears.
+        let mut scored_nodes = HashMap::<String, Vec<(NodeSig, DecodedCandidate)>>::new();
         for node in nodes {
-            let node_key = format!(
-                "{:?}|{:?}|{:?}|{:?}|{:?}",
-                node.text,
-                node.score.to_bits(),
-                node.language,
-                node.languages,
-                node.transforms
-            );
-            if let Some(reused) = scored_nodes.get(&node_key) {
+            if node.text.is_empty() {
+                continue;
+            }
+            let reused = scored_nodes.get(&node.text).and_then(|bucket| {
+                bucket
+                    .iter()
+                    .filter(|(sig, _)| {
+                        sig.score_bits == node.score.to_bits()
+                            && sig.language == node.language
+                            && sig.languages == node.languages
+                    })
+                    .find(|(_, candidate)| {
+                        format!("{:?}", candidate.transformations)
+                            == format!("{:?}", node.transforms)
+                    })
+                    .map(|(_, candidate)| candidate.clone())
+            });
+            if let Some(reused) = reused {
                 let key = casefold_text(&reused.text);
                 if candidates
                     .get(&key)
@@ -285,10 +304,15 @@ impl RebusDecoder {
                 &evidence,
                 weights,
             );
-            if node.text.is_empty() {
-                continue;
-            }
             let key = casefold_text(&node.text);
+            // Memo key/sig split off before the candidate takes ownership;
+            // the language list moves out of the spent evidence.
+            let map_key = node.text.clone();
+            let sig = NodeSig {
+                score_bits: node.score.to_bits(),
+                language: node.language.clone(),
+                languages: evidence.candidate_languages,
+            };
             let candidate = DecodedCandidate {
                 text: node.text,
                 score,
@@ -301,7 +325,10 @@ impl RebusDecoder {
                 confidence_gap: 0.0,
                 strong: false,
             };
-            scored_nodes.insert(node_key, candidate.clone());
+            scored_nodes
+                .entry(map_key)
+                .or_default()
+                .push((sig, candidate.clone()));
             if candidates
                 .get(&key)
                 .is_none_or(|old| candidate.score > old.score)

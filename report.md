@@ -54,7 +54,7 @@ a matched template or fine-tune could do better.
 
 | Model | Overall | AG-48 | Routing-12 | Latency/ex | Notes |
 |---|---|---|---|---|---|
-| **S1-v1 (trained head)** | **0.800** | 0.812 | 0.750 | ~119ms eval avg | calibrated, ECE 0.077 |
+| **S1-v1 (trained head)** | **0.800** | 0.812 | 0.750 | ~91ms eval avg | calibrated, ECE 0.077 |
 | similarity adapter | 0.350 | — | — | ~2.3s (debug) | lexical overlap only |
 | LFM2.5-230M (v4) | 0.267 | 0.250 | 0.333 | ~175ms | constant outputs |
 | lfm25-350m (v4) | 0.267 | 0.250 | 0.333 | ~220ms | constant outputs |
@@ -63,7 +63,7 @@ Blended chance ≈ 0.27. S1-v1 macro F1 0.779, NLL 0.595, Brier 0.079.
 Risk/coverage: 80% coverage → 0.875 accuracy, 50% → 0.933 — confidence
 is a working escalation signal. Confusion is concentrated where
 expected (scitech↔business). S1 latency after optimization (§ below):
-~119ms/example on this eval (long news texts), ~70ms on short
+~91ms/example on this eval (long news texts), ~64ms on short
 messages; repeated traffic serves from cache at ~0.6ms.
 
 ## S1-v1 training (completed, single run, no retries)
@@ -83,9 +83,13 @@ messages; repeated traffic serves from cache at ~0.6ms.
 ## Optimization (post-eval, accuracy unchanged at 0.800)
 
 All changes are semantics-preserving: caches return identical values,
-and the two algorithmic rewrites were verified bit-identical against
-the old code (460+ fuzzed pairs for phonetics; full suite + eval rerun
-for the rest). Re-ran eval after every change: still 48/60.
+and every algorithmic rewrite was verified bit-identical against the
+old code (460+ fuzzed pairs for phonetics; byte-compared fingerprint,
+embedding-bit, and decision dumps over an 83-text corpus plus the full
+suite and an eval rerun for the rest). Re-ran eval after every change:
+still 48/60.
+
+### Batches one–two
 
 Measured on this machine, release build, short routing message
 (`cargo bench --bench decision`):
@@ -166,6 +170,144 @@ What changed:
   on the forward for days of risky work; parked pending a decision.
 - GPU: none present (`nvidia-smi` absent, integrated graphics
   only) — CPU-only is set by hardware, not just policy.
+
+### Batch three (analysis bottlenecks)
+
+Profiling showed analysis at 3.1ms (short text) split ~57% rebus,
+~33% language detection. Same bench, same machine:
+
+| Path | Before | After | Speedup |
+|---|---|---|---|
+| Single analysis | ~2.9ms | ~1.59ms | 1.8× |
+| Cold decide (no caches) | ~382ms | ~307ms | 1.25× |
+| Single embed | ~58.4ms | ~55.9ms | 1.04× |
+| Fresh / hot decide | ~70ms / ~0.60ms | ~69ms / ~0.59ms | ~1× |
+
+What changed (all bit-identical per the 83-text dumps):
+
+- `language/ngram.rs`: per-query word-spread counts hoisted out of
+  the per-language loop, stored profiles/word-sets/IDF hashed, one
+  casefold shared by profile and word split, profile chars collected
+  once. Language stage 3.3× (detect 493µs → 125µs).
+- `rebus/decoder.rs`: call-scoped G2P memo (the source text
+  phonemized once per decode instead of per candidate) plus a lean
+  `phonemes()` provider path that skips the IPA join, syllable scan,
+  and per-phoneme feature labels scoring never reads; ladder views
+  folded once; memo maps hashed. Scoring 135µs → 102µs per
+  candidate, rebus stage 1.6×.
+- `normalization/unicode.rs`: ASCII casefold fast path (NFKC is the
+  identity on ASCII): 3.5µs → 27ns per call, ~80 calls per analysis.
+- `rebus/beam_search.rs`: token/reading lowercases hoisted out of
+  the beam loop.
+- `engine/analyzer.rs`: tokens reused from segments (piece splits do
+  not depend on the detector), skipping a duplicate segmentation
+  pass; input length counted once.
+- `cache/core.rs`, `semantic/embeddings.rs`: borrowed cache lookups
+  (no key clone on hits); embedding cache keyed by exact text under
+  the existing `model@revision` namespace instead of per-text
+  model/revision/text tuples.
+- `semantic/transformer/tokenizer.rs`: hashed vocabularies, one
+  reusable Viterbi/WordPiece buffer instead of an allocation per
+  attempt, lazy byte-fallback with ids precomputed at load.
+- `semantic/transformer/weights.rs`: linear weights pre-transposed
+  at load (measured ~neutral here — the forward is matmul-bound —
+  kept as strictly less per-forward work).
+- Reverted on measurement: hashing the small phoneme n-gram count
+  maps (SipHash slower than B-tree integer compares, +8µs per
+  similarity).
+
+### Batch four (multi-text embeds, lexicon scans)
+
+Single-text paths were now forward-bound (~56ms e5-small forward),
+so this batch parallelized across texts and trimmed lexicon scans:
+
+| Path | Before | After | Speedup |
+|---|---|---|---|
+| 4-text embed batch | ~214ms | ~69ms | **3.1×** |
+| 5-text embed bench | ~279ms | ~138ms | **2.1×** |
+| Cold decide (no caches) | ~307ms | ~170ms | **1.8×** |
+| Single analysis / embed | ~1.59ms / ~56ms | ~1.60ms / ~57ms | ~1× |
+| Full eval (60 long texts) | ~119ms/ex | ~91ms/ex | 1.3× |
+
+What changed (all bit-identical per the 83-text dumps):
+
+- Parallel chunk embeds (`semantic/transformer.rs`,
+  `with_max_parallel`, default 4): each text runs its own
+  exact-length forward on a worker and results rejoin in input
+  order with the first-in-order error — independent forwards, so
+  vectors match sequential encoding bit for bit. Single-text calls
+  never spawn threads; `1` restores strictly sequential encoding.
+  Committed equivalence test over worker counts 1/2/3/4/8 plus
+  multi-chunk batching on the committed mini-transformer fixture.
+- `starts_with` spaced-prefix gate (`resources/index.rs`): a
+  normalized prefix with inner whitespace cannot match any key of a
+  spaceless index, so it answers `false` without the table scan.
+  Embedded packs verified spaceless (110 spaced strings all live in
+  `examples`, which index per word); indexes rebuilt with spaced
+  keys set a flag that keeps the full scan. Committed soundness
+  test with a spaced-key pack.
+- `lexicon_coverage` fold-stability precheck: clean lowercase words
+  skip the redundant second lookup (fold is the identity there).
+
+### Batch five (comparison scoring, lexicon gates)
+
+Profiling showed `compare` spending ~3.7ms scoring short pairs:
+transliteration evidence ran 3×, swap detection 4×, and every
+character similarity recomputed Jaro inside Jaro-Winkler. Analysis
+still spent ~60 lexicon lookups per rebus scoring. Criterion plus a
+75-pair probe, same machine:
+
+| Path | Before | After | Speedup |
+|---|---|---|---|
+| Compare short pair (probe) | ~7.17ms | ~4.55ms | **1.57×** |
+| Compare long pair (probe) | ~20.8ms | ~16.6ms | 1.25× |
+| `compare_obfuscated` bench | ~2.87ms | ~2.18ms | 1.31× |
+| `decode_symbol` bench | ~0.99ms | ~0.80ms | 1.24× |
+| `analyze_rebus` bench | ~3.68ms | ~3.34ms | 1.10× |
+| Single analysis | ~1.60ms | ~1.46ms | 1.10× |
+| Cold decide (no caches) | ~170ms | ~163ms | 1.04× |
+
+(The batch-four `decision_similarity_end_to_end` figure was measured
+under heavy machine load and is not comparable; current value is
+~4.47ms.)
+
+What changed (all bit-identical per the 83-text dumps plus 75
+byte-compared compare pairs):
+
+- `comparison/scorer.rs`: transliteration evidence, compatibility,
+  and raw views computed once and shared across channels (was 3×
+  evidence + 4× compatibility + 18 view scans); swap probe runs once
+  instead of 4×; alphanumeric folds and language agreement computed
+  once.
+- `comparison/scorer/decoded.rs`: Phase-2 identical pairs share one
+  value computed through the real similarity function (every channel
+  reads 1.0 on equal non-empty inputs), skipping redundant full
+  string comparisons.
+- `lexical/character.rs`: Jaro computed once and reused for
+  Jaro-Winkler; n-gram Jaccard restructured to hashed counts in one
+  pass (exact integer sums, no union key-set); Damerau-Levenshtein
+  moved from a full matrix to three rolling rows; Levenshtein/LCS
+  rows pre-sized. Single `combined_character_similarity` 210µs →
+  95µs (2.2×).
+- `resources/index.rs`: overlong ASCII words skip point lookups
+  (`contains`, `lemma`, `frequency`, `is_stop_word`, `lookup`) —
+  NFKC-casefold preserves ASCII length past trimming, so they cannot
+  match any key; non-ASCII still proceeds (NFKC composition can
+  shrink). Short words pay one length compare. Lexical plausibility
+  28µs → 16µs; long-text analysis rebus stage 1.35×. Committed
+  boundary tests including a shrink-to-hit non-ASCII case.
+- `rebus/decoder.rs`: beam memo buckets keyed on surface text with
+  borrowed lookups; score bits plus language scope confirm, and
+  transforms compare by Debug exactly like the old format key —
+  identical dedup verdicts (including NaN/±0.0 corners) with no
+  per-node formatting.
+- `normalization/unicode.rs`: ASCII fast path for
+  `strip_diacritics` (NFD is the identity on ASCII).
+- Dropped on inspection: reusing stored fingerprint scripts in
+  `cross_script_pair` (9µs, but changes semantics for
+  hand-built/hostile fingerprints) and prefix-skipping in
+  `can_split_known` (it works on whitespace-stripped text, so the
+  skip never fires).
 
 Fresh-path floor: one e5-small forward is ~55ms on this CPU and the
 trained head needs its output plus the analysis features, so

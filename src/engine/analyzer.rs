@@ -72,10 +72,20 @@ fn lexicon_coverage(
     let known = words
         .iter()
         .filter(|token| {
-            provider.contains(token, None) || provider.contains(&alphanumeric_fold(token), None)
+            provider.contains(token, None)
+                || (!is_fold_stable(token) && provider.contains(&alphanumeric_fold(token), None))
         })
         .count();
     (known as f64 / words.len() as f64).clamp(0.0, 1.0)
+}
+
+/// True when [`alphanumeric_fold`] is the identity: ASCII lowercase
+/// alphanumerics casefold to themselves and nothing is filtered, so a
+/// second lookup on the fold would repeat the first.
+fn is_fold_stable(token: &str) -> bool {
+    token
+        .bytes()
+        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
 }
 
 fn alphanumeric_fold(text: &str) -> String {

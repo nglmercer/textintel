@@ -236,6 +236,7 @@ pub struct TransformerEmbeddingProvider {
     weights: BertWeights,
     pooling: TransformerPooling,
     max_batch: usize,
+    max_parallel: usize,
     text_prefix: Option<String>,
     model_id: String,
     revision: Option<String>,
@@ -311,6 +312,7 @@ impl TransformerEmbeddingProvider {
             weights,
             pooling: TransformerPooling::default(),
             max_batch: 32,
+            max_parallel: 4,
             text_prefix: None,
         })
     }
@@ -322,6 +324,17 @@ impl TransformerEmbeddingProvider {
 
     pub fn with_max_batch(mut self, max_batch: usize) -> Self {
         self.max_batch = max_batch.max(1);
+        self
+    }
+
+    /// Worker threads for multi-text batches (default 4). Each text runs
+    /// its own exact-length forward on a worker and results rejoin in
+    /// input order, so vectors are identical to sequential encoding;
+    /// single-text calls never spawn threads. Set `1` for strictly
+    /// sequential encoding (e.g. servers that already parallelize across
+    /// requests and want no fan-out per call).
+    pub fn with_max_parallel(mut self, max_parallel: usize) -> Self {
+        self.max_parallel = max_parallel.max(1);
         self
     }
 
@@ -466,40 +479,106 @@ impl TransformerEmbeddingProvider {
         Ok(vector)
     }
 
+    /// Tokenize plus forward for one text: its own exact width (never
+    /// padded), so its vector never depends on batch neighbors.
+    /// Tokenizers always emit at least the two boundary specials, so
+    /// widths are nonzero.
+    fn encode_one(&self, text: &str) -> Result<(Vec<f32>, bool, usize), ProviderError> {
+        let prefixed;
+        let input = match &self.text_prefix {
+            Some(prefix) => {
+                prefixed = format!("{prefix}{text}");
+                prefixed.as_str()
+            }
+            None => text,
+        };
+        let (ids, was_truncated) = self.tokenizer.encode(input, self.config.max_positions);
+        let mask = vec![1.0f32; ids.len()];
+        let vector = self.forward(&ids, &mask, ids.len())?;
+        Ok((vector, was_truncated, ids.len()))
+    }
+
+    /// One chunk sequentially (single text, or parallelism disabled).
+    fn encode_chunk_sequential(
+        &self,
+        chunk: &[String],
+        vectors: &mut Vec<Vec<f32>>,
+        truncated: &mut Vec<bool>,
+        token_counts: &mut Vec<usize>,
+    ) -> Result<(), ProviderError> {
+        for text in chunk {
+            let (vector, was_truncated, count) = self.encode_one(text)?;
+            vectors.push(vector);
+            truncated.push(was_truncated);
+            token_counts.push(count);
+        }
+        Ok(())
+    }
+
+    /// One chunk across worker threads. Each text is an independent
+    /// forward, so workers share `&self` and rejoin in input order with
+    /// the first-in-order error — byte-identical to sequential encoding.
+    fn encode_chunk_parallel(
+        &self,
+        chunk: &[String],
+        vectors: &mut Vec<Vec<f32>>,
+        truncated: &mut Vec<bool>,
+        token_counts: &mut Vec<usize>,
+    ) -> Result<(), ProviderError> {
+        let degree = self.max_parallel.min(chunk.len()).max(1);
+        if degree < 2 {
+            return self.encode_chunk_sequential(chunk, vectors, truncated, token_counts);
+        }
+        let groups: Vec<&[String]> = chunk.chunks(chunk.len().div_ceil(degree)).collect();
+        let mut joined = Vec::with_capacity(groups.len());
+        std::thread::scope(|scope| {
+            let mut handles = Vec::with_capacity(groups.len());
+            for group in groups {
+                handles.push(scope.spawn(move || {
+                    let mut pieces = Vec::with_capacity(group.len());
+                    for text in group {
+                        pieces.push(self.encode_one(text)?);
+                    }
+                    Ok::<Vec<(Vec<f32>, bool, usize)>, ProviderError>(pieces)
+                }));
+            }
+            for handle in handles {
+                joined.push(handle.join());
+            }
+        });
+        for result in joined {
+            match result {
+                Ok(Ok(pieces)) => {
+                    for (vector, was_truncated, count) in pieces {
+                        vectors.push(vector);
+                        truncated.push(was_truncated);
+                        token_counts.push(count);
+                    }
+                }
+                Ok(Err(error)) => return Err(error),
+                Err(_) => {
+                    return Err(invalid("worker thread panicked during parallel encode"));
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Encode with per-input truncation reporting. Inputs are chunked to
     /// `max_batch` texts; each text runs at its own width (never padded),
-    /// so vectors never depend on batch neighbors. The configured
+    /// so vectors never depend on batch neighbors. Multi-text chunks run
+    /// on up to [`Self::with_max_parallel`] worker threads (identical
+    /// vectors, input order); the configured
     /// [`Self::with_text_prefix`] is prepended before tokenizing.
     pub fn encode_detailed(&self, texts: &[String]) -> Result<EncodedBatch, ProviderError> {
         let mut vectors = Vec::with_capacity(texts.len());
         let mut truncated = Vec::with_capacity(texts.len());
         let mut token_counts = Vec::with_capacity(texts.len());
         for chunk in texts.chunks(self.max_batch) {
-            let encoded: Vec<(Vec<u32>, bool)> = chunk
-                .iter()
-                .map(|text| {
-                    let prefixed;
-                    let input = match &self.text_prefix {
-                        Some(prefix) => {
-                            prefixed = format!("{prefix}{text}");
-                            prefixed.as_str()
-                        }
-                        None => text.as_str(),
-                    };
-                    self.tokenizer.encode(input, self.config.max_positions)
-                })
-                .collect();
-            // Each text runs at its own width: forwards are already
-            // per-text, so padding to the chunk longest only burns
-            // attention/FFN compute on pad rows that pooling ignores
-            // (CLS) or must exclude (mean). Tokenizers always emit at
-            // least the two boundary specials, so widths are nonzero.
-            for (ids, was_truncated) in &encoded {
-                let mask = vec![1.0f32; ids.len()];
-                vectors.push(self.forward(ids, &mask, ids.len())?);
-                truncated.push(*was_truncated);
-                token_counts.push(ids.len());
-            }
+            // Each text runs at its own width: padding to the chunk
+            // longest only burns attention/FFN compute on pad rows that
+            // pooling ignores (CLS) or must exclude (mean).
+            self.encode_chunk_parallel(chunk, &mut vectors, &mut truncated, &mut token_counts)?;
         }
         Ok(EncodedBatch {
             vectors,

@@ -369,3 +369,71 @@ fn transformer_vectors_drive_semantic_ann() {
         Some("textintel-mini-bert-fixture@fixture-1")
     );
 }
+
+#[test]
+fn parallel_encode_matches_sequential_bit_for_bit() {
+    // Worker counts 1 (sequential), 2, 3, 4, and 8 (more workers than
+    // texts) must agree exactly: same vectors, truncation flags, and
+    // token counts in input order. Mixed lengths plus an empty string
+    // and duplicates exercise grouping, order restoration, and sharing.
+    let texts = [
+        "the river flows north",
+        "",
+        "baking bread",
+        "the river flows north",
+        "a considerably longer piece of text with many more tokens in it",
+        "z",
+    ]
+    .map(str::to_string);
+    let sequential = TransformerEmbeddingProvider::open(FIXTURE)
+        .expect("fixture must open")
+        .with_max_parallel(1)
+        .encode_detailed(&texts)
+        .expect("sequential encode");
+    for workers in [1, 2, 3, 4, 8] {
+        let parallel = TransformerEmbeddingProvider::open(FIXTURE)
+            .expect("fixture must open")
+            .with_max_parallel(workers)
+            .encode_detailed(&texts)
+            .expect("parallel encode");
+        assert_eq!(
+            parallel.truncated, sequential.truncated,
+            "workers={workers}"
+        );
+        assert_eq!(
+            parallel.token_counts, sequential.token_counts,
+            "workers={workers}"
+        );
+        assert_eq!(
+            parallel.vectors.len(),
+            sequential.vectors.len(),
+            "workers={workers}"
+        );
+        for (index, (left, right)) in parallel
+            .vectors
+            .iter()
+            .zip(sequential.vectors.iter())
+            .enumerate()
+        {
+            let left_bits: Vec<u32> = left.iter().map(|value| value.to_bits()).collect();
+            let right_bits: Vec<u32> = right.iter().map(|value| value.to_bits()).collect();
+            assert_eq!(left_bits, right_bits, "workers={workers} text={index}");
+        }
+    }
+    // Small max_batch forces several chunks (including a singleton,
+    // which stays sequential) through the same fan-out.
+    let chunked = TransformerEmbeddingProvider::open(FIXTURE)
+        .expect("fixture must open")
+        .with_max_batch(2)
+        .with_max_parallel(4)
+        .encode_detailed(&texts)
+        .expect("chunked parallel encode");
+    assert_eq!(chunked.truncated, sequential.truncated);
+    assert_eq!(chunked.token_counts, sequential.token_counts);
+    assert_eq!(chunked.vectors.len(), sequential.vectors.len());
+    for (left, right) in chunked.vectors.iter().zip(sequential.vectors.iter()) {
+        let left_bits: Vec<u32> = left.iter().map(|value| value.to_bits()).collect();
+        let right_bits: Vec<u32> = right.iter().map(|value| value.to_bits()).collect();
+        assert_eq!(left_bits, right_bits);
+    }
+}

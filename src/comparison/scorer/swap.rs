@@ -136,10 +136,10 @@ pub(crate) fn same_language_swap(
     }
 }
 
-pub(crate) fn swapped_word_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
-    match swapped_words(a, b) {
+pub(crate) fn swapped_word_similarity(swap: &Option<(usize, String, String)>) -> f64 {
+    match swap {
         Some((_, left_word, right_word)) => {
-            combined_character_similarity(&left_word, &right_word).clamp(0.0, 1.0)
+            combined_character_similarity(left_word, right_word).clamp(0.0, 1.0)
         }
         None => 0.0,
     }
@@ -154,16 +154,16 @@ pub(crate) fn swapped_word_similarity(a: &MessageFingerprint, b: &MessageFingerp
 /// embedded lexicon — the same default-provider precedent as
 /// `swapped_phonetic_similarity` below, since the scorer trait carries no
 /// provider handle.
-pub(crate) fn swapped_validity(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
+pub(crate) fn swapped_validity(swap: &Option<(usize, String, String)>) -> f64 {
     use crate::core::providers::LexiconProvider;
-    let Some((_, left_word, right_word)) = swapped_words(a, b) else {
+    let Some((_, left_word, right_word)) = swap else {
         return 0.0;
     };
     let provider = crate::resources::DefaultLexiconProvider;
     let valid = |word: &str| {
         provider.contains(word, None) || provider.contains(&alphanumeric_fold(word), None)
     };
-    if valid(&left_word) && valid(&right_word) {
+    if valid(left_word) && valid(right_word) {
         1.0
     } else {
         0.0
@@ -180,14 +180,14 @@ fn alphanumeric_fold(text: &str) -> String {
 /// Phonetic similarity of the swapped words (rule-based G2P under the
 /// default `und` rules, so both sides phonemize comparably regardless of
 /// detected language); 0.0 when the swap gate above does not fire.
-pub(crate) fn swapped_phonetic_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
+pub(crate) fn swapped_phonetic_similarity(swap: &Option<(usize, String, String)>) -> f64 {
     use crate::core::providers::G2PProvider;
-    let Some((_, left_word, right_word)) = swapped_words(a, b) else {
+    let Some((_, left_word, right_word)) = swap else {
         return 0.0;
     };
     let g2p = crate::phonetic::g2p::RuleBasedG2PProvider;
-    let left = g2p.phonemize(&left_word, "und");
-    let right = g2p.phonemize(&right_word, "und");
+    let left = g2p.phonemize(left_word, "und");
+    let right = g2p.phonemize(right_word, "und");
     match (left, right) {
         (Ok(left), Ok(right)) => phonetic_similarity(&left, &right).clamp(0.0, 1.0),
         _ => 0.0,

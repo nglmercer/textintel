@@ -54,6 +54,10 @@ pub struct LanguageIndex {
     /// when it is at least as long, so longer prefixes answer `false`
     /// without scanning the table.
     max_key_bytes: usize,
+    /// True when at least one key contains whitespace (multi-word
+    /// entries). Spaceless indexes answer spaced-prefix `starts_with`
+    /// queries `false` without scanning: no key can carry the prefix.
+    has_spaced_keys: bool,
 }
 
 impl LanguageIndex {
@@ -120,8 +124,24 @@ impl LanguageIndex {
         profiles
     }
 
+    /// True when `word` cannot match any key: ASCII words longer than
+    /// every key stay longer after normalization (trimming runs first
+    /// and NFKC-casefold preserves ASCII length), so no key can equal
+    /// them. Non-ASCII words may shrink under NFKC composition and
+    /// always proceed to lookup. Short words pay one length compare.
+    fn cannot_match(&self, word: &str) -> bool {
+        if word.len() <= self.max_key_bytes {
+            return false;
+        }
+        let trimmed = word.trim();
+        trimmed.len() > self.max_key_bytes && trimmed.is_ascii()
+    }
+
     pub fn lookup(&self, query: &str) -> LexiconLookup {
         let key = normalize_key(query);
+        if key.len() > self.max_key_bytes {
+            return lookup_result(query, key, Vec::new());
+        }
         let matches = self
             .records
             .get(&IndexKey::new(&key))
@@ -132,6 +152,9 @@ impl LanguageIndex {
 
     pub fn lookup_in_language(&self, query: &str, language: &str) -> LexiconLookup {
         let key = normalize_key(query);
+        if key.len() > self.max_key_bytes {
+            return lookup_result(query, key, Vec::new());
+        }
         let language = canonical_language(language);
         let matches = self
             .records
@@ -148,6 +171,9 @@ impl LanguageIndex {
     }
 
     pub fn records_for_key(&self, key: &str) -> Vec<LexiconRecord> {
+        if self.cannot_match(key) {
+            return Vec::new();
+        }
         self.records
             .get(&IndexKey::new(key))
             .cloned()
@@ -166,6 +192,9 @@ impl LanguageIndex {
     }
 
     pub fn contains(&self, word: &str, languages: Option<&[String]>) -> bool {
+        if self.cannot_match(word) {
+            return false;
+        }
         self.records
             .get(&IndexKey::new(word))
             .is_some_and(|records| {
@@ -176,15 +205,29 @@ impl LanguageIndex {
     }
 
     pub fn contains_in_language(&self, word: &str, language: &str) -> bool {
+        if self.cannot_match(word) {
+            return false;
+        }
         let language = canonical_language(language);
         self.records
             .get(&IndexKey::new(word))
             .is_some_and(|records| records.iter().any(|record| record.language == language))
     }
 
+    /// True when at least one key contains whitespace, i.e. a pack
+    /// contributed multi-word entries.
+    pub fn has_spaced_keys(&self) -> bool {
+        self.has_spaced_keys
+    }
+
     pub fn starts_with(&self, prefix: &str, languages: Option<&[String]>) -> bool {
         let prefix = normalize_key(prefix);
         if prefix.is_empty() || prefix.len() > self.max_key_bytes {
+            return false;
+        }
+        // Spaced prefix on a spaceless index: a matching key would carry
+        // the prefix's whitespace, which no key has.
+        if !self.has_spaced_keys && prefix.chars().any(|ch| ch.is_whitespace()) {
             return false;
         }
         self.records.iter().any(|(key, records)| {
@@ -196,6 +239,9 @@ impl LanguageIndex {
     }
 
     pub fn is_stop_word(&self, word: &str, languages: Option<&[String]>) -> bool {
+        if self.cannot_match(word) {
+            return false;
+        }
         self.records
             .get(&IndexKey::new(word))
             .is_some_and(|records| {
@@ -206,6 +252,9 @@ impl LanguageIndex {
     }
 
     pub fn lemma(&self, word: &str, languages: Option<&[String]>) -> Option<String> {
+        if self.cannot_match(word) {
+            return None;
+        }
         let records = self.records.get(&IndexKey::new(word))?;
         if let Some(languages) = languages.filter(|values| !values.is_empty()) {
             for language in languages {
@@ -222,6 +271,9 @@ impl LanguageIndex {
     }
 
     pub fn frequency(&self, word: &str, languages: Option<&[String]>) -> Option<f64> {
+        if self.cannot_match(word) {
+            return None;
+        }
         let records = self.records.get(&IndexKey::new(word))?;
         records
             .iter()
@@ -349,6 +401,9 @@ impl LanguageIndex {
             .map(|key| key.as_str().len())
             .max()
             .unwrap_or(0);
+        self.has_spaced_keys = records
+            .keys()
+            .any(|key| key.as_str().chars().any(|ch| ch.is_whitespace()));
         self.records = records;
     }
 }
@@ -526,5 +581,63 @@ fn merge_symbol(existing: &mut SymbolResource, incoming: &SymbolResource) {
         if !existing.readings.iter().any(|value| value == reading) {
             existing.readings.push(reading.clone());
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn pack_with_words(language: &str, words: &[&str]) -> LanguagePack {
+        serde_json::from_value(serde_json::json!({
+            "language": language,
+            "words": words,
+        }))
+        .expect("test pack must parse")
+    }
+
+    #[test]
+    fn spaced_prefix_gate_respects_spaced_keys() {
+        // Spaceless index: spaced prefixes answer false without scanning.
+        let mut spaceless = LanguageIndex::default();
+        spaceless.add_pack(
+            pack_with_words("en", &["hello", "world"]),
+            std::path::Path::new("test"),
+        );
+        assert!(!spaceless.has_spaced_keys());
+        assert!(spaceless.starts_with("hel", None));
+        assert!(!spaceless.starts_with("hello world", None));
+        assert!(!spaceless.starts_with("  hello world  ", None));
+        // Spaced keys present: the gate stays off and prefix matches work.
+        let mut spaced = LanguageIndex::default();
+        spaced.add_pack(
+            pack_with_words("en", &["hello", "hello brave world"]),
+            std::path::Path::new("test"),
+        );
+        assert!(spaced.has_spaced_keys());
+        assert!(spaced.starts_with("hello brave", None));
+        assert!(spaced.contains("hello brave world", None));
+    }
+
+    #[test]
+    fn overlong_ascii_words_skip_lookup() {
+        // Keys "é" and "ex": max key length is 2 bytes.
+        let mut index = LanguageIndex::default();
+        index.add_pack(
+            pack_with_words("en", &["é", "ex"]),
+            std::path::Path::new("test"),
+        );
+        // Boundary length still looks up and hits.
+        assert!(index.contains("ex", None));
+        assert_eq!(index.lemma("ex", None).as_deref(), Some("ex"));
+        // Overlong ASCII cannot match (normalization preserves length).
+        assert!(!index.contains("exx", None));
+        assert_eq!(index.lemma("exx", None), None);
+        assert_eq!(index.frequency("exx", None), None);
+        assert!(!index.is_stop_word("exx", None));
+        assert!(index.lookup("exx").matches.is_empty());
+        // Overlong non-ASCII still proceeds: NFKC composes "e\u{301}"
+        // down to the "é" key.
+        assert!(index.contains("e\u{301}", None));
     }
 }

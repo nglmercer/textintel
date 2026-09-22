@@ -115,16 +115,14 @@ fn alphanumeric_fold(text: &str) -> String {
 /// (`carpet` sits inside `carpeta`, `soy` inside `soy sauce`): the
 /// learned weight prices the net value, and short confusables stay out
 /// by the length gate.
-fn substring_containment(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
-    let left = alphanumeric_fold(&a.raw);
-    let right = alphanumeric_fold(&b.raw);
+fn substring_containment_from(left: &str, right: &str) -> f64 {
     if left.is_empty() || right.is_empty() || left == right {
         return 0.0;
     }
     let (shorter, longer) = if left.len() <= right.len() {
-        (left.as_str(), right.as_str())
+        (left, right)
     } else {
-        (right.as_str(), left.as_str())
+        (right, left)
     };
     if !longer.contains(shorter) {
         return 0.0;
@@ -136,9 +134,7 @@ fn substring_containment(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 
     if long_enough || non_latin { 1.0 } else { 0.0 }
 }
 
-fn normalized_identity(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
-    let left = alphanumeric_fold(&a.raw);
-    let right = alphanumeric_fold(&b.raw);
+fn normalized_identity_from(left: &str, right: &str) -> f64 {
     if !left.is_empty() && left == right {
         1.0
     } else {
@@ -247,7 +243,21 @@ pub fn score_fingerprints(
     let character = finite_or_zero(combined_character_similarity(&a.raw, &b.raw));
     let lexical = finite_or_zero(lexical_similarity(&a.raw, &b.raw));
     let visual = finite_or_zero(visual_similarity(&a.raw, &b.raw));
-    let decoded = finite_or_zero(best_decoded_overlap(a, b));
+    // Shared transliteration inputs, computed once: the evidence (raw
+    // similarity plus provider confidence), the language/context
+    // compatibility discount, and the raw views. The channels below all
+    // derive from these same values instead of recomputing them.
+    let transliteration = crate::transliteration::transliteration_evidence(a, b);
+    let compatibility = crate::transliteration::transliteration_compatibility(a, b);
+    let views_a = a.transliteration_views();
+    let views_b = b.transliteration_views();
+    let decoded = finite_or_zero(best_decoded_overlap(
+        a,
+        b,
+        compatibility,
+        &views_a,
+        &views_b,
+    ));
     let obfuscation = finite_or_zero(obfuscation_similarity(a, b));
     let symbolic = if a.symbols.is_empty() && b.symbols.is_empty() {
         None
@@ -300,12 +310,15 @@ pub fn score_fingerprints(
     } else {
         0.0
     };
-    let swapped_word_similarity = finite_or_zero(swapped_word_similarity(a, b));
-    let swapped_phonetic_raw = finite_or_zero(swapped_phonetic_similarity(a, b));
+    // The swap probe runs once; every swap channel reads the same probe.
+    let swap = swapped_words(a, b);
+    let swapped_word_similarity = finite_or_zero(swapped_word_similarity(&swap));
+    let swapped_phonetic_raw = finite_or_zero(swapped_phonetic_similarity(&swap));
     // Cross-language swaps (`mi`/`my`) are switches, not confusables:
     // phonetic-suspicion evidence is meaningless across languages.
-    let same_language =
-        swapped_words(a, b).map_or(1.0, |(position, _, _)| same_language_swap(a, b, position));
+    let same_language = swap
+        .as_ref()
+        .map_or(1.0, |(position, _, _)| same_language_swap(a, b, *position));
     // Gate phonetic-swap evidence on pair lexicon validity: phonemizing
     // leetspeak tokens (`gr8`→"gr eight" vs `grate`) manufactures similarity
     // out of glyph accidents, so the signal only counts when both sides read
@@ -321,7 +334,7 @@ pub fn score_fingerprints(
     // through top candidate `você`) while the raw swapped word is not a
     // word — without this gate, abbreviation pairs would pay the
     // confusable penalty meant for real-word swaps.
-    let swap_validity = finite_or_zero(swapped_validity(a, b));
+    let swap_validity = finite_or_zero(swapped_validity(&swap));
     let confusable_swap = (swapped_word_similarity
         * swapped_phonetic_raw
         * all_valid
@@ -346,12 +359,21 @@ pub fn score_fingerprints(
         * swapped_word_similarity
         * same_language)
         .clamp(0.0, 1.0);
-    let normalized_identity = normalized_identity(a, b);
-    let substring_containment = substring_containment(a, b);
+    // Alphanumeric folds computed once; both identity features read them.
+    let fold_a = alphanumeric_fold(&a.raw);
+    let fold_b = alphanumeric_fold(&b.raw);
+    let normalized_identity = normalized_identity_from(&fold_a, &fold_b);
+    let substring_containment = substring_containment_from(&fold_a, &fold_b);
     let cross_script_pair = cross_script_pair(a, b);
-    let cross_script_agreement =
-        cross_script_pair * crate::comparison::model::language_agreement(a, b);
-    let exact_decode = finite_or_zero(exact_decode_confidence(a, b));
+    let language_agreement = crate::comparison::model::language_agreement(a, b);
+    let cross_script_agreement = cross_script_pair * language_agreement;
+    let exact_decode = finite_or_zero(exact_decode_confidence(
+        a,
+        b,
+        compatibility,
+        &views_a,
+        &views_b,
+    ));
     // Single-word exact decoding: a lone exact read (`cheque`→`check`) is
     // the variant signature, while single-word confusables (`their`/`there`)
     // decode to nothing — the linear model cannot express this interaction
@@ -368,8 +390,7 @@ pub fn score_fingerprints(
     ));
     let entity_conflict =
         finite_or_zero(crate::entities::entity_conflict(&a.entities, &b.entities));
-    let transliteration_compatibility =
-        finite_or_zero(crate::transliteration::transliteration_compatibility(a, b));
+    let transliteration_compatibility = finite_or_zero(compatibility);
     // Contextual semantic splits: the raw channel value routed by provider
     // quality, language scope, lexical support, and transliteration backing
     // so the linear model can price each situation separately.
@@ -382,17 +403,20 @@ pub fn score_fingerprints(
             .get("semantic_quality")
             .is_some_and(|quality| quality == "production");
     let contextual_semantic = if production_pair { semantic_value } else { 0.0 };
-    let languages_agree = crate::comparison::model::language_agreement(a, b) > 0.5;
+    let languages_agree = language_agreement > 0.5;
     let cross_language_semantic = if languages_agree { 0.0 } else { semantic_value };
     let semantic_without_lexical_overlap = if lexical < 0.3 { semantic_value } else { 0.0 };
-    let transliteration_effective =
-        crate::transliteration::effective_transliteration_evidence(a, b).unwrap_or(0.0);
+    // Same composition as `effective_transliteration_evidence`, over the
+    // shared evidence and compatibility values.
+    let transliteration_effective = transliteration
+        .map(|evidence| (evidence.similarity * evidence.confidence * compatibility).clamp(0.0, 1.0))
+        .unwrap_or(0.0);
     // Interaction features use the compatibility-free weighted evidence
     // (`similarity × confidence`) with explicit gates, keeping them distinct
     // from the compatibility-discounted evidence priced through `decoded`
     // and `exact_decode`. Both fire only cross-script: same-script Latin→X
     // views are spurious byproducts, not transliteration links.
-    let transliteration_weighted = crate::transliteration::transliteration_evidence(a, b)
+    let transliteration_weighted = transliteration
         .map(|evidence| evidence.weighted())
         .unwrap_or(0.0);
     let semantic_floor = semantic_value.max(0.0);
@@ -449,7 +473,6 @@ pub fn score_fingerprints(
         Some(value) => format!("phonetic={value:.3}"),
         None => "phonetic=absent".to_string(),
     });
-    let transliteration = crate::transliteration::transliteration_evidence(a, b);
     match transliteration {
         Some(tr) => {
             evidence.push(format!("transliteration={:.3}", tr.weighted()));

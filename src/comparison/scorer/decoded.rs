@@ -68,13 +68,19 @@ fn asserted_confidence_map(fingerprint: &MessageFingerprint) -> BTreeMap<String,
     map
 }
 
-pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
+pub(crate) fn best_decoded_overlap(
+    a: &MessageFingerprint,
+    b: &MessageFingerprint,
+    compatibility: f64,
+    views_a: &[(&str, f64)],
+    views_b: &[(&str, f64)],
+) -> f64 {
     // Transliteration views contribute `similarity × confidence ×
     // compatibility`: provider confidence discounts the lossy conversion and
     // language/context compatibility discounts look-alikes without semantic,
     // entity, or language support (transliteration alone never creates a
-    // strong match).
-    let compatibility = crate::transliteration::transliteration_compatibility(a, b);
+    // strong match). Compatibility and views arrive precomputed from the
+    // scorer, which shares them across channels.
     let mut left = BTreeSet::new();
     let mut right = BTreeSet::new();
     for value in [a.raw.clone(), a.normalized.clone().unwrap_or_default()] {
@@ -95,15 +101,13 @@ pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprin
     // so leet/casefold variants cannot inflate decoded similarity. Every view
     // carries its provider confidence: a view match contributes
     // `similarity * confidence`, never an unconditional 1.0.
-    let views_left: Vec<(String, f64)> = a
-        .transliteration_views()
-        .into_iter()
-        .map(|(view, confidence)| (compact(&casefold_text(view)), confidence))
+    let views_left: Vec<(String, f64)> = views_a
+        .iter()
+        .map(|(view, confidence)| (compact(&casefold_text(view)), *confidence))
         .collect();
-    let views_right: Vec<(String, f64)> = b
-        .transliteration_views()
-        .into_iter()
-        .map(|(view, confidence)| (compact(&casefold_text(view)), confidence))
+    let views_right: Vec<(String, f64)> = views_b
+        .iter()
+        .map(|(view, confidence)| (compact(&casefold_text(view)), *confidence))
         .collect();
     // Phase 1a: graded exact matches. Literal identity (raw/normalized)
     // still counts at 1.0, but candidate-mediated matches count at the
@@ -191,10 +195,19 @@ pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprin
     // low-rank whisper (`gr8`→`grate`) must not sneak back to 1.0 through
     // the fuzzy tier after Phase 1a graded it down. Literal↔literal pairs
     // keep confidence 1.0, so plain fuzzy behavior is unchanged.
+    // Identical pairs share one value: every channel reads 1.0 on equal
+    // non-empty inputs, so the blend is the same constant for all of them.
+    // It is computed through the real function once, never hand-folded
+    // (map keys are never empty — empties are skipped at build).
+    let identical = combined_character_similarity("a", "a");
     for (left_value, left_confidence) in &graded_left {
         for (right_value, right_confidence) in &graded_right {
-            let pair = combined_character_similarity(left_value, right_value)
-                * left_confidence.min(*right_confidence);
+            let pair = if left_value == right_value {
+                identical * left_confidence.min(*right_confidence)
+            } else {
+                combined_character_similarity(left_value, right_value)
+                    * left_confidence.min(*right_confidence)
+            };
             best = best.max(pair);
         }
     }
@@ -242,8 +255,13 @@ pub(crate) fn best_decoded_overlap(a: &MessageFingerprint, b: &MessageFingerprin
 /// matches count at the provider confidence — mirroring
 /// [`best_decoded_overlap`]'s Phase 1a/1b, but as graded evidence instead of
 /// a short-circuit.
-pub(crate) fn exact_decode_confidence(a: &MessageFingerprint, b: &MessageFingerprint) -> f64 {
-    let compatibility = crate::transliteration::transliteration_compatibility(a, b);
+pub(crate) fn exact_decode_confidence(
+    a: &MessageFingerprint,
+    b: &MessageFingerprint,
+    compatibility: f64,
+    views_a: &[(&str, f64)],
+    views_b: &[(&str, f64)],
+) -> f64 {
     let left = graded_confidence_map(a);
     let right = graded_confidence_map(b);
     let mut best: f64 = 0.0;
@@ -252,15 +270,13 @@ pub(crate) fn exact_decode_confidence(a: &MessageFingerprint, b: &MessageFingerp
             best = best.max(confidence.min(*other));
         }
     }
-    let views_left: Vec<(String, f64)> = a
-        .transliteration_views()
-        .into_iter()
-        .map(|(view, confidence)| (compact(&casefold_text(view)), confidence))
+    let views_left: Vec<(String, f64)> = views_a
+        .iter()
+        .map(|(view, confidence)| (compact(&casefold_text(view)), *confidence))
         .collect();
-    let views_right: Vec<(String, f64)> = b
-        .transliteration_views()
-        .into_iter()
-        .map(|(view, confidence)| (compact(&casefold_text(view)), confidence))
+    let views_right: Vec<(String, f64)> = views_b
+        .iter()
+        .map(|(view, confidence)| (compact(&casefold_text(view)), *confidence))
         .collect();
     for (view, confidence) in &views_left {
         if view.is_empty() {
