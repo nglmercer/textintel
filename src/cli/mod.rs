@@ -9,7 +9,7 @@
 //! anywhere:
 //!
 //! ```rust,no_run
-//! use textintel::cli::{handle_meta, parse, textintel_spec};
+//! use textintel::cli::{handle_meta, parse_args, textintel_spec};
 //!
 //! let argv: Vec<String> = std::env::args().skip(1).collect();
 //! let spec = textintel_spec();

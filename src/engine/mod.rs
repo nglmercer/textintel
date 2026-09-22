@@ -23,7 +23,7 @@ use crate::core::providers::{
     LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
     SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
 };
-use crate::core::types::DecodedCandidate;
+use crate::core::types::{DecodedCandidate, MessageFingerprint};
 use crate::resources::ResourceLoader;
 
 use self::patterns::RegisteredPattern;
@@ -56,6 +56,12 @@ pub struct TextIntelligence {
     /// limit, scoring weights, and the semantic-rescoring marker; the
     /// revision tracks the loaded resource packs.
     rebus_cache: Option<Mutex<RevisionCache<String, Vec<DecodedCandidate>>>>,
+    /// Bounded exact-text fingerprint cache for the decision path (`None`
+    /// when `config.cache.decision == 0`). Static criterion descriptions
+    /// are otherwise re-analyzed per request; the revision tracks the
+    /// fingerprint schema and the loaded resource packs, and every
+    /// analysis-affecting provider swap invalidates explicitly.
+    decision_fp_cache: Option<Mutex<RevisionCache<String, MessageFingerprint>>>,
 }
 
 impl Default for TextIntelligence {

@@ -50,6 +50,10 @@ struct LoadedLanguagePack {
 pub struct LanguageIndex {
     packs: BTreeMap<String, Vec<LoadedLanguagePack>>,
     records: BTreeMap<IndexKey, Vec<LexiconRecord>>,
+    /// Longest normalized key in bytes. A key can carry a byte-prefix only
+    /// when it is at least as long, so longer prefixes answer `false`
+    /// without scanning the table.
+    max_key_bytes: usize,
 }
 
 impl LanguageIndex {
@@ -180,13 +184,15 @@ impl LanguageIndex {
 
     pub fn starts_with(&self, prefix: &str, languages: Option<&[String]>) -> bool {
         let prefix = normalize_key(prefix);
-        !prefix.is_empty()
-            && self.records.iter().any(|(key, records)| {
-                key.as_str().starts_with(&prefix)
-                    && records
-                        .iter()
-                        .any(|record| language_allowed(&record.language, languages))
-            })
+        if prefix.is_empty() || prefix.len() > self.max_key_bytes {
+            return false;
+        }
+        self.records.iter().any(|(key, records)| {
+            key.as_str().starts_with(&prefix)
+                && records
+                    .iter()
+                    .any(|record| language_allowed(&record.language, languages))
+        })
     }
 
     pub fn is_stop_word(&self, word: &str, languages: Option<&[String]>) -> bool {
@@ -338,6 +344,11 @@ impl LanguageIndex {
                 }
             }
         }
+        self.max_key_bytes = records
+            .keys()
+            .map(|key| key.as_str().len())
+            .max()
+            .unwrap_or(0);
         self.records = records;
     }
 }

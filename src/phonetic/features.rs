@@ -26,7 +26,7 @@ enum Manner {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct Features {
+pub(crate) struct Features {
     vowel: bool,
     voiced: bool,
     place: Place,
@@ -38,7 +38,7 @@ struct Features {
 
 /// A compact stable label useful for diagnostics and serialized fingerprints.
 pub fn feature_label(phoneme: &str) -> &'static str {
-    let features = classify(phoneme);
+    let features = classify_phoneme(phoneme);
     if features.vowel {
         if features.rounded {
             "vowel:rounded"
@@ -64,8 +64,15 @@ pub fn articulatory_distance(left: &str, right: &str) -> f64 {
     if left == right {
         return 0.0;
     }
-    let left = classify(left);
-    let right = classify(right);
+    let left = classify_phoneme(left);
+    let right = classify_phoneme(right);
+    distance_for_features(&left, &right)
+}
+
+/// Distance over pre-classified features. [`articulatory_distance`] and the
+/// similarity DP share this so hot paths classify each distinct phoneme
+/// once instead of once per DP cell; the arithmetic is identical.
+pub(crate) fn distance_for_features(left: &Features, right: &Features) -> f64 {
     if left.vowel != right.vowel {
         return 1.0;
     }
@@ -85,7 +92,7 @@ pub fn articulatory_distance(left: &str, right: &str) -> f64 {
     (place + manner + voicing).min(1.0)
 }
 
-fn classify(phoneme: &str) -> Features {
+pub(crate) fn classify_phoneme(phoneme: &str) -> Features {
     let value = phoneme.to_lowercase();
     let vowel = value.chars().any(|ch| "aeiouəɛɪɔʊɑɒɨʉɯyøœ".contains(ch));
     if vowel {

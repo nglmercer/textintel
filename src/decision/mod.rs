@@ -56,9 +56,9 @@ pub use fusion::{
 };
 pub use interaction::{
     ARCHITECTURE_STATE_CANDIDATE_INTERACTION, HeadTrainExample, HeadTrainer,
-    INTERACTION_ARTIFACT_KIND, INTERACTION_ARTIFACT_VERSION, INTERACTION_TEMPERATURE,
-    InteractionArtifact, InteractionDecisionProvider, InteractionHead, SplitMix64, gelu,
-    gelu_prime, head_loss_accuracy, init_head_xavier, interaction_features,
+    INTERACTION_ARTIFACT_KIND, INTERACTION_ARTIFACT_VERSION, INTERACTION_EMBEDDING_CACHE,
+    INTERACTION_TEMPERATURE, InteractionArtifact, InteractionDecisionProvider, InteractionHead,
+    SplitMix64, gelu, gelu_prime, head_loss_accuracy, init_head_xavier, interaction_features,
 };
 pub use provider::{DecisionProvider, SharedDecisionProvider, validate_request};
 pub use scoring::{

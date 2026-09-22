@@ -83,7 +83,7 @@ pub struct EngineDiagnostics {
     pub degraded: Vec<DegradedCapability>,
     pub resource_manifest: Vec<ResourcePackInfo>,
     /// Bounded revision-aware caches by subsystem (`embeddings`, `g2p`,
-    /// `language`, `rebus`). Counts only — never cached texts.
+    /// `language`, `rebus`, `decision`). Counts only — never cached texts.
     #[serde(default)]
     pub caches: std::collections::BTreeMap<String, crate::cache::CacheDiagnostics>,
     /// Explicit store capabilities: `memory`/`json`/`redb`, persistence, ANN

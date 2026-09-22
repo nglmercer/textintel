@@ -327,11 +327,17 @@ impl InteractionArtifact {
     }
 }
 
+/// Entries in the provider's internal exact-text embedding cache.
+/// Static criterion descriptions encode once per provider instead of once
+/// per request; a backbone revision change invalidates automatically.
+pub const INTERACTION_EMBEDDING_CACHE: usize = 1024;
+
 /// v2 choice provider: one state encoding plus one cached encoding per
 /// criterion, scored by the interaction head. Binary/score questions are
-/// rejected; the provider embeds through the injected backbone.
+/// rejected; the provider embeds through the injected backbone, wrapped
+/// in a bounded exact-text cache so static criteria never re-encode.
 pub struct InteractionDecisionProvider {
-    embeddings: Arc<dyn EmbeddingProvider>,
+    embeddings: crate::semantic::embeddings::CachedEmbeddingProvider<Arc<dyn EmbeddingProvider>>,
     head: InteractionHead,
     embedding_dim: usize,
     use_fusion: bool,
@@ -347,7 +353,10 @@ impl InteractionDecisionProvider {
     ) -> Result<Self, String> {
         let head = artifact.to_head()?;
         Ok(Self {
-            embeddings,
+            embeddings: crate::semantic::embeddings::CachedEmbeddingProvider::new(
+                embeddings,
+                INTERACTION_EMBEDDING_CACHE,
+            ),
             head,
             embedding_dim: artifact.embedding_dim,
             use_fusion: artifact.fusion_features > 0,
@@ -375,6 +384,11 @@ impl InteractionDecisionProvider {
         }
         self.accept_threshold = threshold;
         Ok(self)
+    }
+
+    /// Observable embedding-cache state (counts only, never cached texts).
+    pub fn embedding_cache_diagnostics(&self) -> crate::cache::CacheDiagnostics {
+        self.embeddings.diagnostics()
     }
 }
 

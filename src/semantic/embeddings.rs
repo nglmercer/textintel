@@ -302,9 +302,11 @@ where
 }
 
 /// Bounded, deterministic embedding cache keyed by model identity, model
-/// revision, and folded text. Missing values are fetched in one batch from
-/// the wrapped provider. An observed revision change invalidates the cache
-/// instead of serving stale vectors.
+/// revision, and exact text. Keys must be exact: cased models assign
+/// different vectors to case variants, so folded keys would serve wrong
+/// vectors. Missing values are fetched in one batch from the wrapped
+/// provider. An observed revision change invalidates the cache instead of
+/// serving stale vectors.
 pub struct CachedEmbeddingProvider<P> {
     inner: P,
     cache: Mutex<crate::cache::RevisionCache<(String, String, String), Vec<f32>>>,
@@ -398,7 +400,7 @@ where
         let revision = current_revision(&self.inner);
         let keys = texts
             .iter()
-            .map(|text| (model.clone(), revision.clone(), casefold_text(text)))
+            .map(|text| (model.clone(), revision.clone(), text.clone()))
             .collect::<Vec<_>>();
         let mut output = vec![None; texts.len()];
         let mut missing = Vec::new();

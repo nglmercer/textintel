@@ -90,6 +90,10 @@ harness = false
 name = "ann"
 harness = false
 
+[[bench]]
+name = "decision"
+harness = false
+
 [profile.release]
 lto = true
 codegen-units = 1

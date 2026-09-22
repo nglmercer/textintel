@@ -231,18 +231,23 @@ pub struct CacheLimits {
     pub g2p: usize,
     pub language: usize,
     pub rebus: usize,
+    /// Exact-text fingerprint cache for the decision path
+    /// (`prepare_decision_request` re-analyzes static criterion
+    /// descriptions otherwise). Off (`0`) by default.
+    pub decision: usize,
 }
 
 impl CacheLimits {
     /// Production preset: generous text-keyed caches for the embedding, G2P,
-    /// and language providers plus a smaller rebus cache (decoded candidate
-    /// lists are the largest values).
+    /// and language providers plus smaller rebus/decision caches
+    /// (fingerprints and decoded candidate lists are the largest values).
     pub fn production() -> Self {
         Self {
             embeddings: 1024,
             g2p: 1024,
             language: 1024,
             rebus: 256,
+            decision: 256,
         }
     }
 
@@ -262,11 +267,18 @@ impl CacheLimits {
         if self.rebus == 0 {
             self.rebus = production.rebus;
         }
+        if self.decision == 0 {
+            self.decision = production.decision;
+        }
         self
     }
 
     pub fn any_enabled(&self) -> bool {
-        self.embeddings > 0 || self.g2p > 0 || self.language > 0 || self.rebus > 0
+        self.embeddings > 0
+            || self.g2p > 0
+            || self.language > 0
+            || self.rebus > 0
+            || self.decision > 0
     }
 }
 

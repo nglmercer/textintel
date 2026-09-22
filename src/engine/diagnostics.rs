@@ -158,6 +158,7 @@ impl TextIntelligence {
                     .unwrap_or_else(CacheDiagnostics::disabled),
             ),
             ("rebus".to_string(), self.rebus_cache_diagnostics()),
+            ("decision".to_string(), self.decision_cache_diagnostics()),
         ])
     }
 

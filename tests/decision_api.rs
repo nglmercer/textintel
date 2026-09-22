@@ -235,6 +235,62 @@ fn spam_labels_must_be_valid() {
 }
 
 #[test]
+fn fingerprint_cache_serves_identical_evidence() {
+    let mut config = textintel::EngineConfig::default();
+    config.cache.decision = 64;
+    let engine = TextIntelligence::new(config).with_decision_provider(
+        SimilarityDecisionProvider::new(Arc::new(ProfileSimilarityScorer::default())),
+    );
+    let request = DecisionRequest::new("I was charged twice, refund me", routing_question());
+    let first = engine.decide(&request).expect("decide");
+    let diagnostics = engine.diagnostics();
+    let misses = diagnostics.caches["decision"].misses;
+    assert!(misses >= 4, "first pass populates: {misses} misses");
+    let second = engine.decide(&request).expect("decide again");
+    assert_eq!(first, second, "cached evidence decides identically");
+    let diagnostics = engine.diagnostics();
+    assert!(
+        diagnostics.caches["decision"].hits >= 4,
+        "second pass hits: {:?}",
+        diagnostics.caches["decision"]
+    );
+}
+
+#[test]
+fn provider_swaps_invalidate_fingerprint_cache() {
+    let mut config = textintel::EngineConfig::default();
+    config.cache.decision = 64;
+    let engine = TextIntelligence::new(config);
+    let mut request = DecisionRequest::new("hello world", routing_question());
+    engine
+        .prepare_decision_request(&mut request)
+        .expect("prepare");
+    assert!(engine.diagnostics().caches["decision"].entries > 0);
+    // Swapping an analysis-affecting provider drops cached fingerprints.
+    let swapped = engine.without_entities();
+    assert_eq!(swapped.diagnostics().caches["decision"].entries, 0);
+}
+
+#[test]
+fn interaction_provider_caches_criterion_encodings() {
+    use textintel::decision::{InteractionArtifact, InteractionDecisionProvider, init_head_xavier};
+
+    // Deterministic 8-dim backbone needs no weights.
+    let backbone = Arc::new(textintel::FeatureHashEmbeddingProvider::new(8).expect("dims"));
+    let head = init_head_xavier(8 * 4 + textintel::FUSION_FEATURES.len(), 4, 7).expect("head");
+    let artifact =
+        InteractionArtifact::from_head(&head, 8, textintel::FUSION_FEATURES.len(), "test")
+            .expect("artifact");
+    let provider = InteractionDecisionProvider::new(backbone, &artifact).expect("provider");
+    let engine = TextIntelligence::default().with_decision_provider(provider);
+    let request = DecisionRequest::new("I was charged twice, refund me", routing_question());
+    let first = engine.decide(&request).expect("decide");
+    first.validate_against(&request).expect("valid answer");
+    let second = engine.decide(&request).expect("decide again");
+    assert_eq!(first, second, "cached encodings decide identically");
+}
+
+#[test]
 fn decision_request_json_roundtrip_skips_evidence() {
     let request = DecisionRequest::new("I was charged twice", routing_question())
         .with_task("support-routing");

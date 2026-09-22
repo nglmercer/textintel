@@ -168,6 +168,34 @@ impl TextIntelligence {
             .unwrap_or_else(CacheDiagnostics::disabled)
     }
 
+    /// Analyze with the exact-text decision cache when enabled. Hits
+    /// return cloned fingerprints (analysis is deterministic); misses
+    /// analyze and store. A poisoned lock degrades to uncached analysis
+    /// rather than failing the request.
+    pub fn analyze_cached(&self, text: &str) -> Result<MessageFingerprint, TextIntelError> {
+        if let Some(cache) = self.decision_fp_cache.as_ref()
+            && let Ok(mut guard) = cache.lock()
+            && let Some(hit) = guard.get(&text.to_string())
+        {
+            return Ok(hit);
+        }
+        let fingerprint = self.analyze(text)?;
+        if let Some(cache) = self.decision_fp_cache.as_ref()
+            && let Ok(mut guard) = cache.lock()
+        {
+            guard.put(text.to_string(), fingerprint.clone());
+        }
+        Ok(fingerprint)
+    }
+
+    /// Observable decision-cache state (counts only, never cached texts).
+    pub(super) fn decision_cache_diagnostics(&self) -> CacheDiagnostics {
+        self.decision_fp_cache
+            .as_ref()
+            .and_then(|cache| cache.lock().ok().map(|guard| guard.diagnostics()))
+            .unwrap_or_else(CacheDiagnostics::disabled)
+    }
+
     fn check_length(&self, text: &str) -> Result<(), TextIntelError> {
         let length = text.chars().count();
         if length > self.config.max_input_length {
