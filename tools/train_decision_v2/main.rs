@@ -1,20 +1,10 @@
 //! Train a v2 interaction head over a frozen embedding backbone.
 //!
-//! ```bash
-//! cargo run --release --features decision-transformer --bin textintel-train-decision -- \
-//!   --embeddings models/e5-small-decision \
-//!   --train data/agnews/train.jsonl \
-//!   --train data/decision/train.jsonl@100 \
-//!   --valid data/agnews/valid.jsonl \
-//!   --valid data/decision/validation.jsonl \
-//!   --cache data/agnews/features \
-//!   --out models/decision-v2.json
-//! ```
-//!
-//! `--train file@N` repeats a file N times (upsampling for small tasks).
-//! Features are extracted once and cached (see `--cache`); head training
-//! itself is deterministic and CPU-cheap. The backbone stays frozen —
-//! only the ~200K-param head trains.
+//! Arguments are declared in [`textintel::cli::train_decision_spec`] (run
+//! with `--help` for usage). `--train file@N` repeats a file N times
+//! (upsampling for small tasks). Features are extracted once and cached
+//! (see `--cache`); head training itself is deterministic and CPU-cheap.
+//! The backbone stays frozen — only the ~200K-param head trains.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -27,21 +17,6 @@ use textintel::decision::{
 use textintel::{TextIntelligence, TransformerEmbeddingProvider};
 
 const CACHE_VERSION: &str = "interaction-features-v1";
-
-fn usage() -> &'static str {
-    "Usage: textintel-train-decision --embeddings <dir> --train <file[@repeat]>... --valid <file>... --out <artifact.json> [--cache <dir>] [--hidden <n>] [--lr <f>] [--batch <n>] [--epochs <n>] [--patience <n>] [--seed <n>] [--max-train <n>]"
-}
-
-fn flag_values(args: &[String], flag: &str) -> Vec<String> {
-    args.windows(2)
-        .filter(|window| window[0] == flag)
-        .map(|window| window[1].clone())
-        .collect()
-}
-
-fn flag_value(args: &[String], flag: &str) -> Option<String> {
-    flag_values(args, flag).into_iter().next()
-}
 
 fn load_examples(path: &str) -> Result<Vec<DecisionExample>, String> {
     let source =
@@ -265,25 +240,44 @@ fn featurize(
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    let embeddings_dir = flag_value(&args, "--embeddings").ok_or_else(|| usage().to_string())?;
-    let train_files = flag_values(&args, "--train");
-    let valid_files = flag_values(&args, "--valid");
-    let out = flag_value(&args, "--out").ok_or_else(|| usage().to_string())?;
-    if train_files.is_empty() || valid_files.is_empty() {
-        return Err(usage().into());
+    let argv: Vec<String> = std::env::args().skip(1).collect();
+    let spec = textintel::cli::train_decision_spec();
+    if let Some(text) = textintel::cli::handle_meta(spec, env!("CARGO_PKG_VERSION"), &argv) {
+        println!("{text}");
+        return Ok(());
     }
-    let hidden: usize = flag_value(&args, "--hidden").map_or(Ok(128), |value| value.parse())?;
-    let learning_rate: f32 = flag_value(&args, "--lr").map_or(Ok(0.001), |value| value.parse())?;
-    let batch_size: usize = flag_value(&args, "--batch").map_or(Ok(32), |value| value.parse())?;
-    let epochs: usize = flag_value(&args, "--epochs").map_or(Ok(20), |value| value.parse())?;
-    let patience: usize = flag_value(&args, "--patience").map_or(Ok(4), |value| value.parse())?;
-    let seed: u64 = flag_value(&args, "--seed").map_or(Ok(7), |value| value.parse())?;
-    let max_train: usize = flag_value(&args, "--max-train").map_or(Ok(0), |value| value.parse())?;
-    let cache_dir = flag_value(&args, "--cache");
+    let parsed = match textintel::cli::parse_args(spec, &argv) {
+        Ok(parsed) => parsed,
+        Err(error) => {
+            eprintln!("{error}");
+            eprintln!("Run `{} --help` for usage.", spec.name);
+            std::process::exit(error.exit_code());
+        }
+    };
+    let embeddings_dir = parsed.required_value("embeddings")?;
+    let train_files: Vec<String> = parsed
+        .values_of("train")
+        .into_iter()
+        .map(str::to_string)
+        .collect();
+    let valid_files: Vec<String> = parsed
+        .values_of("valid")
+        .into_iter()
+        .map(str::to_string)
+        .collect();
+    let out = parsed.required_value("out")?;
+    let get = |id: &str| parsed.value(id).map(str::to_string);
+    let hidden: usize = get("hidden").map_or(Ok(128), |value| value.parse())?;
+    let learning_rate: f32 = get("lr").map_or(Ok(0.001), |value| value.parse())?;
+    let batch_size: usize = get("batch").map_or(Ok(32), |value| value.parse())?;
+    let epochs: usize = get("epochs").map_or(Ok(20), |value| value.parse())?;
+    let patience: usize = get("patience").map_or(Ok(4), |value| value.parse())?;
+    let seed: u64 = get("seed").map_or(Ok(7), |value| value.parse())?;
+    let max_train: usize = get("max-train").map_or(Ok(0), |value| value.parse())?;
+    let cache_dir = get("cache");
 
     let backbone = Arc::new(
-        TransformerEmbeddingProvider::open(&embeddings_dir).map_err(|error| error.to_string())?,
+        TransformerEmbeddingProvider::open(embeddings_dir).map_err(|error| error.to_string())?,
     );
     let metadata = backbone
         .model_metadata()
@@ -391,7 +385,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     {
         std::fs::create_dir_all(parent)?;
     }
-    std::fs::write(&out, artifact.to_json().map_err(|error| error.to_string())?)?;
+    std::fs::write(out, artifact.to_json().map_err(|error| error.to_string())?)?;
     println!("wrote {out}");
     Ok(())
 }

@@ -5,8 +5,8 @@ use std::collections::BTreeMap;
 use textintel::evaluation::EvaluationDataset;
 use textintel::{EngineConfig, TextIntelligence, logistic_step};
 
-use super::flag_value;
 use super::metrics::logistic_report;
+use textintel::cli::ParsedArgs;
 
 // ---------------------------------------------------------------------------
 // Spam training on seeded synthetic data.
@@ -180,23 +180,24 @@ struct CorpusItem {
     label: String,
 }
 
-pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+pub(crate) fn run_spam(parsed: &ParsedArgs) -> Result<(), Box<dyn std::error::Error>> {
     use textintel::{SPAM_FEATURES, SpamModelArtifact, spam_feature_vector, spam_features};
 
-    let output =
-        flag_value(args, "--output").ok_or("spam training requires --output <artifact.json>")?;
-    let count = flag_value(args, "--count")
+    let output = parsed.required_value("output")?;
+    let count = parsed
+        .value("count")
         .map(|value| value.parse::<usize>())
         .transpose()
         .map_err(|_| "--count must be a positive integer")?
         .unwrap_or(700)
         .max(10);
-    let seed = flag_value(args, "--seed")
+    let seed = parsed
+        .value("seed")
         .map(|value| value.parse::<u64>())
         .transpose()
         .map_err(|_| "--seed must be a non-negative integer")?
         .unwrap_or(0xC0FFEE);
-    let corpus_path = flag_value(args, "--corpus");
+    let corpus_path = parsed.value("corpus").map(str::to_string);
 
     let engine = TextIntelligence::new(EngineConfig::default());
     let corpus_version: Option<String>;
@@ -337,8 +338,10 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
     // pairs' spam labels.
     let mut pair_rows = Vec::new();
     if corpus_path.is_some() {
-        let heldout_path =
-            flag_value(args, "--heldout").unwrap_or_else(|| "data/spam/v2-eval.json".to_string());
+        let heldout_path = parsed
+            .value("heldout")
+            .unwrap_or("data/spam/v2-eval.json")
+            .to_string();
         let source = std::fs::read_to_string(&heldout_path)
             .map_err(|error| format!("read held-out spam corpus {heldout_path}: {error}"))?;
         let file: CorpusFile = serde_json::from_str(&source)
@@ -432,7 +435,7 @@ pub(crate) fn run_spam(args: &[String]) -> Result<(), Box<dyn std::error::Error>
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(
-        &output,
+        output,
         artifact.to_json().map_err(|error| error.to_string())?,
     )?;
     println!("wrote {output}");

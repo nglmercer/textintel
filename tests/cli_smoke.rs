@@ -210,6 +210,45 @@ fn eval_decision_enforces_gates() {
 }
 
 #[test]
+fn help_is_generated_per_command() {
+    let output = textintel()
+        .arg("eval")
+        .arg("--help")
+        .output()
+        .expect("run textintel binary");
+    assert!(output.status.success());
+    let text = String::from_utf8_lossy(&output.stdout);
+    assert!(text.contains("textintel eval"), "missing title: {text}");
+    assert!(text.contains("--split"), "missing option: {text}");
+    assert!(text.contains("--gates"), "missing option: {text}");
+}
+
+#[test]
+fn unknown_flags_fail_with_usage_hint() {
+    let output = textintel()
+        .args(["analyze", "--bogus", "hello"])
+        .output()
+        .expect("run textintel binary");
+    assert!(!output.status.success());
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("unknown flag"), "missing error: {stderr}");
+    assert!(stderr.contains("--help"), "missing hint: {stderr}");
+}
+
+#[test]
+fn missing_command_prints_overview() {
+    let output = textintel().output().expect("run textintel binary");
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("Usage:"), "missing usage: {stderr}");
+    assert!(
+        stderr.contains("eval-decision"),
+        "missing command: {stderr}"
+    );
+}
+
+#[test]
 fn json_outputs_are_versioned() {
     let schema = run_json(&["schema-version", "--json"]);
     assert!(schema["api_version"].is_string());

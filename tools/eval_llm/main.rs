@@ -1,13 +1,8 @@
 //! Evaluate a generative model (OpenAI-compatible chat endpoint) on a
 //! shared choice-question eval set.
 //!
-//! ```bash
-//! cargo run --release --features decision-http --bin textintel-eval-llm -- \
-//!   --eval data/decision/eval-simple.json \
-//!   --endpoint http://localhost:18081 \
-//!   --model lfm25-350m \
-//!   --out /tmp/llm-350m.json
-//! ```
+//! Arguments are declared in [`textintel::cli::eval_llm_spec`] (run
+//! with `--help` for usage).
 //!
 //! Protocol v4: each example becomes one zero-shot numbered
 //! multiple-choice prompt, temperature 0, seed 7. The model replies with
@@ -23,16 +18,6 @@ use std::time::Instant;
 use textintel::decision::{DecisionDataset, DecisionExample, DecisionQuestion};
 
 const PROMPT_VERSION: &str = "choice-numbers-zeroshot-v4";
-
-fn usage() -> &'static str {
-    "Usage: textintel-eval-llm --eval <eval-simple.json> --endpoint <url> --model <id> --out <results.json>"
-}
-
-fn flag_value(args: &[String], flag: &str) -> Option<String> {
-    args.windows(2)
-        .find(|window| window[0] == flag)
-        .map(|window| window[1].clone())
-}
 
 fn letters(count: usize) -> Vec<char> {
     (0..count)
@@ -87,13 +72,26 @@ fn parse_answer(raw: &str, ids: &[String]) -> Option<String> {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    let eval = flag_value(&args, "--eval").ok_or_else(|| usage().to_string())?;
-    let endpoint = flag_value(&args, "--endpoint").ok_or_else(|| usage().to_string())?;
-    let model = flag_value(&args, "--model").ok_or_else(|| usage().to_string())?;
-    let out = flag_value(&args, "--out").ok_or_else(|| usage().to_string())?;
+    let argv: Vec<String> = std::env::args().skip(1).collect();
+    let spec = textintel::cli::eval_llm_spec();
+    if let Some(text) = textintel::cli::handle_meta(spec, env!("CARGO_PKG_VERSION"), &argv) {
+        println!("{text}");
+        return Ok(());
+    }
+    let parsed = match textintel::cli::parse_args(spec, &argv) {
+        Ok(parsed) => parsed,
+        Err(error) => {
+            eprintln!("{error}");
+            eprintln!("Run `{} --help` for usage.", spec.name);
+            std::process::exit(error.exit_code());
+        }
+    };
+    let eval = parsed.required_value("eval")?;
+    let endpoint = parsed.required_value("endpoint")?;
+    let model = parsed.required_value("model")?;
+    let out = parsed.required_value("out")?;
 
-    let dataset = DecisionDataset::load_path(&eval).map_err(|error| error.to_string())?;
+    let dataset = DecisionDataset::load_path(eval).map_err(|error| error.to_string())?;
     let examples = dataset.test.clone();
     if examples.is_empty() {
         return Err("eval set has no examples".into());
@@ -186,7 +184,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }).collect::<BTreeMap<_, _>>(),
         "results": results,
     });
-    std::fs::write(&out, serde_json::to_string_pretty(&report)?)?;
+    std::fs::write(out, serde_json::to_string_pretty(&report)?)?;
     println!(
         "accuracy={:.3} ({correct}/{scored}) parsed={parsed}/{scored} wrote {out}",
         correct as f64 / scored.max(1) as f64

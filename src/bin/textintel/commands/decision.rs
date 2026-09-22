@@ -10,15 +10,18 @@ use textintel::decision::{
     selective_decision,
 };
 
-use super::{build_engine, flag_value, print_json};
+use textintel::cli::ParsedArgs;
+
+use super::common::{build_engine, print_json};
 
 fn decision_provider_named(
-    args: &[String],
+    parsed: &ParsedArgs,
     name: &str,
 ) -> Result<Arc<dyn DecisionProvider>, Box<dyn std::error::Error>> {
     match name {
         "spam" => {
-            let predictor: Arc<dyn textintel::SpamPredictor> = match decision_spam_artifact(args)? {
+            let predictor: Arc<dyn textintel::SpamPredictor> = match decision_spam_artifact(parsed)?
+            {
                 Some(predictor) => Arc::new(predictor),
                 None => Arc::new(textintel::HeuristicSpamPredictor),
             };
@@ -26,7 +29,7 @@ fn decision_provider_named(
         }
         "similarity" => {
             let scorer: Arc<dyn textintel::SimilarityScorer> =
-                match decision_similarity_artifact(args)? {
+                match decision_similarity_artifact(parsed)? {
                     Some(scorer) => Arc::new(scorer),
                     None => Arc::new(textintel::ProfileSimilarityScorer::default()),
                 };
@@ -34,9 +37,13 @@ fn decision_provider_named(
         }
         #[cfg(feature = "semantic-transformer")]
         "interaction" => {
-            let head = flag_value(args, "--head")
+            let head = parsed
+                .value("head")
+                .map(str::to_string)
                 .ok_or("interaction provider requires --head <artifact.json>")?;
-            let embeddings_dir = flag_value(args, "--embeddings")
+            let embeddings_dir = parsed
+                .value("embeddings")
+                .map(str::to_string)
                 .ok_or("interaction provider requires --embeddings <dir>")?;
             let artifact = textintel::InteractionArtifact::from_file(&head)
                 .map_err(|error| format!("invalid interaction head: {error}"))?;
@@ -62,9 +69,9 @@ fn decision_provider_named(
 /// (or `./models`) `spam-v2.json` when present — invalid files fail
 /// loudly, a missing file falls back to the heuristic predictor.
 fn decision_spam_artifact(
-    args: &[String],
+    parsed: &ParsedArgs,
 ) -> Result<Option<textintel::TrainedSpamPredictor>, Box<dyn std::error::Error>> {
-    let dir = flag_value(args, "--model-path").unwrap_or_else(|| "models".to_string());
+    let dir = parsed.value("model-path").unwrap_or("models");
     let path = textintel::engine::preferred_spam_artifact_in(std::path::Path::new(&dir));
     if !path.is_file() {
         return Ok(None);
@@ -79,9 +86,9 @@ fn decision_spam_artifact(
 /// [`decision_spam_artifact`]); a missing file falls back to the
 /// deterministic profile scorer.
 fn decision_similarity_artifact(
-    args: &[String],
+    parsed: &ParsedArgs,
 ) -> Result<Option<textintel::LogisticSimilarityScorer>, Box<dyn std::error::Error>> {
-    let dir = flag_value(args, "--model-path").unwrap_or_else(|| "models".to_string());
+    let dir = parsed.value("model-path").unwrap_or("models");
     let path = textintel::engine::preferred_similarity_artifact_in(std::path::Path::new(&dir));
     if !path.is_file() {
         return Ok(None);
@@ -138,13 +145,11 @@ fn print_decision_human(response: &textintel::DecisionResponse) {
     println!("provider: {}", response.provider);
 }
 
-pub(crate) fn run_decide(
-    args: &[String],
-    positionals: &[String],
-    json: bool,
-    production: bool,
-) -> Result<i32, Box<dyn std::error::Error>> {
-    let path = positionals.get(1).ok_or("decide requires <request.json>")?;
+pub(crate) fn run_decide(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> {
+    let json = parsed.flag("json");
+    let path = parsed
+        .positional(0)
+        .ok_or("decide requires <request.json>")?;
     let source = std::fs::read_to_string(path)?;
     let request: DecisionRequest = serde_json::from_str(&source)
         .map_err(|error| format!("invalid decision request {path}: {error}"))?;
@@ -153,21 +158,24 @@ pub(crate) fn run_decide(
         .map_err(|error| format!("invalid decision request {path}: {error}"))?;
     // Auto-select the adapter by question type unless `--provider` pins one.
     // Score questions have no v1 provider and fail with an explicit error.
-    let provider_name = flag_value(args, "--provider").unwrap_or_else(|| match &request.question {
-        DecisionQuestion::Choice { .. } => "similarity".to_string(),
-        DecisionQuestion::Binary { .. } => "spam".to_string(),
-        DecisionQuestion::Score { .. } => "none".to_string(),
-    });
+    let provider_name = parsed
+        .value("provider")
+        .map(str::to_string)
+        .unwrap_or_else(|| match &request.question {
+            DecisionQuestion::Choice { .. } => "similarity".to_string(),
+            DecisionQuestion::Binary { .. } => "spam".to_string(),
+            DecisionQuestion::Score { .. } => "none".to_string(),
+        });
     if provider_name == "none" {
         return Err(
             "no v1 provider answers score questions (spam/similarity adapters cover binary/choice)"
                 .into(),
         );
     }
-    let provider = decision_provider_named(args, &provider_name)?;
-    let engine = build_engine(args, production)?.with_decision_provider(provider);
+    let provider = decision_provider_named(parsed, &provider_name)?;
+    let engine = build_engine(parsed)?.with_decision_provider(provider);
     let mut response = engine.decide(&request).map_err(|error| error.to_string())?;
-    if let Some(threshold) = flag_value(args, "--threshold") {
+    if let Some(threshold) = parsed.value("threshold") {
         let threshold: f64 = threshold.parse()?;
         if !threshold.is_finite() || !(0.0..=1.0).contains(&threshold) {
             return Err(
@@ -187,8 +195,10 @@ pub(crate) fn run_decide(
 /// Resolve `--task` to a choice question: a direct file path, or
 /// `models/decision-tasks/<name>.json`. Task files are [`DecisionQuestion`]
 /// documents (a `task` label field is allowed and ignored).
-fn load_task_question(args: &[String]) -> Result<DecisionQuestion, Box<dyn std::error::Error>> {
-    let task = flag_value(args, "--task").ok_or("classify requires --task <name|path>")?;
+fn load_task_question(parsed: &ParsedArgs) -> Result<DecisionQuestion, Box<dyn std::error::Error>> {
+    let task = parsed
+        .value("task")
+        .ok_or("classify requires --task <name|path>")?;
     let candidate = std::path::PathBuf::from(&task);
     let fallback = std::path::Path::new("models")
         .join("decision-tasks")
@@ -207,7 +217,7 @@ fn load_task_question(args: &[String]) -> Result<DecisionQuestion, Box<dyn std::
     })?;
     let mut question: DecisionQuestion = serde_json::from_str(&source)
         .map_err(|error| format!("invalid task {}: {error}", path.display()))?;
-    if let Some(instructions) = flag_value(args, "--question") {
+    if let Some(instructions) = parsed.value("question") {
         match &mut question {
             DecisionQuestion::Choice {
                 instructions: current,
@@ -216,8 +226,8 @@ fn load_task_question(args: &[String]) -> Result<DecisionQuestion, Box<dyn std::
             | DecisionQuestion::Score {
                 instructions: current,
                 ..
-            } => *current = instructions,
-            DecisionQuestion::Binary { statement } => *statement = instructions,
+            } => *current = instructions.to_string(),
+            DecisionQuestion::Binary { statement } => *statement = instructions.to_string(),
         }
     }
     question
@@ -226,22 +236,18 @@ fn load_task_question(args: &[String]) -> Result<DecisionQuestion, Box<dyn std::
     Ok(question)
 }
 
-pub(crate) fn run_classify(
-    args: &[String],
-    positionals: &[String],
-    json: bool,
-    production: bool,
-) -> Result<i32, Box<dyn std::error::Error>> {
-    let text = positionals.get(1).ok_or("classify requires <text>")?;
-    let question = load_task_question(args)?;
+pub(crate) fn run_classify(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> {
+    let json = parsed.flag("json");
+    let text = parsed.positional(0).ok_or("classify requires <text>")?;
+    let question = load_task_question(parsed)?;
     if !matches!(question, DecisionQuestion::Choice { .. }) {
         return Err("classify supports only choice tasks in v1".into());
     }
-    let provider_name = flag_value(args, "--provider").unwrap_or_else(|| "similarity".to_string());
-    let provider = decision_provider_named(args, &provider_name)?;
-    let engine = build_engine(args, production)?.with_decision_provider(provider);
-    let task = flag_value(args, "--task").unwrap_or_default();
-    let request = DecisionRequest::new(text.clone(), question).with_task(task);
+    let provider_name = parsed.value("provider").unwrap_or("similarity").to_string();
+    let provider = decision_provider_named(parsed, &provider_name)?;
+    let engine = build_engine(parsed)?.with_decision_provider(provider);
+    let task = parsed.value("task").unwrap_or_default();
+    let request = DecisionRequest::new(text, question).with_task(task);
     let response = engine.decide(&request).map_err(|error| error.to_string())?;
     if json {
         print_json(&response)?;
@@ -252,11 +258,10 @@ pub(crate) fn run_classify(
 }
 
 pub(crate) fn run_decision_model_info(
-    args: &[String],
-    json: bool,
-    production: bool,
+    parsed: &ParsedArgs,
 ) -> Result<i32, Box<dyn std::error::Error>> {
-    if let Some(dir) = flag_value(args, "--model-dir") {
+    let json = parsed.flag("json");
+    if let Some(dir) = parsed.value("model-dir") {
         let path = std::path::Path::new(&dir);
         let artifact = textintel::DecisionArtifact::from_dir(path)
             .map_err(|error| format!("invalid decision model {dir}: {error}"))?;
@@ -295,11 +300,10 @@ pub(crate) fn run_decision_model_info(
         }
         return Ok(0);
     }
-    let provider_name = flag_value(args, "--provider").unwrap_or_else(|| "similarity".to_string());
-    let provider = decision_provider_named(args, &provider_name)?;
+    let provider_name = parsed.value("provider").unwrap_or("similarity").to_string();
+    let provider = decision_provider_named(parsed, &provider_name)?;
     let info = provider.model_info();
     let capabilities = provider.capabilities();
-    let _ = production;
     if json {
         print_json(&serde_json::json!({
             "model": info,
@@ -316,27 +320,20 @@ pub(crate) fn run_decision_model_info(
     Ok(0)
 }
 
-pub(crate) fn run_eval_decision(
-    args: &[String],
-    positionals: &[String],
-    json: bool,
-    production: bool,
-) -> Result<i32, Box<dyn std::error::Error>> {
-    let path = positionals
-        .get(1)
-        .map(String::as_str)
-        .unwrap_or("data/decision");
-    let split = flag_value(args, "--split").unwrap_or_else(|| "test".to_string());
+pub(crate) fn run_eval_decision(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> {
+    let json = parsed.flag("json");
+    let path = parsed.positional(0).unwrap_or("data/decision");
+    let split = parsed.value("split").unwrap_or("test");
     let dataset = DecisionDataset::load_path(path).map_err(|error| error.to_string())?;
-    let provider_name = flag_value(args, "--provider").unwrap_or_else(|| "similarity".to_string());
-    let provider = decision_provider_named(args, &provider_name)?;
-    let engine = build_engine(args, production)?;
+    let provider_name = parsed.value("provider").unwrap_or("similarity").to_string();
+    let provider = decision_provider_named(parsed, &provider_name)?;
+    let engine = build_engine(parsed)?;
     let report = evaluate_decisions(
         &engine,
         provider.as_ref(),
         &dataset.version,
-        &split,
-        dataset.split(&split),
+        split,
+        dataset.split(split),
     )
     .map_err(|error| error.to_string())?;
     if json {
@@ -366,8 +363,8 @@ pub(crate) fn run_eval_decision(
             );
         }
     }
-    if let Some(gates_path) = flag_value(args, "--gates") {
-        let gates_source = std::fs::read_to_string(&gates_path)?;
+    if let Some(gates_path) = parsed.value("gates") {
+        let gates_source = std::fs::read_to_string(gates_path)?;
         let gates: serde_json::Value = serde_json::from_str(&gates_source)?;
         let failures = check_decision_gates(&report, &gates);
         if failures.is_empty() {

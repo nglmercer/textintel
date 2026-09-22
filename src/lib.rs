@@ -29,6 +29,7 @@
 //! `examples/` directory for runnable end-to-end flows.
 
 pub mod cache;
+pub mod cli;
 pub mod comparison;
 pub mod core;
 pub mod decision;
