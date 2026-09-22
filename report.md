@@ -1,0 +1,115 @@
+# TextIntel S1 vs Liquid-class models — comparison report
+
+Date: 2026-09-22. Hardware: 12-core CPU, 14 GB RAM, no GPU. All runs local.
+
+## Question
+
+Can a typed decision model under 300M parameters classify better than
+prompted generative models in the 230–350M class on the same simple
+questions?
+
+## Contestants
+
+| Model | Params | Weights | How it answers |
+|---|---|---|---|
+| TextIntel S1-v1 (ours) | 117.7M frozen + 0.2M head | e5-small safetensors + trained head | typed choice + distribution |
+| similarity adapter | 0 (no neural net) | — | choice over reference texts |
+| LFM2.5-230M Q8_0 | 230M (vendor-claimed) | local GGUF | prompted, parsed reply |
+| lfm25-350m-axstream Q4_K_M | 350M (vendor-claimed) | local GGUF | prompted, parsed reply |
+
+Backbone param count (117.7M) was computed from the safetensors header,
+not quoted. Total S1-v1: **≈117.9M — under the 300M target.**
+
+Out of scope (deleted per request to free ~7GB): LFM2.5-VL-1.6B,
+LFM2.5-2.6B (+DSpark), Spark-X2.5-1.7B, Gemma-4-E4B. No 0.6B model was
+available locally, so the 230M/350M pair is the comparison.
+
+## Shared eval: `data/decision/eval-simple.json` (v1.0.0, 60 items)
+
+- 48 AG News topic choice (`business/scitech/sports/world`), 12 per
+  class, evenly spread over `test.csv` — disjoint from training rows.
+- 12 support-routing choice (`billing/technical/sales`, EN/ES/PT).
+- Identical inputs for every contestant. Chance ≈ 0.27 blended.
+
+## Prompt protocol evolution (generative models)
+
+1. **v1 letters** (few-shot, "reply A/B/C/D"): both models collapsed to
+   one constant letter.
+2. **v2 labels** (first-N few-shot): still constant — demos shared one
+   label on the class-grouped set.
+3. **v3 labels** (stratified demos): still constant per task.
+4. Probes: yes/no questions answered correctly; any 2–4-way label
+   choice collapsed (even "sports or world?" on a Phelps text →
+   "world"). A single numbers probe returned correct once.
+5. **v4 numbers** (zero-shot, "reply 1–K"): still constant
+   (350M → `business`×43/48; 230M → `business`×48/48).
+
+Conclusion: these two tiny quantized models cannot do constrained
+multi-way choice by prompting — they emit a prior, not a judgment.
+v4 numbers below are the fairest protocol found. Caveat: the 350M
+axstream matcher is a task fine-tune whose native template is unknown;
+a matched template or fine-tune could do better.
+
+## Results (accuracy on eval-simple.json, 60 items)
+
+| Model | Overall | AG-48 | Routing-12 | Latency/ex | Notes |
+|---|---|---|---|---|---|
+| **S1-v1 (trained head)** | **0.800** | 0.812 | 0.750 | ~770ms | calibrated, ECE 0.077 |
+| similarity adapter | 0.350 | — | — | ~2.3s (debug) | lexical overlap only |
+| LFM2.5-230M (v4) | 0.267 | 0.250 | 0.333 | ~175ms | constant outputs |
+| lfm25-350m (v4) | 0.267 | 0.250 | 0.333 | ~220ms | constant outputs |
+
+Blended chance ≈ 0.27. S1-v1 macro F1 0.779, NLL 0.595, Brier 0.079.
+Risk/coverage: 80% coverage → 0.875 accuracy, 50% → 0.933 — confidence
+is a working escalation signal. Confusion is concentrated where
+expected (scitech↔business). S1 latency is unoptimized (5 full text
+analyses per example, no candidate cache — static criteria make a ~5×
+speedup straightforward).
+
+## S1-v1 training (completed, single run, no retries)
+
+- Head: Linear(1561→128) → GELU → Linear(128→1), 200,065 trainable
+  params over frozen e5-small (384-dim) + 25 fusion features.
+- Data: 6,000 AG News train (1,500/class, disjoint rows) + 12 routing
+  seeds ×100; validation 600 AG + 6 routing.
+- Adam (lr 1e-3, batch 64), softmax CE, 15 epochs, no early stop
+  triggered (validation loss still falling: 0.949 → 0.582).
+- Final: train acc 0.879, **validation acc 0.804**; held-out
+  eval-simple.json acc **0.800** — no validation/test gap.
+- Wall time ≈ 35–40 min CPU (feature extraction ≈ 33 min, head
+  training ≈ 2 min), sharing the machine with both rival servers.
+- Artifact: `models/decision-s1-v1.json` (2.4 MB, untracked).
+
+## Reproduce
+
+```bash
+# shared eval, adapters
+cargo run --release --bin textintel -- eval-decision data/decision/eval-simple.json
+
+# rivals (serve GGUFs first, then)
+cargo run --release --features decision-http --bin textintel-eval-llm -- \
+  --eval data/decision/eval-simple.json --endpoint http://localhost:18082 \
+  --model lfm25-350m-axstream --out /tmp/llm-350m.json
+
+# train (after tools/prepare_agnews.py + e5-small download)
+cargo run --release --features decision-transformer --bin textintel-train-decision -- \
+  --embeddings models/e5-small-decision --train data/agnews/train.jsonl \
+  --train data/decision/train.jsonl@100 --valid data/agnews/valid.jsonl \
+  --valid data/decision/validation.jsonl --cache data/agnews/features \
+  --out models/decision-s1-v1.json
+
+# score the trained head
+cargo run --release --bin textintel -- eval-decision data/decision/eval-simple.json \
+  --provider interaction --head models/decision-s1-v1.json \
+  --embeddings models/e5-small-decision
+```
+
+Raw per-example rival outputs (with full replies for audit):
+`/tmp/llm-350m.json`, `/tmp/llm-230m.json`. Training log: `/tmp/s1-train.log`.
+
+## Incidental finding (pre-existing, not caused by this work)
+
+`eval data/evaluation --split test --gates data/quality-gates.json`
+fails on pristine HEAD too (spam F1/ROC-AUC, transliteration ROC-AUC —
+identical numbers before/after this change, verified via a clean
+worktree). Tracked separately; untouched by this migration.

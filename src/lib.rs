@@ -31,6 +31,7 @@
 pub mod cache;
 pub mod comparison;
 pub mod core;
+pub mod decision;
 pub mod detection;
 pub mod engine;
 pub mod entities;
@@ -53,11 +54,11 @@ pub use cache::{
     RevisionCache, rebus_cache_key, resource_revision,
 };
 pub use comparison::{
-    ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer, RerankerModelArtifact,
-    SimilarityModelArtifact, SimilarityProfile, TRAINING_FEATURE_SCHEMA_VERSION, TRAINING_FEATURES,
-    balanced_sample_weights, language_agreement, logistic_step, logistic_step_weighted,
-    mean_channel_confidence, rerank_score, score_fingerprints_with_profile, sigmoid,
-    training_features,
+    ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer, ProfileSimilarityScorer,
+    RerankerModelArtifact, SimilarityModelArtifact, SimilarityProfile,
+    TRAINING_FEATURE_SCHEMA_VERSION, TRAINING_FEATURES, balanced_sample_weights,
+    language_agreement, logistic_step, logistic_step_weighted, mean_channel_confidence,
+    rerank_score, score_fingerprints_with_profile, sigmoid, training_features,
 };
 pub use core::capabilities::{CapabilityLevel, ModelMetadata, ProviderCapabilities};
 pub use core::config::{CacheLimits, EngineConfig, RebusWeights, SimilarityWeights};
@@ -70,6 +71,29 @@ pub use core::providers::{
     VectorStoreCapabilities,
 };
 pub use core::types::*;
+#[cfg(feature = "decision-transformer")]
+pub use decision::TransformerBackbone;
+pub use decision::{
+    ADAPTER_ACCEPT_THRESHOLD, ARCHITECTURE_CANDIDATE_CROSS_ENCODER,
+    ARCHITECTURE_STATE_CANDIDATE_INTERACTION, BACKBONE_MODEL_TYPE_BERT, COVERAGE_LEVELS,
+    CalibrationSample, CandidatePrompt, CoveragePoint, CrossEncoderHeadConfig,
+    DECISION_ARTIFACT_KIND, DECISION_ARTIFACT_VERSION, DECISION_SCHEMA_VERSION, Decision,
+    DecisionAnswer, DecisionArtifact, DecisionBackbone, DecisionCalibration, DecisionDataset,
+    DecisionDatasetRef, DecisionEvalReport, DecisionExample, DecisionHead, DecisionModelInfo,
+    DecisionProvider, DecisionQuestion, DecisionRequest, DecisionResponse, DecisionSplit,
+    FUSION_FEATURE_SCHEMA_VERSION, FUSION_FEATURES, HeadTrainExample, HeadTrainer,
+    INTERACTION_ARTIFACT_KIND, INTERACTION_ARTIFACT_VERSION, INTERACTION_TEMPERATURE,
+    InteractionArtifact, InteractionDecisionProvider, InteractionHead, MAX_DECISION_BATCH,
+    MAX_DECISION_CANDIDATES, MAX_DECISION_STATE_CHARS, NONE_OF_THE_ABOVE,
+    PROBABILITY_SUM_TOLERANCE, SharedDecisionProvider, SimilarityDecisionProvider,
+    SpamDecisionProvider, SplitMix64, TaskCalibration, TemperatureBias, TemperatureFit,
+    TemperatureScaling, brier_score, candidate_prompt, check_decision_gates, energy_score, entropy,
+    evaluate_decisions, expected_calibration_error, expected_score, fit_temperature,
+    fusion_feature_vector, fusion_features, gelu, gelu_prime, head_loss_accuracy, init_head_xavier,
+    interaction_features, is_ood_by_energy, margin, max_probability, nll_loss,
+    plan_candidate_batch, selective_decision, softmax, softmax_with_temperature,
+    validate_cross_encoder_request, validate_distribution, validate_request,
+};
 pub use detection::{
     HeuristicSpamPredictor, SPAM_FEATURE_SCHEMA_VERSION, SPAM_FEATURES, SpamModelArtifact,
     TrainedSpamPredictor, duplicate_result, match_pattern, predict_spam, spam_feature_vector,

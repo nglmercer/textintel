@@ -2,3 +2,8 @@
 fuzz/target/
 fuzz/artifacts/
 fuzz/Cargo.lock
+# Third-party weights and raw datasets (reproducible via download scripts).
+models/e5-small-decision/
+models/transformer/
+data/agnews/
+tools/llama-bin/

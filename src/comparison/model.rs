@@ -134,6 +134,39 @@ pub fn score_fingerprints_with_profile(
     result
 }
 
+/// Deterministic profile scorer: the weighted channel blend plus the
+/// profile's logit calibration, exposed as a [`SimilarityScorer`] so
+/// callers without a trained artifact (decision adapters, CLIs) can score
+/// through the trait. [`SimilarityProfile::general_similarity`] is the
+/// default profile.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq)]
+pub struct ProfileSimilarityScorer {
+    pub profile: SimilarityProfile,
+}
+
+impl ProfileSimilarityScorer {
+    pub fn new(profile: SimilarityProfile) -> Self {
+        Self { profile }
+    }
+}
+
+impl Default for ProfileSimilarityScorer {
+    fn default() -> Self {
+        Self::new(SimilarityProfile::general_similarity())
+    }
+}
+
+impl SimilarityScorer for ProfileSimilarityScorer {
+    fn score(&self, left: &MessageFingerprint, right: &MessageFingerprint) -> ComparisonResult {
+        score_fingerprints_with_profile(left, right, &self.profile)
+    }
+
+    fn capabilities(&self) -> ProviderCapabilities {
+        ProviderCapabilities::new(format!("profile_similarity:{}", self.profile.name))
+            .with_quality(CapabilityLevel::Basic)
+    }
+}
+
 /// Interpretable linear/logistic scorer for applications that have trained
 /// channel weights. Missing channels are omitted and therefore cannot become
 /// accidental evidence.

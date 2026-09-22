@@ -76,6 +76,8 @@ pub struct EngineDiagnostics {
     pub reranker: Option<ProviderCapabilities>,
     #[serde(default)]
     pub generative: Option<ProviderCapabilities>,
+    #[serde(default)]
+    pub decision: Option<ProviderCapabilities>,
     pub store: ProviderCapabilities,
     pub ann_enabled: bool,
     pub degraded: Vec<DegradedCapability>,
@@ -140,6 +142,7 @@ pub struct EngineBuilder {
     pub(crate) entity_disabled: bool,
     pub(crate) reranker: Option<Arc<dyn RerankerProvider>>,
     pub(crate) generative: Option<Arc<dyn GenerativeProvider>>,
+    pub(crate) decision: Option<Arc<dyn crate::decision::DecisionProvider>>,
     /// Explicit local transformer directory for [`Self::production_local`].
     pub(crate) transformer_model_path: Option<PathBuf>,
     /// Fallback notes recorded while assembling the preset (surfaced via
@@ -253,6 +256,17 @@ impl EngineBuilder {
     /// always needs an explicit endpoint.
     pub fn generative_provider<P: GenerativeProvider + 'static>(mut self, provider: P) -> Self {
         self.generative = Some(Arc::new(provider));
+        self
+    }
+
+    /// Attach a typed decision provider. Never configured by
+    /// [`Self::production_local`]: decision models join the preset only
+    /// after the decision quality gates pass.
+    pub fn decision_provider<P: crate::decision::DecisionProvider + 'static>(
+        mut self,
+        provider: P,
+    ) -> Self {
+        self.decision = Some(Arc::new(provider));
         self
     }
 

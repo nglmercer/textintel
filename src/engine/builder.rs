@@ -66,6 +66,7 @@ impl TextIntelligence {
             )),
             reranker_provider: None,
             generative_provider: None,
+            decision_provider: None,
             spam_predictor: Arc::new(HeuristicSpamPredictor),
             similarity_scorer: None,
             similarity_profile: None,
@@ -189,6 +190,9 @@ impl TextIntelligence {
         }
         if let Some(provider) = builder.generative {
             engine.generative_provider = Some(provider);
+        }
+        if let Some(provider) = builder.decision {
+            engine.decision_provider = Some(provider);
         }
         if let Some(predictor) = builder.spam {
             engine.spam_predictor = predictor;
@@ -395,6 +399,68 @@ impl TextIntelligence {
         provider
             .generate(prompt, options)
             .map_err(TextIntelError::from)
+    }
+
+    pub fn with_decision_provider<P: crate::decision::DecisionProvider + 'static>(
+        mut self,
+        provider: P,
+    ) -> Self {
+        self.decision_provider = Some(Arc::new(provider));
+        self
+    }
+
+    /// Answer a typed decision request with the configured provider.
+    /// Prepares text evidence (analyzing `state` and, for choice
+    /// questions, every criterion description) before dispatch, then
+    /// validates the provider's answer against the request so malformed
+    /// distributions fail here instead of reaching the caller. Errors
+    /// when no decision provider is configured.
+    pub fn decide(
+        &self,
+        request: &crate::decision::DecisionRequest,
+    ) -> Result<crate::decision::DecisionResponse, TextIntelError> {
+        let provider = self.decision_provider.as_ref().ok_or_else(|| {
+            TextIntelError::InvalidConfiguration(
+                "no decision provider configured; attach one with \
+                 with_decision_provider() or EngineBuilder::decision_provider()"
+                    .to_string(),
+            )
+        })?;
+        let mut prepared = request.clone();
+        self.prepare_decision_request(&mut prepared)?;
+        let response = provider.decide(&prepared)?;
+        response
+            .validate_against(&prepared)
+            .map_err(TextIntelError::InvalidConfiguration)?;
+        Ok(response)
+    }
+
+    /// Attach analyzed evidence to a decision request in place: the
+    /// `state` fingerprint plus, for choice questions, one fingerprint
+    /// per criterion description. Already-attached evidence is kept, so
+    /// callers may pre-analyze with custom options. Analysis bounds
+    /// (`max_input_length`, …) apply, so oversized evidence is rejected.
+    pub fn prepare_decision_request(
+        &self,
+        request: &mut crate::decision::DecisionRequest,
+    ) -> Result<(), TextIntelError> {
+        request
+            .validate()
+            .map_err(TextIntelError::InvalidConfiguration)?;
+        if request.fingerprint.is_none() {
+            request.fingerprint = Some(self.analyze(&request.state)?);
+        }
+        if let crate::decision::DecisionQuestion::Choice { criteria, .. } = &request.question {
+            for (id, description) in criteria {
+                if !request.candidate_fingerprints.contains_key(id) {
+                    let fingerprint = self.analyze(description)?;
+                    request
+                        .candidate_fingerprints
+                        .insert(id.clone(), fingerprint);
+                }
+            }
+        }
+        Ok(())
     }
 
     pub fn with_spam_predictor<P: SpamPredictor + 'static>(mut self, predictor: P) -> Self {

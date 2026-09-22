@@ -44,6 +44,7 @@ pub struct TextIntelligence {
     entity_provider: Option<Arc<dyn EntityProvider>>,
     reranker_provider: Option<Arc<dyn RerankerProvider>>,
     generative_provider: Option<Arc<dyn GenerativeProvider>>,
+    decision_provider: Option<Arc<dyn crate::decision::DecisionProvider>>,
     spam_predictor: Arc<dyn SpamPredictor>,
     similarity_scorer: Option<Arc<dyn SimilarityScorer>>,
     similarity_profile: Option<SimilarityProfile>,

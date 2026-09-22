@@ -2,11 +2,13 @@ use std::env;
 
 use textintel::{EngineConfig, ResourceLoader, TextIntelligence};
 
+mod decision;
 mod eval;
 
+use decision::{run_classify, run_decide, run_decision_model_info, run_eval_decision};
 use eval::run_eval;
 fn usage() -> &'static str {
-    "Usage:\n  textintel analyze <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel explain <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel decode <text> [--languages <es,en>] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel compare <message-a> <message-b> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel duplicate <message-a> <message-b> [--threshold <0..1>] [--mode combined|near_exact|lexical|semantic|phonetic|decoded|visual] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel spam <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel batch <input.jsonl> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <dataset> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--spam-corpus <spam-eval.json>] [--no-ranking] [--json] [--production]\n  textintel evaluate <dataset> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--spam-corpus <spam-eval.json>] [--no-ranking] [--json] [--production]\n  textintel index <store.json> <id> <text> [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel search <store.json> <text> <limit> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel generate <prompt> [--liquid-endpoint <url>] [--liquid-model <id>] [--max-tokens <n>] [--temperature <f>] [--system <text>] [--json]\n\nJSON output contract: every --json payload follows API_VERSION (see\nschema-version); payloads evolve additively only — fields are added, never\nrenamed or removed, within a major version."
+    "Usage:\n  textintel analyze <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel explain <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel decode <text> [--languages <es,en>] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel compare <message-a> <message-b> [--json] [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel duplicate <message-a> <message-b> [--threshold <0..1>] [--mode combined|near_exact|lexical|semantic|phonetic|decoded|visual] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel spam <text> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel batch <input.jsonl> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel resources [resource-root] [--json]\n  textintel resources validate <path> [--json]\n  textintel diagnostics [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel provider-info [--json]\n  textintel schema-version [--json]\n  textintel eval <dataset> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--spam-corpus <spam-eval.json>] [--no-ranking] [--json] [--production]\n  textintel evaluate <dataset> [--split train|validation|test] [--profile <name>] [--scorer <artifact.json>] [--gates <quality-gates.json>] [--spam-corpus <spam-eval.json>] [--no-ranking] [--json] [--production]\n  textintel index <store.json> <id> <text> [--production] [--resource-root <dir>] [--model-path <dir>] [--language <code>]\n  textintel search <store.json> <text> <limit> [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel generate <prompt> [--liquid-endpoint <url>] [--liquid-model <id>] [--max-tokens <n>] [--temperature <f>] [--system <text>] [--json]\n  textintel decide <request.json> [--provider spam|similarity|interaction] [--head <artifact.json>] [--embeddings <dir>] [--threshold <0..1>] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel classify <text> --task <name|path> [--question <text>] [--provider similarity] [--json] [--production] [--resource-root <dir>] [--model-path <dir>]\n  textintel decision-model-info [--provider spam|similarity|interaction] [--head <artifact.json>] [--embeddings <dir>] [--model-dir <dir>] [--json]\n  textintel eval-decision <data/decision> [--split train|validation|test] [--provider similarity|spam|interaction] [--head <artifact.json>] [--embeddings <dir>] [--gates <quality-gates-decision.json>] [--json] [--production]\n\nJSON output contract: every --json payload follows API_VERSION (see\nschema-version); payloads evolve additively only — fields are added, never\nrenamed or removed, within a major version."
 }
 
 fn print_json<T: serde::Serialize>(value: &T) -> Result<(), Box<dyn std::error::Error>> {
@@ -376,6 +378,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             0
         }
         "evaluate" | "eval" => run_eval(&args, json, production)?,
+        "decide" => run_decide(&args, &positionals, json, production)?,
+        "classify" => run_classify(&args, &positionals, json, production)?,
+        "decision-model-info" => run_decision_model_info(&args, json, production)?,
+        "eval-decision" => run_eval_decision(&args, &positionals, json, production)?,
         "index" => {
             let store = positionals
                 .get(1)
@@ -483,6 +489,12 @@ fn positional_args(args: &[String]) -> Vec<String> {
                 || arg == "--max-tokens"
                 || arg == "--temperature"
                 || arg == "--system"
+                || arg == "--provider"
+                || arg == "--head"
+                || arg == "--embeddings"
+                || arg == "--task"
+                || arg == "--question"
+                || arg == "--model-dir"
                 || arg == "--resource-root")
         {
             skip_next = true;
