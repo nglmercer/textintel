@@ -13,8 +13,11 @@ manually with the commands below, then point the providers at them.
 - `decision-minilm-l3-v1.json` — v2 interaction head over
   `sentence-transformers/paraphrase-MiniLM-L3-v2` (frozen backbone).
 - `decision-minilm-l2-v1.json` — v2 interaction head over the first two
-  layers of `paraphrase-MiniLM-L3-v2` (see below); the fastest
-  decision configuration (see `report.md`).
+  layers of `paraphrase-MiniLM-L3-v2` (see below); trained and served
+  with rebus decoding enabled.
+- `decision-minilm-l2-v2.json` — same backbone, hidden-64 head trained
+  with `--no-rebus`; serve with `--no-rebus` (train/serve must match).
+  The fastest decision configuration (see `report.md`).
 
 Legacy revisions (`similarity-v1..v4`, `spam-v1`) were removed; there is no
 fallback chain.

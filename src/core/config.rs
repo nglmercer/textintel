@@ -295,6 +295,12 @@ impl CacheLimits {
     }
 }
 
+/// Stored configs predate the rebus toggle, so a missing key must keep
+/// decoding enabled (the struct default), not take the `bool` default.
+fn default_rebus_enabled() -> bool {
+    true
+}
+
 /// Resource and provider limits.  These bounds protect candidate generation
 /// from untrusted input and make runtime behavior predictable.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -335,6 +341,13 @@ pub struct EngineConfig {
     pub similarity_weights: SimilarityWeights,
     pub semantic: bool,
     pub phonetic: bool,
+    /// Rebus/leet/symbol decoding during analysis. Disable only for
+    /// pipelines that never read decoded evidence (fast decision serving
+    /// over clean text): fingerprints then carry empty
+    /// `rebus_candidates`/`spoken_candidates` and `lexicon_coverage` runs
+    /// over the raw tokens.
+    #[serde(default = "default_rebus_enabled")]
+    pub rebus: bool,
     /// Rebus scoring blend (see [`RebusWeights`]).
     pub rebus_weights: RebusWeights,
     /// Preferred languages (BCP-47) for decoding and phonetics. Empty means
@@ -374,6 +387,7 @@ impl Default for EngineConfig {
             // baseline or a model). The default provider is a null backend.
             semantic: false,
             phonetic: false,
+            rebus: true,
             rebus_weights: RebusWeights::default(),
             language_hints: Vec::new(),
             cache: CacheLimits::default(),

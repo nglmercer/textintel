@@ -36,6 +36,9 @@ pub fn build_engine(parsed: &ParsedArgs) -> Result<TextIntelligence, Box<dyn std
     if let Some(hints) = language_hints(parsed) {
         config.language_hints = hints;
     }
+    if parsed.flag("no-rebus") {
+        config.rebus = false;
+    }
     let mut engine = if parsed.flag("production") {
         TextIntelligence::builder()
             .config(config)

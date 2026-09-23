@@ -158,6 +158,11 @@ const TEXTINTEL_ARGS: &[ArgSpec] = &[
         "N",
         "Eval worker threads (default 1; latencies under N>1 reflect contention).",
     ),
+    flag(
+        "no-rebus",
+        "no-rebus",
+        "Skip rebus decoding during analysis (fast decision serving over clean text).",
+    ),
 ];
 
 const TEXTINTEL_COMMANDS: &[CommandSpec] = &[
@@ -366,6 +371,7 @@ const TEXTINTEL_COMMANDS: &[CommandSpec] = &[
             "head",
             "embeddings",
             "threshold",
+            "no-rebus",
         ],
         required_args: &[],
         positionals: &[positional(
@@ -388,6 +394,7 @@ const TEXTINTEL_COMMANDS: &[CommandSpec] = &[
             "provider",
             "head",
             "embeddings",
+            "no-rebus",
         ],
         required_args: &["task"],
         positionals: &[positional("text", "TEXT", true, false, "Text to classify.")],
@@ -404,7 +411,15 @@ const TEXTINTEL_COMMANDS: &[CommandSpec] = &[
         name: "eval-decision",
         aliases: &[],
         summary: "Score a decision dataset and enforce decision gates.",
-        args: &["split", "provider", "gates", "head", "embeddings", "jobs"],
+        args: &[
+            "split",
+            "provider",
+            "gates",
+            "head",
+            "embeddings",
+            "jobs",
+            "no-rebus",
+        ],
         required_args: &[],
         positionals: &[positional(
             "dataset",
@@ -559,6 +574,11 @@ const TRAIN_DECISION_ARGS: &[ArgSpec] = &[
         "jobs",
         "N",
         "Extraction worker threads (default 1; features rejoin in order).",
+    ),
+    flag(
+        "no-rebus",
+        "no-rebus",
+        "Skip rebus decoding during featurization (must match serving).",
     ),
 ];
 

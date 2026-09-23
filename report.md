@@ -526,6 +526,62 @@ data/decision/eval-simple.json --provider interaction --head
 models/decision-minilm-l2-v1.json --embeddings
 models/minilm-l2-decision` (expect 0.850 / ~22ms).
 
+### Batch ten (model: no-rebus serving + smaller head)
+
+Profiling the batch-nine winner showed the 21.8ms split as ~6ms
+state analysis (rebus decode alone 4–7ms) + ~11.4ms single-text L2
+forward + ~1ms head. The rebus fusion features turned out to be
+noise for this task: the old L2 head served with decoding skipped
+already scored 52/60 at 14.5ms. Retraining without them (matched
+train/serve) plus a hidden-128→64 head squeeze gives:
+
+| System | Backbone | Head | Accuracy | Mean latency |
+|---|---|---|---|---|
+| Traditional (similarity) | none (handcrafted) | similarity-v5 | 0.350 (21/60) | ~23.3ms |
+| Interaction (e5 baseline) | multilingual-e5-small, 118M | decision-s1-v1 | 0.800 (48/60) | ~80ms |
+| Interaction (MiniLM-L3) | paraphrase-MiniLM-L3-v2, 17M | decision-minilm-l3-v1 | 0.867 (52/60) | ~26.3ms |
+| Interaction (MiniLM-L2 v2) | MiniLM-L3 layers 0–1, 15M | decision-minilm-l2-v2 | **0.867 (52/60)** | **~14.1ms** |
+
+The L2-v2 system is tied-most-accurate (52/60, NLL 0.388, ECE
+0.060) and the fastest by 1.65× over the next system.
+
+What changed:
+
+- `EngineConfig.rebus` (default true, stored configs without the key
+  keep decoding) skips rebus/leet/symbol decoding: empty
+  `rebus_candidates`/`spoken_candidates`, coverage over raw tokens,
+  `decoded` channel reported unavailable, `rebus_enabled` metadata.
+  `--no-rebus` on `decide`/`classify`/`eval-decision` and on
+  `textintel-train-decision` (train/serve must match; the feature
+  cache keys on the engine toggle).
+- New head `models/decision-minilm-l2-v2.json` (committed, ~1.2MB):
+  hidden 64, trained `--no-rebus`, valid_acc 0.781, eval 52/60.
+- Rejected with measurements: intra-op forward threading (row and
+  column two-thread splits of the FFN/output projections were both
+  bit-exact but 5–8% *slower* — the forward streams ~56MB of
+  weights per pass and extra threads only add traffic and spawn
+  cost; reverted); a 1-layer slice (44/60 @ 9.3ms — fails the
+  accuracy bar); hidden-32 (51/60 — drops one); token truncation
+  (attention is ~3% of forward traffic, weights dominate, so it
+  cannot pay for a retrain cycle).
+- Durable test: `rebus_skip_empties_decoded_evidence` (empty decoded
+  evidence, zero rebus time, unavailable channel, legacy serde
+  default). Exactness: `forward.rs` is byte-identical to batch nine
+  and the e5 eval JSON matches the stashed baseline bit for bit
+  (NLL 0.5952701213964783). Full suite (59 binaries), clippy `-D
+  warnings`, fmt, doc, and no-default tests green; the
+  `data/quality-gates*.json` failures reproduce on pristine HEAD
+  (verified via stash), pre-existing.
+
+Tradeoffs: `--no-rebus` serving suits clean-text classification; any
+obfuscation-heavy task keeps the default engine (and a
+rebus-trained head). L3 keeps its rebus-trained v1 head as the
+reference — L2-v2 dominates it on both axes. Reproduce with: train
+with `--no-rebus --hidden 64`, then `eval-decision
+data/decision/eval-simple.json --provider interaction --head
+models/decision-minilm-l2-v2.json --embeddings
+models/minilm-l2-decision --no-rebus` (expect 0.867 / ~14ms).
+
 Fresh-path floor: one e5-small forward is ~55ms on this CPU and the
 trained head needs its output plus the analysis features, so
 never-seen single queries cannot reach 100× without a model change

@@ -413,36 +413,44 @@ impl TextIntelligence {
         let started = Instant::now();
         // Fingerprint rebus decoding never uses semantic rescoring (the
         // `sem:off` key marker); `decode_with_languages` may, and keys
-        // separately.
-        let rebus = match self.rebus_cache_lookup(
-            text,
-            Some(&decode_languages),
-            Some(self.config.max_candidates),
-            "sem:off",
-        ) {
-            Some(hit) => hit,
-            None => {
-                let decoder = RebusDecoder::new(self.config.clone());
-                let abbreviations = self.abbreviation_provider.as_deref();
-                let decoded = decoder.decode_with_abbreviations(
-                    text,
-                    Some(&decode_languages),
-                    Some(self.config.max_candidates),
-                    self.symbol_provider.as_ref(),
-                    self.lexicon_provider.as_ref(),
-                    self.g2p_provider.as_ref(),
-                    None,
-                    abbreviations,
-                );
-                self.rebus_cache_store(
-                    text,
-                    Some(&decode_languages),
-                    Some(self.config.max_candidates),
-                    "sem:off",
-                    decoded.clone(),
-                );
-                decoded
-            }
+        // separately. Fast decision serving over clean text opts out via
+        // `config.rebus = false` (see `EngineConfig::rebus`): no decode
+        // runs, and coverage below falls back to the raw tokens.
+        let rebus = if !self.config.rebus {
+            Vec::new()
+        } else {
+            let decoded = match self.rebus_cache_lookup(
+                text,
+                Some(&decode_languages),
+                Some(self.config.max_candidates),
+                "sem:off",
+            ) {
+                Some(hit) => hit,
+                None => {
+                    let decoder = RebusDecoder::new(self.config.clone());
+                    let abbreviations = self.abbreviation_provider.as_deref();
+                    let decoded = decoder.decode_with_abbreviations(
+                        text,
+                        Some(&decode_languages),
+                        Some(self.config.max_candidates),
+                        self.symbol_provider.as_ref(),
+                        self.lexicon_provider.as_ref(),
+                        self.g2p_provider.as_ref(),
+                        None,
+                        abbreviations,
+                    );
+                    self.rebus_cache_store(
+                        text,
+                        Some(&decode_languages),
+                        Some(self.config.max_candidates),
+                        "sem:off",
+                        decoded.clone(),
+                    );
+                    decoded
+                }
+            };
+            timings.rebus_micros += elapsed(started);
+            decoded
         };
         let spoken_candidates = rebus
             .iter()
@@ -455,7 +463,6 @@ impl TextIntelligence {
                 source: "rebus".to_string(),
             })
             .collect::<Vec<_>>();
-        timings.rebus_micros += elapsed(started);
 
         let semantic_embeddings = BTreeMap::new();
         let started = Instant::now();
@@ -530,7 +537,11 @@ impl TextIntelligence {
         );
         channel_availability.insert(
             "decoded".to_string(),
-            ChannelAvailability::available("bounded_beam_search", 0.7),
+            if self.config.rebus {
+                ChannelAvailability::available("bounded_beam_search", 0.7)
+            } else {
+                ChannelAvailability::unavailable("bounded_beam_search")
+            },
         );
         channel_availability.insert(
             "obfuscation".to_string(),
@@ -565,6 +576,7 @@ impl TextIntelligence {
             "phonetic_enabled".to_string(),
             self.config.phonetic.to_string(),
         );
+        metadata.insert("rebus_enabled".to_string(), self.config.rebus.to_string());
         metadata.insert("input_length".to_string(), input_length.to_string());
         // Coverage is computed after decoding so validity reflects the
         // intended reading (`h3llo` counts through `hello`), not the raw

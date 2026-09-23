@@ -106,7 +106,9 @@ fn featurize(
     if examples.is_empty() {
         return Err(format!("{label}: no examples"));
     }
-    // Cache identity covers the file list, the backbone, and the dims.
+    // Cache identity covers the file list, the backbone, the dims, and
+    // the engine's rebus toggle (skipped decoding changes fusion features).
+    let no_rebus = !engine.config().rebus;
     let metadata = embeddings
         .model_metadata()
         .ok_or_else(|| "backbone has no metadata".to_string())?;
@@ -116,6 +118,7 @@ fn featurize(
         metadata.model_id.clone(),
         metadata.revision.clone().unwrap_or_default(),
         embedding_dim.to_string(),
+        format!("no_rebus={no_rebus}"),
     ]);
     if let Some(dir) = cache_dir {
         let path = std::path::Path::new(dir).join(format!("{label}-{key}.json"));
@@ -274,6 +277,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let max_train: usize = get("max-train").map_or(Ok(0), |value| value.parse())?;
     let cache_dir = get("cache");
     let jobs: usize = get("jobs").map_or(Ok(1), |value| value.parse())?;
+    let no_rebus = parsed.flag("no-rebus");
 
     let backbone = Arc::new(
         TransformerEmbeddingProvider::open(embeddings_dir).map_err(|error| error.to_string())?,
@@ -288,7 +292,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         metadata.dimensions,
         metadata.normalized
     );
-    let engine = TextIntelligence::default().with_embedding_provider(backbone.clone());
+    let mut engine_config = textintel::EngineConfig::default();
+    if no_rebus {
+        engine_config.rebus = false;
+    }
+    let engine = TextIntelligence::new(engine_config).with_embedding_provider(backbone.clone());
     let train = featurize(
         &engine,
         backbone.as_ref(),
