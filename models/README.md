@@ -8,6 +8,16 @@ manually with the commands below, then point the providers at them.
 
 - `similarity-v5.json` — logistic similarity scorer (feature schema 9).
 - `spam-v2.json` — calibrated logistic spam predictor.
+- `decision-s1-v1.json` — v2 interaction head over
+  `intfloat/multilingual-e5-small` (frozen backbone).
+- `decision-minilm-l3-v1.json` — v2 interaction head over
+  `sentence-transformers/paraphrase-MiniLM-L3-v2` (frozen backbone).
+- `decision-minilm-l2-v1.json` — v2 interaction head over the first two
+  layers of `paraphrase-MiniLM-L3-v2` (see below); trained and served
+  with rebus decoding enabled.
+- `decision-minilm-l2-v2.json` — same backbone, hidden-64 head trained
+  with `--no-rebus`; serve with `--no-rebus` (train/serve must match).
+  The fastest decision configuration (see `report.md`).
 
 Legacy revisions (`similarity-v1..v4`, `spam-v1`) were removed; there is no
 fallback chain.
@@ -23,6 +33,18 @@ checkpoints declare BERT wiring (`model_type: "bert"`):
 | `intfloat/multilingual-e5-small` | 118M | 384 | `tokenizer.json` (Unigram) | mean | `query: ` / `passage: ` |
 | `Snowflake/snowflake-arctic-embed-xs` | 22M | 384 | `vocab.txt` (WordPiece) | CLS | `Represent this sentence for searching relevant passages: ` on queries |
 | `mixedbread-ai/mxbai-embed-xsmall-v1` | 24M | 384 | `vocab.txt` (WordPiece) | mean | none |
+| `sentence-transformers/all-MiniLM-L6-v2` | 22M | 384 | `vocab.txt` (WordPiece) | CLS (as deployed here) | none |
+| `sentence-transformers/paraphrase-MiniLM-L3-v2` | 17M | 384 | `vocab.txt` (WordPiece) | CLS (as deployed here) | none |
+
+MiniLM notes: the loader takes the WordPiece layout (`vocab.txt`, not
+`tokenizer.json`) and reads `do_lower_case` from `config.json` — both
+MiniLM checkpoints are uncased, so add `"do_lower_case": true` to the
+local `config.json` copy (their `tokenizer_config.json` confirms it).
+`models/minilm-l2-decision` is layers 0–1 of MiniLM-L3 with
+`num_hidden_layers: 2` (sliced safetensors, embeddings untouched).
+All MiniLM
+checkpoints here are English-only: they trade multilingual coverage
+for speed on English routing workloads.
 
 Manual download (example: multilingual default into `models/e5-small`):
 

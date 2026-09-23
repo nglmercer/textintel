@@ -11,8 +11,8 @@ use textintel::{
     training_features,
 };
 
-use super::flag_value;
 use super::metrics::report;
+use textintel::cli::ParsedArgs;
 
 const ITERATIONS: usize = 20000;
 const CALIBRATION_ITERATIONS: usize = 500;
@@ -143,22 +143,24 @@ fn metrics_at(
     Ok(report(&scores))
 }
 
-pub(crate) fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
-    let path = args.get(1).map(String::as_str).unwrap_or("data/evaluation");
-    let output = flag_value(args, "--output")
-        .ok_or("similarity training requires --output <artifact.json>")?;
-    let iterations = flag_value(args, "--iterations")
+pub(crate) fn run_similarity(parsed: &ParsedArgs) -> Result<(), Box<dyn std::error::Error>> {
+    let path = parsed.positional(0).unwrap_or("data/evaluation");
+    let output = parsed.required_value("output")?;
+    let iterations = parsed
+        .value("iterations")
         .map(|value| value.parse::<usize>())
         .transpose()
         .map_err(|_| "--iterations must be a positive integer")?
         .unwrap_or(ITERATIONS)
         .max(1);
-    let learning_rate = flag_value(args, "--learning-rate")
+    let learning_rate = parsed
+        .value("learning-rate")
         .map(|value| value.parse::<f64>())
         .transpose()
         .map_err(|_| "--learning-rate must be a number")?
         .unwrap_or(LEARNING_RATE);
-    let l2 = flag_value(args, "--l2")
+    let l2 = parsed
+        .value("l2")
         .map(|value| value.parse::<f64>())
         .transpose()
         .map_err(|_| "--l2 must be a number")?
@@ -169,7 +171,9 @@ pub(crate) fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::
     // starve both channels and ship a misleading artifact). The semantic
     // backend follows the production preference order (configured local
     // transformer, feature-hash fallback).
-    let transformer_model = flag_value(args, "--transformer-model")
+    let transformer_model = parsed
+        .value("transformer-model")
+        .map(str::to_string)
         .or_else(|| std::env::var("TEXTINTEL_TRANSFORMER_MODEL").ok());
     let (engine, embedding_backend) = training_engine(transformer_model.as_deref())?;
 
@@ -351,7 +355,7 @@ pub(crate) fn run_similarity(args: &[String]) -> Result<(), Box<dyn std::error::
         std::fs::create_dir_all(parent)?;
     }
     std::fs::write(
-        &output,
+        output,
         artifact.to_json().map_err(|error| error.to_string())?,
     )?;
     println!("wrote {output}");

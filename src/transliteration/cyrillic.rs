@@ -1,65 +1,73 @@
 //! Cyrillic ↔ Latin rule tables (Russian-biased).
 
-fn match_case(mapped: &str, upper: bool) -> String {
+/// Case-match a mapped fragment into the output buffer: lowercase maps
+/// pass through, uppercase inputs uppercase the first scalar. Identical
+/// bytes to the old per-char `String` helper, no allocation per char.
+fn push_case(output: &mut String, mapped: &str, upper: bool) {
     if !upper {
-        mapped.to_string()
+        output.push_str(mapped);
     } else {
         let mut chars = mapped.chars();
-        match chars.next() {
-            Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
-            None => String::new(),
+        if let Some(first) = chars.next() {
+            for uppered in first.to_uppercase() {
+                output.push(uppered);
+            }
+            output.push_str(chars.as_str());
         }
     }
 }
 
 pub(crate) fn cyrillic_to_latin(text: &str) -> String {
-    text.chars()
-        .map(|ch| {
-            let lower = ch.to_lowercase().next().unwrap_or(ch);
-            let mapped = match lower {
-                'а' => "a",
-                'б' => "b",
-                'в' => "v",
-                'г' => "g",
-                'д' => "d",
-                'е' => "e",
-                'ё' => "yo",
-                'ж' => "zh",
-                'з' => "z",
-                'и' => "i",
-                'й' => "y",
-                'к' => "k",
-                'л' => "l",
-                'м' => "m",
-                'н' => "n",
-                'о' => "o",
-                'п' => "p",
-                'р' => "r",
-                'с' => "s",
-                'т' => "t",
-                'у' => "u",
-                'ф' => "f",
-                'х' => "kh",
-                'ц' => "ts",
-                'ч' => "ch",
-                'ш' => "sh",
-                'щ' => "shch",
-                'ъ' => "",
-                'ы' => "y",
-                'ь' => "'",
-                'э' => "e",
-                'ю' => "yu",
-                'я' => "ya",
-                'і' => "i",
-                'ї' => "yi",
-                'є' => "ye",
-                'ґ' => "g",
-                'ў' => "w",
-                _ => return ch.to_string(),
-            };
-            match_case(mapped, ch.is_uppercase())
-        })
-        .collect()
+    let mut output = String::with_capacity(text.len());
+    for ch in text.chars() {
+        let lower = ch.to_lowercase().next().unwrap_or(ch);
+        let mapped = match lower {
+            'а' => "a",
+            'б' => "b",
+            'в' => "v",
+            'г' => "g",
+            'д' => "d",
+            'е' => "e",
+            'ё' => "yo",
+            'ж' => "zh",
+            'з' => "z",
+            'и' => "i",
+            'й' => "y",
+            'к' => "k",
+            'л' => "l",
+            'м' => "m",
+            'н' => "n",
+            'о' => "o",
+            'п' => "p",
+            'р' => "r",
+            'с' => "s",
+            'т' => "t",
+            'у' => "u",
+            'ф' => "f",
+            'х' => "kh",
+            'ц' => "ts",
+            'ч' => "ch",
+            'ш' => "sh",
+            'щ' => "shch",
+            'ъ' => "",
+            'ы' => "y",
+            'ь' => "'",
+            'э' => "e",
+            'ю' => "yu",
+            'я' => "ya",
+            'і' => "i",
+            'ї' => "yi",
+            'є' => "ye",
+            'ґ' => "g",
+            'ў' => "w",
+            _ => {
+                output.push(ch);
+                continue;
+            }
+        };
+        push_case(&mut output, mapped, ch.is_uppercase());
+    }
+    output
 }
 
 pub(crate) fn latin_to_cyrillic(text: &str) -> String {
@@ -79,18 +87,28 @@ pub(crate) fn latin_to_cyrillic(text: &str) -> String {
     ];
     let mut output = String::with_capacity(text.len());
     let chars: Vec<char> = text.chars().collect();
+    let key_len = crate::transliteration::table_key_len(DIGRAPHS);
     let mut index = 0;
     while index < chars.len() {
-        let rest: String = chars[index..].iter().collect::<String>().to_lowercase();
-        let mut matched: Option<(&str, usize)> = None;
-        for (latin, cyrl) in DIGRAPHS {
-            if rest.starts_with(latin) {
-                matched = Some((cyrl, latin.len()));
-                break;
+        // ASCII windows match by byte (no suffix alloc); non-ASCII
+        // windows keep the legacy lowered-suffix check verbatim.
+        let window_end = (index + key_len).min(chars.len());
+        let matched = if chars[index..window_end].iter().all(|ch| ch.is_ascii()) {
+            crate::transliteration::ascii_table_match(&chars, index, DIGRAPHS)
+                .map(|position| (DIGRAPHS[position].1, DIGRAPHS[position].0.len()))
+        } else {
+            let rest: String = chars[index..].iter().collect::<String>().to_lowercase();
+            let mut found: Option<(&str, usize)> = None;
+            for (latin, cyrl) in DIGRAPHS {
+                if rest.starts_with(latin) {
+                    found = Some((cyrl, latin.len()));
+                    break;
+                }
             }
-        }
+            found
+        };
         if let Some((cyrl, width)) = matched {
-            output.push_str(&match_case(cyrl, chars[index].is_uppercase()));
+            push_case(&mut output, cyrl, chars[index].is_uppercase());
             index += width;
             continue;
         }
@@ -129,7 +147,7 @@ pub(crate) fn latin_to_cyrillic(text: &str) -> String {
                 continue;
             }
         };
-        output.push_str(&match_case(mapped, ch.is_uppercase()));
+        push_case(&mut output, mapped, ch.is_uppercase());
         index += 1;
     }
     output

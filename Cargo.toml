@@ -21,6 +21,16 @@ path = "src/bin/textintel/main.rs"
 name = "textintel-train"
 path = "tools/train_similarity/main.rs"
 
+[[bin]]
+name = "textintel-train-decision"
+path = "tools/train_decision_v2/main.rs"
+required-features = ["decision-transformer"]
+
+[[bin]]
+name = "textintel-eval-llm"
+path = "tools/eval_llm/main.rs"
+required-features = ["decision-http"]
+
 [[example]]
 name = "espeak"
 required-features = ["phonetic-espeak"]
@@ -42,10 +52,17 @@ semantic-http = ["dep:ureq"]
 phonetic = ["phonetic-ipa"]
 phonetic-ipa = []
 persist = []
+# Typed local decisions (TextIntel S1). The base API (types, providers,
+# adapters, scoring, calibration, artifacts, fusion, datasets, eval) is
+# dependency-free and always compiled; these features gate the backends.
+decision = []
+decision-transformer = ["decision", "semantic-transformer"]
+decision-http = ["decision", "dep:ureq"]
+decision-modernbert = ["decision-transformer"]
 ml = ["lang-profile", "semantic-local", "phonetic-ipa"]
 production-local-lite = ["lang-profile", "semantic-local", "phonetic-ipa"]
 production-local = ["lang-profile", "semantic-local", "semantic-transformer", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb"]
-all = ["lang-profile", "semantic-local", "semantic-transformer", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb", "ml", "production-local-lite", "production-local"]
+all = ["lang-profile", "semantic-local", "semantic-transformer", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb", "ml", "production-local-lite", "production-local", "decision", "decision-transformer", "decision-http", "decision-modernbert"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -71,6 +88,10 @@ harness = false
 
 [[bench]]
 name = "ann"
+harness = false
+
+[[bench]]
+name = "decision"
 harness = false
 
 [profile.release]

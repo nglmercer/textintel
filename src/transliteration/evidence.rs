@@ -27,6 +27,26 @@ pub fn transliteration_evidence(
     a: &crate::core::types::MessageFingerprint,
     b: &crate::core::types::MessageFingerprint,
 ) -> Option<TransliterationEvidence> {
+    transliteration_evidence_inner(a, b, None)
+}
+
+/// [`transliteration_evidence`] with the raw-text similarity precomputed:
+/// the scorer already holds `combined_character_similarity` over the raw
+/// pair for its character channel, so it passes that value instead of
+/// paying for the same comparison twice. Same inputs, same value.
+pub(crate) fn transliteration_evidence_with_raw(
+    a: &crate::core::types::MessageFingerprint,
+    b: &crate::core::types::MessageFingerprint,
+    raw: f64,
+) -> Option<TransliterationEvidence> {
+    transliteration_evidence_inner(a, b, Some(raw))
+}
+
+fn transliteration_evidence_inner(
+    a: &crate::core::types::MessageFingerprint,
+    b: &crate::core::types::MessageFingerprint,
+    raw: Option<f64>,
+) -> Option<TransliterationEvidence> {
     let views_a = a.transliteration_views();
     let views_b = b.transliteration_views();
     if views_a.is_empty() && views_b.is_empty() {
@@ -55,8 +75,9 @@ pub fn transliteration_evidence(
     }
     // Same-script pairs already match through the raw texts; the remaining
     // fuzzy work only pays off for cross-script pairs with weak raw overlap.
-    let raw =
-        crate::lexical::character::combined_character_similarity(a.raw.as_str(), b.raw.as_str());
+    let raw = raw.unwrap_or_else(|| {
+        crate::lexical::character::combined_character_similarity(a.raw.as_str(), b.raw.as_str())
+    });
     if raw >= 0.5 {
         return Some(TransliterationEvidence {
             similarity: raw,

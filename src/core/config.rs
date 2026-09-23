@@ -224,25 +224,43 @@ impl RebusWeights {
 /// wrapped provider would compute, keys always include the provider identity
 /// and model/resource revision, and an observed revision change invalidates
 /// instead of serving stale values.
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct CacheLimits {
     pub embeddings: usize,
     pub g2p: usize,
     pub language: usize,
     pub rebus: usize,
+    /// Exact-text fingerprint cache for the decision path
+    /// (`prepare_decision_request` re-analyzes static criterion
+    /// descriptions otherwise). On by default (256 entries, ≈6MB worst
+    /// case); set `0` to disable.
+    pub decision: usize,
+}
+
+impl Default for CacheLimits {
+    fn default() -> Self {
+        Self {
+            embeddings: 0,
+            g2p: 0,
+            language: 0,
+            rebus: 0,
+            decision: 256,
+        }
+    }
 }
 
 impl CacheLimits {
     /// Production preset: generous text-keyed caches for the embedding, G2P,
-    /// and language providers plus a smaller rebus cache (decoded candidate
-    /// lists are the largest values).
+    /// and language providers plus smaller rebus/decision caches
+    /// (fingerprints and decoded candidate lists are the largest values).
     pub fn production() -> Self {
         Self {
             embeddings: 1024,
             g2p: 1024,
             language: 1024,
             rebus: 256,
+            decision: 256,
         }
     }
 
@@ -262,12 +280,25 @@ impl CacheLimits {
         if self.rebus == 0 {
             self.rebus = production.rebus;
         }
+        if self.decision == 0 {
+            self.decision = production.decision;
+        }
         self
     }
 
     pub fn any_enabled(&self) -> bool {
-        self.embeddings > 0 || self.g2p > 0 || self.language > 0 || self.rebus > 0
+        self.embeddings > 0
+            || self.g2p > 0
+            || self.language > 0
+            || self.rebus > 0
+            || self.decision > 0
     }
+}
+
+/// Stored configs predate the rebus toggle, so a missing key must keep
+/// decoding enabled (the struct default), not take the `bool` default.
+fn default_rebus_enabled() -> bool {
+    true
 }
 
 /// Resource and provider limits.  These bounds protect candidate generation
@@ -310,14 +341,22 @@ pub struct EngineConfig {
     pub similarity_weights: SimilarityWeights,
     pub semantic: bool,
     pub phonetic: bool,
+    /// Rebus/leet/symbol decoding during analysis. Disable only for
+    /// pipelines that never read decoded evidence (fast decision serving
+    /// over clean text): fingerprints then carry empty
+    /// `rebus_candidates`/`spoken_candidates` and `lexicon_coverage` runs
+    /// over the raw tokens.
+    #[serde(default = "default_rebus_enabled")]
+    pub rebus: bool,
     /// Rebus scoring blend (see [`RebusWeights`]).
     pub rebus_weights: RebusWeights,
     /// Preferred languages (BCP-47) for decoding and phonetics. Empty means
     /// "use detected languages". Hints never change detection itself, only
     /// which readings the decoder and G2P prefer.
     pub language_hints: Vec<String>,
-    /// Bounded revision-aware caches. Disabled by default; the production
-    /// preset enables them (see [`CacheLimits::production`]).
+    /// Bounded revision-aware caches. Only the decision fingerprint
+    /// cache is enabled by default; the production preset enables the
+    /// rest (see [`CacheLimits::production`]).
     pub cache: CacheLimits,
 }
 
@@ -348,6 +387,7 @@ impl Default for EngineConfig {
             // baseline or a model). The default provider is a null backend.
             semantic: false,
             phonetic: false,
+            rebus: true,
             rebus_weights: RebusWeights::default(),
             language_hints: Vec::new(),
             cache: CacheLimits::default(),

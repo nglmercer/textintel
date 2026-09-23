@@ -8,9 +8,9 @@ use super::weights::LayerWeights;
 const TANH_GELU_COEF: f64 = 0.7978845608; // sqrt(2/pi)
 const TANH_GELU_CUBIC: f64 = 0.044715;
 
-/// `x @ w^T + b` with `w: [out, in]`.
+/// `x @ w + b` with `w: [in, out]` pre-transposed at load.
 fn linear(x: &Tensor, weight: &Tensor, bias: &Tensor) -> Result<Tensor, candle_core::Error> {
-    x.matmul(&weight.transpose(0, 1)?)?.broadcast_add(bias)
+    x.matmul(weight)?.broadcast_add(bias)
 }
 
 pub(crate) fn layer_norm(
@@ -46,29 +46,77 @@ fn softmax_last_dim(scores: &Tensor) -> Result<Tensor, candle_core::Error> {
     exp.broadcast_div(&exp.sum_keepdim(last)?)
 }
 
+/// Split a `[tokens, hidden]` projection into per-head `[heads, tokens,
+/// head_dim]` views. Free function so worker threads share it.
+fn split_heads(
+    projected: Tensor,
+    tokens: usize,
+    heads: usize,
+    head_dim: usize,
+) -> Result<Tensor, candle_core::Error> {
+    projected
+        .reshape((tokens, heads, head_dim))?
+        .transpose(0, 1)?
+        .contiguous()
+}
+
+fn panicked_worker() -> candle_core::Error {
+    candle_core::Error::Msg("worker thread panicked during parallel projection".to_string())
+}
+
 fn attention(
     hidden: &Tensor,
-    mask_add: &Tensor,
+    mask_add: Option<&Tensor>,
     layer: &LayerWeights,
     config: &EncoderConfig,
 ) -> Result<Tensor, candle_core::Error> {
     let tokens = hidden.dim(0)?;
     let heads = config.num_heads;
     let head_dim = config.hidden_size / heads;
-    let split = |projected: Tensor| {
-        projected
-            .reshape((tokens, heads, head_dim))?
-            .transpose(0, 1)?
-            .contiguous()
-    };
-    let query = split(linear(hidden, &layer.query_w, &layer.query_b)?)?;
-    let key = split(linear(hidden, &layer.key_w, &layer.key_b)?)?;
-    let value = split(linear(hidden, &layer.value_w, &layer.value_b)?)?;
+    // Query/key/value projections are independent whole ops: three threads
+    // each run the same kernels on the same inputs, so every element
+    // matches sequential execution bit for bit; results rejoin in fixed
+    // order with the first-in-order error, exactly as before.
+    let (query, key, value) = std::thread::scope(|scope| {
+        let query = scope.spawn(|| {
+            split_heads(
+                linear(hidden, &layer.query_w, &layer.query_b)?,
+                tokens,
+                heads,
+                head_dim,
+            )
+        });
+        let key = scope.spawn(|| {
+            split_heads(
+                linear(hidden, &layer.key_w, &layer.key_b)?,
+                tokens,
+                heads,
+                head_dim,
+            )
+        });
+        let value = scope.spawn(|| {
+            split_heads(
+                linear(hidden, &layer.value_w, &layer.value_b)?,
+                tokens,
+                heads,
+                head_dim,
+            )
+        });
+        let query = query.join().unwrap_or_else(|_| Err(panicked_worker()))?;
+        let key = key.join().unwrap_or_else(|_| Err(panicked_worker()))?;
+        let value = value.join().unwrap_or_else(|_| Err(panicked_worker()))?;
+        Ok::<_, candle_core::Error>((query, key, value))
+    })?;
     let scale = 1.0 / (head_dim as f64).sqrt();
-    let scores = query
+    let scaled = query
         .matmul(&key.transpose(1, 2)?.contiguous()?)?
-        .affine(scale, 0.0)?
-        .broadcast_add(mask_add)?;
+        .affine(scale, 0.0)?;
+    let scores = match mask_add {
+        Some(mask) => scaled.broadcast_add(mask)?,
+        // Unmasked (unpadded) forwards skip the exact-zero add; see the
+        // identical-outputs argument at the call site in `forward`.
+        None => scaled,
+    };
     let context = softmax_last_dim(&scores)?
         .matmul(&value)?
         .transpose(0, 1)?
@@ -86,7 +134,7 @@ fn attention(
 
 pub(crate) fn encoder_layer(
     hidden: &Tensor,
-    mask_add: &Tensor,
+    mask_add: Option<&Tensor>,
     layer: &LayerWeights,
     config: &EncoderConfig,
 ) -> Result<Tensor, candle_core::Error> {
@@ -152,5 +200,99 @@ mod tests {
         assert!(out[0].abs() < 1e-6);
         assert!((out[1] - 0.8412).abs() < 1e-3, "gelu(1)={}", out[1]);
         assert!((out[2] + 0.1588).abs() < 1e-3, "gelu(-1)={}", out[2]);
+    }
+
+    fn tiny_layer() -> (LayerWeights, EncoderConfig) {
+        // Deterministic pseudo-random weights (fixed pattern, no RNG
+        // dependency): exercises matmuls, softmax, norms, and GELU.
+        fn weight(rows: usize, cols: usize, seed: u32) -> Tensor {
+            let values: Vec<f32> = (0..rows * cols)
+                .map(|index| {
+                    (index as u32).wrapping_mul(37).wrapping_add(seed) as f32 / 251.0 - 0.5
+                })
+                .collect();
+            Tensor::new(values, &Device::Cpu)
+                .unwrap()
+                .reshape((rows, cols))
+                .unwrap()
+        }
+        fn bias(len: usize, seed: u32) -> Tensor {
+            Tensor::new(
+                (0..len)
+                    .map(|index| {
+                        (index as u32).wrapping_mul(17).wrapping_add(seed) as f32 / 127.0 - 0.5
+                    })
+                    .collect::<Vec<f32>>(),
+                &Device::Cpu,
+            )
+            .unwrap()
+        }
+        let layer = LayerWeights {
+            query_w: weight(4, 4, 1),
+            query_b: bias(4, 2),
+            key_w: weight(4, 4, 3),
+            key_b: bias(4, 4),
+            value_w: weight(4, 4, 5),
+            value_b: bias(4, 6),
+            attn_out_w: weight(4, 4, 7),
+            attn_out_b: bias(4, 8),
+            attn_ln_w: bias(4, 9),
+            attn_ln_b: bias(4, 10),
+            inter_w: weight(4, 8, 11),
+            inter_b: bias(8, 12),
+            out_w: weight(8, 4, 13),
+            out_b: bias(4, 14),
+            out_ln_w: bias(4, 15),
+            out_ln_b: bias(4, 16),
+        };
+        let config = EncoderConfig {
+            hidden_size: 4,
+            num_layers: 1,
+            num_heads: 2,
+            intermediate_size: 8,
+            max_positions: 8,
+            layer_norm_eps: 1e-12,
+            vocab_size: 32,
+            model_id: "test".to_string(),
+            revision: None,
+            languages: Vec::new(),
+            do_lower_case: false,
+        };
+        (layer, config)
+    }
+
+    /// Skipping the exact-zero mask add (unpadded forwards) must match the
+    /// explicit add bit for bit — compared by bits, so even a signed-zero
+    /// divergence would fail.
+    #[test]
+    fn unmasked_layer_matches_zero_mask_bit_for_bit() {
+        let (layer, config) = tiny_layer();
+        let hidden = tensor(&[
+            vec![0.5, -1.0, 0.0, 2.0],
+            vec![-0.0, 0.25, -2.5, 1.0],
+            vec![1.5, 0.0, -0.5, -1.5],
+        ]);
+        let zeros = Tensor::zeros((1, 1, 3), candle_core::DType::F32, &Device::Cpu).unwrap();
+        let skipped = encoder_layer(&hidden, None, &layer, &config)
+            .unwrap()
+            .to_vec2::<f32>()
+            .unwrap();
+        let explicit = encoder_layer(&hidden, Some(&zeros), &layer, &config)
+            .unwrap()
+            .to_vec2::<f32>()
+            .unwrap();
+        assert_eq!(skipped.len(), explicit.len());
+        for (left, right) in skipped.iter().zip(explicit.iter()) {
+            assert_eq!(left.len(), right.len());
+            for (a, b) in left.iter().zip(right.iter()) {
+                assert_eq!(
+                    a.to_bits(),
+                    b.to_bits(),
+                    "mask skip diverges: {a} ({:#x}) vs {b} ({:#x})",
+                    a.to_bits(),
+                    b.to_bits()
+                );
+            }
+        }
     }
 }

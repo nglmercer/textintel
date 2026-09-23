@@ -108,6 +108,147 @@ fn version_and_help_flags_answer_without_engine() {
 }
 
 #[test]
+fn decide_answers_a_request_file() {
+    let path = std::env::temp_dir().join("textintel-decide-smoke.json");
+    std::fs::write(
+        &path,
+        r#"{"state": "refund my duplicate payment", "question": {"type": "choice", "instructions": "Which team?", "criteria": {"billing": "Payments and refunds", "technical": "Product problems"}}}"#,
+    )
+    .expect("write request");
+    let response = run_json(&[
+        "decide",
+        path.to_str().expect("path"),
+        "--provider",
+        "similarity",
+        "--json",
+    ]);
+    assert_eq!(response["answer"]["type"], "choice");
+    assert_eq!(response["provider"], "similarity_decision_adapter");
+    let probabilities = response["answer"]["probabilities"]
+        .as_object()
+        .expect("probabilities");
+    let sum: f64 = probabilities
+        .values()
+        .map(|value| value.as_f64().unwrap_or(0.0))
+        .sum();
+    assert!((sum - 1.0).abs() < 1e-6, "probabilities sum to {sum}");
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn classify_uses_task_files() {
+    let response = run_json(&[
+        "classify",
+        "The app crashes on login",
+        "--task",
+        "support-routing",
+        "--json",
+    ]);
+    assert_eq!(response["answer"]["type"], "choice");
+    assert_eq!(response["task"], "support-routing");
+    // Unknown tasks fail with a helpful error, never a wrong answer.
+    let output = textintel()
+        .args(["classify", "hello", "--task", "no-such-task"])
+        .output()
+        .expect("run textintel binary");
+    assert!(!output.status.success());
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("unknown task"),
+        "unexpected stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
+fn decision_model_info_reports_adapters() {
+    let info = run_json(&["decision-model-info", "--provider", "spam", "--json"]);
+    assert_eq!(info["model"]["provider"], "spam_decision_adapter");
+    assert_eq!(info["model"]["local"], true);
+    assert!(info["model"]["supported_questions"].as_array().is_some());
+}
+
+#[test]
+fn eval_decision_scores_the_seed_split() {
+    let report = run_json(&[
+        "eval-decision",
+        "data/decision",
+        "--split",
+        "validation",
+        "--provider",
+        "similarity",
+        "--json",
+    ]);
+    assert_eq!(report["split"], "validation");
+    assert_eq!(report["count"], 6);
+    assert_eq!(report["skipped"], 0);
+    assert!(report["accuracy"].as_f64().unwrap() > 0.33);
+    assert_eq!(report["coverage"].as_array().expect("coverage").len(), 6);
+}
+
+#[test]
+fn eval_decision_enforces_gates() {
+    let output = textintel()
+        .args([
+            "eval-decision",
+            "data/decision",
+            "--split",
+            "test",
+            "--gates",
+            "data/quality-gates-decision.json",
+        ])
+        .output()
+        .expect("run textintel binary");
+    assert!(
+        output.status.success(),
+        "seed gates must pass: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        String::from_utf8_lossy(&output.stdout).contains("quality gates: pass"),
+        "missing gate verdict"
+    );
+}
+
+#[test]
+fn help_is_generated_per_command() {
+    let output = textintel()
+        .arg("eval")
+        .arg("--help")
+        .output()
+        .expect("run textintel binary");
+    assert!(output.status.success());
+    let text = String::from_utf8_lossy(&output.stdout);
+    assert!(text.contains("textintel eval"), "missing title: {text}");
+    assert!(text.contains("--split"), "missing option: {text}");
+    assert!(text.contains("--gates"), "missing option: {text}");
+}
+
+#[test]
+fn unknown_flags_fail_with_usage_hint() {
+    let output = textintel()
+        .args(["analyze", "--bogus", "hello"])
+        .output()
+        .expect("run textintel binary");
+    assert!(!output.status.success());
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("unknown flag"), "missing error: {stderr}");
+    assert!(stderr.contains("--help"), "missing hint: {stderr}");
+}
+
+#[test]
+fn missing_command_prints_overview() {
+    let output = textintel().output().expect("run textintel binary");
+    assert_eq!(output.status.code(), Some(2));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("Usage:"), "missing usage: {stderr}");
+    assert!(
+        stderr.contains("eval-decision"),
+        "missing command: {stderr}"
+    );
+}
+
+#[test]
 fn json_outputs_are_versioned() {
     let schema = run_json(&["schema-version", "--json"]);
     assert!(schema["api_version"].is_string());

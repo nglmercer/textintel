@@ -1,0 +1,953 @@
+{
+ "version": "1.0.0",
+ "examples": [
+  {
+   "id": "ag_eval_00000",
+   "state": "Sister of man who died in Vancouver police custody slams chief (Canadian Press). Canadian Press - VANCOUVER (CP) - The sister of a man who died after a violent confrontation with police has demanded the city's chief constable resign for defending the officer involved.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00001",
+   "state": "Bush Makes Fourth Trip of Year to N.M. (AP). AP - The ranks of independent voters in New Mexico have grown by nearly 20,000 in the last 10 months, a prize pulling President Bush and rival John Kerry to the state again and again.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00002",
+   "state": "Former Saddam Deputy Arrested in Iraq (AP). AP - Iraqi authorities claimed on Sunday to have captured Izzat Ibrahim al-Douri, the most wanted member of Saddam Hussein's ousted dictatorship, but there was confusion over the report, as the Iraqi defense minister said word of his arrest was \"baseless.\"",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00003",
+   "state": "European Abortion Debate Turns Divisive (AP). AP - European Parliament legislators on Thursday turned a fight over abortion rights in Portugal into an emotional and divisive debate on women's rights and the division between church and state.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00004",
+   "state": "Four held in anti-terror raids. Three of the men were seized in a  quot;pre-planned quot; operation by officers from the Metropolitan Police anti-terrorist branch at a hotel in Brent Cross, north London.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00005",
+   "state": "Insurgents target Green Zone. Insurgents exploded two car bombs at the gates of the main US-Iraqi headquarters in Baghdad and near major hotels Monday, killing at least 21 people and wounding 96.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00006",
+   "state": "Supreme Court to Review Inmate Freedom Law (AP). AP - The Supreme Court agreed Tuesday to consider the constitutionality of a federal law that requires state prisons to accommodate inmate religions, from Christianity to Satanism.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00007",
+   "state": "Campaign Spending on Rise in House Races (AP). AP - Ground zero for the country's costliest House race is Dallas, where two congressmen shoehorned into the same new district have each raised  #36;4.1 million  #151; and counting  #151; to bash each other with television ads and sophisticated mailings.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00008",
+   "state": "First Black Watch troops move north to Sunni Triangle. BAGHDAD, Iraq An advance party of British soldiers has arrived at its new base near Baghdad. The small group from the Scottish Black Watch regiment set up base camp south of the capital, according to a pool report made to British media.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00009",
+   "state": "Final respects paid to Arafat. Palestinians pay their last respects to Yasser Arafat after chaotic scenes at his burial in Ramallah.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00010",
+   "state": "Chinese President Meets With Castro (AP). AP - Chinese President Hu Jintao met with Fidel Castro Monday for talks focusing on the broadening ties between Cuba and China, which has become the island's third-largest trading partner.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00011",
+   "state": "IRA says it reopened disarmament talks. BELFAST -- The Irish Republican Army has reopened negotiations with Northern Ireland's disarmament chief, the outlawed group said yesterday, signaling its readiness to put more weapons out of commission for the first time in over a year. The move came ahead of the planned unveiling by the leaders of Britain and Ireland of a joint peace package that has taken ...",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "world",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00012",
+   "state": "Giddy Phelps Touches Gold for First Time. Michael Phelps won the gold medal in the 400 individual medley and set a world record in a time of 4 minutes 8.26 seconds.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00013",
+   "state": "Bryant Prosecutors Question Defense DNA Evidence. DENVER (Reuters) - Prosecutors in the rape case against  U.S. basketball star Kobe Bryant are questioning the validity  of DNA evidence crucial to the defense's case, saying data  appeared to have been manipulated and might have to be thrown  out.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00014",
+   "state": "Rossi:  #39;I #39;m fairly happy #39;. Valentino Rossi, who on Thursday pledged his future to Yamaha, entered the final qualifying session with the fastest time to date, but with the morning rain having washed the circuit clean, the Italian was unable to challenge Makoto Tamada for the pole.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00015",
+   "state": "MCNAMARA RECEIVES GOOD NEWS. Celtic have been boosted by the news that Jackie McNamara should be back in action within six weeks. The Hoops skipper was clearly in agony when he was stretchered off during Tuesday nights 3-1 defeat at the hands of Barcelona.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00016",
+   "state": "US leads 2-0 in Davis Cup. Olympic silver medalist Mardy Fish served 19 aces to defeat Max Mirnyi in the second singles match 7-5, 6-2, 3-6, 6-3. Roddick #39;s serve in the final game of the match eclipsed his own record of 153 mph set at the Queen #39;s Club tournament in England in June.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00017",
+   "state": "Ichiro with 260 hits, Writes First New Chapter in 84 Years. Japans  quot;Baseball talent quot; Suzuki Ichiro (31,Seattle Mariners) has leapfrogged 84 years of outdated records of most hits in a season and stepped into the 260-hit peak.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00018",
+   "state": "Yao Thrills Capacity Crowd at First China NBA Game (Reuters). Reuters - Yao Ming's Houston Rockets squeezed\\past the Sacramento Kings on Thursday in the first NBA game to\\be played in China, a country the fast-growing basketball\\league deems a potential marketing mecca.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00019",
+   "state": "Bellhorn Makes Big Noise for Red Sox. BOSTON (Reuters) - With a power-packed lineup that features  sluggers like Manny Ramirez and David Ortiz, it was Mark  Bellhorn who was the unlikely hero of Game One of the 100th  World Series with a two-run homer for the Boston Red Sox  Saturday.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00020",
+   "state": "Premier League charges Villa manager with illegal approach for &lt;b&gt;...&lt;/b&gt;. The Premier League has charged Aston Villa manager David O #39;Leary with making an illegal approach for Southampton striker James Beattie.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00021",
+   "state": "Will Bills be more receptive?. FOXBOROUGH -- Hello, Mike Mularkey. Welcome to opportunity. Watch that game film of New England-St. Louis last week?",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00022",
+   "state": "Cocky Arsene. Arsene Wenger is confident that Arsenal will make the knockout stages of the Champions League, despite needing to beat Rosenborg to make sure.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00023",
+   "state": "USC #39;s Orgeron shows interest in Ole Miss job. While the list has dwindled in the search to replace David Cutcliffe as the Ole Miss football coach, one name has risen to the top.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "sports",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00024",
+   "state": "Fears for T N pension after talks. Unions representing workers at Turner   Newall say they are 'disappointed' after talks with stricken parent firm Federal Mogul.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00025",
+   "state": "UK growth at fastest pace in nearly 4 years. Britain #39;s economy accelerated to the fastest annual pace in nearly four years in the second quarter as manufacturing emerged from a slump and consumers ratcheted up spending, the government said Friday.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00026",
+   "state": "Stocks Higher on Drop in Jobless Claims. A sharp drop in initial unemployment claims and bullish forecasts from Nokia and Texas Instruments sent stocks slightly higher in early trading Thursday.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00027",
+   "state": "US rates seen headed up despite soft-spot worries. Federal Reserve policy-makers were expected to raise US interest rates on Tuesday for a third time this year, continuing to lift borrowing costs from rock",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00028",
+   "state": "Salaries Cut 10 at Delta in Bid to Remain Solvent. elta Air Lines said yesterday that it was cutting the pay of executives and other salaried workers by 10 percent and making other changes meant to help it avoid a bankruptcy filing.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00029",
+   "state": "Winter Concerns Push to Record High. SINGAPORE (Reuters) - Oil prices broke into record  territory above \\$52 Thursday on heightened concerns that  supplies of heating fuels will prove inadequate during the  northern hemisphere winter.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00030",
+   "state": "Gold Fields ready to fight Harmony takeover. Gold Fields Ltd. (GFI) said it rejected a takeover bid by Harmony Gold Mining Co. Ltd. to create the world #39;s leading gold mining group, saying it was not in its interests.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00031",
+   "state": "SEC Seeks to Make Hedge Funds More Transparent. Description: A divided Securities and Exchange Commission will likely approve new regulations governing the hedge fund industry. Under the rules, all but the smallest hedge funds would be required to register with federal regulators.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00032",
+   "state": "Ontario gets harsh with school dropouts. HUNTSVILLE, ONT. - The Ontario government plans to introduce legislation that will require students to stay in school until they reach the age of 18, said the province?",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00033",
+   "state": "Google shares released for sale. Employees and some investors in Google will be able to sell shares in the company as the latest \"lockup\" phase on sales ends.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00034",
+   "state": "More harmful drugs may be on the market. After writing about hundreds of individual and class-action lawsuits that have been filed on behalf of consumers who developed cancer, suffered heart attacks or other medical problems from hormone replacement therapy drugs and Vioxx, an FDA employee now",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00035",
+   "state": "Industrials lift stocks. THE stock market opened higher today as industrials stocks mitigated the effects of a weaker resources sector.  quot;Commodity prices are generally weaker on renewed speculation of weaker demand in China, quot; Wilson HTM senior client adviser Angus Bligh said.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "business",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00036",
+   "state": "The Race is On: Second Private Team Sets Launch Date for Human Spaceflight (SPACE.com). SPACE.com - TORONTO, Canada -- A second\\team of rocketeers competing for the  #36;10 million Ansari X Prize, a contest for\\privately funded suborbital space flight, has officially announced the first\\launch date for its manned rocket.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00037",
+   "state": "Best Software overhauls Act. Best Softwarelaunched this week an overhaul of its Act contact management software, adding to the product line a second version with more scalability and advanced functionality.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00038",
+   "state": "Has Your Broadband Had Its Fiber?. Falling costs, new technology, and competition, with a nudge from regulatory changes, are bringing fiber closer to homes in the US just a few years after the idea seemed all but written off.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00039",
+   "state": "CRM Best Practices: TCO and ROI (NewsFactor). NewsFactor - With CRM projects costing millions, even in some mid-size companies, it is no surprise CFOs are leading the charge to be sure the most important projects are first, that they are justified, and that they actually deliver on their forecast benefits.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00040",
+   "state": "Airbus drops out of Microsoft appeal. Aircraft builder withdraws its request to intervene in Microsoft's antitrust appeal; Boeing also forgoes intervention.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00041",
+   "state": "Fable; Nascar 2005: Chase For The Cup. Fable comes with a big reputation behind it -- it was developed by Peter Molyneux, creator of such involved, engrossing games as Populous and Black and White.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00042",
+   "state": "Sony looks under the Christmas tree. Americans will go gadget shopping this holiday season even if oil prices go up, Sony execs say.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00043",
+   "state": "Yahoo! email acquisition aims to keep Google in view. Stata Labs previously sold two products Bloomba and SAproxy Pro which have now been withdrawn from sale. Saproxy was an anti-spam product whilst Bloomba was an email management system which allows users to",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00044",
+   "state": "NASA Picks May 2005 Shuttle Launch Date (AP). AP - NASA is aiming for a mid-May launch of the first shuttle flight since the Columbia tragedy almost two years ago. The launch date was the latest of several set by the space agency, and just as subject to change.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00045",
+   "state": "Microsoft Takes Lead in PDA Software. Microsoft Corp.'s software platform for personal digital assistants took over the market lead from PalmSource Inc. for the first time in the third quarter, according to market research released Friday.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00046",
+   "state": "Measures Aim to Stem Middle East Bird Slaughter (Reuters). Reuters - Conservationists launched a\\three-year project on Tuesday to protect millions of migrating\\birds which are indiscriminately targeted by hunters in North\\Africa and the Middle East.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "id": "ag_eval_00047",
+   "state": "Project Megagrid shows off business side of grid. Hoping to prove that grid computing can work in the business world, Dell, EMC, Intel and Oracle have announced a joint effort designed to show business users how to use the distributed computing technology.",
+   "question": {
+    "type": "choice",
+    "instructions": "Which topic is this news article about?",
+    "criteria": {
+     "world": "World news: international politics, wars, diplomacy and global events.",
+     "sports": "Sports news: matches, scores, teams, athletes and tournaments.",
+     "business": "Business news: markets, companies, stocks, economy and finance.",
+     "scitech": "Science and technology news: research, space, computers and gadgets."
+    }
+   },
+   "gold": "scitech",
+   "task": "ag-news-topic"
+  },
+  {
+   "gold": "billing",
+   "id": "test_001",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "I need a copy of my receipt for the last invoice payment.",
+   "task": "support-routing"
+  },
+  {
+   "gold": "technical",
+   "id": "test_002",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "The login page shows an error and I cannot sign in.",
+   "task": "support-routing"
+  },
+  {
+   "gold": "sales",
+   "id": "test_003",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "Is there a demo video showing the pricing plans?",
+   "task": "support-routing"
+  },
+  {
+   "gold": "billing",
+   "id": "test_004",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "My credit card was charged after I cancelled the subscription.",
+   "task": "support-routing"
+  },
+  {
+   "gold": "technical",
+   "id": "test_005",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "Every click ends in a crash since yesterday's release.",
+   "task": "support-routing"
+  },
+  {
+   "gold": "sales",
+   "id": "test_006",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "We are ready to buy if the discount applies to our team.",
+   "task": "support-routing"
+  },
+  {
+   "gold": "billing",
+   "id": "test_007",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "Quiero un reembolso: me cobraron la suscripción dos veces.",
+   "task": "support-routing"
+  },
+  {
+   "gold": "technical",
+   "id": "test_008",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "O aplicativo trava e apresenta um erro ao abrir.",
+   "task": "support-routing"
+  },
+  {
+   "gold": "sales",
+   "id": "test_009",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "¿Cuánto cuesta el plan para equipos pequeños?",
+   "task": "support-routing"
+  },
+  {
+   "gold": "billing",
+   "id": "test_010",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "The receipt total does not match the invoice I was sent.",
+   "task": "support-routing"
+  },
+  {
+   "gold": "technical",
+   "id": "test_011",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "Password reset emails never arrive, so login is impossible.",
+   "task": "support-routing"
+  },
+  {
+   "gold": "sales",
+   "id": "test_012",
+   "question": {
+    "criteria": {
+     "billing": "Payment, invoice, billing and refund problems. Duplicate charges, subscriptions, receipts, failed payments.",
+     "sales": "Purchasing and pricing questions. Plans, discounts, demos, trials, buying the product.",
+     "technical": "Product or technical problems. Errors, crashes, login failures, bugs when using the software."
+    },
+    "instructions": "Which team should handle this message?",
+    "type": "choice"
+   },
+   "state": "Book me a trial walkthrough with your sales team next week.",
+   "task": "support-routing"
+  }
+ ]
+}

@@ -119,6 +119,26 @@ fn take_f32(
     Ok(tensor)
 }
 
+/// Load a `[out, in]` linear weight validated against `shape`, stored
+/// pre-transposed as contiguous `[in, out]`: every forward runs
+/// `x @ w.t()`, so transposing once at load removes a per-forward
+/// transpose plus the strided-input copy inside each matmul.
+fn take_linear(
+    tensors: &mut HashMap<String, Tensor>,
+    name: &str,
+    shape: &[usize],
+) -> Result<Tensor, ProviderError> {
+    let weight = take_f32(tensors, name, shape)?;
+    weight
+        .transpose(0, 1)
+        .and_then(|transposed| transposed.contiguous())
+        .map_err(|error| {
+            invalid(format!(
+                "{WEIGHTS_FILE}: tensor `{name}` transpose failed: {error}"
+            ))
+        })
+}
+
 pub(crate) fn load_weights(
     tensors: &mut HashMap<String, Tensor>,
     config: &EncoderConfig,
@@ -150,42 +170,71 @@ pub(crate) fn load_weights(
     for layer in 0..config.num_layers {
         let base = format!("encoder.layer.{layer}");
         let attention = format!("{base}.attention.self");
-        let mut linear = |name: &str, shape: &[usize]| take_f32(tensors, name, shape);
         layers.push(LayerWeights {
-            query_w: linear(&format!("{attention}.query.weight"), &mat(hidden, hidden))?,
-            query_b: linear(&format!("{attention}.query.bias"), &vec(hidden))?,
-            key_w: linear(&format!("{attention}.key.weight"), &mat(hidden, hidden))?,
-            key_b: linear(&format!("{attention}.key.bias"), &vec(hidden))?,
-            value_w: linear(&format!("{attention}.value.weight"), &mat(hidden, hidden))?,
-            value_b: linear(&format!("{attention}.value.bias"), &vec(hidden))?,
-            attn_out_w: linear(
+            query_w: take_linear(
+                tensors,
+                &format!("{attention}.query.weight"),
+                &mat(hidden, hidden),
+            )?,
+            query_b: take_f32(tensors, &format!("{attention}.query.bias"), &vec(hidden))?,
+            key_w: take_linear(
+                tensors,
+                &format!("{attention}.key.weight"),
+                &mat(hidden, hidden),
+            )?,
+            key_b: take_f32(tensors, &format!("{attention}.key.bias"), &vec(hidden))?,
+            value_w: take_linear(
+                tensors,
+                &format!("{attention}.value.weight"),
+                &mat(hidden, hidden),
+            )?,
+            value_b: take_f32(tensors, &format!("{attention}.value.bias"), &vec(hidden))?,
+            attn_out_w: take_linear(
+                tensors,
                 &format!("{base}.attention.output.dense.weight"),
                 &mat(hidden, hidden),
             )?,
-            attn_out_b: linear(&format!("{base}.attention.output.dense.bias"), &vec(hidden))?,
-            attn_ln_w: linear(
+            attn_out_b: take_f32(
+                tensors,
+                &format!("{base}.attention.output.dense.bias"),
+                &vec(hidden),
+            )?,
+            attn_ln_w: take_f32(
+                tensors,
                 &format!("{base}.attention.output.LayerNorm.weight"),
                 &vec(hidden),
             )?,
-            attn_ln_b: linear(
+            attn_ln_b: take_f32(
+                tensors,
                 &format!("{base}.attention.output.LayerNorm.bias"),
                 &vec(hidden),
             )?,
-            inter_w: linear(
+            inter_w: take_linear(
+                tensors,
                 &format!("{base}.intermediate.dense.weight"),
                 &mat(intermediate, hidden),
             )?,
-            inter_b: linear(
+            inter_b: take_f32(
+                tensors,
                 &format!("{base}.intermediate.dense.bias"),
                 &vec(intermediate),
             )?,
-            out_w: linear(
+            out_w: take_linear(
+                tensors,
                 &format!("{base}.output.dense.weight"),
                 &mat(hidden, intermediate),
             )?,
-            out_b: linear(&format!("{base}.output.dense.bias"), &vec(hidden))?,
-            out_ln_w: linear(&format!("{base}.output.LayerNorm.weight"), &vec(hidden))?,
-            out_ln_b: linear(&format!("{base}.output.LayerNorm.bias"), &vec(hidden))?,
+            out_b: take_f32(tensors, &format!("{base}.output.dense.bias"), &vec(hidden))?,
+            out_ln_w: take_f32(
+                tensors,
+                &format!("{base}.output.LayerNorm.weight"),
+                &vec(hidden),
+            )?,
+            out_ln_b: take_f32(
+                tensors,
+                &format!("{base}.output.LayerNorm.bias"),
+                &vec(hidden),
+            )?,
         });
     }
     Ok(BertWeights {

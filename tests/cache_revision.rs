@@ -109,6 +109,23 @@ fn embedding_cache_serves_hits_and_observes_revisions() {
 }
 
 #[test]
+fn embedding_cache_keys_exact_text_not_casefolded() {
+    // Cased models assign different vectors to case variants; the cache
+    // must keep them apart (folded keys would serve wrong vectors).
+    let inner = RevisionedEmbedding::new("r1", 4);
+    let cached = CachedEmbeddingProvider::new(inner, 16);
+    let lower = cached.embed(&["hello".to_string()]).unwrap();
+    let upper = cached.embed(&["Hello".to_string()]).unwrap();
+    assert_eq!(cached.len(), 2, "case variants need distinct entries");
+    assert_eq!(cached.inner().calls.load(Ordering::SeqCst), 2);
+    // RevisionedEmbedding vectors embed text length; make the values
+    // differ by length so a folded-key collision is observable.
+    let short = cached.embed(&["hi".to_string()]).unwrap();
+    assert_ne!(lower[0][0], short[0][0]);
+    assert_eq!(upper, cached.embed(&["Hello".to_string()]).unwrap());
+}
+
+#[test]
 fn embedding_cache_is_bounded() {
     let inner = RevisionedEmbedding::new("r1", 4);
     let cached = CachedEmbeddingProvider::new(inner, 2);

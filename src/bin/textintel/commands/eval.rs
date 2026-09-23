@@ -1,12 +1,13 @@
 //! The `eval`/`evaluate` subcommand: dataset scoring, human/JSON reports,
 //! and quality-gate enforcement.
 
+use textintel::cli::ParsedArgs;
 use textintel::comparison::SimilarityProfile;
 use textintel::evaluation::{
     EvaluateOptions, EvaluationDataset, EvaluationReport, SpamCorpus, check_gates,
 };
 
-use super::{build_engine, flag_value, print_json};
+use super::common::{build_engine, print_json};
 
 fn profile_named(name: &str) -> Option<SimilarityProfile> {
     match name {
@@ -101,24 +102,21 @@ fn print_eval_human(report: &EvaluationReport) {
     }
 }
 
-pub(crate) fn run_eval(
-    args: &[String],
-    json: bool,
-    production: bool,
-) -> Result<i32, Box<dyn std::error::Error>> {
-    let path = args.get(1).map(String::as_str).unwrap_or("data/evaluation");
-    let split = flag_value(args, "--split");
-    let profile_name = flag_value(args, "--profile");
-    let gates_path = flag_value(args, "--gates");
-    let no_ranking = args.iter().any(|arg| arg == "--no-ranking");
+pub(crate) fn run_eval(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> {
+    let json = parsed.flag("json");
+    let path = parsed.positional(0).unwrap_or("data/evaluation");
+    let split = parsed.value("split").map(str::to_string);
+    let profile_name = parsed.value("profile").map(str::to_string);
+    let gates_path = parsed.value("gates").map(str::to_string);
+    let no_ranking = parsed.flag("no-ranking");
     let dataset = EvaluationDataset::load_path(path).map_err(|error| error.to_string())?;
-    let mut engine = build_engine(args, production)?;
+    let mut engine = build_engine(parsed)?;
     if let Some(name) = &profile_name {
         let profile = profile_named(name).ok_or_else(|| format!("unknown profile '{name}'"))?;
         engine = engine.with_similarity_profile(profile);
     }
-    if let Some(path) = flag_value(args, "--scorer") {
-        let source = std::fs::read_to_string(&path)?;
+    if let Some(path) = parsed.value("scorer") {
+        let source = std::fs::read_to_string(path)?;
         let artifact = textintel::SimilarityModelArtifact::from_json(&source)
             .map_err(|error| format!("invalid scorer artifact {path}: {error}"))?;
         engine = engine.with_similarity_scorer(artifact.to_scorer());
@@ -127,7 +125,7 @@ pub(crate) fn run_eval(
     // `spam/v2-eval.json` sibling of the dataset directory. Absent or
     // unreadable resolves to `None` (no spam metrics); production gates
     // requiring spam fail closed on the missing section.
-    let spam_corpus_path = flag_value(args, "--spam-corpus").or_else(|| {
+    let spam_corpus_path = parsed.value("spam-corpus").map(str::to_string).or_else(|| {
         let dataset_path = std::path::Path::new(path);
         let root = if dataset_path.is_dir() {
             dataset_path.parent()

@@ -85,6 +85,48 @@ fn timings_never_carry_user_text() {
 }
 
 #[test]
+fn rebus_skip_empties_decoded_evidence() {
+    let text = "Fr4🏠d0 secret-payload";
+    let full = TextIntelligence::new(EngineConfig::default());
+    let (decoded, _) = full.analyze_with_timing(text).unwrap();
+    // The text must actually decode, or the skip assertions below are vacuous.
+    assert!(
+        !decoded.rebus_candidates.is_empty(),
+        "fixture text must decode under the default config"
+    );
+    assert_eq!(
+        decoded.metadata.get("rebus_enabled").map(String::as_str),
+        Some("true")
+    );
+    let skipped = TextIntelligence::new(EngineConfig {
+        rebus: false,
+        ..Default::default()
+    });
+    let (fingerprint, timings) = skipped.analyze_with_timing(text).unwrap();
+    assert!(fingerprint.rebus_candidates.is_empty());
+    assert!(fingerprint.spoken_candidates.is_empty());
+    assert_eq!(timings.rebus_micros, 0.0);
+    assert_eq!(
+        fingerprint
+            .metadata
+            .get("rebus_enabled")
+            .map(String::as_str),
+        Some("false")
+    );
+    assert_eq!(
+        fingerprint
+            .channel_availability
+            .get("decoded")
+            .map(|channel| channel.available),
+        Some(false)
+    );
+    assert!((0.0..=1.0).contains(&fingerprint.lexicon_coverage));
+    // Stored configs predate the toggle: a missing key keeps decoding on.
+    let legacy: EngineConfig = serde_json::from_str("{}").unwrap();
+    assert!(legacy.rebus);
+}
+
+#[test]
 fn semantic_stage_is_timed_when_enabled() {
     let config = EngineConfig {
         semantic: true,

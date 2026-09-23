@@ -72,10 +72,20 @@ fn lexicon_coverage(
     let known = words
         .iter()
         .filter(|token| {
-            provider.contains(token, None) || provider.contains(&alphanumeric_fold(token), None)
+            provider.contains(token, None)
+                || (!is_fold_stable(token) && provider.contains(&alphanumeric_fold(token), None))
         })
         .count();
     (known as f64 / words.len() as f64).clamp(0.0, 1.0)
+}
+
+/// True when [`alphanumeric_fold`] is the identity: ASCII lowercase
+/// alphanumerics casefold to themselves and nothing is filtered, so a
+/// second lookup on the fold would repeat the first.
+fn is_fold_stable(token: &str) -> bool {
+    token
+        .bytes()
+        .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
 }
 
 fn alphanumeric_fold(text: &str) -> String {
@@ -168,7 +178,35 @@ impl TextIntelligence {
             .unwrap_or_else(CacheDiagnostics::disabled)
     }
 
-    fn check_length(&self, text: &str) -> Result<(), TextIntelError> {
+    /// Analyze with the exact-text decision cache when enabled. Hits
+    /// return cloned fingerprints (analysis is deterministic); misses
+    /// analyze and store. A poisoned lock degrades to uncached analysis
+    /// rather than failing the request.
+    pub fn analyze_cached(&self, text: &str) -> Result<MessageFingerprint, TextIntelError> {
+        if let Some(cache) = self.decision_fp_cache.as_ref()
+            && let Ok(mut guard) = cache.lock()
+            && let Some(hit) = guard.get(text)
+        {
+            return Ok(hit);
+        }
+        let fingerprint = self.analyze(text)?;
+        if let Some(cache) = self.decision_fp_cache.as_ref()
+            && let Ok(mut guard) = cache.lock()
+        {
+            guard.put(text.to_string(), fingerprint.clone());
+        }
+        Ok(fingerprint)
+    }
+
+    /// Observable decision-cache state (counts only, never cached texts).
+    pub(super) fn decision_cache_diagnostics(&self) -> CacheDiagnostics {
+        self.decision_fp_cache
+            .as_ref()
+            .and_then(|cache| cache.lock().ok().map(|guard| guard.diagnostics()))
+            .unwrap_or_else(CacheDiagnostics::disabled)
+    }
+
+    fn check_length(&self, text: &str) -> Result<usize, TextIntelError> {
         let length = text.chars().count();
         if length > self.config.max_input_length {
             return Err(TextIntelError::InputTooLong {
@@ -176,7 +214,7 @@ impl TextIntelligence {
                 maximum: self.config.max_input_length,
             });
         }
-        Ok(())
+        Ok(length)
     }
 
     fn detect(
@@ -251,7 +289,7 @@ impl TextIntelligence {
         &self,
         text: &str,
     ) -> Result<(MessageFingerprint, Vec<EmbeddingInput>, StageTimings), TextIntelError> {
-        self.check_length(text)?;
+        let input_length = self.check_length(text)?;
         let total_started = Instant::now();
         let mut timings = StageTimings::default();
         let elapsed = |started: Instant| started.elapsed().as_secs_f64() * 1_000_000.0;
@@ -272,7 +310,17 @@ impl TextIntelligence {
             self.language_provider.as_ref(),
         )
         .map_err(TextIntelError::from)?;
-        let tokens = tokenize(text);
+        // Piece splits do not depend on the detector, so when segmentation
+        // was not truncated the segments already hold every token and the
+        // second segmentation pass is skipped; truncated runs fall back.
+        let tokens = if segments.len() < self.config.max_segments {
+            segments
+                .iter()
+                .map(|segment| segment.text.clone())
+                .collect()
+        } else {
+            tokenize(text)
+        };
         let lemmas = match &self.lemmatizer_provider {
             Some(provider) => provider
                 .lemmatize(&tokens, None)
@@ -365,36 +413,44 @@ impl TextIntelligence {
         let started = Instant::now();
         // Fingerprint rebus decoding never uses semantic rescoring (the
         // `sem:off` key marker); `decode_with_languages` may, and keys
-        // separately.
-        let rebus = match self.rebus_cache_lookup(
-            text,
-            Some(&decode_languages),
-            Some(self.config.max_candidates),
-            "sem:off",
-        ) {
-            Some(hit) => hit,
-            None => {
-                let decoder = RebusDecoder::new(self.config.clone());
-                let abbreviations = self.abbreviation_provider.as_deref();
-                let decoded = decoder.decode_with_abbreviations(
-                    text,
-                    Some(&decode_languages),
-                    Some(self.config.max_candidates),
-                    self.symbol_provider.as_ref(),
-                    self.lexicon_provider.as_ref(),
-                    self.g2p_provider.as_ref(),
-                    None,
-                    abbreviations,
-                );
-                self.rebus_cache_store(
-                    text,
-                    Some(&decode_languages),
-                    Some(self.config.max_candidates),
-                    "sem:off",
-                    decoded.clone(),
-                );
-                decoded
-            }
+        // separately. Fast decision serving over clean text opts out via
+        // `config.rebus = false` (see `EngineConfig::rebus`): no decode
+        // runs, and coverage below falls back to the raw tokens.
+        let rebus = if !self.config.rebus {
+            Vec::new()
+        } else {
+            let decoded = match self.rebus_cache_lookup(
+                text,
+                Some(&decode_languages),
+                Some(self.config.max_candidates),
+                "sem:off",
+            ) {
+                Some(hit) => hit,
+                None => {
+                    let decoder = RebusDecoder::new(self.config.clone());
+                    let abbreviations = self.abbreviation_provider.as_deref();
+                    let decoded = decoder.decode_with_abbreviations(
+                        text,
+                        Some(&decode_languages),
+                        Some(self.config.max_candidates),
+                        self.symbol_provider.as_ref(),
+                        self.lexicon_provider.as_ref(),
+                        self.g2p_provider.as_ref(),
+                        None,
+                        abbreviations,
+                    );
+                    self.rebus_cache_store(
+                        text,
+                        Some(&decode_languages),
+                        Some(self.config.max_candidates),
+                        "sem:off",
+                        decoded.clone(),
+                    );
+                    decoded
+                }
+            };
+            timings.rebus_micros += elapsed(started);
+            decoded
         };
         let spoken_candidates = rebus
             .iter()
@@ -407,7 +463,6 @@ impl TextIntelligence {
                 source: "rebus".to_string(),
             })
             .collect::<Vec<_>>();
-        timings.rebus_micros += elapsed(started);
 
         let semantic_embeddings = BTreeMap::new();
         let started = Instant::now();
@@ -482,7 +537,11 @@ impl TextIntelligence {
         );
         channel_availability.insert(
             "decoded".to_string(),
-            ChannelAvailability::available("bounded_beam_search", 0.7),
+            if self.config.rebus {
+                ChannelAvailability::available("bounded_beam_search", 0.7)
+            } else {
+                ChannelAvailability::unavailable("bounded_beam_search")
+            },
         );
         channel_availability.insert(
             "obfuscation".to_string(),
@@ -517,7 +576,8 @@ impl TextIntelligence {
             "phonetic_enabled".to_string(),
             self.config.phonetic.to_string(),
         );
-        metadata.insert("input_length".to_string(), text.chars().count().to_string());
+        metadata.insert("rebus_enabled".to_string(), self.config.rebus.to_string());
+        metadata.insert("input_length".to_string(), input_length.to_string());
         // Coverage is computed after decoding so validity reflects the
         // intended reading (`h3llo` counts through `hello`), not the raw
         // obfuscation. See `lexicon_coverage`.

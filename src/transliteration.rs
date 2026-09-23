@@ -25,27 +25,63 @@ use crate::core::providers::{Transliteration, TransliterationProvider};
 #[derive(Debug, Default, Clone, Copy)]
 pub struct RuleBasedTransliterationProvider;
 
+/// First-in-table digraph match without allocation. `table` keys must
+/// be ASCII-only and the compared window must be ASCII (checked by the
+/// caller): ASCII lowering is byte-exact (`b | 32`), so byte comparison
+/// equals the legacy lowercase-the-suffix-then-`starts_with` check.
+/// Returns the matched table index. Non-ASCII windows fall back to the
+/// legacy path (lowering can mint ASCII from e.g. Kelvin sign).
+pub(crate) fn ascii_table_match<T>(
+    chars: &[char],
+    index: usize,
+    table: &[(&str, T)],
+) -> Option<usize> {
+    table.iter().position(|(pattern, _)| {
+        let bytes = pattern.as_bytes();
+        chars.len() - index >= bytes.len()
+            && bytes
+                .iter()
+                .enumerate()
+                .all(|(offset, expected)| (chars[index + offset] as u8 | 32) == *expected)
+    })
+}
+
+/// Longest key in a digraph table: the ASCII-window check covers this
+/// many upcoming chars, so every compared char is proven ASCII.
+pub(crate) fn table_key_len<T>(table: &[(&str, T)]) -> usize {
+    table.iter().map(|(key, _)| key.len()).max().unwrap_or(0)
+}
+
+/// Casefolded, whitespace-stripped comparison key for transliteration
+/// views (see [`RuleBasedTransliterationProvider::views_for`]).
+fn casefold_compact(text: &str) -> String {
+    use crate::normalization::unicode::casefold_text;
+    casefold_text(text)
+        .chars()
+        .filter(|ch| !ch.is_whitespace())
+        .collect()
+}
+
 impl RuleBasedTransliterationProvider {
     fn views_for(text: &str) -> Vec<Transliteration> {
-        use crate::normalization::unicode::casefold_text;
-        let compact_input: String = casefold_text(text)
-            .chars()
-            .filter(|ch| !ch.is_whitespace())
-            .collect();
+        // The input key folds lazily: texts with no matching script (or
+        // only unchanged outputs) never pay for either fold.
+        let mut compact_input: Option<String> = None;
         let mut views = Vec::new();
-        let push = |views: &mut Vec<Transliteration>,
-                    output: String,
-                    script: &str,
-                    language: Option<&str>,
-                    confidence: f64| {
+        let mut push = |views: &mut Vec<Transliteration>,
+                        output: String,
+                        script: &str,
+                        language: Option<&str>,
+                        confidence: f64| {
             // Views must carry new information: outputs equal modulo
             // case/whitespace (e.g. pass-through CJK with inserted syllable
-            // spaces) are dropped instead of stored.
-            let compact_output: String = casefold_text(&output)
-                .chars()
-                .filter(|ch| !ch.is_whitespace())
-                .collect();
-            if output != text && !output.is_empty() && compact_output != compact_input {
+            // spaces) are dropped instead of stored. Cheap rejections run
+            // before either fold.
+            if output == text || output.is_empty() {
+                return;
+            }
+            let input = compact_input.get_or_insert_with(|| casefold_compact(text));
+            if casefold_compact(&output) != *input {
                 views.push(Transliteration::new(
                     output,
                     script,
@@ -175,6 +211,7 @@ use devanagari::devanagari_to_latin;
 use han::{han_to_latin, latin_to_han};
 use kana::kana_to_latin;
 
+pub(crate) use evidence::transliteration_evidence_with_raw;
 pub use evidence::{
     TransliterationEvidence, effective_transliteration_evidence, transliteration_compatibility,
     transliteration_evidence, transliteration_similarity,

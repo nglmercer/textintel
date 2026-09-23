@@ -82,6 +82,27 @@ fn unigram_mean_pooling_and_prefix_change_vectors() {
 }
 
 #[test]
+fn unigram_parallel_forward_is_stable_bit_for_bit() {
+    // The attention projections fan out across threads; every element is
+    // still computed by the same kernels in the same order. Fifty repeats
+    // compared by bits catch any race or nondeterminism (float `==` would
+    // forgive a signed-zero divergence — bits do not).
+    let provider = provider();
+    let texts = vec!["hello world".to_string(), "pack my box".to_string()];
+    let first = provider.embed(&texts).expect("embed");
+    for _ in 0..50 {
+        let again = provider.embed(&texts).expect("embed again");
+        assert_eq!(first.len(), again.len());
+        for (left, right) in first.iter().zip(again.iter()) {
+            assert_eq!(left.len(), right.len());
+            for (a, b) in left.iter().zip(right.iter()) {
+                assert_eq!(a.to_bits(), b.to_bits(), "forward diverged across runs");
+            }
+        }
+    }
+}
+
+#[test]
 fn unigram_reports_truncation() {
     let provider = provider().with_max_batch(1);
     let detailed = provider

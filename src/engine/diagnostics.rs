@@ -62,6 +62,9 @@ impl TextIntelligence {
         if let Some(scorer) = &self.similarity_scorer {
             capabilities.insert("similarity".to_string(), scorer.capabilities());
         }
+        if let Some(decision) = &self.decision_provider {
+            capabilities.insert("decision".to_string(), decision.capabilities());
+        }
         capabilities
     }
 
@@ -117,6 +120,7 @@ impl TextIntelligence {
             similarity: capabilities.get("similarity").cloned(),
             reranker: capabilities.get("reranker").cloned(),
             generative: capabilities.get("generative").cloned(),
+            decision: capabilities.get("decision").cloned(),
             store: get("store"),
             ann_enabled: store_capabilities.ann_enabled,
             degraded: self.degraded_capabilities(&capabilities),
@@ -154,6 +158,7 @@ impl TextIntelligence {
                     .unwrap_or_else(CacheDiagnostics::disabled),
             ),
             ("rebus".to_string(), self.rebus_cache_diagnostics()),
+            ("decision".to_string(), self.decision_cache_diagnostics()),
         ])
     }
 

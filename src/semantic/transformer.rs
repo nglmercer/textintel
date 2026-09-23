@@ -212,13 +212,6 @@ impl EncoderTokenizer {
         }
     }
 
-    fn pad_id(&self) -> u32 {
-        match self {
-            Self::Unigram(tokenizer) => tokenizer.pad_id(),
-            Self::WordPiece(tokenizer) => tokenizer.pad_id,
-        }
-    }
-
     fn kind(&self) -> &'static str {
         match self {
             Self::Unigram(_) => "unigram (tokenizer.json)",
@@ -243,6 +236,7 @@ pub struct TransformerEmbeddingProvider {
     weights: BertWeights,
     pooling: TransformerPooling,
     max_batch: usize,
+    max_parallel: usize,
     text_prefix: Option<String>,
     model_id: String,
     revision: Option<String>,
@@ -318,6 +312,7 @@ impl TransformerEmbeddingProvider {
             weights,
             pooling: TransformerPooling::default(),
             max_batch: 32,
+            max_parallel: 4,
             text_prefix: None,
         })
     }
@@ -329,6 +324,17 @@ impl TransformerEmbeddingProvider {
 
     pub fn with_max_batch(mut self, max_batch: usize) -> Self {
         self.max_batch = max_batch.max(1);
+        self
+    }
+
+    /// Worker threads for multi-text batches (default 4). Each text runs
+    /// its own exact-length forward on a worker and results rejoin in
+    /// input order, so vectors are identical to sequential encoding;
+    /// single-text calls never spawn threads. Set `1` for strictly
+    /// sequential encoding (e.g. servers that already parallelize across
+    /// requests and want no fan-out per call).
+    pub fn with_max_parallel(mut self, max_parallel: usize) -> Self {
+        self.max_parallel = max_parallel.max(1);
         self
     }
 
@@ -398,17 +404,16 @@ impl TransformerEmbeddingProvider {
             .word_emb
             .index_select(&id_tensor, 0)
             .map_err(candle)?;
-        let positions: Vec<u32> = (0..tokens as u32).collect();
-        let pos = self
-            .weights
-            .pos_emb
-            .index_select(&Tensor::new(positions, &device).map_err(candle)?, 0)
-            .map_err(candle)?;
-        let zeros = vec![0u32; tokens];
+        // Range gathers are views, not copies: rows 0..tokens in order
+        // (positions) and row 0 broadcast (token type 0) hold exactly the
+        // gathered values, with no index tensors or copies.
+        let pos = self.weights.pos_emb.narrow(0, 0, tokens).map_err(candle)?;
         let token_type = self
             .weights
             .token_type_emb
-            .index_select(&Tensor::new(zeros, &device).map_err(candle)?, 0)
+            .narrow(0, 0, 1)
+            .map_err(candle)?
+            .broadcast_as((tokens, hidden))
             .map_err(candle)?;
         let embedded = word
             .add(&pos)
@@ -423,17 +428,28 @@ impl TransformerEmbeddingProvider {
             1,
         )
         .map_err(candle)?;
-        let additive: Vec<f32> = mask
-            .iter()
-            .map(|value| (1.0 - value) * MASKED_LOGIT as f32)
-            .collect();
-        let mask_add = Tensor::new(additive, &device)
-            .map_err(candle)?
-            .reshape((1, 1, tokens))
-            .map_err(candle)?;
+        // Unpadded forwards (the only kind `encode_one` runs) would add
+        // exact zeros before softmax: skipping the no-op leaves outputs
+        // identical (`exp` maps both signed zeros to `1.0`, erasing the
+        // only possible -0.0/+0.0 divergence). Padded callers keep the
+        // additive mask.
+        let mask_add = if mask.iter().all(|value| *value == 1.0) {
+            None
+        } else {
+            let additive: Vec<f32> = mask
+                .iter()
+                .map(|value| (1.0 - value) * MASKED_LOGIT as f32)
+                .collect();
+            Some(
+                Tensor::new(additive, &device)
+                    .map_err(candle)?
+                    .reshape((1, 1, tokens))
+                    .map_err(candle)?,
+            )
+        };
         for layer in &self.weights.layers {
-            hidden_state =
-                encoder_layer(&hidden_state, &mask_add, layer, &self.config).map_err(candle)?;
+            hidden_state = encoder_layer(&hidden_state, mask_add.as_ref(), layer, &self.config)
+                .map_err(candle)?;
         }
         let pooled = match self.pooling {
             TransformerPooling::Cls => hidden_state
@@ -473,38 +489,106 @@ impl TransformerEmbeddingProvider {
         Ok(vector)
     }
 
+    /// Tokenize plus forward for one text: its own exact width (never
+    /// padded), so its vector never depends on batch neighbors.
+    /// Tokenizers always emit at least the two boundary specials, so
+    /// widths are nonzero.
+    fn encode_one(&self, text: &str) -> Result<(Vec<f32>, bool, usize), ProviderError> {
+        let prefixed;
+        let input = match &self.text_prefix {
+            Some(prefix) => {
+                prefixed = format!("{prefix}{text}");
+                prefixed.as_str()
+            }
+            None => text,
+        };
+        let (ids, was_truncated) = self.tokenizer.encode(input, self.config.max_positions);
+        let mask = vec![1.0f32; ids.len()];
+        let vector = self.forward(&ids, &mask, ids.len())?;
+        Ok((vector, was_truncated, ids.len()))
+    }
+
+    /// One chunk sequentially (single text, or parallelism disabled).
+    fn encode_chunk_sequential(
+        &self,
+        chunk: &[String],
+        vectors: &mut Vec<Vec<f32>>,
+        truncated: &mut Vec<bool>,
+        token_counts: &mut Vec<usize>,
+    ) -> Result<(), ProviderError> {
+        for text in chunk {
+            let (vector, was_truncated, count) = self.encode_one(text)?;
+            vectors.push(vector);
+            truncated.push(was_truncated);
+            token_counts.push(count);
+        }
+        Ok(())
+    }
+
+    /// One chunk across worker threads. Each text is an independent
+    /// forward, so workers share `&self` and rejoin in input order with
+    /// the first-in-order error — byte-identical to sequential encoding.
+    fn encode_chunk_parallel(
+        &self,
+        chunk: &[String],
+        vectors: &mut Vec<Vec<f32>>,
+        truncated: &mut Vec<bool>,
+        token_counts: &mut Vec<usize>,
+    ) -> Result<(), ProviderError> {
+        let degree = self.max_parallel.min(chunk.len()).max(1);
+        if degree < 2 {
+            return self.encode_chunk_sequential(chunk, vectors, truncated, token_counts);
+        }
+        let groups: Vec<&[String]> = chunk.chunks(chunk.len().div_ceil(degree)).collect();
+        let mut joined = Vec::with_capacity(groups.len());
+        std::thread::scope(|scope| {
+            let mut handles = Vec::with_capacity(groups.len());
+            for group in groups {
+                handles.push(scope.spawn(move || {
+                    let mut pieces = Vec::with_capacity(group.len());
+                    for text in group {
+                        pieces.push(self.encode_one(text)?);
+                    }
+                    Ok::<Vec<(Vec<f32>, bool, usize)>, ProviderError>(pieces)
+                }));
+            }
+            for handle in handles {
+                joined.push(handle.join());
+            }
+        });
+        for result in joined {
+            match result {
+                Ok(Ok(pieces)) => {
+                    for (vector, was_truncated, count) in pieces {
+                        vectors.push(vector);
+                        truncated.push(was_truncated);
+                        token_counts.push(count);
+                    }
+                }
+                Ok(Err(error)) => return Err(error),
+                Err(_) => {
+                    return Err(invalid("worker thread panicked during parallel encode"));
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Encode with per-input truncation reporting. Inputs are chunked to
-    /// `max_batch` texts; every chunk pads to its own longest sequence. The
-    /// configured [`Self::with_text_prefix`] is prepended before tokenizing.
+    /// `max_batch` texts; each text runs at its own width (never padded),
+    /// so vectors never depend on batch neighbors. Multi-text chunks run
+    /// on up to [`Self::with_max_parallel`] worker threads (identical
+    /// vectors, input order); the configured
+    /// [`Self::with_text_prefix`] is prepended before tokenizing.
     pub fn encode_detailed(&self, texts: &[String]) -> Result<EncodedBatch, ProviderError> {
         let mut vectors = Vec::with_capacity(texts.len());
         let mut truncated = Vec::with_capacity(texts.len());
         let mut token_counts = Vec::with_capacity(texts.len());
         for chunk in texts.chunks(self.max_batch) {
-            let encoded: Vec<(Vec<u32>, bool)> = chunk
-                .iter()
-                .map(|text| {
-                    let prefixed;
-                    let input = match &self.text_prefix {
-                        Some(prefix) => {
-                            prefixed = format!("{prefix}{text}");
-                            prefixed.as_str()
-                        }
-                        None => text.as_str(),
-                    };
-                    self.tokenizer.encode(input, self.config.max_positions)
-                })
-                .collect();
-            let width = encoded.iter().map(|(ids, _)| ids.len()).max().unwrap_or(0);
-            for (ids, was_truncated) in &encoded {
-                let mut padded = ids.clone();
-                let mut mask = vec![1.0f32; ids.len()];
-                padded.resize(width, self.tokenizer.pad_id());
-                mask.resize(width, 0.0);
-                vectors.push(self.forward(&padded, &mask, width)?);
-                truncated.push(*was_truncated);
-                token_counts.push(ids.len());
-            }
+            // Each text runs at its own width: padding to the chunk
+            // longest only burns attention/FFN compute on pad rows that
+            // pooling ignores (CLS) or must exclude (mean).
+            self.encode_chunk_parallel(chunk, &mut vectors, &mut truncated, &mut token_counts)?;
         }
         Ok(EncodedBatch {
             vectors,

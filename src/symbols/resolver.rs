@@ -66,13 +66,51 @@ pub fn symbolic_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f6
     };
     let b_text = compact(b.normalized.as_deref().unwrap_or(&b.raw));
     let a_text = compact(a.normalized.as_deref().unwrap_or(&a.raw));
+    // Unique reading texts per side, in first-occurrence order: string
+    // similarity is pure in its inputs and `max` is order-independent,
+    // so scoring each distinct pair once (32×32 occurrences collapse to
+    // 15×15 here) yields the same maximum with ~4× fewer comparisons.
+    // The probability channel below stays per-occurrence — the same
+    // text can carry different probabilities per symbol.
+    fn unique_readings(symbols: &[SymbolInstance]) -> Vec<&str> {
+        let mut unique = Vec::new();
+        for symbol in symbols {
+            for reading in &symbol.readings {
+                if !unique.contains(&reading.text.as_str()) {
+                    unique.push(reading.text.as_str());
+                }
+            }
+        }
+        unique
+    }
+    let readings_a = unique_readings(&a.symbols);
+    let readings_b = unique_readings(&b.symbols);
     let mut best: f64 = 0.0;
+    for reading in &readings_a {
+        best = best.max(combined_character_similarity(reading, &b_text));
+    }
+    for reading in &readings_b {
+        best = best.max(combined_character_similarity(reading, &a_text));
+    }
+    for left in &readings_a {
+        for right in &readings_b {
+            best = best.max(combined_character_similarity(left, right));
+        }
+    }
+    // Lowercases folded once per unique text; occurrences share them.
+    let lower_a: std::collections::HashMap<&str, String> = readings_a
+        .iter()
+        .map(|text| (*text, text.to_lowercase()))
+        .collect();
+    let lower_b: std::collections::HashMap<&str, String> = readings_b
+        .iter()
+        .map(|text| (*text, text.to_lowercase()))
+        .collect();
     for symbol in &a.symbols {
         for reading in &symbol.readings {
-            best = best.max(combined_character_similarity(&reading.text, &b_text));
             if b.lexical_features
                 .jaccard_ready
-                .contains(&reading.text.to_lowercase())
+                .contains(&lower_a[reading.text.as_str()])
             {
                 best = best.max(reading.probability);
             }
@@ -80,21 +118,11 @@ pub fn symbolic_similarity(a: &MessageFingerprint, b: &MessageFingerprint) -> f6
     }
     for symbol in &b.symbols {
         for reading in &symbol.readings {
-            best = best.max(combined_character_similarity(&reading.text, &a_text));
             if a.lexical_features
                 .jaccard_ready
-                .contains(&reading.text.to_lowercase())
+                .contains(&lower_b[reading.text.as_str()])
             {
                 best = best.max(reading.probability);
-            }
-        }
-    }
-    for left in &a.symbols {
-        for right in &b.symbols {
-            for lread in &left.readings {
-                for rread in &right.readings {
-                    best = best.max(combined_character_similarity(&lread.text, &rread.text));
-                }
             }
         }
     }

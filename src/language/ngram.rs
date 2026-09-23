@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
 use crate::core::error::ProviderError;
@@ -25,11 +25,13 @@ const ABSTAIN_THRESHOLD: f64 = 0.4;
 /// guessing. Zero-network and deterministic.
 #[derive(Debug, Clone)]
 pub struct NgramLanguageDetector {
-    profiles: BTreeMap<String, BTreeMap<String, f64>>,
-    word_sets: BTreeMap<String, BTreeSet<String>>,
+    // Outer maps stay ordered (deterministic language iteration); inner
+    // maps/sets are hashed lookups only, so hashing changes no value.
+    profiles: BTreeMap<String, HashMap<String, f64>>,
+    word_sets: BTreeMap<String, HashSet<String>>,
     /// Inverse document frequency per word, normalized so a word unique to
     /// one language weighs 1.0 and a word in every language weighs 0.0.
-    idf: BTreeMap<String, f64>,
+    idf: HashMap<String, f64>,
     profile_scripts: BTreeMap<String, BTreeSet<String>>,
     max_candidates: usize,
 }
@@ -37,12 +39,13 @@ pub struct NgramLanguageDetector {
 impl NgramLanguageDetector {
     pub fn from_resources(resources: &ResourceLoader) -> Self {
         let profile_texts = resources.profile_texts();
-        let profiles: BTreeMap<String, BTreeMap<String, f64>> = profile_texts
+        let profiles: BTreeMap<String, HashMap<String, f64>> = profile_texts
             .iter()
             .map(|(language, texts)| (language.clone(), build_profile(texts)))
             .filter(|(_, profile)| !profile.is_empty())
+            .map(|(language, profile)| (language, profile.into_iter().collect()))
             .collect();
-        let mut word_sets: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+        let mut word_sets: BTreeMap<String, HashSet<String>> = BTreeMap::new();
         let mut profile_scripts: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
         for (language, texts) in &profile_texts {
             let words = word_sets.entry(language.clone()).or_default();
@@ -58,10 +61,10 @@ impl NgramLanguageDetector {
             !words.is_empty()
                 || profiles
                     .get(language)
-                    .is_some_and(|profile: &BTreeMap<String, f64>| !profile.is_empty())
+                    .is_some_and(|profile| !profile.is_empty())
         });
         let languages = word_sets.len().max(1) as f64;
-        let mut document_frequency: BTreeMap<String, usize> = BTreeMap::new();
+        let mut document_frequency: HashMap<String, usize> = HashMap::new();
         for words in word_sets.values() {
             for word in words {
                 *document_frequency.entry(word.clone()).or_default() += 1;
@@ -96,16 +99,44 @@ impl NgramLanguageDetector {
     }
 
     fn detect_inner(&self, text: &str) -> Vec<LanguageCandidate> {
-        let query = build_profile(&[text.to_string()]);
-        let words = query_words(text);
-        let query_scripts: BTreeSet<String> = scripts_in(text).into_iter().collect();
+        // One casefold serves both the n-gram profile and the word split;
+        // both helpers consume the same folded string they folded before.
+        let folded = casefold_text(text);
+        let query = build_profile_folded(&folded);
+        // Borrowed words: the query only probes lookups with them, so no
+        // per-word allocation. All borrows stay within this call.
+        let words = query_words_borrowed(&folded);
+        // `scripts_in` already returns a deduplicated vec; the set rebuild
+        // only served `contains`, which the vec answers identically.
+        let query_scripts = scripts_in(text);
         if (query.is_empty() || self.profiles.is_empty()) && words.is_empty() {
             return vec![LanguageCandidate::new("unknown", 1.0)];
         }
         let total_weight: f64 = words
             .iter()
-            .map(|word| self.idf.get(word).copied().unwrap_or(0.0))
+            .map(|word| self.idf.get(*word).copied().unwrap_or(0.0))
             .sum();
+        // Word spread (in how many profiles a word appears) does not vary
+        // by language, so count it once per query instead of once per
+        // language per word. Identical values, hoisted.
+        let mut spread: HashMap<&str, f64> = HashMap::with_capacity(words.len());
+        for word in &words {
+            spread.entry(*word).or_insert_with(|| {
+                self.word_sets
+                    .values()
+                    .filter(|set| set.contains(*word))
+                    .count()
+                    .max(1) as f64
+            });
+        }
+        // Per-word matched unit (IDF discounted by spread): the
+        // per-language loop below pays one lookup per occurrence instead
+        // of two, adding the same values in the same order.
+        let mut unit: HashMap<&str, f64> = HashMap::with_capacity(words.len());
+        for word in &words {
+            unit.entry(*word)
+                .or_insert_with(|| self.idf.get(*word).copied().unwrap_or(0.0) / spread[*word]);
+        }
         let cjk_query = cjk_chars(text);
         let mut scores = Vec::new();
         for (language, profile) in &self.profiles {
@@ -123,15 +154,8 @@ impl NgramLanguageDetector {
                 if total_weight > 0.0 {
                     let mut matched_weight = 0.0;
                     for word in &words {
-                        if known.contains(word) {
-                            let idf = self.idf.get(word).copied().unwrap_or(0.0);
-                            let spread = self
-                                .word_sets
-                                .values()
-                                .filter(|set| set.contains(word))
-                                .count()
-                                .max(1) as f64;
-                            matched_weight += idf / spread;
+                        if known.contains(*word) {
+                            matched_weight += unit[*word];
                         }
                     }
                     word_score = (matched_weight / total_weight).clamp(0.0, 1.0);
@@ -211,10 +235,26 @@ impl LanguageDetectionProvider for NgramLanguageDetector {
 /// Casefolded alphabetic words of a text. Splitting mirrors lexicon word
 /// extraction so profile words and query words compare apples to apples.
 fn query_words(text: &str) -> Vec<String> {
-    casefold_text(text)
+    query_words_split(&casefold_text(text))
+}
+
+/// [`query_words`] over an already-casefolded string, so callers that fold
+/// once can share the fold with the n-gram profile.
+fn query_words_split(folded: &str) -> Vec<String> {
+    folded
         .split(|character: char| !character.is_alphabetic())
         .filter(|word| !word.is_empty())
         .map(str::to_string)
+        .collect()
+}
+
+/// Borrowed [`query_words_split`]: same split, no per-word allocation.
+/// The slices borrow the folded query, so this fits per-query detection
+/// (load-time profiles keep the owned variant).
+fn query_words_borrowed(folded: &str) -> Vec<&str> {
+    folded
+        .split(|character: char| !character.is_alphabetic())
+        .filter(|word| !word.is_empty())
         .collect()
 }
 
@@ -238,7 +278,7 @@ fn cjk_chars(text: &str) -> Vec<char> {
 /// Fraction of `query` CJK characters covered by `words` entries occurring
 /// as substrings (longest match wins per position; single characters are
 /// legitimate words in these scripts).
-fn cjk_coverage(query: &[char], words: &BTreeSet<String>) -> f64 {
+fn cjk_coverage(query: &[char], words: &HashSet<String>) -> f64 {
     if query.is_empty() {
         return 0.0;
     }
@@ -273,17 +313,34 @@ fn cjk_coverage(query: &[char], words: &BTreeSet<String>) -> f64 {
 fn build_profile(texts: &[String]) -> BTreeMap<String, f64> {
     let mut counts = BTreeMap::<String, f64>::new();
     for text in texts {
-        let folded = casefold_text(text);
-        for n in 2..=4 {
-            let chars = folded.chars().collect::<Vec<_>>();
-            for window in chars.windows(n) {
-                if window.iter().all(|character| character.is_whitespace()) {
-                    continue;
-                }
-                *counts.entry(window.iter().collect()).or_default() += 1.0;
+        add_profile_counts(&mut counts, &casefold_text(text));
+    }
+    normalize_profile(counts)
+}
+
+/// [`build_profile`] over one already-casefolded string, so per-query
+/// detection shares its fold with word extraction.
+fn build_profile_folded(folded: &str) -> BTreeMap<String, f64> {
+    let mut counts = BTreeMap::<String, f64>::new();
+    add_profile_counts(&mut counts, folded);
+    normalize_profile(counts)
+}
+
+fn add_profile_counts(counts: &mut BTreeMap<String, f64>, folded: &str) {
+    // The char vector is identical for every n, so collect it once;
+    // windows visit in the same order as before.
+    let chars = folded.chars().collect::<Vec<_>>();
+    for n in 2..=4 {
+        for window in chars.windows(n) {
+            if window.iter().all(|character| character.is_whitespace()) {
+                continue;
             }
+            *counts.entry(window.iter().collect()).or_default() += 1.0;
         }
     }
+}
+
+fn normalize_profile(mut counts: BTreeMap<String, f64>) -> BTreeMap<String, f64> {
     let norm = counts
         .values()
         .map(|value| value * value)
@@ -294,7 +351,9 @@ fn build_profile(texts: &[String]) -> BTreeMap<String, f64> {
     counts
 }
 
-fn cosine_profile(left: &BTreeMap<String, f64>, right: &BTreeMap<String, f64>) -> f64 {
+// The query side stays ordered (identical summation order); only the
+// stored-profile lookup is hashed, returning the same values.
+fn cosine_profile(left: &BTreeMap<String, f64>, right: &HashMap<String, f64>) -> f64 {
     left.iter()
         .filter_map(|(key, value)| right.get(key).map(|other| value * other))
         .sum::<f64>()

@@ -1,0 +1,12 @@
+{
+  "_comment": "Seed-baseline gates for the support-routing choice task (data/decision, 12 test cases). Both v1 adapters clear these with margin; they guard against regressions, not production quality. Tighten when Phase 2 datasets land and require production thresholds before any preset promotion.",
+  "decision": {
+    "accuracy_min": 0.65,
+    "macro_f1_min": 0.6,
+    "micro_f1_min": 0.6,
+    "ece_max": 0.55
+  },
+  "coverage_50": {
+    "accuracy_min": 0.6
+  }
+}

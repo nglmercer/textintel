@@ -108,35 +108,47 @@ fn emit_word(word: &str, language: &str) -> Vec<String> {
     output
 }
 
+/// Phoneme sequence for already-folded text, shared by the full and
+/// lean paths so they can never disagree.
+fn phonemes_for(folded: &str, language: &str) -> Vec<String> {
+    let mut phonemes = Vec::new();
+    for word in folded.split(|ch: char| !ch.is_alphabetic()) {
+        if !word.is_empty() {
+            phonemes.extend(emit_word(word, language));
+        }
+    }
+    phonemes
+}
+
+/// Honest coverage: Latin-script rules only. Unknown scripts keep
+/// their (unreliable) phoneme guess but are marked low confidence
+/// instead of being presented as accurate pronunciations.
+fn confidence_for(folded: &str, phonemes: &[String]) -> f64 {
+    if phonemes.is_empty() {
+        return 0.0;
+    }
+    let scripts = scripts_in(folded);
+    let latin = scripts.iter().any(|script| script == "Latin");
+    let other = scripts.iter().any(|script| script != "Latin");
+    if latin && !other {
+        0.65
+    } else if latin {
+        0.35
+    } else {
+        0.15
+    }
+}
+
 impl G2PProviderTrait for RuleBasedG2PProvider {
     fn phonemize(&self, text: &str, language: &str) -> Result<PhoneticCandidate, ProviderError> {
         let folded = casefold_text(text);
-        let mut phonemes = Vec::new();
-        for word in folded.split(|ch: char| !ch.is_alphabetic()) {
-            if !word.is_empty() {
-                phonemes.extend(emit_word(word, language));
-            }
-        }
+        let phonemes = phonemes_for(&folded, language);
         let ipa = if phonemes.is_empty() {
             None
         } else {
             Some(phonemes.join(""))
         };
-        // Honest coverage: Latin-script rules only. Unknown scripts keep
-        // their (unreliable) phoneme guess but are marked low confidence
-        // instead of being presented as accurate pronunciations.
-        let scripts = scripts_in(&folded);
-        let latin = scripts.iter().any(|script| script == "Latin");
-        let other = scripts.iter().any(|script| script != "Latin");
-        let confidence = if phonemes.is_empty() {
-            0.0
-        } else if latin && !other {
-            0.65
-        } else if latin {
-            0.35
-        } else {
-            0.15
-        };
+        let confidence = confidence_for(&folded, &phonemes);
         Ok(PhoneticCandidate {
             source: text.to_string(),
             language: language.to_string(),
@@ -154,6 +166,16 @@ impl G2PProviderTrait for RuleBasedG2PProvider {
             phonemes,
             confidence,
         })
+    }
+
+    fn phonemes(&self, text: &str, language: &str) -> Result<(Vec<String>, f64), ProviderError> {
+        // Same phonemes and confidence as `phonemize` (shared helpers),
+        // skipping the IPA join, syllable scan, and per-phoneme feature
+        // labels that scoring never reads.
+        let folded = casefold_text(text);
+        let phonemes = phonemes_for(&folded, language);
+        let confidence = confidence_for(&folded, &phonemes);
+        Ok((phonemes, confidence))
     }
 
     fn capabilities(&self) -> ProviderCapabilities {

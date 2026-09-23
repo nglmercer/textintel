@@ -109,7 +109,11 @@ where
         }
     }
 
-    pub fn get(&mut self, key: &Key) -> Option<Value> {
+    pub fn get<Q>(&mut self, key: &Q) -> Option<Value>
+    where
+        Key: std::borrow::Borrow<Q>,
+        Q: Ord + ?Sized,
+    {
         let hit = self.entries.get(key).cloned();
         if hit.is_some() {
             self.hits += 1;

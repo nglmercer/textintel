@@ -66,6 +66,7 @@ impl TextIntelligence {
             )),
             reranker_provider: None,
             generative_provider: None,
+            decision_provider: None,
             spam_predictor: Arc::new(HeuristicSpamPredictor),
             similarity_scorer: None,
             similarity_profile: None,
@@ -73,6 +74,7 @@ impl TextIntelligence {
             store: RwLock::new(Box::new(MemoryStore::default())),
             patterns: RwLock::new(BTreeMap::new()),
             rebus_cache: None,
+            decision_fp_cache: None,
         };
         engine.install_caches();
         engine
@@ -119,12 +121,43 @@ impl TextIntelligence {
         } else {
             self.rebus_cache = None;
         }
+        if limits.decision > 0 {
+            let revision = format!(
+                "decision-fp:{}:{}",
+                crate::core::types::FINGERPRINT_SCHEMA_VERSION,
+                resource_revision(self.resources.manifest())
+            );
+            match &self.decision_fp_cache {
+                Some(cache) => {
+                    if let Ok(mut guard) = cache.lock() {
+                        guard.set_revision(&revision);
+                    }
+                }
+                None => {
+                    self.decision_fp_cache =
+                        Some(Mutex::new(RevisionCache::new(revision, limits.decision)));
+                }
+            }
+        } else {
+            self.decision_fp_cache = None;
+        }
     }
 
     /// Drop all cached rebus decodings (used after provider swaps that change
     /// decoding behavior without changing the resource revision).
     fn invalidate_rebus_cache(&mut self) {
         if let Some(cache) = &self.rebus_cache
+            && let Ok(mut guard) = cache.lock()
+        {
+            guard.invalidate();
+        }
+    }
+
+    /// Drop all cached decision fingerprints (used after every
+    /// analysis-affecting provider swap; resource swaps invalidate via
+    /// the cache revision instead).
+    fn invalidate_decision_cache(&mut self) {
+        if let Some(cache) = &self.decision_fp_cache
             && let Ok(mut guard) = cache.lock()
         {
             guard.invalidate();
@@ -189,6 +222,9 @@ impl TextIntelligence {
         }
         if let Some(provider) = builder.generative {
             engine.generative_provider = Some(provider);
+        }
+        if let Some(provider) = builder.decision {
+            engine.decision_provider = Some(provider);
         }
         if let Some(predictor) = builder.spam {
             engine.spam_predictor = predictor;
@@ -257,6 +293,7 @@ impl TextIntelligence {
         self.embedding_provider = Arc::new(provider);
         self.install_caches();
         self.invalidate_rebus_cache();
+        self.invalidate_decision_cache();
         self
     }
 
@@ -264,6 +301,7 @@ impl TextIntelligence {
         self.g2p_provider = Arc::new(provider);
         self.install_caches();
         self.invalidate_rebus_cache();
+        self.invalidate_decision_cache();
         self
     }
 
@@ -273,12 +311,14 @@ impl TextIntelligence {
     ) -> Self {
         self.language_provider = Arc::new(provider);
         self.install_caches();
+        self.invalidate_decision_cache();
         self
     }
 
     pub fn with_lexicon_provider<P: LexiconProvider + 'static>(mut self, provider: P) -> Self {
         self.lexicon_provider = Arc::new(provider);
         self.invalidate_rebus_cache();
+        self.invalidate_decision_cache();
         self
     }
 
@@ -316,6 +356,7 @@ impl TextIntelligence {
     ) -> Self {
         self.abbreviation_provider = Some(Arc::new(provider));
         self.invalidate_rebus_cache();
+        self.invalidate_decision_cache();
         self
     }
 
@@ -324,6 +365,7 @@ impl TextIntelligence {
         provider: P,
     ) -> Self {
         self.lemmatizer_provider = Some(Arc::new(provider));
+        self.invalidate_decision_cache();
         self
     }
 
@@ -333,6 +375,7 @@ impl TextIntelligence {
     ) -> Self {
         self.symbol_provider = Arc::new(provider);
         self.invalidate_rebus_cache();
+        self.invalidate_decision_cache();
         self
     }
 
@@ -341,17 +384,20 @@ impl TextIntelligence {
         provider: P,
     ) -> Self {
         self.transliteration_provider = Some(Arc::new(provider));
+        self.invalidate_decision_cache();
         self
     }
 
     /// Disable transliteration views (fingerprint keeps all other channels).
     pub fn without_transliteration(mut self) -> Self {
         self.transliteration_provider = None;
+        self.invalidate_decision_cache();
         self
     }
 
     pub fn with_entity_provider<P: EntityProvider + 'static>(mut self, provider: P) -> Self {
         self.entity_provider = Some(Arc::new(provider));
+        self.invalidate_decision_cache();
         self
     }
 
@@ -359,6 +405,7 @@ impl TextIntelligence {
     /// entity features read 0.0, never a penalty).
     pub fn without_entities(mut self) -> Self {
         self.entity_provider = None;
+        self.invalidate_decision_cache();
         self
     }
 
@@ -395,6 +442,70 @@ impl TextIntelligence {
         provider
             .generate(prompt, options)
             .map_err(TextIntelError::from)
+    }
+
+    pub fn with_decision_provider<P: crate::decision::DecisionProvider + 'static>(
+        mut self,
+        provider: P,
+    ) -> Self {
+        self.decision_provider = Some(Arc::new(provider));
+        self
+    }
+
+    /// Answer a typed decision request with the configured provider.
+    /// Prepares text evidence (analyzing `state` and, for choice
+    /// questions, every criterion description) before dispatch, then
+    /// validates the provider's answer against the request so malformed
+    /// distributions fail here instead of reaching the caller. Errors
+    /// when no decision provider is configured.
+    pub fn decide(
+        &self,
+        request: &crate::decision::DecisionRequest,
+    ) -> Result<crate::decision::DecisionResponse, TextIntelError> {
+        let provider = self.decision_provider.as_ref().ok_or_else(|| {
+            TextIntelError::InvalidConfiguration(
+                "no decision provider configured; attach one with \
+                 with_decision_provider() or EngineBuilder::decision_provider()"
+                    .to_string(),
+            )
+        })?;
+        let mut prepared = request.clone();
+        self.prepare_decision_request(&mut prepared)?;
+        let response = provider.decide(&prepared)?;
+        response
+            .validate_against(&prepared)
+            .map_err(TextIntelError::InvalidConfiguration)?;
+        Ok(response)
+    }
+
+    /// Attach analyzed evidence to a decision request in place: the
+    /// `state` fingerprint plus, for choice questions, one fingerprint
+    /// per criterion description. Already-attached evidence is kept, so
+    /// callers may pre-analyze with custom options. Analysis runs through
+    /// the exact-text decision cache when `config.cache.decision` enables
+    /// it, so static criteria analyze once per engine. Analysis bounds
+    /// (`max_input_length`, …) apply, so oversized evidence is rejected.
+    pub fn prepare_decision_request(
+        &self,
+        request: &mut crate::decision::DecisionRequest,
+    ) -> Result<(), TextIntelError> {
+        request
+            .validate()
+            .map_err(TextIntelError::InvalidConfiguration)?;
+        if request.fingerprint.is_none() {
+            request.fingerprint = Some(self.analyze_cached(&request.state)?);
+        }
+        if let crate::decision::DecisionQuestion::Choice { criteria, .. } = &request.question {
+            for (id, description) in criteria {
+                if !request.candidate_fingerprints.contains_key(id) {
+                    let fingerprint = self.analyze_cached(description)?;
+                    request
+                        .candidate_fingerprints
+                        .insert(id.clone(), fingerprint);
+                }
+            }
+        }
+        Ok(())
     }
 
     pub fn with_spam_predictor<P: SpamPredictor + 'static>(mut self, predictor: P) -> Self {
