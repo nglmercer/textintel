@@ -404,17 +404,16 @@ impl TransformerEmbeddingProvider {
             .word_emb
             .index_select(&id_tensor, 0)
             .map_err(candle)?;
-        let positions: Vec<u32> = (0..tokens as u32).collect();
-        let pos = self
-            .weights
-            .pos_emb
-            .index_select(&Tensor::new(positions, &device).map_err(candle)?, 0)
-            .map_err(candle)?;
-        let zeros = vec![0u32; tokens];
+        // Range gathers are views, not copies: rows 0..tokens in order
+        // (positions) and row 0 broadcast (token type 0) hold exactly the
+        // gathered values, with no index tensors or copies.
+        let pos = self.weights.pos_emb.narrow(0, 0, tokens).map_err(candle)?;
         let token_type = self
             .weights
             .token_type_emb
-            .index_select(&Tensor::new(zeros, &device).map_err(candle)?, 0)
+            .narrow(0, 0, 1)
+            .map_err(candle)?
+            .broadcast_as((tokens, hidden))
             .map_err(candle)?;
         let embedded = word
             .add(&pos)
@@ -429,17 +428,28 @@ impl TransformerEmbeddingProvider {
             1,
         )
         .map_err(candle)?;
-        let additive: Vec<f32> = mask
-            .iter()
-            .map(|value| (1.0 - value) * MASKED_LOGIT as f32)
-            .collect();
-        let mask_add = Tensor::new(additive, &device)
-            .map_err(candle)?
-            .reshape((1, 1, tokens))
-            .map_err(candle)?;
+        // Unpadded forwards (the only kind `encode_one` runs) would add
+        // exact zeros before softmax: skipping the no-op leaves outputs
+        // identical (`exp` maps both signed zeros to `1.0`, erasing the
+        // only possible -0.0/+0.0 divergence). Padded callers keep the
+        // additive mask.
+        let mask_add = if mask.iter().all(|value| *value == 1.0) {
+            None
+        } else {
+            let additive: Vec<f32> = mask
+                .iter()
+                .map(|value| (1.0 - value) * MASKED_LOGIT as f32)
+                .collect();
+            Some(
+                Tensor::new(additive, &device)
+                    .map_err(candle)?
+                    .reshape((1, 1, tokens))
+                    .map_err(candle)?,
+            )
+        };
         for layer in &self.weights.layers {
-            hidden_state =
-                encoder_layer(&hidden_state, &mask_add, layer, &self.config).map_err(candle)?;
+            hidden_state = encoder_layer(&hidden_state, mask_add.as_ref(), layer, &self.config)
+                .map_err(candle)?;
         }
         let pooled = match self.pooling {
             TransformerPooling::Cls => hidden_state

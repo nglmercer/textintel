@@ -466,6 +466,66 @@ dumps, re-run against the batch-seven baseline):
   per-char emoji scan (letters are never emoji components; `#`,
   `*`, digits, and non-ASCII still scan).
 
+### Batch nine (model: faster backbone + exact forward wins)
+
+Decision-model comparison on `data/decision/eval-simple.json`
+(n=60, English news + support routing) showed the transformer
+interaction model far ahead on quality but 3.7× slower than the
+traditional similarity model (88ms vs 24ms). Per-decision cost is
+one state forward (candidates are cached), so the floor was the
+backbone: multilingual-e5-small needs ~57ms per forward (12 layers,
+118M params, 470MB weights, single-threaded tiny matmuls). Two
+changes, one behavior (new models) and one exact (faster forward):
+
+| System | Backbone | Head | Accuracy | Mean latency |
+|---|---|---|---|---|
+| Traditional (similarity) | none (handcrafted) | similarity-v5 | 0.350 (21/60) | ~23.5ms |
+| Interaction (e5 baseline) | multilingual-e5-small, 118M | decision-s1-v1 | 0.800 (48/60) | ~88ms |
+| Interaction (MiniLM-L3) | paraphrase-MiniLM-L3-v2, 17M | decision-minilm-l3-v1 | **0.867 (52/60)** | ~26.7ms |
+| Interaction (MiniLM-L2) | MiniLM-L3 layers 0–1, 15M | decision-minilm-l2-v1 | **0.850 (51/60)** | **~21.8ms** |
+
+The L2 system is both the most accurate (51/60 vs 48/60) and the
+fastest (21.8ms vs 23.5ms) — the goal. Single forwards: e5 57ms →
+L6 32ms → L3 14ms → L2 ~12ms (agnews states; batch5 L2 is 32ms).
+Weights shrink 470MB → 62MB (7.6×).
+
+What changed:
+
+- New backbones (weights gitignored, reproducible per
+  `models/README.md`): `all-MiniLM-L6-v2` (measured only — 32ms
+  forward, still over budget) and `paraphrase-MiniLM-L3-v2` wired
+  through the `vocab.txt` WordPiece layout with the checkpoint's
+  `do_lower_case: true` added to the local `config.json` copy;
+  `minilm-l2-decision` keeps L3's layers 0–1 (sliced safetensors,
+  embeddings untouched, `num_hidden_layers: 2`).
+- New trained heads (committed, ~2.4MB each): both trained with
+  `textintel-train-decision` on `data/agnews/train.jsonl` plus
+  `data/decision/train.jsonl@100`, validated on both valid splits
+  (L3 valid_acc 0.804, L2 valid_acc 0.784).
+- Exact forward wins (`semantic/transformer/*`, bit-identical on
+  all three backbones — 30 full-precision vectors byte-compared
+  against a stashed baseline, plus the e5 eval JSON with NLL exact
+  to 15 digits): query/key/value projections run on three threads
+  (independent whole ops, same kernels, fixed join order), range
+  gathers became views (`narrow`/`broadcast_as`), and unpadded
+  forwards skip the exact-zero mask add (scores feed only softmax,
+  whose `exp` erases the only possible signed-zero divergence).
+  E5 eval latency 88ms → 81ms (1.09×) from these alone.
+- Durable tests: `unmasked_layer_matches_zero_mask_bit_for_bit`
+  (unit, synthetic weights, `to_bits` comparison) and
+  `unigram_parallel_forward_is_stable_bit_for_bit` (50 repeats on
+  the committed mini fixture). L2/L3 accuracy cannot run in CI
+  (weights are gitignored downloads) — the eval commands above are
+  the gate; e5's eval JSON is the exactness gate for the forward.
+
+Tradeoffs, stated plainly: MiniLM backbones are English-only, so
+multilingual routing keeps e5 (accuracy there was not re-measured);
+the L2 slice is a deployment choice, not a general embedding
+upgrade. Reproduce with: train as above, then `eval-decision
+data/decision/eval-simple.json --provider interaction --head
+models/decision-minilm-l2-v1.json --embeddings
+models/minilm-l2-decision` (expect 0.850 / ~22ms).
+
 Fresh-path floor: one e5-small forward is ~55ms on this CPU and the
 trained head needs its output plus the analysis features, so
 never-seen single queries cannot reach 100× without a model change
