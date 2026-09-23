@@ -230,16 +230,27 @@ pub(crate) fn best_decoded_overlap(
     // non-empty inputs, so the blend is the same constant for all of them.
     // It is computed through the real function once, never hand-folded
     // (map keys are never empty — empties are skipped at build).
-    let identical = combined_character_similarity("a", "a");
-    for (left_value, left_confidence) in &graded_left {
-        for (right_value, right_confidence) in &graded_right {
-            let pair = if left_value == right_value {
-                identical * left_confidence.min(*right_confidence)
-            } else {
-                combined_character_similarity(left_value, right_value)
-                    * left_confidence.min(*right_confidence)
-            };
-            best = best.max(pair);
+    //
+    // Pruning: every pair scores `similarity × min_confidence` with the
+    // similarity clamped to [0, 1], so a pair whose weaker confidence is
+    // already at or below `best` cannot move the maximum and its string
+    // comparison is skipped; a perfect `best` skips the tier entirely.
+    // Same maximum, fewer comparisons.
+    if best < 1.0 {
+        let identical = combined_character_similarity("a", "a");
+        for (left_value, left_confidence) in &graded_left {
+            for (right_value, right_confidence) in &graded_right {
+                let ceiling = left_confidence.min(*right_confidence);
+                if ceiling <= best {
+                    continue;
+                }
+                let pair = if left_value == right_value {
+                    identical * ceiling
+                } else {
+                    combined_character_similarity(left_value, right_value) * ceiling
+                };
+                best = best.max(pair);
+            }
         }
     }
     // Phase 3: view↔raw rescue pairs run only when the base overlap is

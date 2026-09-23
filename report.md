@@ -366,6 +366,61 @@ and similarity decisions):
   of the per-suffix strip loop (suffix lengths computed once per
   call).
 
+### Batch seven (symbolic channel, detect loop, phonetic fusion)
+
+Sub-profiling the batch-six leftovers: `symbolic_similarity` ran the
+full 32×32 reading cross-product (only 15 unique texts) at ~1.8ms
+per symbol-bearing identical pair — 93% of its scoring step; the
+decoded fuzzy tier re-ran ~1ms of string comparisons even at a
+perfect `best`; per-segment `NgramLanguageDetector` detection (~25µs
+× 15 calls, uncached by default) dominates the language stage; and
+each rebus candidate scoring pays ~90µs (lexical splits, G2P pair,
+phonetic DPs). Criterion plus probes, same machine:
+
+| Path | Before | After | Speedup |
+|---|---|---|---|
+| `symbolic_similarity`, obf-identical (probe) | ~1762µs | ~456µs | **3.9×** |
+| `symbolic_similarity`, rebus-identical (probe) | ~2750µs | ~869µs | **3.2×** |
+| Identical-obf compare, scoring step (probe) | ~1899µs | ~558µs | **3.4×** |
+| Identical-rebus compare, scoring step (probe) | ~2957µs | ~1138µs | **2.6×** |
+| `compare_obfuscated` bench (one side symbolic) | ~1.94ms | ~1.88ms | 1.03× |
+| `decode_symbol` bench | ~812µs | ~791µs | 1.03× |
+| Analyze / similarity / decision benches | — | — | ~1× (trims inside noise) |
+
+What changed (all bit-identical per the same 8.2MB byte-compared
+dumps, re-run against the batch-six baseline):
+
+- `symbols/resolver.rs`: `symbolic_similarity` scores unique reading
+  texts per side in first-occurrence order (purity + order-independent
+  `max` ⇒ same maximum, ~4× fewer `combined` calls); the probability
+  channel stays per-occurrence (same text, different probabilities)
+  with lowercases folded once per unique text.
+- `comparison/scorer/decoded.rs`: Phase-2 fuzzy tier prunes pairs
+  whose weaker confidence is already at/below `best` (each pair
+  scores `similarity × min_confidence` with similarity ≤ 1, so they
+  cannot move the maximum) and skips the tier outright at a perfect
+  `best`. Verified firing: on identical candidate-rich pairs the
+  symbolic channel alone accounts for the whole scoring step, so the
+  ~1ms tier cost is gone.
+- `language/ngram.rs`: per-query words borrowed from the shared fold
+  (no per-word allocation), per-word IDF/spread unit precomputed so
+  the per-language loop pays one lookup per occurrence instead of
+  two (same values, same order), and the redundant `scripts_in`
+  set-rebuild dropped (the vec answers `contains` identically).
+- `phonetic/similarity.rs`: weighted + exact edit recurrences fused
+  into one pass with independent rows (each returns exactly its old
+  value), and 2/3-gram packed counts fused into one pass per side
+  with the general path kept for short sides or huge alphabets.
+- `rebus/scorer.rs`: `can_split_known` no longer re-probes the
+  whole-text hit its caller just checked (same lookups, same order,
+  minus one duplicate per call).
+- `transliteration.rs`: view-key folds computed lazily — cheap
+  rejections (unchanged/empty outputs) run before either fold, and
+  texts with no matching script never fold at all.
+- `language/segmentation.rs`: URL checks lowercase only when the
+  first byte permits an `http(s)://` match (`to_ascii_lowercase`
+  never mints ASCII from non-ASCII, so other pieces skip the copy).
+
 Fresh-path floor: one e5-small forward is ~55ms on this CPU and the
 trained head needs its output plus the analysis features, so
 never-seen single queries cannot reach 100× without a model change

@@ -30,13 +30,14 @@ fn can_split_known(
     if depth > max_depth || text.is_empty() {
         return false;
     }
-    if known(text, languages, provider) {
-        return true;
-    }
+    // The whole-text hit is checked by the caller (and by each suffix
+    // below), so only proper splits are tried here: same lookups in the
+    // same order, minus the duplicated whole-text probe.
     (2..text.len().saturating_sub(1)).any(|index| {
         text.is_char_boundary(index)
             && known(&text[..index], languages, provider)
-            && can_split_known(&text[index..], depth + 1, max_depth, languages, provider)
+            && (known(&text[index..], languages, provider)
+                || can_split_known(&text[index..], depth + 1, max_depth, languages, provider))
     })
 }
 

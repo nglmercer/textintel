@@ -7,11 +7,21 @@ use crate::language::detector::detect_languages;
 use crate::lexical::tokenizer::is_emoji;
 use crate::visual::scripts::script_name;
 
+/// Whether `text` can match an `http(s)://` prefix once ASCII-lowercased:
+/// `to_ascii_lowercase` never mints ASCII from non-ASCII, so only `h`/`H`
+/// first bytes qualify. Spares every other piece the lowercase copy.
+fn maybe_http(text: &str) -> bool {
+    text.len() >= 7 && (text.as_bytes()[0] | 32) == b'h'
+}
+
 fn classify(piece: &str) -> &'static str {
-    let lower = piece.to_ascii_lowercase();
-    if lower.starts_with("http://") || lower.starts_with("https://") {
-        "url"
-    } else if piece.contains('@') && piece.contains('.') {
+    if maybe_http(piece) {
+        let lower = piece.to_ascii_lowercase();
+        if lower.starts_with("http://") || lower.starts_with("https://") {
+            return "url";
+        }
+    }
+    if piece.contains('@') && piece.contains('.') {
         "email"
     } else if piece.starts_with('@') && piece.len() > 1 {
         "mention"
@@ -93,9 +103,12 @@ fn process_chunk(
     }
     let chunk_end = chunk_start + chunk.len();
     // Keep network identifiers intact for spam and privacy-aware inspection.
-    let lower = chunk.to_ascii_lowercase();
-    if lower.starts_with("http://")
-        || lower.starts_with("https://")
+    // The URL check lowercases only when the first byte permits a match.
+    let is_url = maybe_http(chunk) && {
+        let lower = chunk.to_ascii_lowercase();
+        lower.starts_with("http://") || lower.starts_with("https://")
+    };
+    if is_url
         || (chunk.contains('@') && chunk.contains('.'))
         || (chunk.starts_with('@') && chunk.len() > 1)
         || (chunk.starts_with('#') && chunk.len() > 1)

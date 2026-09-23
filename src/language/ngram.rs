@@ -103,27 +103,39 @@ impl NgramLanguageDetector {
         // both helpers consume the same folded string they folded before.
         let folded = casefold_text(text);
         let query = build_profile_folded(&folded);
-        let words = query_words_split(&folded);
-        let query_scripts: BTreeSet<String> = scripts_in(text).into_iter().collect();
+        // Borrowed words: the query only probes lookups with them, so no
+        // per-word allocation. All borrows stay within this call.
+        let words = query_words_borrowed(&folded);
+        // `scripts_in` already returns a deduplicated vec; the set rebuild
+        // only served `contains`, which the vec answers identically.
+        let query_scripts = scripts_in(text);
         if (query.is_empty() || self.profiles.is_empty()) && words.is_empty() {
             return vec![LanguageCandidate::new("unknown", 1.0)];
         }
         let total_weight: f64 = words
             .iter()
-            .map(|word| self.idf.get(word).copied().unwrap_or(0.0))
+            .map(|word| self.idf.get(*word).copied().unwrap_or(0.0))
             .sum();
         // Word spread (in how many profiles a word appears) does not vary
         // by language, so count it once per query instead of once per
         // language per word. Identical values, hoisted.
         let mut spread: HashMap<&str, f64> = HashMap::with_capacity(words.len());
         for word in &words {
-            spread.entry(word.as_str()).or_insert_with(|| {
+            spread.entry(*word).or_insert_with(|| {
                 self.word_sets
                     .values()
-                    .filter(|set| set.contains(word))
+                    .filter(|set| set.contains(*word))
                     .count()
                     .max(1) as f64
             });
+        }
+        // Per-word matched unit (IDF discounted by spread): the
+        // per-language loop below pays one lookup per occurrence instead
+        // of two, adding the same values in the same order.
+        let mut unit: HashMap<&str, f64> = HashMap::with_capacity(words.len());
+        for word in &words {
+            unit.entry(*word)
+                .or_insert_with(|| self.idf.get(*word).copied().unwrap_or(0.0) / spread[*word]);
         }
         let cjk_query = cjk_chars(text);
         let mut scores = Vec::new();
@@ -142,9 +154,8 @@ impl NgramLanguageDetector {
                 if total_weight > 0.0 {
                     let mut matched_weight = 0.0;
                     for word in &words {
-                        if known.contains(word) {
-                            let idf = self.idf.get(word).copied().unwrap_or(0.0);
-                            matched_weight += idf / spread[word.as_str()];
+                        if known.contains(*word) {
+                            matched_weight += unit[*word];
                         }
                     }
                     word_score = (matched_weight / total_weight).clamp(0.0, 1.0);
@@ -234,6 +245,16 @@ fn query_words_split(folded: &str) -> Vec<String> {
         .split(|character: char| !character.is_alphabetic())
         .filter(|word| !word.is_empty())
         .map(str::to_string)
+        .collect()
+}
+
+/// Borrowed [`query_words_split`]: same split, no per-word allocation.
+/// The slices borrow the folded query, so this fits per-query detection
+/// (load-time profiles keep the owned variant).
+fn query_words_borrowed(folded: &str) -> Vec<&str> {
+    folded
+        .split(|character: char| !character.is_alphabetic())
+        .filter(|word| !word.is_empty())
         .collect()
 }
 

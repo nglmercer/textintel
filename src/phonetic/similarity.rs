@@ -73,6 +73,51 @@ pub fn phoneme_edit_distance(a: &[String], b: &[String]) -> usize {
     edit_distance_idx(&interned.left, &interned.right)
 }
 
+/// Both edit recurrences in one pass: the weighted (feature) and exact
+/// (index-equality) distances share loop structure but keep independent
+/// rows, so each returns exactly what its separate function computes —
+/// one nest, one walk over the sequences, half the row traffic.
+fn edit_distances_idx(left: &[usize], right: &[usize], features: &[Features]) -> (f64, usize) {
+    if left.is_empty() && right.is_empty() {
+        return (0.0, 0);
+    }
+    // Pairwise feature distances, computed once per distinct pair. A
+    // shared index means identical strings, which score 0.0 exactly as
+    // the string equality fast path did.
+    let distinct = features.len();
+    let mut pair = vec![0.0f64; distinct * distinct];
+    for (i, left) in features.iter().enumerate() {
+        for (j, right) in features.iter().enumerate() {
+            pair[i * distinct + j] = if i == j {
+                0.0
+            } else {
+                distance_for_features(left, right)
+            };
+        }
+    }
+    let mut w_previous: Vec<f64> = (0..=right.len()).map(|value| value as f64).collect();
+    let mut w_current = vec![0.0f64; right.len() + 1];
+    let mut e_previous: Vec<usize> = (0..=right.len()).collect();
+    let mut e_current = vec![0usize; right.len() + 1];
+    for (i, left) in left.iter().enumerate() {
+        w_current[0] = (i + 1) as f64;
+        e_current[0] = i + 1;
+        for (j, right) in right.iter().enumerate() {
+            let w_substitute = w_previous[j] + pair[left * distinct + right];
+            w_current[j + 1] = (w_current[j] + 1.0)
+                .min(w_previous[j + 1] + 1.0)
+                .min(w_substitute);
+            let e_substitute = e_previous[j] + usize::from(left != right);
+            e_current[j + 1] = (e_current[j] + 1)
+                .min(e_previous[j + 1] + 1)
+                .min(e_substitute);
+        }
+        std::mem::swap(&mut w_previous, &mut w_current);
+        std::mem::swap(&mut e_previous, &mut e_current);
+    }
+    (w_previous[right.len()], e_previous[right.len()])
+}
+
 fn weighted_distance_idx(left: &[usize], right: &[usize], features: &[Features]) -> f64 {
     if left.is_empty() && right.is_empty() {
         return 0.0;
@@ -137,6 +182,31 @@ fn ngram_counts_packed(items: &[usize], distinct: usize, n: usize) -> BTreeMap<u
         }
     }
     map
+}
+
+/// 2-gram and 3-gram packed counts in one pass: position `i` feeds the
+/// 2-gram at `i` and (while in bounds) the 3-gram at `i`, the same window
+/// multisets the two separate builds collect. `BTreeMap` order and exact
+/// integer counts match, so downstream Jaccards are unchanged.
+fn ngram23_counts_packed(
+    items: &[usize],
+    distinct: usize,
+) -> (BTreeMap<u64, usize>, BTreeMap<u64, usize>) {
+    let mut two = BTreeMap::new();
+    let mut three = BTreeMap::new();
+    if items.len() >= 2 {
+        for i in 0..items.len() - 1 {
+            if let Some(key) = packed_key(&items[i..i + 2], distinct) {
+                *two.entry(key).or_insert(0) += 1;
+            }
+            if i + 3 <= items.len()
+                && let Some(key) = packed_key(&items[i..i + 3], distinct)
+            {
+                *three.entry(key).or_insert(0) += 1;
+            }
+        }
+    }
+    (two, three)
 }
 
 fn ngram_counts_boxed(items: &[usize], n: usize) -> BTreeMap<Vec<usize>, usize> {
@@ -233,24 +303,25 @@ pub fn phonetic_similarity_raw(
     // original recurrence, so the blend below is unchanged.
     let interned = intern_phones(a_phonemes, b_phonemes);
     let sides_equal = a_phonemes == b_phonemes;
-    let edit =
-        1.0 - weighted_distance_idx(&interned.left, &interned.right, &interned.features) / max_len;
-    let exact = 1.0 - edit_distance_idx(&interned.left, &interned.right) as f64 / max_len;
-    let grams =
-        0.5 * ngram_similarity_idx(
-            &interned.left,
-            &interned.right,
-            interned.features.len(),
-            2,
-            sides_equal,
-        ) + 0.5
-            * ngram_similarity_idx(
-                &interned.left,
-                &interned.right,
-                interned.features.len(),
-                3,
-                sides_equal,
-            );
+    let distinct = interned.features.len();
+    let (weighted, exact_distance) =
+        edit_distances_idx(&interned.left, &interned.right, &interned.features);
+    let edit = 1.0 - weighted / max_len;
+    let exact = 1.0 - exact_distance as f64 / max_len;
+    // Long-enough sides take the packed path with non-empty maps for
+    // both n = 2 and n = 3, so both Jaccards come out of one counting
+    // pass per side; short or huge-alphabet sides keep the general path.
+    let grams = if interned.left.len() >= 3
+        && interned.right.len() >= 3
+        && distinct <= u16::MAX as usize
+    {
+        let (left2, left3) = ngram23_counts_packed(&interned.left, distinct);
+        let (right2, right3) = ngram23_counts_packed(&interned.right, distinct);
+        0.5 * jaccard(&left2, &right2) + 0.5 * jaccard(&left3, &right3)
+    } else {
+        0.5 * ngram_similarity_idx(&interned.left, &interned.right, distinct, 2, sides_equal)
+            + 0.5 * ngram_similarity_idx(&interned.left, &interned.right, distinct, 3, sides_equal)
+    };
     // Hostile fingerprints can carry non-finite confidences; sanitize so
     // the channel stays total.
     let confidence_a = if a_confidence.is_finite() {

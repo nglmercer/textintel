@@ -25,27 +25,36 @@ use crate::core::providers::{Transliteration, TransliterationProvider};
 #[derive(Debug, Default, Clone, Copy)]
 pub struct RuleBasedTransliterationProvider;
 
+/// Casefolded, whitespace-stripped comparison key for transliteration
+/// views (see [`RuleBasedTransliterationProvider::views_for`]).
+fn casefold_compact(text: &str) -> String {
+    use crate::normalization::unicode::casefold_text;
+    casefold_text(text)
+        .chars()
+        .filter(|ch| !ch.is_whitespace())
+        .collect()
+}
+
 impl RuleBasedTransliterationProvider {
     fn views_for(text: &str) -> Vec<Transliteration> {
-        use crate::normalization::unicode::casefold_text;
-        let compact_input: String = casefold_text(text)
-            .chars()
-            .filter(|ch| !ch.is_whitespace())
-            .collect();
+        // The input key folds lazily: texts with no matching script (or
+        // only unchanged outputs) never pay for either fold.
+        let mut compact_input: Option<String> = None;
         let mut views = Vec::new();
-        let push = |views: &mut Vec<Transliteration>,
-                    output: String,
-                    script: &str,
-                    language: Option<&str>,
-                    confidence: f64| {
+        let mut push = |views: &mut Vec<Transliteration>,
+                        output: String,
+                        script: &str,
+                        language: Option<&str>,
+                        confidence: f64| {
             // Views must carry new information: outputs equal modulo
             // case/whitespace (e.g. pass-through CJK with inserted syllable
-            // spaces) are dropped instead of stored.
-            let compact_output: String = casefold_text(&output)
-                .chars()
-                .filter(|ch| !ch.is_whitespace())
-                .collect();
-            if output != text && !output.is_empty() && compact_output != compact_input {
+            // spaces) are dropped instead of stored. Cheap rejections run
+            // before either fold.
+            if output == text || output.is_empty() {
+                return;
+            }
+            let input = compact_input.get_or_insert_with(|| casefold_compact(text));
+            if casefold_compact(&output) != *input {
                 views.push(Transliteration::new(
                     output,
                     script,
