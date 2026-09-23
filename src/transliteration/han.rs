@@ -116,15 +116,25 @@ fn han_syllable(ch: char) -> Option<&'static str> {
 }
 
 pub(crate) fn han_to_latin(text: &str) -> String {
-    let mut syllables = Vec::new();
+    // Syllables joined by single spaces, as `Vec::join(" ")` — without
+    // the per-character `String`s. Same bytes.
+    let mut output = String::with_capacity(text.len());
+    let mut first = true;
     for ch in text.chars() {
-        if let Some(syllable) = han_syllable(ch) {
-            syllables.push(syllable.to_string());
-        } else if !ch.is_whitespace() {
-            syllables.push(ch.to_string());
+        let syllable = han_syllable(ch);
+        if syllable.is_none() && ch.is_whitespace() {
+            continue;
         }
+        if !first {
+            output.push(' ');
+        }
+        match syllable {
+            Some(syllable) => output.push_str(syllable),
+            None => output.push(ch),
+        }
+        first = false;
     }
-    syllables.join(" ")
+    output
 }
 
 fn latin_syllable_to_han(word: &str) -> Option<char> {

@@ -421,6 +421,51 @@ dumps, re-run against the batch-six baseline):
   first byte permits an `http(s)://` match (`to_ascii_lowercase`
   never mints ASCII from non-ASCII, so other pieces skip the copy).
 
+### Batch eight (digraph matcher, gram Jaccard, converter allocs)
+
+Profiling the remaining analyze mass: every `latin_to_*` digraph
+position rebuilt and lowercased the whole remaining suffix (O(n²)
+allocs) just to test ≤4-char prefixes; phonetic n-gram Jaccards
+counted through `BTreeMap`s with per-window node allocs; and the
+Cyrillic converter allocated a `String` per character twice over.
+Criterion plus probes, same machine:
+
+| Path | Before | After | Speedup |
+|---|---|---|---|
+| Transliteration provider, latin-heavy text (probe) | ~35.1µs | ~20.6µs | **1.70×** |
+| `phonetic_similarity_raw`, 62×60 phones (probe) | ~52.9µs | ~45.3µs | 1.17× |
+| `segment_message`, long text (probe) | ~25.7µs | ~23.3µs | 1.10× |
+| `score_candidate`, long text (probe) | ~89.5µs | ~86.6µs | 1.03× |
+| Long-text analyze, rebus stage (probe) | ~1.01ms | ~0.96ms | 1.06× |
+| `decision_analyze_state` bench | ~1.37ms | ~1.32ms | ~1.03× |
+| `compare_obfuscated` bench | ~1.88ms | ~1.86ms | 1.01× |
+| `analyze_rebus` / `decode_symbol` benches | — | — | ~1× |
+
+What changed (all bit-identical per the same 8.2MB byte-compared
+dumps, re-run against the batch-seven baseline):
+
+- `transliteration.rs` + `cyrillic.rs` + `arabic.rs`: digraph tables
+  match by byte over an ASCII-proven window (ASCII lowering is
+  `b | 32`, so it equals the legacy lowered-suffix `starts_with`
+  exactly); non-ASCII windows keep the legacy check verbatim
+  (lowering can mint ASCII from e.g. Kelvin sign, so they must not
+  take the byte path). Kills the per-position suffix allocs.
+- `transliteration/cyrillic.rs`: `cyrillic_to_latin` rewritten as a
+  buffered loop and both `latin_to_cyrillic` case sites push into
+  the buffer (identical bytes, no per-char `String`s).
+- `phonetic/similarity.rs`: packed n-gram Jaccards count via
+  sort-and-merge over plain key vecs instead of `BTreeMap`s —
+  intersection/union stay exact integer sums over the same
+  multisets, so values match bit for bit — unlike float summations,
+  these integer sums are order-independent, which is what makes the
+  container swap sound.
+- `transliteration/han.rs`: `han_to_latin` joins syllables into the
+  buffer directly (same bytes as `Vec::join(" ")`); `kana.rs`:
+  `chars().next_back()` for the chōonpu lookback (same char, O(1)).
+- `language/segmentation.rs`: ASCII-letter-only pieces skip the
+  per-char emoji scan (letters are never emoji components; `#`,
+  `*`, digits, and non-ASCII still scan).
+
 Fresh-path floor: one e5-small forward is ~55ms on this CPU and the
 trained head needs its output plus the analysis features, so
 never-seen single queries cannot reach 100× without a model change

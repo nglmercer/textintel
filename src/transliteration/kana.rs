@@ -117,7 +117,7 @@ pub(crate) fn kana_to_latin(text: &str) -> String {
         if ch == 'ー' {
             if let Some(vowel) = output
                 .chars()
-                .last()
+                .next_back()
                 .filter(|c| matches!(c, 'a' | 'i' | 'u' | 'e' | 'o'))
             {
                 output.push(vowel);

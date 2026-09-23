@@ -25,6 +25,33 @@ use crate::core::providers::{Transliteration, TransliterationProvider};
 #[derive(Debug, Default, Clone, Copy)]
 pub struct RuleBasedTransliterationProvider;
 
+/// First-in-table digraph match without allocation. `table` keys must
+/// be ASCII-only and the compared window must be ASCII (checked by the
+/// caller): ASCII lowering is byte-exact (`b | 32`), so byte comparison
+/// equals the legacy lowercase-the-suffix-then-`starts_with` check.
+/// Returns the matched table index. Non-ASCII windows fall back to the
+/// legacy path (lowering can mint ASCII from e.g. Kelvin sign).
+pub(crate) fn ascii_table_match<T>(
+    chars: &[char],
+    index: usize,
+    table: &[(&str, T)],
+) -> Option<usize> {
+    table.iter().position(|(pattern, _)| {
+        let bytes = pattern.as_bytes();
+        chars.len() - index >= bytes.len()
+            && bytes
+                .iter()
+                .enumerate()
+                .all(|(offset, expected)| (chars[index + offset] as u8 | 32) == *expected)
+    })
+}
+
+/// Longest key in a digraph table: the ASCII-window check covers this
+/// many upcoming chars, so every compared char is proven ASCII.
+pub(crate) fn table_key_len<T>(table: &[(&str, T)]) -> usize {
+    table.iter().map(|(key, _)| key.len()).max().unwrap_or(0)
+}
+
 /// Casefolded, whitespace-stripped comparison key for transliteration
 /// views (see [`RuleBasedTransliterationProvider::views_for`]).
 fn casefold_compact(text: &str) -> String {

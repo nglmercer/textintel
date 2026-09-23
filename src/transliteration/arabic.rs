@@ -96,16 +96,26 @@ pub(crate) fn latin_to_arabic(text: &str) -> String {
 fn latin_to_arabic_chars(text: &str, digraphs: &[(&str, char)]) -> String {
     let mut output = String::with_capacity(text.len());
     let chars: Vec<char> = text.chars().collect();
+    let key_len = crate::transliteration::table_key_len(digraphs);
     let mut index = 0;
     while index < chars.len() {
-        let rest: String = chars[index..].iter().collect::<String>().to_lowercase();
-        let mut matched: Option<(char, usize)> = None;
-        for (latin, arab) in digraphs {
-            if rest.starts_with(latin) {
-                matched = Some((*arab, latin.len()));
-                break;
+        // ASCII windows match by byte (no suffix alloc); non-ASCII
+        // windows keep the legacy lowered-suffix check verbatim.
+        let window_end = (index + key_len).min(chars.len());
+        let matched = if chars[index..window_end].iter().all(|ch| ch.is_ascii()) {
+            crate::transliteration::ascii_table_match(&chars, index, digraphs)
+                .map(|position| (digraphs[position].1, digraphs[position].0.len()))
+        } else {
+            let rest: String = chars[index..].iter().collect::<String>().to_lowercase();
+            let mut found: Option<(char, usize)> = None;
+            for (latin, arab) in digraphs {
+                if rest.starts_with(latin) {
+                    found = Some((*arab, latin.len()));
+                    break;
+                }
             }
-        }
+            found
+        };
         if let Some((arab, width)) = matched {
             output.push(arab);
             index += width;

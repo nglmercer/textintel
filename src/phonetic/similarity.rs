@@ -172,37 +172,85 @@ fn packed_key(window: &[usize], distinct: usize) -> Option<u64> {
     Some(key)
 }
 
-fn ngram_counts_packed(items: &[usize], distinct: usize, n: usize) -> BTreeMap<u64, usize> {
-    // Ordered, not hashed: these maps are small with integer keys, where
-    // BTree compares beat hashing (measured: HashMap<SipHash> is slower).
-    let mut map = BTreeMap::new();
-    for window in items.windows(n) {
-        if let Some(key) = packed_key(window, distinct) {
-            *map.entry(key).or_insert(0) += 1;
-        }
-    }
-    map
+/// Packed keys of one side's n-grams as a plain vec: sorted below
+/// instead of counted through a tree (no per-window pointer chasing or
+/// node allocs; integer keys sort fast).
+fn ngram_keys_packed(items: &[usize], distinct: usize, n: usize) -> Vec<u64> {
+    items
+        .windows(n)
+        .filter_map(|window| packed_key(window, distinct))
+        .collect()
 }
 
-/// 2-gram and 3-gram packed counts in one pass: position `i` feeds the
+/// Jaccard index over two key multisets: sort both sides, then walk
+/// runs in lockstep. Intersection and union are exact integer sums
+/// over the same multisets the tree-counted path sums, so the value
+/// matches bit for bit.
+fn jaccard_sorted(left_keys: &mut [u64], right_keys: &mut [u64]) -> f64 {
+    left_keys.sort_unstable();
+    right_keys.sort_unstable();
+    fn run_length(keys: &[u64], mut index: usize) -> (usize, usize) {
+        let key = keys[index];
+        let mut count = 0;
+        while index < keys.len() && keys[index] == key {
+            count += 1;
+            index += 1;
+        }
+        (index, count)
+    }
+    let (mut i, mut j) = (0usize, 0usize);
+    let (mut intersection, mut union) = (0usize, 0usize);
+    while i < left_keys.len() && j < right_keys.len() {
+        let (left_key, right_key) = (left_keys[i], right_keys[j]);
+        if left_key == right_key {
+            let (next_i, left_count) = run_length(left_keys, i);
+            let (next_j, right_count) = run_length(right_keys, j);
+            intersection += left_count.min(right_count);
+            union += left_count.max(right_count);
+            i = next_i;
+            j = next_j;
+        } else if left_key < right_key {
+            let (next_i, left_count) = run_length(left_keys, i);
+            union += left_count;
+            i = next_i;
+        } else {
+            let (next_j, right_count) = run_length(right_keys, j);
+            union += right_count;
+            j = next_j;
+        }
+    }
+    while i < left_keys.len() {
+        let (next_i, left_count) = run_length(left_keys, i);
+        union += left_count;
+        i = next_i;
+    }
+    while j < right_keys.len() {
+        let (next_j, right_count) = run_length(right_keys, j);
+        union += right_count;
+        j = next_j;
+    }
+    if union == 0 {
+        0.0
+    } else {
+        intersection as f64 / union as f64
+    }
+}
+
+/// 2-gram and 3-gram packed keys in one pass: position `i` feeds the
 /// 2-gram at `i` and (while in bounds) the 3-gram at `i`, the same window
-/// multisets the two separate builds collect. `BTreeMap` order and exact
-/// integer counts match, so downstream Jaccards are unchanged.
-fn ngram23_counts_packed(
-    items: &[usize],
-    distinct: usize,
-) -> (BTreeMap<u64, usize>, BTreeMap<u64, usize>) {
-    let mut two = BTreeMap::new();
-    let mut three = BTreeMap::new();
+/// multisets the two separate builds collect, sorted downstream.
+fn ngram23_keys_packed(items: &[usize], distinct: usize) -> (Vec<u64>, Vec<u64>) {
+    let mut two = Vec::new();
+    let mut three = Vec::new();
     if items.len() >= 2 {
         for i in 0..items.len() - 1 {
             if let Some(key) = packed_key(&items[i..i + 2], distinct) {
-                *two.entry(key).or_insert(0) += 1;
+                two.push(key);
             }
             if i + 3 <= items.len()
                 && let Some(key) = packed_key(&items[i..i + 3], distinct)
             {
-                *three.entry(key).or_insert(0) += 1;
+                three.push(key);
             }
         }
     }
@@ -253,12 +301,12 @@ fn ngram_similarity_idx(
         return if sides_equal { 1.0 } else { 0.0 };
     }
     if n <= 3 && distinct <= u16::MAX as usize {
-        let packed_left = ngram_counts_packed(left, distinct, n);
-        let packed_right = ngram_counts_packed(right, distinct, n);
+        let mut packed_left = ngram_keys_packed(left, distinct, n);
+        let mut packed_right = ngram_keys_packed(right, distinct, n);
         if packed_left.is_empty() && packed_right.is_empty() {
             return if sides_equal { 1.0 } else { 0.0 };
         }
-        return jaccard(&packed_left, &packed_right);
+        return jaccard_sorted(&mut packed_left, &mut packed_right);
     }
     let boxed_left = ngram_counts_boxed(left, n);
     let boxed_right = ngram_counts_boxed(right, n);
@@ -315,9 +363,10 @@ pub fn phonetic_similarity_raw(
         && interned.right.len() >= 3
         && distinct <= u16::MAX as usize
     {
-        let (left2, left3) = ngram23_counts_packed(&interned.left, distinct);
-        let (right2, right3) = ngram23_counts_packed(&interned.right, distinct);
-        0.5 * jaccard(&left2, &right2) + 0.5 * jaccard(&left3, &right3)
+        let (mut left2, mut left3) = ngram23_keys_packed(&interned.left, distinct);
+        let (mut right2, mut right3) = ngram23_keys_packed(&interned.right, distinct);
+        0.5 * jaccard_sorted(&mut left2, &mut right2)
+            + 0.5 * jaccard_sorted(&mut left3, &mut right3)
     } else {
         0.5 * ngram_similarity_idx(&interned.left, &interned.right, distinct, 2, sides_equal)
             + 0.5 * ngram_similarity_idx(&interned.left, &interned.right, distinct, 3, sides_equal)

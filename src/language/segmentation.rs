@@ -29,7 +29,9 @@ fn classify(piece: &str) -> &'static str {
         "hashtag"
     } else if !piece.is_empty() && piece.chars().all(|ch| ch.is_numeric()) {
         "number"
-    } else if piece.chars().any(is_emoji) {
+    } else if !piece.bytes().all(|byte| byte.is_ascii_alphabetic()) && piece.chars().any(is_emoji) {
+        // ASCII letters are never emoji components (those are `#`, `*`,
+        // digits, and non-ASCII), so pure words skip the Unicode scan.
         "emoji"
     } else if is_named_entity(piece) {
         "named_entity"
