@@ -15,7 +15,7 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::core::capabilities::{CapabilityLevel, ProviderCapabilities};
+use crate::core::capabilities::{ModelMetadata, ProviderCapabilities};
 use crate::core::error::ProviderError;
 use crate::core::providers::EmbeddingProvider;
 
@@ -38,6 +38,10 @@ pub const ARCHITECTURE_STATE_CANDIDATE_INTERACTION: &str = "state_candidate_inte
 
 /// Default softmax temperature for interaction logits.
 pub const INTERACTION_TEMPERATURE: f64 = 1.0;
+
+fn default_temperature() -> f64 {
+    INTERACTION_TEMPERATURE
+}
 
 /// `tanh`-approximation GELU, shared by training and inference.
 pub fn gelu(x: f32) -> f32 {
@@ -218,6 +222,12 @@ pub struct InteractionArtifact {
     pub revision: Option<String>,
     #[serde(default)]
     pub metrics: BTreeMap<String, f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub embedding_model: Option<ModelMetadata>,
+    #[serde(default)]
+    pub training_config: BTreeMap<String, String>,
+    #[serde(default = "default_temperature")]
+    pub temperature: f64,
 }
 
 impl InteractionArtifact {
@@ -250,6 +260,9 @@ impl InteractionArtifact {
             dataset_version: dataset_version.into(),
             revision: None,
             metrics: BTreeMap::new(),
+            embedding_model: None,
+            training_config: BTreeMap::new(),
+            temperature: INTERACTION_TEMPERATURE,
         })
     }
 
@@ -273,6 +286,17 @@ impl InteractionArtifact {
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        if !self.temperature.is_finite() || self.temperature <= 0.0 {
+            return Err("artifact temperature must be finite and positive".to_string());
+        }
+        if let Some(model) = &self.embedding_model
+            && model.dimensions != self.embedding_dim
+        {
+            return Err("artifact backbone dimensions do not match the head".to_string());
+        }
+        if self.fusion_features != 0 && self.fusion_features != super::FUSION_FEATURES.len() {
+            return Err("unsupported interaction fusion feature count".to_string());
+        }
         if self.artifact_version != INTERACTION_ARTIFACT_VERSION {
             return Err(format!(
                 "artifact version {} is not supported (build expects {INTERACTION_ARTIFACT_VERSION})",
@@ -352,6 +376,18 @@ impl InteractionDecisionProvider {
         artifact: &InteractionArtifact,
     ) -> Result<Self, String> {
         let head = artifact.to_head()?;
+        if let Some(expected) = &artifact.embedding_model {
+            let actual = embeddings
+                .model_metadata()
+                .ok_or("pinned head needs backbone metadata")?;
+            if actual.model_id != expected.model_id
+                || actual.revision != expected.revision
+                || actual.dimensions != expected.dimensions
+                || actual.normalized != expected.normalized
+            {
+                return Err("backbone identity does not match the trained head".to_string());
+            }
+        }
         Ok(Self {
             embeddings: crate::semantic::embeddings::CachedEmbeddingProvider::new(
                 embeddings,
@@ -360,7 +396,7 @@ impl InteractionDecisionProvider {
             head,
             embedding_dim: artifact.embedding_dim,
             use_fusion: artifact.fusion_features > 0,
-            temperature: INTERACTION_TEMPERATURE,
+            temperature: artifact.temperature,
             accept_threshold: super::adapters::ADAPTER_ACCEPT_THRESHOLD,
             revision: artifact.revision.clone(),
         })
@@ -393,6 +429,13 @@ impl InteractionDecisionProvider {
 }
 
 impl DecisionProvider for InteractionDecisionProvider {
+    fn needs_fingerprints(&self) -> bool {
+        self.use_fusion
+    }
+
+    fn needs_candidate_fingerprints(&self) -> bool {
+        false
+    }
     fn decide(&self, request: &DecisionRequest) -> Result<DecisionResponse, ProviderError> {
         let provider = self.capabilities().provider;
         validate_request(&provider, request)?;
@@ -402,26 +445,29 @@ impl DecisionProvider for InteractionDecisionProvider {
                 "interaction decisions support only choice questions",
             ));
         };
-        let fingerprint = request.fingerprint.as_ref().ok_or_else(|| {
+        let fingerprint = if self.use_fusion {
+            Some(request.fingerprint.as_ref().ok_or_else(|| {
             ProviderError::new(
                 provider.clone(),
                 "interaction decisions need the analyzed state fingerprint; prepare the request with the engine first",
             )
-        })?;
-        let mut ids: Vec<&String> = criteria.keys().collect();
-        ids.sort_unstable();
+        })?)
+        } else {
+            None
+        };
+        let ids: Vec<&String> = criteria.keys().collect();
         let mut texts = Vec::with_capacity(ids.len() + 1);
-        texts.push(fingerprint.raw.clone());
+        texts.push(fingerprint.map_or_else(
+            || request.state.clone(),
+            |fingerprint| fingerprint.raw.clone(),
+        ));
         for id in &ids {
-            let candidate = request.candidate_fingerprints.get(*id).ok_or_else(|| {
-                ProviderError::new(
-                    provider.clone(),
-                    format!(
-                        "interaction decisions need the analyzed fingerprint for criterion {id:?}; prepare the request with the engine first"
-                    ),
-                )
-            })?;
-            texts.push(candidate.raw.clone());
+            texts.push(
+                request
+                    .candidate_fingerprints
+                    .get(*id)
+                    .map_or_else(|| criteria[*id].clone(), |candidate| candidate.raw.clone()),
+            );
         }
         let vectors = self.embeddings.embed(&texts)?;
         if vectors.len() != texts.len() {
@@ -452,7 +498,7 @@ impl DecisionProvider for InteractionDecisionProvider {
                 ));
             }
         }
-        let fusion = self.use_fusion.then(|| fusion_feature_vector(fingerprint));
+        let fusion = fingerprint.map(fusion_feature_vector);
         let mut logits = Vec::with_capacity(ids.len());
         for (index, _id) in ids.iter().enumerate() {
             let features =
@@ -492,7 +538,7 @@ impl DecisionProvider for InteractionDecisionProvider {
 
     fn capabilities(&self) -> ProviderCapabilities {
         let mut capabilities = ProviderCapabilities::new("interaction_decision")
-            .with_quality(CapabilityLevel::Production);
+            .with_quality(self.embeddings.capabilities().quality);
         if let Some(revision) = &self.revision {
             capabilities = capabilities.with_model_revision(revision.clone());
         }
@@ -649,10 +695,11 @@ impl HeadTrainer {
     }
 
     /// Mean softmax-CE gradients over `batch` (forward + backward).
-    fn gradients(
+    fn gradients<'a>(
         head: &InteractionHead,
-        batch: &[HeadTrainExample],
+        batch: impl ExactSizeIterator<Item = &'a HeadTrainExample>,
     ) -> Result<HeadGradients, String> {
+        let batch_len = batch.len();
         let mut grad_w1 = vec![0.0f32; head.w1.len()];
         let mut grad_b1 = vec![0.0f32; head.b1.len()];
         let mut grad_w2 = vec![0.0f32; head.w2.len()];
@@ -706,7 +753,7 @@ impl HeadTrainer {
                 }
             }
         }
-        let scale = 1.0 / batch.len().max(1) as f32;
+        let scale = 1.0 / batch_len.max(1) as f32;
         for grad in grad_w1
             .iter_mut()
             .chain(grad_b1.iter_mut())
@@ -720,7 +767,7 @@ impl HeadTrainer {
             grad_b1,
             grad_w2,
             grad_b2,
-            loss / batch.len().max(1) as f64,
+            loss / batch_len.max(1) as f64,
         ))
     }
 
@@ -730,7 +777,28 @@ impl HeadTrainer {
         head: &mut InteractionHead,
         batch: &[HeadTrainExample],
     ) -> Result<f64, String> {
-        if batch.is_empty() {
+        self.step_iter(head, batch.iter())
+    }
+
+    /// Train shuffled rows by index without cloning their feature vectors.
+    pub fn step_indexed(
+        &mut self,
+        head: &mut InteractionHead,
+        examples: &[HeadTrainExample],
+        indices: &[usize],
+    ) -> Result<f64, String> {
+        if indices.iter().any(|index| *index >= examples.len()) {
+            return Err("training index is out of bounds".to_string());
+        }
+        self.step_iter(head, indices.iter().map(|index| &examples[*index]))
+    }
+
+    fn step_iter<'a>(
+        &mut self,
+        head: &mut InteractionHead,
+        batch: impl ExactSizeIterator<Item = &'a HeadTrainExample>,
+    ) -> Result<f64, String> {
+        if batch.len() == 0 {
             return Err("training batch must not be empty".to_string());
         }
         let (grad_w1, grad_b1, grad_w2, grad_b2, loss) = Self::gradients(head, batch)?;
@@ -863,7 +931,7 @@ mod tests {
         let head = tiny_head();
         let batch = vec![tiny_example()];
         let (grad_w1, grad_b1, grad_w2, grad_b2, _) =
-            HeadTrainer::gradients(&head, &batch).expect("gradients");
+            HeadTrainer::gradients(&head, batch.iter()).expect("gradients");
         let loss_of =
             |head: &InteractionHead| head_loss_accuracy(head, &batch).expect("loss").0 as f32;
         let epsilon = 1e-3f32;

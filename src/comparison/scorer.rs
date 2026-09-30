@@ -16,7 +16,7 @@ use crate::visual::similarity::visual_similarity;
 mod decoded;
 mod swap;
 
-use decoded::{best_decoded_overlap, exact_decode_confidence};
+use decoded::{DecodedInput, best_decoded_overlap, exact_decode_confidence};
 use swap::{
     same_language_swap_with_words, swapped_phonetic_similarity, swapped_validity,
     swapped_word_similarity, swapped_words_from,
@@ -62,7 +62,7 @@ pub(crate) fn word_tokens(fingerprint: &MessageFingerprint) -> Vec<String> {
             continue;
         }
         if token.chars().any(|ch| ch.is_alphabetic()) {
-            if !(glue_pending && !current.is_empty()) {
+            if !glue_pending || current.is_empty() {
                 flush(&mut current, &mut words);
             }
             current.push_str(token);
@@ -254,13 +254,9 @@ pub fn score_fingerprints(
     let compatibility = crate::transliteration::transliteration_compatibility(a, b);
     let views_a = a.transliteration_views();
     let views_b = b.transliteration_views();
-    let decoded = finite_or_zero(best_decoded_overlap(
-        a,
-        b,
-        compatibility,
-        &views_a,
-        &views_b,
-    ));
+    let decoded_a = DecodedInput::new(a, &views_a);
+    let decoded_b = DecodedInput::new(b, &views_b);
+    let decoded = finite_or_zero(best_decoded_overlap(&decoded_a, &decoded_b, compatibility));
     let obfuscation = finite_or_zero(obfuscation_similarity(a, b));
     let symbolic = if a.symbols.is_empty() && b.symbols.is_empty() {
         None
@@ -376,11 +372,9 @@ pub fn score_fingerprints(
     let language_agreement = crate::comparison::model::language_agreement(a, b);
     let cross_script_agreement = cross_script_pair * language_agreement;
     let exact_decode = finite_or_zero(exact_decode_confidence(
-        a,
-        b,
+        &decoded_a,
+        &decoded_b,
         compatibility,
-        &views_a,
-        &views_b,
     ));
     // Single-word exact decoding: a lone exact read (`cheque`→`check`) is
     // the variant signature, while single-word confusables (`their`/`there`)

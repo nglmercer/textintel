@@ -150,7 +150,7 @@ const TEXTINTEL_ARGS: &[ArgSpec] = &[
         "embeddings",
         "embeddings",
         "DIR",
-        "Embedding backbone directory.",
+        "Local backbone directory, hash:N, or wordhash:N.",
     ),
     value(
         "jobs",
@@ -536,7 +536,7 @@ const TRAIN_DECISION_ARGS: &[ArgSpec] = &[
         "embeddings",
         "embeddings",
         "DIR",
-        "Frozen embedding backbone directory (required).",
+        "Local backbone directory, hash:N, or wordhash:N (required).",
     ),
     value(
         "train",
@@ -552,6 +552,18 @@ const TRAIN_DECISION_ARGS: &[ArgSpec] = &[
     ),
     value("out", "out", "FILE", "Head artifact to write (required)."),
     value("cache", "cache", "DIR", "Feature cache directory."),
+    value(
+        "approach",
+        "approach",
+        "TYPE",
+        "interaction (default) or task-specific prototype.",
+    ),
+    value(
+        "prototype-blend",
+        "prototype-blend",
+        "F",
+        "Criterion/centroid blend within [0,1] (default 0.5).",
+    ),
     value("hidden", "hidden", "N", "Head hidden size (default: 128)."),
     value("lr", "lr", "F", "Adam learning rate (default: 0.001)."),
     value("batch", "batch", "N", "Mini-batch size (default: 32)."),
@@ -574,6 +586,11 @@ const TRAIN_DECISION_ARGS: &[ArgSpec] = &[
         "jobs",
         "N",
         "Extraction worker threads (default 1; features rejoin in order).",
+    ),
+    flag(
+        "no-fusion",
+        "no-fusion",
+        "Train an embedding-only head without fingerprint analysis.",
     ),
     flag(
         "no-rebus",

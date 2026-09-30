@@ -269,7 +269,7 @@ fn score_one_example(
         request = request.with_task(task.clone());
     }
     engine
-        .prepare_decision_request(&mut request)
+        .prepare_decision_request_with_provider(provider, &mut request)
         .map_err(|error| error.to_string())?;
     let response = provider
         .decide(&request)

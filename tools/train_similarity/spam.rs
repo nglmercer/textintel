@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use textintel::evaluation::EvaluationDataset;
-use textintel::{EngineConfig, TextIntelligence, logistic_step};
+use textintel::{EngineConfig, LogisticTrainingBatch, TextIntelligence};
 
 use super::metrics::logistic_report;
 use textintel::cli::ParsedArgs;
@@ -279,32 +279,14 @@ pub(crate) fn run_spam(parsed: &ParsedArgs) -> Result<(), Box<dyn std::error::Er
     let mut weights = vec![0.0; SPAM_FEATURES.len()];
     let mut bias = 0.0;
     let mut loss = f64::INFINITY;
+    let mut batch = LogisticTrainingBatch::new(&train_features, &train_labels);
     for _ in 0..5000 {
-        loss = logistic_step(
-            &train_features,
-            &train_labels,
-            &mut weights,
-            &mut bias,
-            0.2,
-            1e-3,
-        );
+        loss = batch.step(&mut weights, &mut bias, 0.2, 1e-3);
     }
     println!("train loss: {loss:.4}");
-    // Calibration on validation: freeze weights, fit the bias only (same
-    // pattern as the similarity trainer). The scratch copy absorbs the
-    // weight update and is discarded. Only artifacts produced by this step
-    // may carry `calibrated: true`.
-    for _ in 0..500 {
-        let mut scratch = weights.clone();
-        logistic_step(
-            &validation_features,
-            &validation_labels,
-            &mut scratch,
-            &mut bias,
-            0.2,
-            0.0,
-        );
-    }
+    // Freeze weights; calibrate the intercept using validation only.
+    LogisticTrainingBatch::new(&validation_features, &validation_labels)
+        .calibrate_bias(&weights, &mut bias, 0.2, 500);
 
     let names: BTreeMap<String, f64> = SPAM_FEATURES
         .iter()

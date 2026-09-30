@@ -1,0 +1,92 @@
+{
+  "date": "2026-09-30",
+  "selection": "validation macro-F1, NLL, parameter count; frozen before test",
+  "experiments": [
+    {
+      "approach": "interaction",
+      "task": "routing",
+      "trials": 128,
+      "configuration": {
+        "encoder": "wordhash:128",
+        "fusion": true,
+        "hidden": 8,
+        "lr": 0.01,
+        "seed": 19,
+        "training": "augmented.jsonl"
+      },
+      "validation_macro_f1": 0.6555555555555556,
+      "baseline_test": {
+        "count": 12,
+        "accuracy": 0.75,
+        "macro_f1": 0.7367724867724869,
+        "nll": 1.013411440429403,
+        "ece": 0.40907454957519435
+      },
+      "selected_test": {
+        "count": 12,
+        "accuracy": 0.8333333333333334,
+        "macro_f1": 0.832010582010582,
+        "nll": 0.8527116156358838,
+        "ece": 0.33014438693890136
+      }
+    },
+    {
+      "approach": "interaction",
+      "task": "matching",
+      "trials": 48,
+      "configuration": {
+        "encoder": "hash:64",
+        "fusion": true,
+        "hidden": 16,
+        "lr": 0.03,
+        "seed": 7,
+        "training": "train.jsonl"
+      },
+      "validation_macro_f1": 0.611662272614131,
+      "baseline_test": {
+        "count": 482,
+        "accuracy": 0.7199170124481328,
+        "macro_f1": 0.6565773848792716,
+        "nll": 0.5768975930477475,
+        "ece": 0.11752035874739347
+      },
+      "selected_test": {
+        "count": 482,
+        "accuracy": 0.6742738589211619,
+        "macro_f1": 0.6560319632005018,
+        "nll": 0.6128224710268468,
+        "ece": 0.0370943401722704
+      }
+    },
+    {
+      "approach": "prototype",
+      "task": "routing",
+      "trials": 60,
+      "configuration": {
+        "approach": "prototype",
+        "blend": 1.0,
+        "encoder": "hash:256",
+        "fusion": false,
+        "hidden": 0,
+        "lr": 0,
+        "seed": 0,
+        "training": "augmented.jsonl"
+      },
+      "validation_macro_f1": 1.0,
+      "baseline_test": {
+        "count": 12,
+        "accuracy": 0.75,
+        "macro_f1": 0.7367724867724869,
+        "nll": 1.013411440429403,
+        "ece": 0.40907454957519435
+      },
+      "selected_test": {
+        "count": 12,
+        "accuracy": 0.3333333333333333,
+        "macro_f1": 0.3333333333333333,
+        "nll": 1.5556898031976782,
+        "ece": 0.4477020760363616
+      }
+    }
+  ]
+}

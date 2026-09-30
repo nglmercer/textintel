@@ -19,6 +19,18 @@ use super::types::{DecisionModelInfo, DecisionRequest, DecisionResponse, MAX_DEC
 pub trait DecisionProvider: Send + Sync {
     fn decide(&self, request: &DecisionRequest) -> Result<DecisionResponse, ProviderError>;
 
+    /// False for models using raw text embeddings without fingerprint fusion.
+    /// The engine still validates the request and enforces input limits.
+    fn needs_fingerprints(&self) -> bool {
+        true
+    }
+
+    /// Whether analyzed criterion descriptions are consumed, independently
+    /// of state fusion. Embedding heads only need criterion text.
+    fn needs_candidate_fingerprints(&self) -> bool {
+        self.needs_fingerprints()
+    }
+
     fn decide_batch(
         &self,
         requests: &[DecisionRequest],
@@ -55,6 +67,13 @@ pub trait DecisionProvider: Send + Sync {
 /// batch, capability, and model-info introspection) forwards to the inner
 /// provider.
 impl<T: DecisionProvider + ?Sized> DecisionProvider for Arc<T> {
+    fn needs_fingerprints(&self) -> bool {
+        (**self).needs_fingerprints()
+    }
+
+    fn needs_candidate_fingerprints(&self) -> bool {
+        (**self).needs_candidate_fingerprints()
+    }
     fn decide(&self, request: &DecisionRequest) -> Result<DecisionResponse, ProviderError> {
         (**self).decide(request)
     }

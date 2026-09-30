@@ -55,8 +55,8 @@ pub use cache::{
     RevisionCache, rebus_cache_key, resource_revision,
 };
 pub use comparison::{
-    ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer, ProfileSimilarityScorer,
-    RerankerModelArtifact, SimilarityModelArtifact, SimilarityProfile,
+    ChannelRerankWeights, ChannelScoreReranker, LogisticSimilarityScorer, LogisticTrainingBatch,
+    ProfileSimilarityScorer, RerankerModelArtifact, SimilarityModelArtifact, SimilarityProfile,
     TRAINING_FEATURE_SCHEMA_VERSION, TRAINING_FEATURES, balanced_sample_weights,
     language_agreement, logistic_step, logistic_step_weighted, mean_channel_confidence,
     rerank_score, score_fingerprints_with_profile, sigmoid, training_features,

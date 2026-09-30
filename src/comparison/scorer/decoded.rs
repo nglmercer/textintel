@@ -51,6 +51,21 @@ fn fold_views(views: &[(&str, f64)]) -> Vec<(String, f64)> {
 }
 
 /// Literal bases (raw/normalized text) count at 1.0 in every confidence map.
+/// Fold once per fingerprint; both decoded channels reuse these inputs.
+pub(super) struct DecodedInput {
+    keys: DecodedKeys,
+    views: Vec<(String, f64)>,
+}
+
+impl DecodedInput {
+    pub(super) fn new(fingerprint: &MessageFingerprint, views: &[(&str, f64)]) -> Self {
+        Self {
+            keys: decoded_keys(fingerprint),
+            views: fold_views(views),
+        }
+    }
+}
+
 fn insert_literal_bases(map: &mut BTreeMap<String, f64>, literals: &[String; 2]) {
     for key in literals {
         if !key.is_empty() {
@@ -101,21 +116,15 @@ fn asserted_confidence_map(keys: &DecodedKeys) -> BTreeMap<String, f64> {
     map
 }
 
-pub(crate) fn best_decoded_overlap(
-    a: &MessageFingerprint,
-    b: &MessageFingerprint,
-    compatibility: f64,
-    views_a: &[(&str, f64)],
-    views_b: &[(&str, f64)],
-) -> f64 {
+pub(super) fn best_decoded_overlap(a: &DecodedInput, b: &DecodedInput, compatibility: f64) -> f64 {
     // Transliteration views contribute `similarity × confidence ×
     // compatibility`: provider confidence discounts the lossy conversion and
     // language/context compatibility discounts look-alikes without semantic,
     // entity, or language support (transliteration alone never creates a
     // strong match). Compatibility and views arrive precomputed from the
     // scorer, which shares them across channels.
-    let keys_a = decoded_keys(a);
-    let keys_b = decoded_keys(b);
+    let keys_a = &a.keys;
+    let keys_b = &b.keys;
     let mut left = BTreeSet::new();
     let mut right = BTreeSet::new();
     for key in keys_a
@@ -138,15 +147,15 @@ pub(crate) fn best_decoded_overlap(
     // so leet/casefold variants cannot inflate decoded similarity. Every view
     // carries its provider confidence: a view match contributes
     // `similarity * confidence`, never an unconditional 1.0.
-    let views_left = fold_views(views_a);
-    let views_right = fold_views(views_b);
+    let views_left = &a.views;
+    let views_right = &b.views;
     // Phase 1a: graded exact matches. Literal identity (raw/normalized)
     // still counts at 1.0, but candidate-mediated matches count at the
     // weaker side's rank-aware confidence — a low-rank whisper (`gr8`→
     // `grate`) must not weigh like the top reading (`gr8`→`great`).
     let mut best: f64 = 0.0;
-    let graded_left = asserted_confidence_map(&keys_a);
-    let graded_right = asserted_confidence_map(&keys_b);
+    let graded_left = asserted_confidence_map(keys_a);
+    let graded_right = asserted_confidence_map(keys_b);
     for (key, confidence) in &graded_left {
         if let Some(other) = graded_right.get(key) {
             best = best.max(confidence.min(*other));
@@ -156,20 +165,20 @@ pub(crate) fn best_decoded_overlap(
     // the view confidence times compatibility (similarity 1.0 times provider
     // confidence times language/context compatibility). View↔view matches
     // take the weaker confidence; view↔base matches take the view's.
-    for (view, confidence) in &views_left {
+    for (view, confidence) in views_left {
         if view.is_empty() {
             continue;
         }
         if right.contains(view) {
             best = best.max(*confidence * compatibility);
         }
-        for (other, other_confidence) in &views_right {
+        for (other, other_confidence) in views_right {
             if view == other {
                 best = best.max(confidence.min(*other_confidence) * compatibility);
             }
         }
     }
-    for (view, confidence) in &views_right {
+    for (view, confidence) in views_right {
         if view.is_empty() {
             continue;
         }
@@ -263,7 +272,7 @@ pub(crate) fn best_decoded_overlap(
         // Anchors are the literal keys: same strings, already folded.
         let anchors_left = &keys_a.literals;
         let anchors_right = &keys_b.literals;
-        for (views, anchors) in [(&views_left, &anchors_right), (&views_right, &anchors_left)] {
+        for (views, anchors) in [(views_left, anchors_right), (views_right, anchors_left)] {
             for (view, confidence) in views.iter() {
                 if view.is_empty() {
                     continue;
@@ -292,24 +301,22 @@ pub(crate) fn best_decoded_overlap(
 /// matches count at the provider confidence — mirroring
 /// [`best_decoded_overlap`]'s Phase 1a/1b, but as graded evidence instead of
 /// a short-circuit.
-pub(crate) fn exact_decode_confidence(
-    a: &MessageFingerprint,
-    b: &MessageFingerprint,
+pub(super) fn exact_decode_confidence(
+    a: &DecodedInput,
+    b: &DecodedInput,
     compatibility: f64,
-    views_a: &[(&str, f64)],
-    views_b: &[(&str, f64)],
 ) -> f64 {
-    let left = graded_confidence_map(&decoded_keys(a));
-    let right = graded_confidence_map(&decoded_keys(b));
+    let left = graded_confidence_map(&a.keys);
+    let right = graded_confidence_map(&b.keys);
     let mut best: f64 = 0.0;
     for (key, confidence) in &left {
         if let Some(other) = right.get(key) {
             best = best.max(confidence.min(*other));
         }
     }
-    let views_left = fold_views(views_a);
-    let views_right = fold_views(views_b);
-    for (view, confidence) in &views_left {
+    let views_left = &a.views;
+    let views_right = &b.views;
+    for (view, confidence) in views_left {
         if view.is_empty() {
             continue;
         }
@@ -321,13 +328,13 @@ pub(crate) fn exact_decode_confidence(
         // (`complement`/`compliment` collapse to the same Arabic form) while
         // a view matching the other side's literal text is first-hand. Halve
         // the weaker confidence so collisions whisper instead of shout.
-        for (other, other_confidence) in &views_right {
+        for (other, other_confidence) in views_right {
             if view == other {
                 best = best.max(confidence.min(*other_confidence) * 0.5 * compatibility);
             }
         }
     }
-    for (view, confidence) in &views_right {
+    for (view, confidence) in views_right {
         if view.is_empty() {
             continue;
         }

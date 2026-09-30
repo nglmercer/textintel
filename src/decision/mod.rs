@@ -29,9 +29,11 @@ pub mod adapters;
 pub mod artifact;
 pub mod calibration;
 pub mod dataset;
+pub mod embeddings;
 pub mod eval;
 pub mod fusion;
 pub mod interaction;
+pub mod prototype;
 pub mod provider;
 pub mod scoring;
 pub mod transformer;
@@ -48,6 +50,7 @@ pub use calibration::{
     brier_score, expected_calibration_error, fit_temperature, nll_loss,
 };
 pub use dataset::{DecisionDataset, DecisionExample, DecisionSplit};
+pub use embeddings::{WordHashEmbeddingProvider, open_decision_embeddings};
 pub use eval::{
     COVERAGE_LEVELS, CoveragePoint, DecisionEvalReport, check_decision_gates, evaluate_decisions,
     evaluate_decisions_with_jobs,
@@ -61,6 +64,7 @@ pub use interaction::{
     INTERACTION_TEMPERATURE, InteractionArtifact, InteractionDecisionProvider, InteractionHead,
     SplitMix64, gelu, gelu_prime, head_loss_accuracy, init_head_xavier, interaction_features,
 };
+pub use prototype::{PrototypeArtifact, PrototypeDecisionProvider};
 pub use provider::{DecisionProvider, SharedDecisionProvider, validate_request};
 pub use scoring::{
     energy_score, entropy, expected_score, is_ood_by_energy, margin, max_probability, softmax,
