@@ -2,16 +2,14 @@
 
 use std::collections::BTreeMap;
 
-use textintel::SimilarityScorer;
 use textintel::evaluation::EvaluationDataset;
 use textintel::semantic::FeatureHashEmbeddingProvider;
 use textintel::{
-    EngineConfig, LogisticSimilarityScorer, SimilarityModelArtifact, TRAINING_FEATURES,
-    TextIntelligence, balanced_sample_weights, language_agreement, logistic_step_weighted,
-    training_features,
+    EngineConfig, LogisticTrainingBatch, SimilarityModelArtifact, TRAINING_FEATURES,
+    TextIntelligence, balanced_sample_weights, language_agreement, training_features,
 };
 
-use super::metrics::report;
+use super::metrics::logistic_report;
 use textintel::cli::ParsedArgs;
 
 const ITERATIONS: usize = 20000;
@@ -22,6 +20,15 @@ const L2: f64 = 1e-3;
 struct SplitData {
     features: Vec<Vec<f64>>,
     labels: Vec<bool>,
+}
+
+fn calibrate_bias(weights: &[f64], bias: &mut f64, learning_rate: f64, validation: &SplitData) {
+    LogisticTrainingBatch::new(&validation.features, &validation.labels).calibrate_bias(
+        weights,
+        bias,
+        learning_rate,
+        CALIBRATION_ITERATIONS,
+    );
 }
 
 fn featurize(
@@ -125,24 +132,6 @@ fn training_engine(
     Ok((engine, "feature-hash-v1".to_string()))
 }
 
-fn metrics_at(
-    scorer: &LogisticSimilarityScorer,
-    engine: &TextIntelligence,
-    dataset: &EvaluationDataset,
-    split: &str,
-) -> Result<BTreeMap<String, f64>, Box<dyn std::error::Error>> {
-    // Held-out measurement through the public scorer interface: re-analyze
-    // each pair and score with the trained weights.
-    let cases = dataset.filter_split(split);
-    let mut scores = Vec::with_capacity(cases.len());
-    for case in cases {
-        let left = engine.analyze(&case.a)?;
-        let right = engine.analyze(&case.b)?;
-        scores.push((scorer.score(&left, &right).score, case.is_similar()));
-    }
-    Ok(report(&scores))
-}
-
 pub(crate) fn run_similarity(parsed: &ParsedArgs) -> Result<(), Box<dyn std::error::Error>> {
     let path = parsed.positional(0).unwrap_or("data/evaluation");
     let output = parsed.required_value("output")?;
@@ -191,44 +180,24 @@ pub(crate) fn run_similarity(parsed: &ParsedArgs) -> Result<(), Box<dyn std::err
     // slices are closer to balanced, so uniform weighting would drag the
     // operating point toward always-positive (recall ~0.98, poor precision).
     let train_sample_weights = balanced_sample_weights(&train.labels);
-    let validation_sample_weights = balanced_sample_weights(&validation.labels);
     let mut weights = vec![0.0; TRAINING_FEATURES.len()];
     let mut bias = 0.0;
     let mut loss = f64::INFINITY;
+    let mut batch =
+        LogisticTrainingBatch::weighted(&train.features, &train.labels, &train_sample_weights);
     for _ in 0..iterations {
-        loss = logistic_step_weighted(
-            &train.features,
-            &train.labels,
-            &mut weights,
-            &mut bias,
-            learning_rate,
-            l2,
-            &train_sample_weights,
-        );
+        loss = batch.step(&mut weights, &mut bias, learning_rate, l2);
     }
     println!("balanced train loss after {iterations} iterations: {loss:.4}");
 
-    // Calibration on validation: freeze weights, fit the bias only. The
-    // scratch copy absorbs the weight update and is discarded.
-    for _ in 0..CALIBRATION_ITERATIONS {
-        let mut scratch = weights.clone();
-        logistic_step_weighted(
-            &validation.features,
-            &validation.labels,
-            &mut scratch,
-            &mut bias,
-            learning_rate,
-            0.0,
-            &validation_sample_weights,
-        );
-    }
+    // Balance classes when fitting discrimination, but calibrate on the
+    // observed validation distribution. Balancing calibration would impose
+    // an artificial 50/50 prior and systematically underpredict positives.
+    calibrate_bias(&weights, &mut bias, learning_rate, &validation);
     println!("bias after validation calibration: {bias:.4}");
 
-    // NOTE: no F1 operating-point tuning here. The validation-optimal
-    // boundary (best threshold ~0.47) does not transfer to test (~0.60):
-    // sliding the bias to the validation F1 peak raised validation F1 to
-    // 0.946 but dropped test F1 to 0.911 — a pure operating-point overfit.
-    // The NLL-calibrated bias above is the honest boundary.
+    // Bias and temperature minimize validation NLL. Do not tune a cutoff
+    // against held-out test outcomes; the probability boundary remains 0.5.
     let validation_logits: Vec<f64> = validation
         .features
         .iter()
@@ -288,10 +257,16 @@ pub(crate) fn run_similarity(parsed: &ParsedArgs) -> Result<(), Box<dyn std::err
     for name in TRAINING_FEATURES {
         println!("  {name} = {:.4}", names.get(*name).copied().unwrap_or(0.0));
     }
-    let scorer = LogisticSimilarityScorer::new(names.clone(), bias);
     let mut metrics = BTreeMap::new();
-    for split in ["train", "validation", "test"] {
-        let split_metrics = metrics_at(&scorer, &engine, &dataset, split)?;
+    // Reuse train/validation features. Test is featurized only after fitting
+    // and calibration, and never contributes to parameter updates.
+    let test = featurize(&engine, &dataset, "test")?;
+    for (split, data) in [
+        ("train", &train),
+        ("validation", &validation),
+        ("test", &test),
+    ] {
+        let split_metrics = logistic_report(&weights, bias, &data.features, &data.labels);
         println!(
             "{split}: accuracy={:.3} f1={:.3} brier={:.3} roc_auc={:.3} pr_auc={:.3} ece={:.3} best_threshold={:.3}",
             split_metrics["accuracy"],
@@ -334,13 +309,14 @@ pub(crate) fn run_similarity(parsed: &ParsedArgs) -> Result<(), Box<dyn std::err
         "method".to_string(),
         "validation_nll_bias_plus_temperature_scaling".to_string(),
     );
+    calibration_config.insert("sample_weighting".to_string(), "uniform".to_string());
     calibration_config.insert(
         "validation_split".to_string(),
         format!("validation (n={})", validation.labels.len()),
     );
     let mut artifact = SimilarityModelArtifact::new(dataset.version.clone(), names, bias)
         .with_revision(format!(
-            "train-{iterations}-iter-lr{learning_rate}-l2{l2}-ds{}",
+            "train-{iterations}-iter-lr{learning_rate}-l2{l2}-cal-uniform-ds{}",
             dataset.version
         ))
         .with_metrics(metrics)
@@ -360,4 +336,61 @@ pub(crate) fn run_similarity(parsed: &ParsedArgs) -> Result<(), Box<dyn std::err
     )?;
     println!("wrote {output}");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use textintel::{LogisticSimilarityScorer, SimilarityScorer};
+
+    #[test]
+    fn calibration_recovers_observed_class_prior() {
+        let validation = SplitData {
+            features: vec![vec![0.0]; 4],
+            labels: vec![true, true, true, false],
+        };
+        let mut bias = 0.0;
+        calibrate_bias(&[0.0], &mut bias, 0.2, &validation);
+        assert!((textintel::sigmoid(bias) - 0.75).abs() < 1e-6);
+    }
+
+    #[test]
+    fn cached_feature_metrics_match_public_scorer() {
+        let dataset: EvaluationDataset = serde_json::from_value(serde_json::json!({
+            "version": "test",
+            "cases": [
+                {"a": "salU2", "b": "saludos", "split": "train", "labels": {"similar": true}},
+                {"a": "buy milk", "b": "sell crypto", "split": "train", "labels": {"similar": false}},
+                {"a": "hola", "b": "привет", "split": "train", "labels": {"similar": true}}
+            ]
+        })).unwrap();
+        let (engine, _) = training_engine(None).unwrap();
+        let data = featurize(&engine, &dataset, "train").unwrap();
+        let weights: Vec<f64> = (0..TRAINING_FEATURES.len())
+            .map(|index| index as f64 * 0.1 - 1.0)
+            .collect();
+        let bias = -0.3;
+        let scorer = LogisticSimilarityScorer::new(
+            TRAINING_FEATURES
+                .iter()
+                .zip(&weights)
+                .map(|(name, weight)| (name.to_string(), *weight))
+                .collect(),
+            bias,
+        );
+        let samples: Vec<_> = dataset
+            .cases
+            .iter()
+            .map(|case| {
+                let left = engine.analyze(&case.a).unwrap();
+                let right = engine.analyze(&case.b).unwrap();
+                (scorer.score(&left, &right).score, case.is_similar())
+            })
+            .collect();
+        let expected = super::super::metrics::report(&samples);
+        let actual = logistic_report(&weights, bias, &data.features, &data.labels);
+        for (name, value) in expected {
+            assert!((actual[&name] - value).abs() < 1e-12, "{name}");
+        }
+    }
 }

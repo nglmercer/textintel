@@ -470,7 +470,7 @@ impl TextIntelligence {
             )
         })?;
         let mut prepared = request.clone();
-        self.prepare_decision_request(&mut prepared)?;
+        self.prepare_decision_request_with_provider(provider.as_ref(), &mut prepared)?;
         let response = provider.decide(&prepared)?;
         response
             .validate_against(&prepared)
@@ -502,6 +502,49 @@ impl TextIntelligence {
                     request
                         .candidate_fingerprints
                         .insert(id.clone(), fingerprint);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Prepare only the evidence consumed by this provider. Embedding-only
+    /// models skip fingerprint analysis while retaining validation and bounds.
+    pub fn prepare_decision_request_with_provider(
+        &self,
+        provider: &dyn crate::decision::DecisionProvider,
+        request: &mut crate::decision::DecisionRequest,
+    ) -> Result<(), TextIntelError> {
+        if provider.needs_fingerprints() && provider.needs_candidate_fingerprints() {
+            return self.prepare_decision_request(request);
+        }
+        request
+            .validate()
+            .map_err(TextIntelError::InvalidConfiguration)?;
+        let mut texts = vec![request.state.as_str()];
+        if let crate::decision::DecisionQuestion::Choice { criteria, .. } = &request.question {
+            texts.extend(criteria.values().map(String::as_str));
+        }
+        for text in texts {
+            let length = text.chars().count();
+            if length > self.config.max_input_length {
+                return Err(TextIntelError::InputTooLong {
+                    length,
+                    maximum: self.config.max_input_length,
+                });
+            }
+        }
+        if provider.needs_fingerprints() && request.fingerprint.is_none() {
+            request.fingerprint = Some(self.analyze_cached(&request.state)?);
+        }
+        if provider.needs_candidate_fingerprints()
+            && let crate::decision::DecisionQuestion::Choice { criteria, .. } = &request.question
+        {
+            for (id, description) in criteria {
+                if !request.candidate_fingerprints.contains_key(id) {
+                    request
+                        .candidate_fingerprints
+                        .insert(id.clone(), self.analyze_cached(description)?);
                 }
             }
         }

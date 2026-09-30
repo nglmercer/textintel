@@ -35,7 +35,6 @@ fn decision_provider_named(
                 };
             Ok(Arc::new(SimilarityDecisionProvider::new(scorer)))
         }
-        #[cfg(feature = "semantic-transformer")]
         "interaction" => {
             let head = parsed
                 .value("head")
@@ -47,19 +46,23 @@ fn decision_provider_named(
                 .ok_or("interaction provider requires --embeddings <dir>")?;
             let artifact = textintel::InteractionArtifact::from_file(&head)
                 .map_err(|error| format!("invalid interaction head: {error}"))?;
-            let backbone = Arc::new(
-                textintel::TransformerEmbeddingProvider::open(&embeddings_dir)
-                    .map_err(|error| error.to_string())?,
-            );
+            let backbone = textintel::decision::open_decision_embeddings(&embeddings_dir)?;
             let provider = textintel::InteractionDecisionProvider::new(backbone, &artifact)
                 .map_err(|error| format!("invalid interaction head: {error}"))?;
             Ok(Arc::new(provider))
         }
+        "prototype" => {
+            let artifact =
+                textintel::decision::PrototypeArtifact::from_file(parsed.required_value("head")?)?;
+            let embeddings = textintel::decision::open_decision_embeddings(
+                parsed.required_value("embeddings")?,
+            )?;
+            Ok(Arc::new(
+                textintel::decision::PrototypeDecisionProvider::new(embeddings, artifact)?,
+            ))
+        }
         other => {
-            #[cfg(feature = "semantic-transformer")]
-            let options = "spam|similarity|interaction";
-            #[cfg(not(feature = "semantic-transformer"))]
-            let options = "spam|similarity";
+            let options = "spam|similarity|interaction|prototype";
             Err(format!("unknown decision provider '{other}' (use {options})").into())
         }
     }

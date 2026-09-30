@@ -7,17 +7,16 @@
 //! The backbone stays frozen — only the ~200K-param head trains.
 
 use std::collections::BTreeMap;
-use std::sync::Arc;
 
+use textintel::TextIntelligence;
 use textintel::core::parallel::map_chunks_ordered;
 use textintel::core::providers::EmbeddingProvider;
 use textintel::decision::{
     DecisionExample, FUSION_FEATURES, HeadTrainExample, HeadTrainer, InteractionArtifact,
     SplitMix64, fusion_feature_vector, head_loss_accuracy, init_head_xavier, interaction_features,
 };
-use textintel::{TextIntelligence, TransformerEmbeddingProvider};
 
-const CACHE_VERSION: &str = "interaction-features-v1";
+const CACHE_VERSION: &str = "interaction-features-v2";
 
 fn load_examples(path: &str) -> Result<Vec<DecisionExample>, String> {
     let source =
@@ -64,13 +63,43 @@ struct CachedExample {
 }
 
 fn cache_key(parts: &[String]) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-    let mut hasher = DefaultHasher::new();
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
     for part in parts {
-        part.hash(&mut hasher);
+        hasher.update((part.len() as u64).to_le_bytes());
+        hasher.update(part.as_bytes());
     }
-    format!("{:016x}", hasher.finish())
+    hasher
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+/// Content identity, including repeat counts. File edits invalidate caches.
+fn source_digest(files: &[String]) -> Result<String, String> {
+    use sha2::{Digest, Sha256};
+    let mut hash = Sha256::new();
+    for file in files {
+        let path = file.split_once('@').map_or(file.as_str(), |(path, _)| path);
+        let bytes = std::fs::read(path).map_err(|e| format!("cannot read {path}: {e}"))?;
+        hash.update((file.len() as u64).to_le_bytes());
+        hash.update(file.as_bytes());
+        hash.update((bytes.len() as u64).to_le_bytes());
+        hash.update(&bytes);
+    }
+    Ok(hash
+        .finalize()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect())
+}
+
+#[derive(Clone, Copy)]
+struct FeatureOptions<'a> {
+    cache_dir: Option<&'a str>,
+    jobs: usize,
+    use_fusion: bool,
 }
 
 /// Extract (or load cached) head-training features for `examples`.
@@ -83,9 +112,14 @@ fn featurize(
     embedding_dim: usize,
     label: &str,
     files: &[String],
-    cache_dir: Option<&str>,
-    jobs: usize,
+    options: FeatureOptions<'_>,
 ) -> Result<Vec<HeadTrainExample>, String> {
+    let FeatureOptions {
+        cache_dir,
+        jobs,
+        use_fusion,
+    } = options;
+    let fusion_dim = if use_fusion { FUSION_FEATURES.len() } else { 0 };
     let mut examples = Vec::new();
     for file in files {
         let (path, repeat) = match file.split_once('@') {
@@ -114,11 +148,13 @@ fn featurize(
         .ok_or_else(|| "backbone has no metadata".to_string())?;
     let key = cache_key(&[
         CACHE_VERSION.to_string(),
-        files.join(","),
+        source_digest(files)?,
+        textintel::resource_revision(&engine.resource_manifest()),
+        textintel::FINGERPRINT_SCHEMA_VERSION.to_string(),
         metadata.model_id.clone(),
         metadata.revision.clone().unwrap_or_default(),
         embedding_dim.to_string(),
-        format!("no_rebus={no_rebus}"),
+        format!("no_rebus={no_rebus},fusion={use_fusion}"),
     ]);
     if let Some(dir) = cache_dir {
         let path = std::path::Path::new(dir).join(format!("{label}-{key}.json"));
@@ -128,7 +164,10 @@ fn featurize(
                 serde_json::from_str(&source).map_err(|error| format!("bad cache: {error}"))?;
             if cache.version == CACHE_VERSION
                 && cache.embedding_dim == embedding_dim
-                && cache.fusion_features == FUSION_FEATURES.len()
+                && cache.fusion_features == fusion_dim
+                && cache.embedding_model == metadata.model_id
+                && cache.embedding_revision == metadata.revision.clone().unwrap_or_default()
+                && cache.examples.len() == examples.len()
             {
                 println!(
                     "{label}: cache hit {} ({} examples)",
@@ -183,11 +222,15 @@ fn featurize(
     }
     println!("{label}: {} unique texts", texts.len());
     // `analyze_batch` enforces `max_batch_size`: chunk large corpora.
-    let fingerprints = map_chunks_ordered(&texts, 256, jobs, |chunk| {
-        engine
-            .analyze_batch(chunk)
-            .map_err(|error| format!("analysis failed: {error}"))
-    })?;
+    let fingerprints = if use_fusion {
+        map_chunks_ordered(&texts, 256, jobs, |chunk| {
+            engine
+                .analyze_batch(chunk)
+                .map_err(|error| format!("analysis failed: {error}"))
+        })?
+    } else {
+        Vec::new()
+    };
     // Embed in chunks to keep provider calls bounded.
     let vectors = map_chunks_ordered(&texts, 64, jobs, |chunk| {
         embeddings
@@ -199,13 +242,13 @@ fn featurize(
     }
     let mut cached = Vec::with_capacity(layout.len());
     for (position, (state, candidates, gold)) in layout.iter().enumerate() {
-        let fusion = fusion_feature_vector(&fingerprints[*state]);
+        let fusion = use_fusion.then(|| fusion_feature_vector(&fingerprints[*state]));
         let mut rows = Vec::with_capacity(candidates.len());
         for (_id, text) in candidates {
             rows.push(interaction_features(
                 &vectors[*state],
                 &vectors[*text],
-                Some(&fusion),
+                fusion.as_deref(),
             )?);
         }
         let example = HeadTrainExample::new(rows, *gold)?;
@@ -224,7 +267,7 @@ fn featurize(
             embedding_model: metadata.model_id,
             embedding_revision: metadata.revision.unwrap_or_default(),
             embedding_dim,
-            fusion_features: FUSION_FEATURES.len(),
+            fusion_features: fusion_dim,
             examples: cached.clone(),
         };
         std::fs::write(
@@ -277,11 +320,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let max_train: usize = get("max-train").map_or(Ok(0), |value| value.parse())?;
     let cache_dir = get("cache");
     let jobs: usize = get("jobs").map_or(Ok(1), |value| value.parse())?;
-    let no_rebus = parsed.flag("no-rebus");
+    let approach = parsed.value("approach").unwrap_or("interaction");
+    if !matches!(approach, "interaction" | "prototype") {
+        return Err("--approach must be interaction or prototype".into());
+    }
+    let no_rebus = parsed.flag("no-rebus") || approach == "prototype";
+    let use_fusion = !parsed.flag("no-fusion") && approach != "prototype";
 
-    let backbone = Arc::new(
-        TransformerEmbeddingProvider::open(embeddings_dir).map_err(|error| error.to_string())?,
-    );
+    let backbone = textintel::decision::open_decision_embeddings(embeddings_dir)?;
     let metadata = backbone
         .model_metadata()
         .ok_or("backbone has no metadata")?;
@@ -303,8 +349,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         metadata.dimensions,
         "train",
         &train_files,
-        cache_dir.as_deref(),
-        jobs,
+        FeatureOptions {
+            cache_dir: cache_dir.as_deref(),
+            jobs,
+            use_fusion,
+        },
     )
     .map_err(|error| error.to_string())?;
     let valid = featurize(
@@ -313,10 +362,69 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         metadata.dimensions,
         "valid",
         &valid_files,
-        cache_dir.as_deref(),
-        jobs,
+        FeatureOptions {
+            cache_dir: cache_dir.as_deref(),
+            jobs,
+            use_fusion,
+        },
     )
     .map_err(|error| error.to_string())?;
+    if approach == "prototype" {
+        let blend: f32 = parsed.value("prototype-blend").unwrap_or("0.5").parse()?;
+        let mut criteria = None;
+        for file in train_files.iter().chain(&valid_files) {
+            let path = file.split_once('@').map_or(file.as_str(), |(path, _)| path);
+            for example in load_examples(path)? {
+                let textintel::decision::DecisionQuestion::Choice {
+                    criteria: current, ..
+                } = example.question
+                else {
+                    unreachable!()
+                };
+                if let Some(expected) = &criteria {
+                    if expected != &current {
+                        return Err(
+                            "prototype training requires one fixed criterion map across splits"
+                                .into(),
+                        );
+                    }
+                } else {
+                    criteria = Some(current);
+                }
+            }
+        }
+        let mut artifact = textintel::decision::PrototypeArtifact::fit(
+            metadata,
+            criteria.ok_or("prototype task has no criteria")?,
+            &train,
+            &valid,
+            blend,
+            format!("train-{}", source_digest(&train_files)?),
+        )?;
+        artifact.training_config.extend(BTreeMap::from([
+            ("train_sources".into(), train_files.join(",")),
+            ("valid_sources".into(), valid_files.join(",")),
+            ("train_digest".into(), source_digest(&train_files)?),
+            ("valid_digest".into(), source_digest(&valid_files)?),
+            ("fusion".into(), "false".into()),
+            ("rebus".into(), "false".into()),
+        ]));
+        artifact.revision = Some(format!(
+            "prototype-{}",
+            cache_key(&[serde_json::to_string(&artifact)?])
+        ));
+        if let Some(parent) = std::path::Path::new(out).parent()
+            && !parent.as_os_str().is_empty()
+        {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(out, serde_json::to_string(&artifact)?)?;
+        println!(
+            "wrote prototype {out} (blend={blend}, temperature={})",
+            artifact.temperature
+        );
+        return Ok(());
+    }
     let mut train = train;
     if max_train > 0 && train.len() > max_train {
         train.truncate(max_train);
@@ -327,6 +435,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         train.len(),
         valid.len()
     );
+    if hidden == 0 || epochs == 0 || patience == 0 || batch_size == 0 {
+        return Err("hidden, epochs, patience and batch must be positive".into());
+    }
     let mut head = init_head_xavier(input_dim, hidden, seed).map_err(|error| error.to_string())?;
     println!("head params: {}", head.parameter_count());
     let mut trainer =
@@ -335,18 +446,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut best = head.clone();
     let mut best_valid = f64::INFINITY;
     let mut waited = 0usize;
+    let mut epochs_run = 0usize;
     let mut order: Vec<usize> = (0..train.len()).collect();
     for epoch in 1..=epochs {
+        epochs_run = epoch;
         SplitMix64::new(seed + epoch as u64).shuffle(&mut order);
         let mut loss_sum = 0.0;
         let mut batches = 0usize;
         for chunk in order.chunks(batch_size) {
-            let batch: Vec<HeadTrainExample> = chunk
-                .iter()
-                .map(|position| train[*position].clone())
-                .collect();
             loss_sum += trainer
-                .step(&mut head, &batch)
+                .step_indexed(&mut head, &train, chunk)
                 .map_err(|error| error.to_string())?;
             batches += 1;
         }
@@ -378,8 +487,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut artifact = InteractionArtifact::from_head(
         &best,
         metadata.dimensions,
-        FUSION_FEATURES.len(),
-        "agnews-12k+routing-seed",
+        if use_fusion { FUSION_FEATURES.len() } else { 0 },
+        format!("train-{}", source_digest(&train_files)?),
     )
     .map_err(|error| error.to_string())?;
     artifact.metrics = BTreeMap::from([
@@ -388,7 +497,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("valid_loss".to_string(), valid_loss),
         ("valid_acc".to_string(), valid_acc),
     ]);
-    artifact.revision = Some(format!("seed{seed}-lr{learning_rate}-h{hidden}"));
+    let samples = valid
+        .iter()
+        .map(|example| {
+            let logits = example
+                .candidates
+                .iter()
+                .map(|features| best.forward(features).map(f64::from))
+                .collect::<Result<Vec<_>, _>>()?;
+            textintel::decision::CalibrationSample::new(logits, example.gold)
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    let fitted = textintel::decision::fit_temperature(&samples)?;
+    artifact.temperature = fitted.temperature;
+    artifact
+        .metrics
+        .insert("valid_nll_calibrated".to_string(), fitted.nll_after);
+    artifact.embedding_model = Some(metadata.clone());
+    artifact.training_config = BTreeMap::from([
+        ("seed".into(), seed.to_string()),
+        ("learning_rate".into(), learning_rate.to_string()),
+        ("batch".into(), batch_size.to_string()),
+        ("epochs_run".into(), epochs_run.to_string()),
+        ("train_sources".into(), train_files.join(",")),
+        ("valid_sources".into(), valid_files.join(",")),
+        ("train_digest".into(), source_digest(&train_files)?),
+        ("valid_digest".into(), source_digest(&valid_files)?),
+        ("rebus".into(), (!no_rebus).to_string()),
+        ("fusion".into(), use_fusion.to_string()),
+        ("cache_version".into(), CACHE_VERSION.to_string()),
+    ]);
+    artifact.revision = Some(format!("interaction-{}", cache_key(&[artifact.to_json()?])));
+    println!(
+        "temperature={:.4} valid_nll_before={:.4} valid_nll_calibrated={:.4}",
+        fitted.temperature, fitted.nll_before, fitted.nll_after
+    );
     if let Some(parent) = std::path::Path::new(&out).parent()
         && !parent.as_os_str().is_empty()
     {

@@ -8,6 +8,7 @@ The Rust crate is the sole implementation and exposes a typed API.
 See [`docs/API.md`](docs/API.md) for the API reference,
 [`resources/README.md`](resources/README.md) for the resource-pack format,
 and [`CHANGELOG.md`](CHANGELOG.md) for release notes.
+See [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) for measured optimization and model-selection results.
 
 ## Installation
 
@@ -293,3 +294,5 @@ corpus in `fuzz/corpus/`; run them locally with
 ## License
 
 MIT — see [`LICENSE-MIT`](LICENSE-MIT).
+
+Decision training experiments and the optional local routing model are documented in [DECISION_OPTIMIZATION.md](docs/DECISION_OPTIMIZATION.md).

@@ -85,3 +85,5 @@ textintel generate "summarize: ..." --liquid-endpoint http://127.0.0.1:8080/v1/c
 
 The server applies the checkpoint's chat template; only `http://`
 endpoints are accepted (terminate TLS in your deployment).
+
+`decision-routing-wordhash-v1.json` is an optional experimental local routing head. It requires `wordhash:128` embeddings and rebus disabled. See [experiment report](../docs/DECISION_OPTIMIZATION.md) for its narrow dataset and evaluation limits.

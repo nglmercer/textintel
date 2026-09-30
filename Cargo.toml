@@ -24,7 +24,6 @@ path = "tools/train_similarity/main.rs"
 [[bin]]
 name = "textintel-train-decision"
 path = "tools/train_decision_v2/main.rs"
-required-features = ["decision-transformer"]
 
 [[bin]]
 name = "textintel-eval-llm"

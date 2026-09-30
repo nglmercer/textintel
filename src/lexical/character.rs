@@ -60,6 +60,18 @@ fn levenshtein_chars(a: &[char], b: &[char]) -> usize {
     if a == b {
         return 0;
     }
+    // Equal affixes cannot contribute to Levenshtein distance. Restrict the
+    // quadratic recurrence to the differing middle, retaining Unicode chars.
+    let prefix = a.iter().zip(b).take_while(|(a, b)| a == b).count();
+    let (a, b) = (&a[prefix..], &b[prefix..]);
+    let suffix = a
+        .iter()
+        .rev()
+        .zip(b.iter().rev())
+        .take_while(|(a, b)| a == b)
+        .count();
+    let (a, b) = (&a[..a.len() - suffix], &b[..b.len() - suffix]);
+    let (a, b) = if a.len() < b.len() { (b, a) } else { (a, b) };
     if a.is_empty() {
         return b.len();
     }
@@ -94,6 +106,7 @@ fn damerau_levenshtein_chars(a: &[char], b: &[char]) -> usize {
     if a == b {
         return 0;
     }
+    let (a, b) = if a.len() < b.len() { (b, a) } else { (a, b) };
     // Three rolling rows (same optimal-string-alignment recurrence — the
     // transposition term reaches back two rows) instead of the full
     // matrix: identical values, O(min) memory. `row_1` always holds the
@@ -220,6 +233,9 @@ fn packed_ngram(window: &[char]) -> u64 {
 /// windows. Either way intersection and union are exact integer sums,
 /// so the value matches the string-based computation bit for bit.
 fn ngram_similarity_chars(a: &[char], b: &[char], n: usize, sides_equal: bool) -> f64 {
+    if sides_equal {
+        return 1.0;
+    }
     if n == 0 || (a.len() < n && b.len() < n) {
         return if sides_equal { 1.0 } else { 0.0 };
     }
@@ -282,9 +298,13 @@ pub fn lcs_len(a: &str, b: &str) -> usize {
 
 /// [`lcs_len`] over pre-collected chars. Same recurrence, same value.
 fn lcs_len_chars(a: &[char], b: &[char]) -> usize {
+    if a == b {
+        return a.len();
+    }
     if a.is_empty() || b.is_empty() {
         return 0;
     }
+    let (a, b) = if a.len() < b.len() { (b, a) } else { (a, b) };
     let mut previous = vec![0usize; b.len() + 1];
     let mut current = vec![0usize; b.len() + 1];
     for ca in a.iter().copied() {

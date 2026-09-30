@@ -2,7 +2,9 @@ use std::hint::black_box;
 
 use criterion::{Criterion, criterion_group, criterion_main};
 
-use textintel::{FINGERPRINT_SCHEMA_VERSION, TextIntelligence};
+use textintel::{
+    FINGERPRINT_SCHEMA_VERSION, LogisticTrainingBatch, TextIntelligence, logistic_step,
+};
 
 fn deterministic_core(c: &mut Criterion) {
     let engine = TextIntelligence::default();
@@ -27,5 +29,36 @@ fn deterministic_core(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, deterministic_core);
+fn training(c: &mut Criterion) {
+    let features: Vec<Vec<f64>> = (0..1229)
+        .map(|row| {
+            (0..30)
+                .map(|column| ((row * 17 + column * 13) % 100) as f64 / 100.0)
+                .collect()
+        })
+        .collect();
+    let labels: Vec<bool> = (0..features.len()).map(|row| row % 3 != 0).collect();
+    let mut weights = vec![0.0; 30];
+    let mut bias = 0.0;
+    c.bench_function("logistic_epoch_oneshot", |bench| {
+        bench.iter(|| {
+            black_box(logistic_step(
+                &features,
+                &labels,
+                &mut weights,
+                &mut bias,
+                0.2,
+                1e-3,
+            ))
+        });
+    });
+    let mut weights = vec![0.0; 30];
+    let mut bias = 0.0;
+    let mut batch = LogisticTrainingBatch::new(&features, &labels);
+    c.bench_function("logistic_epoch_reused", |bench| {
+        bench.iter(|| black_box(batch.step(&mut weights, &mut bias, 0.2, 1e-3)));
+    });
+}
+
+criterion_group!(benches, deterministic_core, training);
 criterion_main!(benches);

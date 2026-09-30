@@ -14,7 +14,9 @@ pub use features::{
     TRAINING_FEATURES, fuzzy_decode_mismatch, language_agreement, mean_channel_confidence,
     training_features,
 };
-pub use optim::{balanced_sample_weights, logistic_step, logistic_step_weighted, sigmoid};
+pub use optim::{
+    LogisticTrainingBatch, balanced_sample_weights, logistic_step, logistic_step_weighted, sigmoid,
+};
 
 /// A named deterministic calibration profile. The channel calculation stays
 /// explainable; calibration only maps its raw score to an operating-point
