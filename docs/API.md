@@ -89,6 +89,57 @@ dimensions, and non-finite values are validated before fingerprints use them.
 It never loads model files or consults model-path environment variables.
 Optional espeak uses an installed local binary with bounded output and timeout.
 
+## Speech normalization and segmentation
+
+The recommended normalization API is `speech::normalization::normalize` with
+`NormalizeOptions::resolve` or `resolve_with_style`. It provides
+versioned `tn-v2.1` rules, including `precise`, `natural`, and `digits`
+styles, explicit locales, resource budgets, protected spans, and warnings.
+`NormalizedText` contains `spoken`, ordered original byte-offset `changes`,
+`warnings`, and language-specific `coverage`. `SpeechText::prepare` retains
+the same stable preparation identity. `language_coverage()` exposes the
+supported language/locale and feature matrix; this is a rules coverage
+declaration, not measured linguistic accuracy.
+
+Normalize the complete input before calling
+`speech::segmentation::segment_text(&spoken, &SegmentPolicy::default())`.
+Fragments carry `index`, `total`, and `text`; the default limit is 200 Unicode
+scalar values, configurable with `SegmentPolicy::bounded(max_chars)`.
+Segmentation can canonicalize whitespace at boundaries. It prefers protected
+sentence boundaries and whitespace, then approximate grapheme boundaries;
+a cluster exceeding the hard character limit can be split. No audio or model
+runtime is involved.
+
+The separate `speech::{parse_for_speech, normalize_for_speech,
+verbalize_document}` APIs are **experimental**, with explicit typed spans for
+20 base-language reading conventions. `SpeechOptions` selects the language,
+date order, decimal separator, and budgets. `SpeechDocument` retains the
+source text and byte offsets. `SpeechNormalization.readings` marks unsupported
+or ambiguous spans with `supported: false` and a reason, preserves their
+source, and sets `fully_supported: false`. That flag reports implementation
+support; it does not certify pronunciation quality. Plain text is preserved
+without similarity normalization, case folding, or rebus decoding.
+
+The versioned normalizer preserves ambiguous forms and reports warnings;
+languages without rules pass through with `none` coverage. In both APIs,
+callers should inspect diagnostics and choose whether to preserve, review, or
+reject unresolved input before synthesis. The experimental parser never
+silently selects USD for a bare `$` or guesses ambiguous slash-date order.
+
+The current speech CLI uses the experimental typed APIs:
+
+```sh
+textintel parse-speech 'El 2024-11-13 pagué S/ 12.50.' --locale es --json
+textintel normalize-speech '03/04/2024' --locale es --date-order dmy --json
+textintel eval-speech data/speech/evaluation.json --json
+textintel eval-speech data/speech/reference-nemo.json --json
+```
+
+`eval-speech` returns a nonzero status when annotated expectations fail;
+failures are expected on the external NeMo reference corpus. These commands
+do not invoke the versioned rule-based normalizer. See [speech coverage,
+corpus policy, and API examples](SPEECH.md).
+
 ## Resources, configuration, and errors
 
 Load custom packs with `ResourceLoader::from_resource_root` and attach them

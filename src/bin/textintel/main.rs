@@ -27,6 +27,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(2);
     };
     let code = match command {
+        "parse-speech" => commands::speech::parse(&parsed)?,
+        "normalize-speech" => commands::speech::normalize(&parsed)?,
+        "eval-speech" => commands::speech::evaluate(&parsed)?,
         "analyze" => commands::text::analyze(&parsed)?,
         "explain" => commands::text::explain(&parsed)?,
         "decode" => commands::text::decode(&parsed)?,

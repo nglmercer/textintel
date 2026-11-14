@@ -10,3 +10,5 @@ pub mod eval;
 pub mod resources;
 pub mod store;
 pub mod text;
+
+pub mod speech;

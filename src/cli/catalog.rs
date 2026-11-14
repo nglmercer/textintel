@@ -48,6 +48,24 @@ const fn positional(
 // ---------------------------------------------------------------------------
 
 const TEXTINTEL_ARGS: &[ArgSpec] = &[
+    value(
+        "locale",
+        "locale",
+        "CODE",
+        "Explicit speech language (e.g. es, en, zh).",
+    ),
+    value(
+        "date-order",
+        "date-order",
+        "ORDER",
+        "Numeric date order: dmy|mdy|reject (default reject).",
+    ),
+    value(
+        "decimal-separator",
+        "decimal-separator",
+        "CHAR",
+        "Explicit decimal separator: dot|comma|arabic; unset preserves ambiguity.",
+    ),
     flag("json", "json", "Emit machine-readable JSON output."),
     flag(
         "production",
@@ -107,6 +125,48 @@ const TEXTINTEL_ARGS: &[ArgSpec] = &[
 ];
 
 const TEXTINTEL_COMMANDS: &[CommandSpec] = &[
+    CommandSpec {
+        name: "parse-speech",
+        aliases: &[],
+        summary: "Parse lossless typed spans for speech.",
+        args: &["locale", "date-order", "decimal-separator"],
+        required_args: &["locale"],
+        positionals: &[positional(
+            "text",
+            "TEXT",
+            true,
+            false,
+            "Original text to parse.",
+        )],
+    },
+    CommandSpec {
+        name: "normalize-speech",
+        aliases: &[],
+        summary: "Produce explicit spoken readings and unresolved-span diagnostics.",
+        args: &["locale", "date-order", "decimal-separator"],
+        required_args: &["locale"],
+        positionals: &[positional(
+            "text",
+            "TEXT",
+            true,
+            false,
+            "Original text for speech.",
+        )],
+    },
+    CommandSpec {
+        name: "eval-speech",
+        aliases: &[],
+        summary: "Measure exact speech spans and annotated spoken-form accuracy.",
+        args: &[],
+        required_args: &[],
+        positionals: &[positional(
+            "dataset",
+            "CORPUS.JSON",
+            false,
+            false,
+            "Speech corpus (default data/speech/evaluation.json).",
+        )],
+    },
     CommandSpec {
         name: "analyze",
         aliases: &[],
@@ -311,6 +371,9 @@ mod tests {
         assert_eq!(
             names,
             vec![
+                "parse-speech",
+                "normalize-speech",
+                "eval-speech",
                 "analyze",
                 "explain",
                 "decode",

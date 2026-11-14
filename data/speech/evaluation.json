@@ -1,0 +1,3582 @@
+{
+  "version": "0.1.0",
+  "purpose": "Hand-authored regression and adversarial acceptance cases; not independent production validation. Locale matrix cases share structural grammar families.",
+  "cases": [
+    {
+      "id": "en-number",
+      "locale": "en",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-date",
+      "locale": "en",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-time",
+      "locale": "en",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-currency",
+      "locale": "en",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-percent",
+      "locale": "en",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-measure",
+      "locale": "en",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-identifier",
+      "locale": "en",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-number",
+      "locale": "es",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-date",
+      "locale": "es",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-time",
+      "locale": "es",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-currency",
+      "locale": "es",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-percent",
+      "locale": "es",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-measure",
+      "locale": "es",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-identifier",
+      "locale": "es",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-number",
+      "locale": "zh",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-date",
+      "locale": "zh",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-time",
+      "locale": "zh",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-currency",
+      "locale": "zh",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-percent",
+      "locale": "zh",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-measure",
+      "locale": "zh",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-identifier",
+      "locale": "zh",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-number",
+      "locale": "hi",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-date",
+      "locale": "hi",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-time",
+      "locale": "hi",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-currency",
+      "locale": "hi",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-percent",
+      "locale": "hi",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-measure",
+      "locale": "hi",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-identifier",
+      "locale": "hi",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-number",
+      "locale": "ar",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-date",
+      "locale": "ar",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-time",
+      "locale": "ar",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-currency",
+      "locale": "ar",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-percent",
+      "locale": "ar",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-measure",
+      "locale": "ar",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-identifier",
+      "locale": "ar",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-number",
+      "locale": "fr",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-date",
+      "locale": "fr",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-time",
+      "locale": "fr",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-currency",
+      "locale": "fr",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-percent",
+      "locale": "fr",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-measure",
+      "locale": "fr",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-identifier",
+      "locale": "fr",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-number",
+      "locale": "pt",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-date",
+      "locale": "pt",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-time",
+      "locale": "pt",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-currency",
+      "locale": "pt",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-percent",
+      "locale": "pt",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-measure",
+      "locale": "pt",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-identifier",
+      "locale": "pt",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-number",
+      "locale": "ru",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-date",
+      "locale": "ru",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-time",
+      "locale": "ru",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-currency",
+      "locale": "ru",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-percent",
+      "locale": "ru",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-measure",
+      "locale": "ru",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-identifier",
+      "locale": "ru",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-number",
+      "locale": "bn",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-date",
+      "locale": "bn",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-time",
+      "locale": "bn",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-currency",
+      "locale": "bn",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-percent",
+      "locale": "bn",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-measure",
+      "locale": "bn",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-identifier",
+      "locale": "bn",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-number",
+      "locale": "ur",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-date",
+      "locale": "ur",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-time",
+      "locale": "ur",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-currency",
+      "locale": "ur",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-percent",
+      "locale": "ur",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-measure",
+      "locale": "ur",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-identifier",
+      "locale": "ur",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-number",
+      "locale": "id",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-date",
+      "locale": "id",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-time",
+      "locale": "id",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-currency",
+      "locale": "id",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-percent",
+      "locale": "id",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-measure",
+      "locale": "id",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-identifier",
+      "locale": "id",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-number",
+      "locale": "de",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-date",
+      "locale": "de",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-time",
+      "locale": "de",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-currency",
+      "locale": "de",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-percent",
+      "locale": "de",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-measure",
+      "locale": "de",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-identifier",
+      "locale": "de",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-number",
+      "locale": "ja",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-date",
+      "locale": "ja",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-time",
+      "locale": "ja",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-currency",
+      "locale": "ja",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-percent",
+      "locale": "ja",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-measure",
+      "locale": "ja",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-identifier",
+      "locale": "ja",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-number",
+      "locale": "pa",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-date",
+      "locale": "pa",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-time",
+      "locale": "pa",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-currency",
+      "locale": "pa",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-percent",
+      "locale": "pa",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-measure",
+      "locale": "pa",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-identifier",
+      "locale": "pa",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-number",
+      "locale": "mr",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-date",
+      "locale": "mr",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-time",
+      "locale": "mr",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-currency",
+      "locale": "mr",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-percent",
+      "locale": "mr",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-measure",
+      "locale": "mr",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-identifier",
+      "locale": "mr",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-number",
+      "locale": "te",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-date",
+      "locale": "te",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-time",
+      "locale": "te",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-currency",
+      "locale": "te",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-percent",
+      "locale": "te",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-measure",
+      "locale": "te",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-identifier",
+      "locale": "te",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-number",
+      "locale": "tr",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-date",
+      "locale": "tr",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-time",
+      "locale": "tr",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-currency",
+      "locale": "tr",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-percent",
+      "locale": "tr",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-measure",
+      "locale": "tr",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-identifier",
+      "locale": "tr",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-number",
+      "locale": "ta",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-date",
+      "locale": "ta",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-time",
+      "locale": "ta",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-currency",
+      "locale": "ta",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-percent",
+      "locale": "ta",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-measure",
+      "locale": "ta",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-identifier",
+      "locale": "ta",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-number",
+      "locale": "vi",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-date",
+      "locale": "vi",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-time",
+      "locale": "vi",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-currency",
+      "locale": "vi",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-percent",
+      "locale": "vi",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-measure",
+      "locale": "vi",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-identifier",
+      "locale": "vi",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-number",
+      "locale": "ko",
+      "text": "42",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "42",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-date",
+      "locale": "ko",
+      "text": "2024-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-time",
+      "locale": "ko",
+      "text": "09:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-currency",
+      "locale": "ko",
+      "text": "USD 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "USD 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-percent",
+      "locale": "ko",
+      "text": "12.5%",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "12.5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-measure",
+      "locale": "ko",
+      "text": "3 kg",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-identifier",
+      "locale": "ko",
+      "text": "https://example.test/2024-01-01",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 31,
+          "source": "https://example.test/2024-01-01",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-spoken-twelve",
+      "locale": "en",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "twelve"
+      ]
+    },
+    {
+      "id": "es-spoken-twelve",
+      "locale": "es",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "doce"
+      ]
+    },
+    {
+      "id": "zh-spoken-twelve",
+      "locale": "zh",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "十二"
+      ]
+    },
+    {
+      "id": "hi-spoken-twelve",
+      "locale": "hi",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "बारह"
+      ]
+    },
+    {
+      "id": "ar-spoken-twelve",
+      "locale": "ar",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "اثنا عشر",
+        "إثنا عشر"
+      ]
+    },
+    {
+      "id": "fr-spoken-twelve",
+      "locale": "fr",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "douze"
+      ]
+    },
+    {
+      "id": "pt-spoken-twelve",
+      "locale": "pt",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "doze"
+      ]
+    },
+    {
+      "id": "ru-spoken-twelve",
+      "locale": "ru",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "двенадцать"
+      ]
+    },
+    {
+      "id": "bn-spoken-twelve",
+      "locale": "bn",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "বারো"
+      ]
+    },
+    {
+      "id": "ur-spoken-twelve",
+      "locale": "ur",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "بارہ"
+      ]
+    },
+    {
+      "id": "id-spoken-twelve",
+      "locale": "id",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "dua belas"
+      ]
+    },
+    {
+      "id": "de-spoken-twelve",
+      "locale": "de",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "zwölf"
+      ]
+    },
+    {
+      "id": "ja-spoken-twelve",
+      "locale": "ja",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "十二",
+        "じゅうに"
+      ]
+    },
+    {
+      "id": "pa-spoken-twelve",
+      "locale": "pa",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "ਬਾਰਾਂ"
+      ]
+    },
+    {
+      "id": "mr-spoken-twelve",
+      "locale": "mr",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "बारा"
+      ]
+    },
+    {
+      "id": "te-spoken-twelve",
+      "locale": "te",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "పన్నెండు"
+      ]
+    },
+    {
+      "id": "tr-spoken-twelve",
+      "locale": "tr",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "on iki"
+      ]
+    },
+    {
+      "id": "ta-spoken-twelve",
+      "locale": "ta",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "பன்னிரண்டு"
+      ]
+    },
+    {
+      "id": "vi-spoken-twelve",
+      "locale": "vi",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "mười hai"
+      ]
+    },
+    {
+      "id": "ko-spoken-twelve",
+      "locale": "ko",
+      "text": "12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 2,
+          "source": "12",
+          "kind": "number"
+        }
+      ],
+      "spoken": [
+        "십이"
+      ]
+    },
+    {
+      "id": "hard-160",
+      "locale": "es",
+      "text": "31/31/2024",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "ambiguous",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "31/31/2024",
+          "kind": "ambiguous"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hard-161",
+      "locale": "es",
+      "text": "2023-02-29",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "ambiguous",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "kind": "ambiguous"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hard-162",
+      "locale": "es",
+      "text": "25:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "ambiguous",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "25:00",
+          "kind": "ambiguous"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hard-163",
+      "locale": "es",
+      "text": "$12",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "ambiguous",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 3,
+          "source": "$12",
+          "kind": "ambiguous"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hard-164",
+      "locale": "es",
+      "text": "03/04/2024",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "ambiguous",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "03/04/2024",
+          "kind": "ambiguous"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hard-165",
+      "locale": "es",
+      "text": "1,234",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "ambiguous",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "1,234",
+          "kind": "ambiguous"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hard-166",
+      "locale": "es",
+      "text": "23:59:99",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "ambiguous",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "source": "23:59:99",
+          "kind": "ambiguous"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hard-167",
+      "locale": "es",
+      "text": "2024-04-31",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "ambiguous",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "2024-04-31",
+          "kind": "ambiguous"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hard-168",
+      "locale": "es",
+      "text": "1/1/123",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "ambiguous",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 7,
+          "source": "1/1/123",
+          "kind": "ambiguous"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hard-169",
+      "locale": "es",
+      "text": "1.2.3.4.5",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "1.2.3.4.5",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-170",
+      "locale": "es",
+      "text": "+51 987 654 321",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 15,
+          "source": "+51 987 654 321",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-171",
+      "locale": "es",
+      "text": "v1.2.3",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 6,
+          "source": "v1.2.3",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-172",
+      "locale": "es",
+      "text": "ada@example.com",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 15,
+          "source": "ada@example.com",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-173",
+      "locale": "es",
+      "text": "a2024-01-01z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 12,
+          "source": "a2024-01-01z",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-174",
+      "locale": "es",
+      "text": "ID00123",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "identifier",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 7,
+          "source": "ID00123",
+          "kind": "identifier"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "exact-175",
+      "locale": "en",
+      "text": "00123",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "00123",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "exact-176",
+      "locale": "en",
+      "text": "-12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 6,
+          "source": "-12.50",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "exact-177",
+      "locale": "en",
+      "text": "+0.01",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 5,
+          "source": "+0.01",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "exact-178",
+      "locale": "en",
+      "text": "9007199254740993",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 16,
+          "source": "9007199254740993",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "money-179",
+      "locale": "es",
+      "text": "S/ 12.50",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "source": "S/ 12.50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "money-180",
+      "locale": "es",
+      "text": "12,50 PEN",
+      "decimal_separator": ",",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 9,
+          "source": "12,50 PEN",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "money-181",
+      "locale": "es",
+      "text": "EUR 1.234,50",
+      "decimal_separator": ",",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 12,
+          "source": "EUR 1.234,50",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "money-182",
+      "locale": "es",
+      "text": "12 USD",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 6,
+          "source": "12 USD",
+          "kind": "currency"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "date-183",
+      "locale": "es",
+      "text": "31/12/2024",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "31/12/2024",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "date-184",
+      "locale": "es",
+      "text": "12/31/2024",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "12/31/2024",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "date-185",
+      "locale": "es",
+      "text": "03/04/2024",
+      "decimal_separator": null,
+      "date_order": "day_month_year",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "03/04/2024",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "date-186",
+      "locale": "es",
+      "text": "03/04/2024",
+      "decimal_separator": null,
+      "date_order": "month_day_year",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 10,
+          "source": "03/04/2024",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "clock-187",
+      "locale": "es",
+      "text": "9:05",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "9:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "clock-188",
+      "locale": "es",
+      "text": "00:00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "source": "00:00:00",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "clock-189",
+      "locale": "es",
+      "text": "23:59:59",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "source": "23:59:59",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "units-190",
+      "locale": "es",
+      "text": "12kg",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "12kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "units-191",
+      "locale": "es",
+      "text": "-3.5 °C",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 8,
+          "source": "-3.5 °C",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "units-192",
+      "locale": "es",
+      "text": "3 km",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "3 km",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "units-193",
+      "locale": "es",
+      "text": "12,5 %",
+      "decimal_separator": ",",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 6,
+          "source": "12,5 %",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-194",
+      "locale": "es",
+      "text": "La cita será el 2024-02-29.",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 17,
+          "end": 27,
+          "source": "2024-02-29",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-195",
+      "locale": "en",
+      "text": "The meeting starts at 09:05.",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "time",
+      "expected_spans": [
+        {
+          "start": 22,
+          "end": 27,
+          "source": "09:05",
+          "kind": "time"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-196",
+      "locale": "fr",
+      "text": "Poids : 3 kg.",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 8,
+          "end": 12,
+          "source": "3 kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-197",
+      "locale": "de",
+      "text": "Der Rabatt ist 12,5%.",
+      "decimal_separator": ",",
+      "date_order": "reject_ambiguous",
+      "category": "percent",
+      "expected_spans": [
+        {
+          "start": 15,
+          "end": 20,
+          "source": "12,5%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-198",
+      "locale": "ar",
+      "text": "الموعد ٢٠٢٤-٠٢-٢٩.",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 13,
+          "end": 31,
+          "source": "٢٠٢٤-٠٢-٢٩",
+          "kind": "date"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-199",
+      "locale": "hi",
+      "text": "मात्रा १२ kg है।",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 19,
+          "end": 28,
+          "source": "१२ kg",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-200",
+      "locale": "zh",
+      "text": "总数是４２。",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 9,
+          "end": 15,
+          "source": "４２",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-201",
+      "locale": "ja",
+      "text": "温度は３ °Cです。",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "measure",
+      "expected_spans": [
+        {
+          "start": 9,
+          "end": 16,
+          "source": "３ °C",
+          "kind": "measure"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-202",
+      "locale": "bn",
+      "text": "সংখ্যা ১২।",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 19,
+          "end": 25,
+          "source": "১২",
+          "kind": "number"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "context-203",
+      "locale": "es",
+      "text": "Código 00123; total -12,50%.",
+      "decimal_separator": ",",
+      "date_order": "reject_ambiguous",
+      "category": "number",
+      "expected_spans": [
+        {
+          "start": 8,
+          "end": 13,
+          "source": "00123",
+          "kind": "number"
+        },
+        {
+          "start": 21,
+          "end": 28,
+          "source": "-12,50%",
+          "kind": "percent"
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "plain-204",
+      "locale": "en",
+      "text": "hello world",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "plain",
+      "expected_spans": [],
+      "spoken": [
+        "hello world"
+      ]
+    },
+    {
+      "id": "plain-205",
+      "locale": "es",
+      "text": "¡Hola, José!",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "plain",
+      "expected_spans": [],
+      "spoken": [
+        "¡Hola, José!"
+      ]
+    },
+    {
+      "id": "plain-206",
+      "locale": "ar",
+      "text": "مرحبا بالعالم",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "plain",
+      "expected_spans": [],
+      "spoken": [
+        "مرحبا بالعالم"
+      ]
+    },
+    {
+      "id": "plain-207",
+      "locale": "zh",
+      "text": "你好世界",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "plain",
+      "expected_spans": [],
+      "spoken": [
+        "你好世界"
+      ]
+    },
+    {
+      "id": "plain-208",
+      "locale": "hi",
+      "text": "नमस्ते दुनिया",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "plain",
+      "expected_spans": [],
+      "spoken": [
+        "नमस्ते दुनिया"
+      ]
+    }
+  ]
+}

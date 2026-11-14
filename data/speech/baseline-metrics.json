@@ -1,0 +1,1018 @@
+{
+  "measured_on": "2026-11-13",
+  "status": "development snapshot, not a production-accuracy guarantee",
+  "baseline_commit": "c99f333",
+  "code_coverage": {
+    "command": "cargo llvm-cov --all-features --workspace --json --output-path target/coverage/current.json --ignore-filename-regex '(/tests/|/benches/|/examples/|/registry/)'",
+    "aggregation": "sum of file summaries belonging to TextIntel, excluding instrumented third-party macro source",
+    "baseline": {
+      "lines": {
+        "count": 15736,
+        "covered": 12844,
+        "percent": 81.62175902389426
+      },
+      "functions": {
+        "count": 1750,
+        "covered": 1391,
+        "percent": 79.48571428571428
+      },
+      "regions": {
+        "count": 24263,
+        "covered": 20187,
+        "percent": 83.20075835634505
+      }
+    },
+    "current": {
+      "lines": {
+        "count": 24437,
+        "covered": 21013,
+        "percent": 85.98846012194623
+      },
+      "functions": {
+        "count": 2585,
+        "covered": 2215,
+        "percent": 85.68665377176016
+      },
+      "regions": {
+        "count": 38946,
+        "covered": 33920,
+        "percent": 87.09495198479947
+      }
+    },
+    "normalization_lines": {
+      "count": 6309,
+      "covered": 5949,
+      "percent": 94.29386590584879
+    },
+    "selected_file_lines": {
+      "src/entities/datetime.rs": {
+        "count": 162,
+        "covered": 159,
+        "percent": 98.14814814814817
+      },
+      "src/language/detector.rs": {
+        "count": 11,
+        "covered": 11,
+        "percent": 100.0
+      },
+      "src/language/profile.rs": {
+        "count": 23,
+        "covered": 23,
+        "percent": 100.0
+      },
+      "src/speech/evaluation.rs": {
+        "count": 166,
+        "covered": 148,
+        "percent": 89.1566265060241
+      },
+      "src/speech/lexicons.rs": {
+        "count": 40,
+        "covered": 38,
+        "percent": 95.0
+      },
+      "src/speech/normalization/classify.rs": {
+        "count": 928,
+        "covered": 894,
+        "percent": 96.33620689655172
+      },
+      "src/speech/normalization/dictionary.rs": {
+        "count": 79,
+        "covered": 78,
+        "percent": 98.73417721518987
+      },
+      "src/speech/normalization/lexer.rs": {
+        "count": 191,
+        "covered": 191,
+        "percent": 100.0
+      },
+      "src/speech/normalization/mod.rs": {
+        "count": 100,
+        "covered": 93,
+        "percent": 93.0
+      },
+      "src/speech/normalization/options.rs": {
+        "count": 159,
+        "covered": 152,
+        "percent": 95.59748427672956
+      },
+      "src/speech/normalization/render.rs": {
+        "count": 93,
+        "covered": 93,
+        "percent": 100.0
+      },
+      "src/speech/normalization/rules/de.rs": {
+        "count": 369,
+        "covered": 340,
+        "percent": 92.14092140921407
+      },
+      "src/speech/normalization/rules/en.rs": {
+        "count": 491,
+        "covered": 434,
+        "percent": 88.39103869653768
+      },
+      "src/speech/normalization/rules/es.rs": {
+        "count": 644,
+        "covered": 610,
+        "percent": 94.72049689440993
+      },
+      "src/speech/normalization/rules/fr.rs": {
+        "count": 453,
+        "covered": 436,
+        "percent": 96.24724061810154
+      },
+      "src/speech/normalization/rules/it.rs": {
+        "count": 434,
+        "covered": 418,
+        "percent": 96.31336405529956
+      },
+      "src/speech/normalization/rules/ja.rs": {
+        "count": 287,
+        "covered": 271,
+        "percent": 94.42508710801394
+      },
+      "src/speech/normalization/rules/ko.rs": {
+        "count": 291,
+        "covered": 268,
+        "percent": 92.09621993127148
+      },
+      "src/speech/normalization/rules/mod.rs": {
+        "count": 217,
+        "covered": 150,
+        "percent": 69.12442396313364
+      },
+      "src/speech/normalization/rules/pt.rs": {
+        "count": 630,
+        "covered": 604,
+        "percent": 95.87301587301587
+      },
+      "src/speech/normalization/rules/ru.rs": {
+        "count": 362,
+        "covered": 354,
+        "percent": 97.79005524861878
+      },
+      "src/speech/normalization/rules/zh.rs": {
+        "count": 360,
+        "covered": 344,
+        "percent": 95.55555555555556
+      },
+      "src/speech/normalization/segments.rs": {
+        "count": 221,
+        "covered": 219,
+        "percent": 99.0950226244344
+      },
+      "src/speech/numbers.rs": {
+        "count": 402,
+        "covered": 329,
+        "percent": 81.8407960199005
+      },
+      "src/speech/parser.rs": {
+        "count": 720,
+        "covered": 685,
+        "percent": 95.13888888888889
+      },
+      "src/speech/segmentation.rs": {
+        "count": 290,
+        "covered": 284,
+        "percent": 97.93103448275862
+      },
+      "src/speech/types.rs": {
+        "count": 66,
+        "covered": 66,
+        "percent": 100.0
+      },
+      "src/speech/verbalize.rs": {
+        "count": 612,
+        "covered": 504,
+        "percent": 82.35294117647058
+      }
+    },
+    "branches_measured": false
+  },
+  "authored_regression": {
+    "corpus_version": "0.1.0",
+    "purpose": "Hand-authored regression and adversarial acceptance cases; not independent production validation. Locale matrix cases share structural grammar families.",
+    "totals": {
+      "cases": 209,
+      "parse_cases": 209,
+      "parse_exact": 209,
+      "spoken_cases": 25,
+      "spoken_exact": 25,
+      "fully_supported": 170,
+      "expected_spans": 205,
+      "predicted_spans": 205,
+      "correct_spans": 205
+    },
+    "by_locale": {
+      "ar": {
+        "cases": 10,
+        "parse_cases": 10,
+        "parse_exact": 10,
+        "spoken_cases": 2,
+        "spoken_exact": 2,
+        "fully_supported": 6,
+        "expected_spans": 9,
+        "predicted_spans": 9,
+        "correct_spans": 9
+      },
+      "bn": {
+        "cases": 9,
+        "parse_cases": 9,
+        "parse_exact": 9,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 8,
+        "expected_spans": 9,
+        "predicted_spans": 9,
+        "correct_spans": 9
+      },
+      "de": {
+        "cases": 9,
+        "parse_cases": 9,
+        "parse_exact": 9,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 8,
+        "expected_spans": 9,
+        "predicted_spans": 9,
+        "correct_spans": 9
+      },
+      "en": {
+        "cases": 14,
+        "parse_cases": 14,
+        "parse_exact": 14,
+        "spoken_cases": 2,
+        "spoken_exact": 2,
+        "fully_supported": 12,
+        "expected_spans": 13,
+        "predicted_spans": 13,
+        "correct_spans": 13
+      },
+      "es": {
+        "cases": 41,
+        "parse_cases": 41,
+        "parse_exact": 41,
+        "spoken_cases": 2,
+        "spoken_exact": 2,
+        "fully_supported": 25,
+        "expected_spans": 41,
+        "predicted_spans": 41,
+        "correct_spans": 41
+      },
+      "fr": {
+        "cases": 9,
+        "parse_cases": 9,
+        "parse_exact": 9,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 8,
+        "expected_spans": 9,
+        "predicted_spans": 9,
+        "correct_spans": 9
+      },
+      "hi": {
+        "cases": 10,
+        "parse_cases": 10,
+        "parse_exact": 10,
+        "spoken_cases": 2,
+        "spoken_exact": 2,
+        "fully_supported": 9,
+        "expected_spans": 9,
+        "predicted_spans": 9,
+        "correct_spans": 9
+      },
+      "id": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "ja": {
+        "cases": 9,
+        "parse_cases": 9,
+        "parse_exact": 9,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 8,
+        "expected_spans": 9,
+        "predicted_spans": 9,
+        "correct_spans": 9
+      },
+      "ko": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "mr": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "pa": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "pt": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "ru": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "ta": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "te": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "tr": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "ur": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "vi": {
+        "cases": 8,
+        "parse_cases": 8,
+        "parse_exact": 8,
+        "spoken_cases": 1,
+        "spoken_exact": 1,
+        "fully_supported": 7,
+        "expected_spans": 8,
+        "predicted_spans": 8,
+        "correct_spans": 8
+      },
+      "zh": {
+        "cases": 10,
+        "parse_cases": 10,
+        "parse_exact": 10,
+        "spoken_cases": 2,
+        "spoken_exact": 2,
+        "fully_supported": 9,
+        "expected_spans": 9,
+        "predicted_spans": 9,
+        "correct_spans": 9
+      }
+    },
+    "by_category": {
+      "ambiguous": {
+        "cases": 9,
+        "parse_cases": 9,
+        "parse_exact": 9,
+        "spoken_cases": 0,
+        "spoken_exact": 0,
+        "fully_supported": 0,
+        "expected_spans": 9,
+        "predicted_spans": 9,
+        "correct_spans": 9
+      },
+      "currency": {
+        "cases": 24,
+        "parse_cases": 24,
+        "parse_exact": 24,
+        "spoken_cases": 0,
+        "spoken_exact": 0,
+        "fully_supported": 23,
+        "expected_spans": 24,
+        "predicted_spans": 24,
+        "correct_spans": 24
+      },
+      "date": {
+        "cases": 26,
+        "parse_cases": 26,
+        "parse_exact": 26,
+        "spoken_cases": 0,
+        "spoken_exact": 0,
+        "fully_supported": 24,
+        "expected_spans": 26,
+        "predicted_spans": 26,
+        "correct_spans": 26
+      },
+      "identifier": {
+        "cases": 26,
+        "parse_cases": 26,
+        "parse_exact": 26,
+        "spoken_cases": 0,
+        "spoken_exact": 0,
+        "fully_supported": 0,
+        "expected_spans": 26,
+        "predicted_spans": 26,
+        "correct_spans": 26
+      },
+      "measure": {
+        "cases": 26,
+        "parse_cases": 26,
+        "parse_exact": 26,
+        "spoken_cases": 0,
+        "spoken_exact": 0,
+        "fully_supported": 26,
+        "expected_spans": 26,
+        "predicted_spans": 26,
+        "correct_spans": 26
+      },
+      "number": {
+        "cases": 47,
+        "parse_cases": 47,
+        "parse_exact": 47,
+        "spoken_cases": 20,
+        "spoken_exact": 20,
+        "fully_supported": 46,
+        "expected_spans": 48,
+        "predicted_spans": 48,
+        "correct_spans": 48
+      },
+      "percent": {
+        "cases": 22,
+        "parse_cases": 22,
+        "parse_exact": 22,
+        "spoken_cases": 0,
+        "spoken_exact": 0,
+        "fully_supported": 22,
+        "expected_spans": 22,
+        "predicted_spans": 22,
+        "correct_spans": 22
+      },
+      "plain": {
+        "cases": 5,
+        "parse_cases": 5,
+        "parse_exact": 5,
+        "spoken_cases": 5,
+        "spoken_exact": 5,
+        "fully_supported": 5,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "time": {
+        "cases": 24,
+        "parse_cases": 24,
+        "parse_exact": 24,
+        "spoken_cases": 0,
+        "spoken_exact": 0,
+        "fully_supported": 24,
+        "expected_spans": 24,
+        "predicted_spans": 24,
+        "correct_spans": 24
+      }
+    },
+    "unresolved_by_reason": {
+      "currency symbol needs an explicit ISO currency code": 1,
+      "currency, fractional precision, or currency grammar is not supported for this locale": 1,
+      "date needs a four-digit year and one- or two-digit day/month": 1,
+      "date order is ambiguous; set date_order": 1,
+      "date value or date grammar is not supported for this locale": 2,
+      "identifier \"alphanumeric\" requires an explicit application reading policy": 2,
+      "identifier \"email\" requires an explicit application reading policy": 1,
+      "identifier \"telephone\" requires an explicit application reading policy": 1,
+      "identifier \"url\" requires an explicit application reading policy": 20,
+      "identifier \"version\" requires an explicit application reading policy": 2,
+      "invalid calendar date": 3,
+      "invalid clock time": 2,
+      "number form or range is not supported for this locale": 1,
+      "number separator is ambiguous; set decimal_separator": 1
+    }
+  },
+  "external_nemo_exact_agreement": {
+    "corpus_version": "nemo-reference-0.1.0",
+    "purpose": "External fixture challenge sample for exact spoken-output agreement. Selected independently of TextIntel success; not a production benchmark, not training data, and not proof of native-language coverage. Type gold is intentionally absent.",
+    "totals": {
+      "cases": 544,
+      "parse_cases": 0,
+      "parse_exact": 0,
+      "spoken_cases": 544,
+      "spoken_exact": 156,
+      "fully_supported": 425,
+      "expected_spans": 0,
+      "predicted_spans": 0,
+      "correct_spans": 0
+    },
+    "by_locale": {
+      "ar": {
+        "cases": 30,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 30,
+        "spoken_exact": 1,
+        "fully_supported": 15,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "de": {
+        "cases": 50,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 50,
+        "spoken_exact": 10,
+        "fully_supported": 36,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "en": {
+        "cases": 50,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 50,
+        "spoken_exact": 8,
+        "fully_supported": 34,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "es": {
+        "cases": 50,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 50,
+        "spoken_exact": 17,
+        "fully_supported": 34,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "fr": {
+        "cases": 20,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 20,
+        "spoken_exact": 12,
+        "fully_supported": 14,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "hi": {
+        "cases": 50,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 50,
+        "spoken_exact": 14,
+        "fully_supported": 38,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "ja": {
+        "cases": 50,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 50,
+        "spoken_exact": 1,
+        "fully_supported": 46,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "ko": {
+        "cases": 50,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 50,
+        "spoken_exact": 14,
+        "fully_supported": 47,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "pt": {
+        "cases": 50,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 50,
+        "spoken_exact": 25,
+        "fully_supported": 43,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "ru": {
+        "cases": 44,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 44,
+        "spoken_exact": 9,
+        "fully_supported": 32,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "vi": {
+        "cases": 50,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 50,
+        "spoken_exact": 18,
+        "fully_supported": 44,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "zh": {
+        "cases": 50,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 50,
+        "spoken_exact": 27,
+        "fully_supported": 42,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      }
+    },
+    "by_category": {
+      "currency": {
+        "cases": 109,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 109,
+        "spoken_exact": 10,
+        "fully_supported": 75,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "date": {
+        "cases": 106,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 106,
+        "spoken_exact": 20,
+        "fully_supported": 66,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "measure": {
+        "cases": 110,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 110,
+        "spoken_exact": 25,
+        "fully_supported": 75,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "number": {
+        "cases": 120,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 120,
+        "spoken_exact": 91,
+        "fully_supported": 120,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      },
+      "time": {
+        "cases": 99,
+        "parse_cases": 0,
+        "parse_exact": 0,
+        "spoken_cases": 99,
+        "spoken_exact": 10,
+        "fully_supported": 89,
+        "expected_spans": 0,
+        "predicted_spans": 0,
+        "correct_spans": 0
+      }
+    },
+    "unresolved_by_reason": {
+      "currency symbol needs an explicit ISO currency code": 29,
+      "currency, fractional precision, or currency grammar is not supported for this locale": 3,
+      "date needs a four-digit year and one- or two-digit day/month": 2,
+      "date order is ambiguous; set date_order": 9,
+      "identifier \"alphanumeric\" requires an explicit application reading policy": 22,
+      "identifier \"version\" requires an explicit application reading policy": 11,
+      "invalid calendar date": 2,
+      "invalid clock time": 1,
+      "invalid digit grouping": 12,
+      "invalid number": 2,
+      "invalid twelve-hour time": 1,
+      "percent grammar or number range is not supported for this locale": 1,
+      "unit, agreement, or number range is not supported for this locale": 14,
+      "unsupported fraction, range, or malformed date": 10
+    }
+  },
+  "limitations": [
+    "Coverage includes standard Rust inline unit tests and excludes test/example/bench/registry files from report.",
+    "External reference measures exact string agreement, including legitimate wording/script/style differences and conservative policy differences; it is not production accuracy.",
+    "No external typed-span annotations are supplied by NeMo.",
+    "No native-speaker or TTS acoustic evaluation performed."
+  ],
+  "existing_library_quality": {
+    "dataset_version": "0.9.0",
+    "split": "test",
+    "metrics": {
+      "count": 482,
+      "positives": 287,
+      "negatives": 195,
+      "accuracy": 0.7344398340248963,
+      "precision": 0.7416413373860182,
+      "recall": 0.8501742160278746,
+      "roc_auc": 0.812650763870276,
+      "pr_auc": 0.8565754048068006,
+      "f1": 0.7922077922077922,
+      "brier": 0.17764327451220654,
+      "expected_calibration_error": 0.12315829233110698
+    },
+    "rebus": {
+      "labelled_cases": 27,
+      "top1_accuracy": 0.7777777777777778,
+      "top_k_accuracy": 1.0,
+      "top3_accuracy": 0.9629629629629629,
+      "top5_accuracy": 1.0,
+      "mrr": 0.8734567901234568
+    },
+    "language": {
+      "labelled_cases": 170,
+      "top1_accuracy": 0.9352941176470588,
+      "top3_accuracy": 0.9705882352941176,
+      "unknown_precision": 0.09090909090909091,
+      "unknown_recall": 1.0,
+      "unknown_support": 1
+    },
+    "ranking": {
+      "queries": 100,
+      "recall_at_1": 0.81,
+      "recall_at_5": 0.88,
+      "recall_at_10": 0.9,
+      "mrr": 0.847321665277532,
+      "ndcg_at_10": 0.858619718491046
+    },
+    "expectations_total": 344,
+    "expectations_met": 251,
+    "categories": {
+      "code_switching": {
+        "count": 24,
+        "positives": 13,
+        "negatives": 11,
+        "accuracy": 0.8333333333333334,
+        "precision": 0.9090909090909091,
+        "recall": 0.7692307692307693,
+        "roc_auc": 0.9790209790209791,
+        "pr_auc": 0.9821780783319245,
+        "f1": 0.8333333333333334,
+        "brier": 0.10566424252598865,
+        "expected_calibration_error": 0.2184152312231621
+      },
+      "cross_language": {
+        "count": 32,
+        "positives": 18,
+        "negatives": 14,
+        "accuracy": 0.78125,
+        "precision": 0.7391304347826086,
+        "recall": 0.9444444444444444,
+        "roc_auc": 0.8373015873015873,
+        "pr_auc": 0.8913399272725899,
+        "f1": 0.8292682926829268,
+        "brier": 0.1620046498886141,
+        "expected_calibration_error": 0.19051274832121518
+      },
+      "general": {
+        "count": 75,
+        "positives": 54,
+        "negatives": 21,
+        "accuracy": 0.8266666666666667,
+        "precision": 0.9767441860465116,
+        "recall": 0.7777777777777778,
+        "roc_auc": 0.9012345679012346,
+        "pr_auc": 0.9670900565394344,
+        "f1": 0.865979381443299,
+        "brier": 0.12171210239461142,
+        "expected_calibration_error": 0.12382251681422655
+      },
+      "hard_negatives": {
+        "count": 34,
+        "positives": 8,
+        "negatives": 26,
+        "accuracy": 0.29411764705882354,
+        "precision": 0.25,
+        "recall": 1.0,
+        "roc_auc": 0.7692307692307693,
+        "pr_auc": 0.39882825507825503,
+        "f1": 0.4,
+        "brier": 0.36499405344433306,
+        "expected_calibration_error": 0.4601791236450003
+      },
+      "homoglyph": {
+        "count": 27,
+        "positives": 15,
+        "negatives": 12,
+        "accuracy": 0.7037037037037037,
+        "precision": 0.6521739130434783,
+        "recall": 1.0,
+        "roc_auc": 1.0,
+        "pr_auc": 1.0,
+        "f1": 0.7894736842105263,
+        "brier": 0.14813466733299452,
+        "expected_calibration_error": 0.3524760223380963
+      },
+      "language_detection": {
+        "count": 4,
+        "positives": 4,
+        "negatives": 0,
+        "accuracy": 0.75,
+        "precision": 1.0,
+        "recall": 0.75,
+        "roc_auc": 0.0,
+        "pr_auc": 1.0,
+        "f1": 0.8571428571428571,
+        "brier": 0.2054030292853615,
+        "expected_calibration_error": 0.4519665896661106
+      },
+      "leetspeak": {
+        "count": 75,
+        "positives": 62,
+        "negatives": 13,
+        "accuracy": 0.92,
+        "precision": 0.9117647058823529,
+        "recall": 1.0,
+        "roc_auc": 0.9987593052109182,
+        "pr_auc": 0.9997439836149513,
+        "f1": 0.9538461538461539,
+        "brier": 0.09885330223323664,
+        "expected_calibration_error": 0.2572185494915346
+      },
+      "phonetic": {
+        "count": 48,
+        "positives": 20,
+        "negatives": 28,
+        "accuracy": 0.6875,
+        "precision": 0.5925925925925926,
+        "recall": 0.8,
+        "roc_auc": 0.76875,
+        "pr_auc": 0.7602982311805839,
+        "f1": 0.6808510638297872,
+        "brier": 0.2247653792419584,
+        "expected_calibration_error": 0.20522248151154399
+      },
+      "rebus": {
+        "count": 30,
+        "positives": 28,
+        "negatives": 2,
+        "accuracy": 0.9333333333333333,
+        "precision": 1.0,
+        "recall": 0.9285714285714286,
+        "roc_auc": 1.0,
+        "pr_auc": 1.0,
+        "f1": 0.9629629629629629,
+        "brier": 0.1279895024704617,
+        "expected_calibration_error": 0.345945876780534
+      },
+      "semantic": {
+        "count": 27,
+        "positives": 16,
+        "negatives": 11,
+        "accuracy": 0.6666666666666666,
+        "precision": 0.7692307692307693,
+        "recall": 0.625,
+        "roc_auc": 0.6875,
+        "pr_auc": 0.6889206023880945,
+        "f1": 0.6896551724137931,
+        "brier": 0.22390211271172406,
+        "expected_calibration_error": 0.29751419456946315
+      },
+      "short_text": {
+        "count": 23,
+        "positives": 14,
+        "negatives": 9,
+        "accuracy": 0.782608695652174,
+        "precision": 0.7647058823529411,
+        "recall": 0.9285714285714286,
+        "roc_auc": 0.9365079365079365,
+        "pr_auc": 0.9673202614379085,
+        "f1": 0.8387096774193549,
+        "brier": 0.16076762002040398,
+        "expected_calibration_error": 0.2933466042082643
+      },
+      "spam": {
+        "count": 34,
+        "positives": 11,
+        "negatives": 23,
+        "accuracy": 0.5294117647058824,
+        "precision": 0.4,
+        "recall": 0.9090909090909091,
+        "roc_auc": 0.7391304347826086,
+        "pr_auc": 0.49813128790401523,
+        "f1": 0.5555555555555556,
+        "brier": 0.2634294876218158,
+        "expected_calibration_error": 0.28925008004805913
+      },
+      "transliteration": {
+        "count": 31,
+        "positives": 13,
+        "negatives": 18,
+        "accuracy": 0.6129032258064516,
+        "precision": 1.0,
+        "recall": 0.07692307692307693,
+        "roc_auc": 0.7735042735042735,
+        "pr_auc": 0.639208783793804,
+        "f1": 0.14285714285714285,
+        "brier": 0.266467824041581,
+        "expected_calibration_error": 0.3046485555174705
+      },
+      "unicode": {
+        "count": 18,
+        "positives": 11,
+        "negatives": 7,
+        "accuracy": 0.6666666666666666,
+        "precision": 0.6470588235294118,
+        "recall": 1.0,
+        "roc_auc": 1.0,
+        "pr_auc": 1.0,
+        "f1": 0.7857142857142857,
+        "brier": 0.14122087181397067,
+        "expected_calibration_error": 0.2012281363417727
+      }
+    },
+    "spam": {
+      "corpus_version": "2.0.0",
+      "metrics": {
+        "count": 160,
+        "positives": 80,
+        "negatives": 80,
+        "accuracy": 0.5,
+        "precision": 0.0,
+        "recall": 0.0,
+        "roc_auc": 0.94703125,
+        "pr_auc": 0.9502921823649817,
+        "f1": 0.0,
+        "brier": 0.3412330952036431,
+        "expected_calibration_error": 0.37297169374860495
+      }
+    },
+    "quality_gates_passed": false,
+    "command": "cargo run --locked --no-default-features --bin textintel -- eval data/evaluation --split test --gates data/quality-gates.json --json"
+  }
+}

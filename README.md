@@ -45,6 +45,37 @@ trained artifacts have been removed from the library. Previous experiments
 remain useful as [references](docs/EXPERIMENTS.md), not supported backends.
 Applications can implement the provider interfaces in separate integrations.
 
+## Text preparation for TTS
+
+Use the versioned normalizer for speech preparation, then split the spoken text into bounded fragments:
+
+```rust
+use textintel::speech::{normalization as tn, segmentation};
+
+let options = tn::NormalizeOptions::resolve(
+    tn::NormalizationMode::Auto,
+    "es",
+    Some("es-PE"),
+    tn::NormalizeLimits::default(),
+    true,
+)?;
+let result = tn::normalize("Tengo 12 libros.", &options)?;
+assert_eq!(result.spoken, "Tengo doce libros.");
+let fragments = segmentation::segment_text(
+    &result.spoken,
+    &segmentation::SegmentPolicy::default(),
+);
+assert_eq!(fragments[0].text, result.spoken);
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+`speech::normalization` provides `tn-v2.1` rules and preparation identity,
+with language-specific coverage and ambiguity warnings. The separate typed
+parser/verbalizer and speech CLI cover 20 languages experimentally with
+different reading policies. Inspect unresolved readings before synthesis.
+See [speech APIs and evaluation](docs/SPEECH.md) and
+[measured coverage and remaining gaps](docs/COVERAGE.md).
+
 ## Configuration
 
 Use `try_new` for configuration read from files or user input:
@@ -112,6 +143,7 @@ and search. Run `<command> --help` for its accepted flags.
 ## Documentation and verification
 
 - [API and extension points](docs/API.md)
+- [Speech preparation and its experimental coverage](docs/SPEECH.md)
 - [Resource-pack format](resources/README.md)
 - [Bounds, caching, and benchmarks](docs/PERFORMANCE.md)
 - [Changelog](CHANGELOG.md)

@@ -28,6 +28,12 @@ fn valid_time(hour: u32, minute: u32, second: Option<u32>) -> bool {
     hour <= 23 && minute <= 59 && second.is_none_or(|value| value <= 59)
 }
 
+fn token_end(bytes: &[u8], end: usize) -> bool {
+    bytes
+        .get(end)
+        .is_none_or(|ch| !ch.is_ascii_alphanumeric() && !matches!(ch, b'/' | b':' | b'-'))
+}
+
 pub(crate) fn scan_dates_times(
     text: &str,
     claimed: &mut [bool],
@@ -37,6 +43,15 @@ pub(crate) fn scan_dates_times(
     let bytes = text.as_bytes();
     let mut index = 0;
     while index < bytes.len() {
+        // Do not recognize a valid suffix inside a longer identifier or a
+        // malformed date/time (e.g. 12024-01-01 or 123:45).
+        if index > 0
+            && (bytes[index - 1].is_ascii_alphanumeric()
+                || matches!(bytes[index - 1], b'/' | b':' | b'-'))
+        {
+            index += 1;
+            continue;
+        }
         // ISO date `YYYY-MM-DD` (ASCII digits and dashes: byte offsets are
         // char boundaries).
         if index + 10 <= bytes.len()
@@ -51,6 +66,7 @@ pub(crate) fn scan_dates_times(
                 .all(|b| b.is_ascii_digit())
             && text.is_char_boundary(index)
             && text.is_char_boundary(index + 10)
+            && token_end(bytes, index + 10)
         {
             let year: u32 = text[index..index + 4].parse().unwrap_or(0);
             let month: u32 = text[index + 5..index + 7].parse().unwrap_or(0);
@@ -94,7 +110,10 @@ pub(crate) fn scan_dates_times(
                 second = Some(text[index + 6..index + 8].parse().unwrap_or(99));
                 end = index + 8;
             }
-            if valid_time(hour, minute, second) && !is_claimed(claimed, index, end) {
+            if valid_time(hour, minute, second)
+                && token_end(bytes, end)
+                && !is_claimed(claimed, index, end)
+            {
                 claim(claimed, index, end);
                 push_mention(
                     mentions,
@@ -133,13 +152,19 @@ pub(crate) fn scan_dates_times(
                     let third = &text[third_start..third_end];
                     let plausible = (1..=2).contains(&first.len())
                         && (1..=2).contains(&second.len())
-                        && (2..=4).contains(&third.len())
-                        && first
-                            .parse::<u32>()
-                            .is_ok_and(|value| (1..=31).contains(&value))
-                        && second
-                            .parse::<u32>()
-                            .is_ok_and(|value| (1..=31).contains(&value));
+                        && matches!(third.len(), 2 | 4)
+                        && token_end(bytes, third_end)
+                        && match (
+                            first.parse::<u32>(),
+                            second.parse::<u32>(),
+                            third.parse::<u32>(),
+                        ) {
+                            (Ok(first), Ok(second), Ok(year)) => {
+                                let year = if third.len() == 2 { 2000 + year } else { year };
+                                valid_date(year, second, first) || valid_date(year, first, second)
+                            }
+                            _ => false,
+                        };
                     if plausible
                         && text.is_char_boundary(index)
                         && text.is_char_boundary(third_end)

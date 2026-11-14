@@ -43,6 +43,7 @@ pub mod phonetic;
 pub mod rebus;
 pub mod resources;
 pub mod semantic;
+pub mod speech;
 pub mod storage;
 pub mod symbols;
 pub mod transliteration;
@@ -104,3 +105,10 @@ pub use transliteration::{
     RuleBasedTransliterationProvider, TransliterationEvidence, effective_transliteration_evidence,
     transliteration_compatibility, transliteration_evidence, transliteration_similarity,
 };
+
+pub use speech::{
+    DateOrder, NumberReading, NumberValue, SpeechDocument, SpeechLocale, SpeechNormalization,
+    SpeechOptions, SpeechReading, SpeechSpan, SpeechValue, parse_for_speech,
+};
+
+pub use speech::{normalize_for_speech, verbalize_document};

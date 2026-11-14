@@ -40,6 +40,7 @@ jobs:
       - run: cargo check --locked --all-features --all-targets
       - run: cargo bench --locked --no-run --all-features
       - run: cargo run --locked --no-default-features --bin textintel -- eval data/evaluation --split test --gates data/quality-gates.json
+      - run: cargo run --locked --no-default-features --bin textintel -- eval-speech data/speech/evaluation.json --json
 
   coverage:
     runs-on: ubuntu-latest
