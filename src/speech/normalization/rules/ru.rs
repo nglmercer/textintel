@@ -28,8 +28,9 @@
 //! `двадцать шестое` / `двадцать шестого`; dot dates have no classifier
 //! hook), times, ordinals and ranges.
 
-use super::{Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem, Unit};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, Unit};
 use crate::speech::normalization::CoverageLevel;
+use crate::speech::{numbers, types::SpeechLocale};
 
 /// Russian rule set.
 pub(crate) struct Russian;
@@ -71,63 +72,6 @@ fn pick(forms: &Forms, n: u64) -> &'static str {
     }
 }
 
-const UNITS: [&str; 10] = [
-    "ноль",
-    "один",
-    "два",
-    "три",
-    "четыре",
-    "пять",
-    "шесть",
-    "семь",
-    "восемь",
-    "девять",
-];
-
-const TEENS: [&str; 10] = [
-    "десять",
-    "одиннадцать",
-    "двенадцать",
-    "тринадцать",
-    "четырнадцать",
-    "пятнадцать",
-    "шестнадцать",
-    "семнадцать",
-    "восемнадцать",
-    "девятнадцать",
-];
-
-const TENS: [&str; 10] = [
-    "",
-    "",
-    "двадцать",
-    "тридцать",
-    "сорок",
-    "пятьдесят",
-    "шестьдесят",
-    "семьдесят",
-    "восемьдесят",
-    "девяносто",
-];
-
-const HUNDREDS: [&str; 10] = [
-    "",
-    "сто",
-    "двести",
-    "триста",
-    "четыреста",
-    "пятьсот",
-    "шестьсот",
-    "семьсот",
-    "восемьсот",
-    "девятьсот",
-];
-
-const THOUSAND: Forms = ["тысяча", "тысячи", "тысяч"];
-const MILLION: Forms = ["миллион", "миллиона", "миллионов"];
-const BILLION: Forms = ["миллиард", "миллиарда", "миллиардов"];
-const TRILLION: Forms = ["триллион", "триллиона", "триллионов"];
-
 const RUBLE: Forms = ["рубль", "рубля", "рублей"];
 const DOLLAR: Forms = ["доллар", "доллара", "долларов"];
 const EURO: Forms = ["евро", "евро", "евро"];
@@ -152,57 +96,10 @@ fn possible_group_tail(int: u64, has_fraction: bool) -> bool {
     has_fraction && (100..=999).contains(&int)
 }
 
-fn below_1000(n: u64, gender: Gender, words: &mut Vec<&'static str>) {
-    debug_assert!(n < 1000);
-    let hundreds = (n / 100) as usize;
-    let rest = n % 100;
-    if hundreds > 0 {
-        words.push(HUNDREDS[hundreds]);
-    }
-    match rest {
-        0 => {}
-        10..=19 => words.push(TEENS[(rest - 10) as usize]),
-        _ => {
-            if rest >= 20 {
-                words.push(TENS[(rest / 10) as usize]);
-            }
-            let unit = rest % 10;
-            if unit > 0 {
-                words.push(match (unit, gender) {
-                    (1, Gender::Feminine) => "одна",
-                    (2, Gender::Feminine) => "две",
-                    _ => UNITS[unit as usize],
-                });
-            }
-        }
-    }
-}
-
-/// Exact nominative cardinal for `n <= 999_999_999_999_999`.
+/// Shared integer composition with locale-specific presentation.
 fn cardinal(n: u64, gender: Gender) -> String {
-    if n == 0 {
-        return "ноль".to_string();
-    }
-    let mut words: Vec<&'static str> = Vec::with_capacity(12);
-    let scales: [(u64, &Forms, Gender); 4] = [
-        (1_000_000_000_000, &TRILLION, Gender::Masculine),
-        (1_000_000_000, &BILLION, Gender::Masculine),
-        (1_000_000, &MILLION, Gender::Masculine),
-        (1000, &THOUSAND, Gender::Feminine),
-    ];
-    for (size, forms, scale_gender) in scales {
-        let value = (n / size) % 1000;
-        if value == 0 {
-            continue;
-        }
-        // A leading "one thousand"/"one million" is read without "one".
-        if !(value == 1 && words.is_empty()) {
-            below_1000(value, scale_gender, &mut words);
-        }
-        words.push(pick(forms, value));
-    }
-    below_1000(n % 1000, gender, &mut words);
-    words.join(" ")
+    numbers::russian_cardinal(n, gender == Gender::Feminine, true)
+        .expect("normalization cardinal range is checked")
 }
 
 /// Formal decimal reading: `три целых четырнадцать сотых`. `None` for more
@@ -290,15 +187,7 @@ impl LanguageRules for Russian {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        (locale == "ru-RU").then_some(Conventions {
-            decimal: ',',
-            // Russian groups with spaces, which the lexer splits. No group
-            // character is recognized inside a digit field.
-            group: '\u{202f}',
-            separators_unambiguous: false,
-            date_order: DateOrder::DayMonth,
-            dollar: None,
-        })
+        Conventions::for_locale("ru", locale)
     }
 
     fn number(&self, amount: &Amount, _locale: &str) -> Option<String> {
@@ -323,7 +212,9 @@ impl LanguageRules for Russian {
         Some(
             digits
                 .bytes()
-                .map(|digit| UNITS[usize::from(digit - b'0')])
+                .map(|digit| {
+                    numbers::digit_word(digit - b'0', SpeechLocale::Ru).expect("validated digit")
+                })
                 .collect::<Vec<_>>()
                 .join(" "),
         )

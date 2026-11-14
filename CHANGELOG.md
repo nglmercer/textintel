@@ -7,12 +7,44 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ## [Unreleased]
 
+### Added
+
+- Experimental typed speech parsing and rendering for twenty language
+  conventions, with explicit interpretation, date/decimal/currency policies,
+  exact quantities, calendar forms, fractions, ranges, scientific notation,
+  ordinals, durations, and diagnostics for unresolved readings.
+- Separate literal and reviewed-variant speech evaluation, preserving original
+  corpus gold and reporting contradictory references and named comparison rules.
+- Opt-in full localized currency names through `CurrencyNaming::Full` and
+  `--currency-naming full`, retaining currency identity in minor-only amounts.
+- Opt-in normalization of coherent redundant clock periods, such as `13:10pm`,
+  with strict parsing retained by default and canonical semantic values.
+- Opt-in literal reading of impossible calendar combinations through
+  `InvalidDatePolicy::ReadComponents`. Invalid-date values and diagnostics
+  remain visible even when speech generation or literal word matching succeeds.
+- Retained evaluation diagnostics, including supported literal readings, and
+  bounded monetary reading/layout variants backed by unchanged typed values.
+- Seven attributed language profiles and shared localized symbol readings,
+  with opt-in completion for custom resource loaders.
+- A reproducible optional eSpeak runtime audit covering the twenty language
+  families, registered aliases, and explicit Japanese/Arabic input controls.
+- Exact subsecond clock IR and reading across the twenty-language core,
+  retaining every fraction digit; comma fractions require explicit Time intent.
+
 ### Changed
 
 - Focus the crate on deterministic text analysis, comparison, decoding,
   provider boundaries, and storage. The default dependency set is lightweight.
 - The local preset enables caches and deterministic providers without reading
   model directories or model environment variables.
+- Speech preparation uses `tn-v3` cache identities. Both entry points reuse
+  protected-region scanning, Unicode digit/calendar primitives, locale metadata,
+  pronunciation dictionaries, and number composition. Established versioned
+  formatting remains behind explicit adapters.
+- Regional number/date/currency conventions share one locale registry;
+  scientific, duration, fraction and range grammars share compatibility profiles.
+- Versioned classification and typed augmentation share one immutable source
+  protection map instead of rescanning code and tags independently.
 
 ### Removed
 
@@ -24,6 +56,23 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ### Fixed
 
+- Clock seconds use shared quantity agreement in English, Spanish, Portuguese
+  and German; Portuguese clock hours retain feminine agreement. Implicit Arabic
+  one/dual unit patterns no longer erase explicit decimal precision.
+- Arabic feminine counting and construct duals share one number core for units
+  and currencies. INR/PKR/IDR/TRY gain reviewed integer paradigms; unresolved
+  noun-order and decimal constructions remain unsupported.
+- Explicit AM/PM clocks retain their time value in all twenty languages, using
+  the shared 24-hour fallback where no spoken period is rendered. Missing
+  minutes remain absent, and compact date/time projection retains extra labels
+  and period metadata in temporal IR.
+- Vietnamese written day labels are consumed once, German clock readings use
+  Uhr rather than duration nouns, and English 24-hour whole hours avoid o'clock.
+- Arabic ruble and Swiss-franc amounts reuse reviewed count/qualifier paradigms;
+  unsupported full currency names remain explicit. Russian exact-hour variants
+  work in both zero-minute directions without dropping a source AM/PM marker.
+- Japanese phonetic dates and clocks share counter readings across speech
+  styles, including calendar-day exceptions and clocks without written minutes.
 - Comparison batch limits count pairs while analysis stays chunked.
 - Embedding chunks enforce their output count and search result requests
   respect the configured candidate budget.
@@ -33,6 +82,26 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
   preserve records; persistent-write rollback restores usable ANN capacity.
 - espeak output is drained concurrently with bounded reads, avoiding pipe
   deadlocks while retaining the subprocess timeout.
+- Native combining marks remain attached to words, entity numeric/date spans
+  recognize native decimal digits with original UTF-8 offsets, and unsupported
+  G2P languages no longer inherit English/Spanish confidence.
+- Scaled measures retain their entire quantity under explicit hints; Japanese
+  and Korean date defaults use year/month/day. Russian explicitly written
+  US-dollar qualifiers and Spanish feminine clock hours are retained correctly.
+- Signed fractions keep their sign in the numeric representation. Scalar hints
+  reject durations, conflicting Arabic separators preserve input, and phone/file
+  shapes are protected before numeric rewriting. Spanish half-unit agreement and
+  English fraction rendering retain values when changing reading style.
+- AM/PM fields require twelve-hour values across all twenty languages, and era
+  year zero is rejected in both parsing and public-document rendering.
+- Oversized fraction and duration counts preserve their input instead of
+  reaching a numeric renderer outside its supported range.
+- eSpeak resolves regional language tags, reads the real voice inventory, and
+  excludes recognized language switches and ZWJ controls from phoneme tokens.
+  `for_voice` now honors explicit overrides, with capabilities and confidence
+  reflecting the selected voice family.
+- eSpeak receives an option terminator before source text, so leading `-`
+  forms are read as data instead of altering the subprocess options.
 
 ## [0.2.0] - 2026-09-16
 

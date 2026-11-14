@@ -12,57 +12,14 @@
 //! only under en-US.
 
 use super::{
-    AbbrevContext, Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem,
-    OrdinalMarker, Unit,
+    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
+    Unit,
 };
 use crate::speech::normalization::{CoverageLevel, ReadingStyle};
+use crate::speech::{numbers, types::SpeechLocale};
 
 /// English rule set.
 pub(crate) struct English;
-
-const ONES: [&str; 20] = [
-    "zero",
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "ten",
-    "eleven",
-    "twelve",
-    "thirteen",
-    "fourteen",
-    "fifteen",
-    "sixteen",
-    "seventeen",
-    "eighteen",
-    "nineteen",
-];
-
-const TENS: [&str; 10] = [
-    "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",
-];
-
-const SCALES: [&str; 5] = ["", "thousand", "million", "billion", "trillion"];
-
-const MONTHS: [&str; 12] = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-];
 
 fn british(locale: &str) -> bool {
     locale == "en-GB"
@@ -70,53 +27,16 @@ fn british(locale: &str) -> bool {
 
 fn below_100(n: u64) -> String {
     debug_assert!(n < 100);
-    if n < 20 {
-        return ONES[n as usize].to_string();
-    }
-    let tens = TENS[(n / 10) as usize];
-    match n % 10 {
-        0 => tens.to_string(),
-        unit => format!("{tens}-{}", ONES[unit as usize]),
-    }
+    cardinal(n, false)
 }
 
-fn below_1000(n: u64, uk: bool) -> String {
-    debug_assert!(n < 1000);
-    let hundreds = n / 100;
-    let rest = n % 100;
-    match (hundreds, rest) {
-        (0, _) => below_100(rest),
-        (h, 0) => format!("{} hundred", ONES[h as usize]),
-        (h, r) if uk => format!("{} hundred and {}", ONES[h as usize], below_100(r)),
-        (h, r) => format!("{} hundred {}", ONES[h as usize], below_100(r)),
-    }
-}
-
-/// Exact English cardinal (short scale) for `n <= 999_999_999_999_999`.
+/// Exact English cardinal with an explicit regional presentation policy.
 pub(crate) fn cardinal(n: u64, uk: bool) -> String {
-    if n == 0 {
-        return "zero".to_string();
-    }
-    let mut groups = Vec::with_capacity(5);
-    let mut rest = n;
-    while rest > 0 {
-        groups.push(rest % 1000);
-        rest /= 1000;
-    }
-    let mut parts: Vec<String> = Vec::with_capacity(groups.len() * 2);
-    for (scale, group) in groups.iter().enumerate().rev() {
-        if *group == 0 {
-            continue;
-        }
-        if scale == 0 && uk && n >= 1000 && *group < 100 {
-            parts.push("and".to_string());
-        }
-        parts.push(below_1000(*group, uk));
-        if scale > 0 {
-            parts.push(SCALES.get(scale).copied().unwrap_or_default().to_string());
-        }
-    }
-    parts.join(" ")
+    numbers::english_cardinal(n, uk, true)
+        .expect("normalization cardinal range is checked before rendering")
+}
+fn digit_word(n: u8) -> &'static str {
+    numbers::digit_word(n, SpeechLocale::En).expect("validated decimal digit")
 }
 
 /// Ordinal form of a cardinal reading (`twenty-one` -> `twenty-first`).
@@ -161,7 +81,7 @@ fn amount_words(amount: &Amount, uk: bool) -> String {
         out.push_str(" point");
         for digit in frac.bytes() {
             out.push(' ');
-            out.push_str(ONES[usize::from(digit - b'0')]);
+            out.push_str(digit_word(digit - b'0'));
         }
     }
     out
@@ -178,7 +98,7 @@ fn year_words(year: u32, uk: bool) -> String {
     }
     match low {
         0 => format!("{} hundred", below_100(high)),
-        1..=9 => format!("{} oh {}", below_100(high), ONES[low as usize]),
+        1..=9 => format!("{} oh {}", below_100(high), digit_word(low as u8)),
         _ => format!("{} {}", below_100(high), below_100(low)),
     }
 }
@@ -228,7 +148,7 @@ fn natural_time(hour: u32, minute: u32, meridiem: Option<Meridiem>) -> Option<St
         1..=9 => format!(
             "{} oh {}",
             below_100(u64::from(hour12)),
-            ONES[minute as usize]
+            digit_word(minute as u8)
         ),
         _ => format!(
             "{} {}",
@@ -301,18 +221,7 @@ impl LanguageRules for English {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        let (date_order, dollar) = match locale {
-            "en-US" => (DateOrder::MonthDay, Some(Currency::Usd)),
-            "en-GB" => (DateOrder::DayMonth, None),
-            _ => return None,
-        };
-        Some(Conventions {
-            decimal: '.',
-            group: ',',
-            separators_unambiguous: true,
-            date_order,
-            dollar,
-        })
+        Conventions::for_locale("en", locale)
     }
 
     fn number(&self, amount: &Amount, locale: &str) -> Option<String> {
@@ -326,7 +235,7 @@ impl LanguageRules for English {
         Some(
             digits
                 .bytes()
-                .map(|digit| ONES[usize::from(digit - b'0')])
+                .map(|digit| digit_word(digit - b'0'))
                 .collect::<Vec<_>>()
                 .join(" "),
         )
@@ -387,7 +296,7 @@ impl LanguageRules for English {
 
     fn date(&self, year: u32, month: u32, day: u32, locale: &str) -> Option<String> {
         let uk = british(locale);
-        let month_name = MONTHS.get(month.checked_sub(1)? as usize)?;
+        let month_name = crate::speech::lexicons::month(SpeechLocale::En, month)?;
         let day_words = ordinalize(&cardinal(u64::from(day), uk));
         let year_words = year_words(year, uk);
         Some(if uk {
@@ -449,7 +358,7 @@ impl LanguageRules for English {
             (0, Some(_)) => hour_words,
             (0, None) if (1..=12).contains(&hour) => format!("{hour_words} o'clock"),
             (0, None) => format!("{hour_words} hundred"),
-            (1..=9, _) => format!("{hour_words} oh {}", ONES[minute as usize]),
+            (1..=9, _) => format!("{hour_words} oh {}", digit_word(minute as u8)),
             _ => format!("{hour_words} {}", below_100(u64::from(minute))),
         };
         match meridiem {

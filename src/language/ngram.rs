@@ -242,7 +242,7 @@ fn query_words(text: &str) -> Vec<String> {
 /// once can share the fold with the n-gram profile.
 fn query_words_split(folded: &str) -> Vec<String> {
     folded
-        .split(|character: char| !character.is_alphabetic())
+        .split(|character: char| !crate::core::unicode::is_word_letter(character))
         .filter(|word| !word.is_empty())
         .map(str::to_string)
         .collect()
@@ -253,7 +253,7 @@ fn query_words_split(folded: &str) -> Vec<String> {
 /// (load-time profiles keep the owned variant).
 fn query_words_borrowed(folded: &str) -> Vec<&str> {
     folded
-        .split(|character: char| !character.is_alphabetic())
+        .split(|character: char| !crate::core::unicode::is_word_letter(character))
         .filter(|word| !word.is_empty())
         .collect()
 }

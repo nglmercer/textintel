@@ -47,19 +47,8 @@ fn classify(piece: &str) -> &'static str {
     }
 }
 
-fn is_combining_mark(ch: char) -> bool {
-    let code = ch as u32;
-    (0x0300..=0x036f).contains(&code)
-        || (0x1ab0..=0x1aff).contains(&code)
-        || (0x1dc0..=0x1dff).contains(&code)
-        || (0x20d0..=0x20ff).contains(&code)
-        || (0xfe20..=0xfe2f).contains(&code)
-}
-
 pub(crate) fn is_word_character(ch: char) -> bool {
-    ch.is_alphabetic()
-        || is_combining_mark(ch)
-        || matches!(ch, '\'' | '_' | '\u{200c}' | '\u{200d}')
+    crate::core::unicode::is_word_letter(ch) || matches!(ch, '\'' | '_' | '\u{200c}' | '\u{200d}')
 }
 
 fn is_no_space_script(piece: &str) -> bool {

@@ -36,7 +36,7 @@ assert!(candidates.iter().any(|c| c.text.eq_ignore_ascii_case("saludos")));
   scoring, reranking, and storage.
 
 Heuristic scores are evidence, not calibrated predictions. Resource packs are
-starter dictionaries for 16 languages; they are not complete dictionaries.
+starter dictionaries and shared speech resources; they are not complete dictionaries.
 Embedding vectors are optional. The included feature-hash vectorizer is a
 simple deterministic baseline, not a contextual encoder.
 
@@ -69,10 +69,11 @@ assert_eq!(fragments[0].text, result.spoken);
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-`speech::normalization` provides `tn-v2.1` rules and preparation identity,
-with language-specific coverage and ambiguity warnings. The separate typed
-parser/verbalizer and speech CLI cover 20 languages experimentally with
-different reading policies. Inspect unresolved readings before synthesis.
+`speech::normalization` provides `tn-v3` rules and preparation identity,
+with language-specific coverage and ambiguity warnings. Both speech APIs cover
+the twenty base languages through shared numeric, calendar, lexical and Unicode
+primitives. The typed API and CLI expose additional explicit interpretation
+policies and diagnostics. Inspect unresolved readings before synthesis.
 See [speech APIs and evaluation](docs/SPEECH.md) and
 [measured coverage and remaining gaps](docs/COVERAGE.md).
 
@@ -97,6 +98,9 @@ phonetics, and deterministic feature-hash vectors. With the `phonetic-espeak`
 feature it uses an installed `espeak-ng` binary when available. It does not
 inspect model directories or model environment variables. Inspect
 `engine.diagnostics()` for the actual providers and storage capabilities.
+The [eSpeak runtime audit](docs/PHONETIC-COVERAGE.md) exercises the twenty language
+families and their aliases, with documented input limits and no claim of native
+pronunciation accuracy.
 
 Providers and resource packs are explicit:
 

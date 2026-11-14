@@ -26,19 +26,12 @@
 //! Korean convention; when both day/month readings are valid under an
 //! explicit locale, month/day is used.
 
-use super::{Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem, Unit};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, Unit};
 use crate::speech::normalization::CoverageLevel;
+use crate::speech::{numbers, types::SpeechLocale};
 
 /// Korean rule set.
 pub(crate) struct Korean;
-
-const DIGITS: [&str; 10] = ["영", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구"];
-const SECTION_UNITS: [&str; 4] = ["", "만", "억", "조"];
-
-/// Native Korean numerals for clock hours 1..=12 (prenominal forms).
-const NATIVE_HOURS: [&str; 13] = [
-    "", "한", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉", "열", "열한", "열두",
-];
 
 /// Sino-Korean nouns after which a number is read with Sino-Korean
 /// numerals.
@@ -82,55 +75,21 @@ fn is_cjk_letter(c: char) -> bool {
     )
 }
 
-/// One section `1..=9999`; `천`, `백`, `십` drop a leading `일`.
-fn section(n: u64, out: &mut String) {
-    let places = [
-        (n / 1000, "천"),
-        ((n / 100) % 10, "백"),
-        ((n / 10) % 10, "십"),
-    ];
-    for (d, place) in places {
-        match d {
-            0 => {}
-            1 => out.push_str(place),
-            _ => {
-                out.push_str(DIGITS[d as usize]);
-                out.push_str(place);
-            }
-        }
-    }
-    let units = n % 10;
-    if units > 0 {
-        out.push_str(DIGITS[units as usize]);
-    }
-}
-
-/// Exact Sino-Korean cardinal for `n <= 999_999_999_999_999`.
 fn cardinal(n: u64) -> String {
-    if n == 0 {
-        return "영".to_string();
-    }
-    let sections = [
-        n % 10_000,
-        (n / 10_000) % 10_000,
-        (n / 100_000_000) % 10_000,
-        (n / 1_000_000_000_000) % 10_000,
-    ];
-    let mut parts: Vec<String> = Vec::with_capacity(4);
-    for idx in (0..4).rev() {
-        let value = sections[idx];
-        if value == 0 {
-            continue;
-        }
-        let mut part = String::new();
-        // 만 alone, but 일억 and 일조.
-        if !(idx == 1 && value == 1) {
-            section(value, &mut part);
-        }
-        part.push_str(SECTION_UNITS[idx]);
-        parts.push(part);
-    }
-    parts.join(" ")
+    let value = crate::speech::types::NumberValue {
+        negative: false,
+        integer: n.to_string(),
+        fraction: None,
+    };
+    numbers::verbalize_number(
+        &value,
+        SpeechLocale::Ko,
+        crate::speech::types::NumberReading::Cardinal,
+    )
+    .expect("normalization cardinal range is checked")
+}
+fn digit_word(digit: u8) -> &'static str {
+    numbers::decimal_digit_word(digit, SpeechLocale::Ko).expect("validated digit")
 }
 
 fn unsigned_words(amount: &Amount) -> String {
@@ -138,7 +97,7 @@ fn unsigned_words(amount: &Amount) -> String {
     if let Some(frac) = &amount.frac {
         out.push_str(" 점 ");
         for d in frac.bytes() {
-            out.push_str(DIGITS[usize::from(d - b'0')]);
+            out.push_str(digit_word(d - b'0'));
         }
     }
     out
@@ -179,13 +138,7 @@ impl LanguageRules for Korean {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        (locale == "ko-KR").then_some(Conventions {
-            decimal: '.',
-            group: ',',
-            separators_unambiguous: true,
-            date_order: DateOrder::MonthDay,
-            dollar: None,
-        })
+        Conventions::for_locale("ko", locale)
     }
 
     fn number(&self, amount: &Amount, _locale: &str) -> Option<String> {
@@ -199,7 +152,7 @@ impl LanguageRules for Korean {
         Some(
             digits
                 .bytes()
-                .map(|digit| DIGITS[usize::from(digit - b'0')])
+                .map(|digit| digit_word(digit - b'0'))
                 .collect::<Vec<_>>()
                 .join(" "),
         )
@@ -291,7 +244,7 @@ impl LanguageRules for Korean {
         if meridiem.is_some() || !(1..=12).contains(&hour) || minute > 59 {
             return None;
         }
-        let mut out = format!("{} 시", NATIVE_HOURS[hour as usize]);
+        let mut out = format!("{} 시", crate::speech::verbalize::korean_native(hour)?);
         if minute > 0 {
             out.push(' ');
             out.push_str(&cardinal(u64::from(minute)));

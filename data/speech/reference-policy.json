@@ -1,0 +1,19 @@
+{
+  "reading_style": "natural",
+  "number_notation": "orthographic",
+  "category_hints": true,
+  "locales": {
+    "ar": {"unit_aliases": {"f": "temperature-fahrenheit"}, "infer_decimal_separator": true, "date_order": "day_month_year", "currency_symbols": {"$": "USD"}},
+    "de": {"date_order": "day_month_year", "currency_symbols": {"$": "USD"}},
+    "en": {"date_order": "month_day_year", "currency_symbols": {"$": "USD", "¥": "JPY"}},
+    "es": {"date_order": "day_month_year", "currency_symbols": {"$": "USD"}},
+    "fr": {"date_order": "day_month_year", "currency_symbols": {"$": "USD"}},
+    "hi": {"date_order": "day_month_year", "currency_symbols": {"$": "USD"}},
+    "ja": {"date_order": "year_month_day", "currency_symbols": {"$": "USD", "¥": "JPY", "￥": "JPY"}},
+    "ko": {"date_order": "reject_ambiguous", "currency_symbols": {"$": "USD"}},
+    "pt": {"date_order": "day_month_year", "currency_symbols": {"$": "USD"}},
+    "ru": {"date_order": "day_month_year", "currency_symbols": {"$": "USD"}},
+    "vi": {"date_order": "day_month_year", "currency_symbols": {"$": "USD", "¥": "JPY"}},
+    "zh": {"date_order": "year_month_day", "currency_symbols": {"$": "USD", "¥": "CNY", "￥": "CNY"}}
+  }
+}

@@ -1,40 +1,68 @@
 //! Date and time entity scanning (ISO, slashed, and `HH:MM` forms).
 
 use crate::core::types::EntityMention;
+use crate::core::unicode::{ascii_decimal_digit as digit, is_cjk, is_word_letter};
 
 use super::normalize::{claim, is_claimed, push_mention};
 
 fn valid_date(year: u32, month: u32, day: u32) -> bool {
-    if !(1000..=2999).contains(&year) {
-        return false;
-    }
-    let leap = year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
-    let days = match month {
-        2 => {
-            if leap {
-                29
-            } else {
-                28
-            }
-        }
-        4 | 6 | 9 | 11 => 30,
-        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
-        _ => return false,
-    };
-    (1..=days).contains(&day)
+    (1000..=2999).contains(&year) && crate::core::calendar::valid_date(year, month, day)
 }
 
 fn valid_time(hour: u32, minute: u32, second: Option<u32>) -> bool {
     hour <= 23 && minute <= 59 && second.is_none_or(|value| value <= 59)
 }
 
-fn token_end(bytes: &[u8], end: usize) -> bool {
-    bytes
-        .get(end)
-        .is_none_or(|ch| !ch.is_ascii_alphanumeric() && !matches!(ch, b'/' | b':' | b'-'))
+fn identifier_character(ch: char) -> bool {
+    ((ch.is_alphanumeric() || is_word_letter(ch)) && !is_cjk(ch)) || ch == '_'
+}
+
+fn token_end(text: &str, end: usize) -> bool {
+    text[end..]
+        .chars()
+        .next()
+        .is_none_or(|ch| !identifier_character(ch) && !matches!(ch, '/' | ':' | '-'))
 }
 
 pub(crate) fn scan_dates_times(
+    text: &str,
+    claimed: &mut [bool],
+    mentions: &mut Vec<EntityMention>,
+    language: Option<&str>,
+) {
+    if text.chars().any(|ch| !ch.is_ascii() && digit(ch).is_some()) {
+        // Run the same strict shape/calendar scanner on digit values, then
+        // restore original UTF-8 offsets. Non-digit spelling is untouched.
+        let mut folded = String::with_capacity(text.len());
+        let mut offsets = Vec::with_capacity(text.len() + 1);
+        for (offset, ch) in text.char_indices() {
+            if let Some(ascii) = digit(ch) {
+                folded.push(ascii);
+                offsets.push(offset);
+            } else {
+                folded.push(ch);
+                offsets.extend((0..ch.len_utf8()).map(|byte| offset + byte));
+            }
+        }
+        offsets.push(text.len());
+        let mut folded_claimed: Vec<bool> = offsets
+            .windows(2)
+            .map(|span| is_claimed(claimed, span[0], span[1]))
+            .collect();
+        let mut found = Vec::new();
+        scan_ascii_dates_times(&folded, &mut folded_claimed, &mut found, language);
+        for mut mention in found {
+            mention.start = offsets[mention.start];
+            mention.end = offsets[mention.end];
+            claim(claimed, mention.start, mention.end);
+            mentions.push(mention);
+        }
+        return;
+    }
+    scan_ascii_dates_times(text, claimed, mentions, language);
+}
+
+fn scan_ascii_dates_times(
     text: &str,
     claimed: &mut [bool],
     mentions: &mut Vec<EntityMention>,
@@ -45,9 +73,11 @@ pub(crate) fn scan_dates_times(
     while index < bytes.len() {
         // Do not recognize a valid suffix inside a longer identifier or a
         // malformed date/time (e.g. 12024-01-01 or 123:45).
-        if index > 0
-            && (bytes[index - 1].is_ascii_alphanumeric()
-                || matches!(bytes[index - 1], b'/' | b':' | b'-'))
+        if !text.is_char_boundary(index)
+            || text[..index]
+                .chars()
+                .next_back()
+                .is_some_and(|ch| identifier_character(ch) || matches!(ch, '/' | ':' | '-'))
         {
             index += 1;
             continue;
@@ -66,7 +96,7 @@ pub(crate) fn scan_dates_times(
                 .all(|b| b.is_ascii_digit())
             && text.is_char_boundary(index)
             && text.is_char_boundary(index + 10)
-            && token_end(bytes, index + 10)
+            && token_end(text, index + 10)
         {
             let year: u32 = text[index..index + 4].parse().unwrap_or(0);
             let month: u32 = text[index + 5..index + 7].parse().unwrap_or(0);
@@ -111,7 +141,7 @@ pub(crate) fn scan_dates_times(
                 end = index + 8;
             }
             if valid_time(hour, minute, second)
-                && token_end(bytes, end)
+                && token_end(text, end)
                 && !is_claimed(claimed, index, end)
             {
                 claim(claimed, index, end);
@@ -153,7 +183,7 @@ pub(crate) fn scan_dates_times(
                     let plausible = (1..=2).contains(&first.len())
                         && (1..=2).contains(&second.len())
                         && matches!(third.len(), 2 | 4)
-                        && token_end(bytes, third_end)
+                        && token_end(text, third_end)
                         && match (
                             first.parse::<u32>(),
                             second.parse::<u32>(),

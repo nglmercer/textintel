@@ -23,10 +23,11 @@
 //!   them; they are preserved.
 
 use super::{
-    AbbrevContext, Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem,
-    OrdinalMarker, Unit,
+    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
+    Unit,
 };
 use crate::speech::normalization::CoverageLevel;
+use crate::speech::{numbers, types::SpeechLocale};
 
 /// German rule set.
 pub(crate) struct German;
@@ -42,48 +43,6 @@ enum One {
     Eine,
 }
 
-const SMALL: [&str; 20] = [
-    "null",
-    "eins",
-    "zwei",
-    "drei",
-    "vier",
-    "fünf",
-    "sechs",
-    "sieben",
-    "acht",
-    "neun",
-    "zehn",
-    "elf",
-    "zwölf",
-    "dreizehn",
-    "vierzehn",
-    "fünfzehn",
-    "sechzehn",
-    "siebzehn",
-    "achtzehn",
-    "neunzehn",
-];
-
-const TENS: [&str; 10] = [
-    "", "", "zwanzig", "dreißig", "vierzig", "fünfzig", "sechzig", "siebzig", "achtzig", "neunzig",
-];
-
-const MONTHS: [&str; 12] = [
-    "Januar",
-    "Februar",
-    "März",
-    "April",
-    "Mai",
-    "Juni",
-    "Juli",
-    "August",
-    "September",
-    "Oktober",
-    "November",
-    "Dezember",
-];
-
 /// `true` when `word` starts with exactly three digits followed by a
 /// non-digit: the second half of a space-grouped number (`1 234,50`).
 fn looks_like_group_tail(word: &str) -> bool {
@@ -91,81 +50,22 @@ fn looks_like_group_tail(word: &str) -> bool {
     bytes.len() > 3 && bytes[..3].iter().all(u8::is_ascii_digit) && !bytes[3].is_ascii_digit()
 }
 
-fn below_100(n: u64, one: One) -> String {
-    debug_assert!(n < 100);
-    match n {
-        1 => match one {
+/// Shared integer composition with locale-specific presentation.
+fn cardinal(n: u64, one: One) -> String {
+    numbers::german_cardinal(
+        n,
+        match one {
             One::Eins => "eins",
             One::Ein => "ein",
             One::Eine => "eine",
-        }
-        .to_string(),
-        0..20 => SMALL[n as usize].to_string(),
-        _ => {
-            let tens = TENS[(n / 10) as usize];
-            match n % 10 {
-                0 => tens.to_string(),
-                1 => format!("einund{tens}"),
-                unit => format!("{}und{tens}", SMALL[unit as usize]),
-            }
-        }
-    }
+        },
+        false,
+    )
+    .expect("normalization cardinal range is checked")
 }
-
-fn below_1000(n: u64, one: One) -> String {
-    debug_assert!(n < 1000);
-    let hundreds = n / 100;
-    let rest = n % 100;
-    let mut out = match hundreds {
-        0 => String::new(),
-        1 => "hundert".to_string(),
-        h => format!("{}hundert", SMALL[h as usize]),
-    };
-    if rest > 0 || hundreds == 0 {
-        out.push_str(&below_100(rest, one));
-    }
-    out
-}
-
-/// One word for `0 < n < 1_000_000`.
-fn below_million(n: u64, one: One) -> String {
-    let thousands = n / 1000;
-    let units = n % 1000;
-    let mut out = match thousands {
-        0 => String::new(),
-        1 => "tausend".to_string(),
-        t => format!("{}tausend", below_1000(t, One::Ein)),
-    };
-    if units > 0 {
-        out.push_str(&below_1000(units, one));
-    }
-    out
-}
-
-/// Exact German cardinal for `n <= 999_999_999_999_999`.
-fn cardinal(n: u64, one: One) -> String {
-    if n == 0 {
-        return "null".to_string();
-    }
-    let mut parts: Vec<String> = Vec::with_capacity(4);
-    let scales = [
-        (1_000_000_000_000, "Billion", "Billionen"),
-        (1_000_000_000, "Milliarde", "Milliarden"),
-        (1_000_000, "Million", "Millionen"),
-    ];
-    for (size, singular, plural) in scales {
-        let value = (n / size) % 1000;
-        match value {
-            0 => {}
-            1 => parts.push(format!("eine {singular}")),
-            _ => parts.push(format!("{} {plural}", below_1000(value, One::Eins))),
-        }
-    }
-    let low = n % 1_000_000;
-    if low > 0 {
-        parts.push(below_million(low, one));
-    }
-    parts.join(" ")
+fn below_100(n: u64, one: One) -> String {
+    debug_assert!(n < 100);
+    cardinal(n, one)
 }
 
 /// Decimals are read digit by digit after `Komma` (`drei Komma eins vier`).
@@ -181,7 +81,9 @@ fn amount_words(amount: &Amount, one: One) -> String {
             out.push_str(" Komma");
             for digit in frac.bytes() {
                 out.push(' ');
-                out.push_str(SMALL[usize::from(digit - b'0')]);
+                out.push_str(
+                    numbers::digit_word(digit - b'0', SpeechLocale::De).expect("validated digit"),
+                );
             }
         }
     }
@@ -195,7 +97,7 @@ fn day_ordinal(day: u32) -> Option<String> {
         3 => "dritten".to_string(),
         7 => "siebten".to_string(),
         8 => "achten".to_string(),
-        2..=19 => format!("{}ten", SMALL[day as usize]),
+        2..=19 => format!("{}ten", cardinal(u64::from(day), One::Eins)),
         20..=31 => format!("{}sten", cardinal(u64::from(day), One::Ein)),
         _ => return None,
     })
@@ -267,13 +169,7 @@ impl LanguageRules for German {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        (locale == "de-DE").then_some(Conventions {
-            decimal: ',',
-            group: '.',
-            separators_unambiguous: false,
-            date_order: DateOrder::DayMonth,
-            dollar: None,
-        })
+        Conventions::for_locale("de", locale)
     }
 
     fn number(&self, amount: &Amount, _locale: &str) -> Option<String> {
@@ -292,7 +188,9 @@ impl LanguageRules for German {
         Some(
             digits
                 .bytes()
-                .map(|digit| SMALL[usize::from(digit - b'0')])
+                .map(|digit| {
+                    numbers::digit_word(digit - b'0', SpeechLocale::De).expect("validated digit")
+                })
                 .collect::<Vec<_>>()
                 .join(" "),
         )
@@ -334,7 +232,7 @@ impl LanguageRules for German {
     }
 
     fn date(&self, year: u32, month: u32, day: u32, _locale: &str) -> Option<String> {
-        let month_name = MONTHS.get(month.checked_sub(1)? as usize)?;
+        let month_name = crate::speech::lexicons::month(SpeechLocale::De, month)?;
         Some(format!(
             "{} {month_name} {}",
             day_ordinal(day)?,

@@ -67,7 +67,47 @@ impl ResourceLoader {
         for (name, source) in ABBREVIATION_PACKS {
             loader.load_abbreviation_json(source, PathBuf::from(format!("<embedded:{name}>")))?;
         }
+        loader.add_speech_resources()?;
         Ok(loader)
+    }
+
+    /// Add missing canonical speech-language and numeric-symbol seeds.
+    ///
+    /// Existing packs win; no data is appended to an already loaded language
+    /// or symbol-language pack. Sources are bounded derivatives of the shared
+    /// number/month/unit lexicons, labelled as narrow speech-domain seeds.
+    /// Custom loaders keep their scope unless this method is explicitly called.
+    /// Limits and declared hashes use the same loading path as external packs.
+    /// On failure the loader remains unchanged.
+    pub fn add_speech_resources(&mut self) -> Result<(), ResourceError> {
+        let languages: std::collections::BTreeSet<_> = self.languages().into_iter().collect();
+        let symbols: std::collections::BTreeSet<_> =
+            self.symbol_pack_languages().into_iter().collect();
+        let missing: Vec<_> = crate::speech::SpeechLocale::ALL
+            .into_iter()
+            .filter(|locale| !languages.contains(locale.code()) || !symbols.contains(locale.code()))
+            .collect();
+        if missing.is_empty() {
+            return Ok(());
+        }
+        let mut updated = self.clone();
+        for locale in missing {
+            let packs = crate::speech::resource_profiles::derive(locale)?;
+            if !languages.contains(locale.code()) {
+                updated.load_language_json(
+                    &packs.language_json,
+                    PathBuf::from(format!("<derived:speech:language:{}>", locale.code())),
+                )?;
+            }
+            if !symbols.contains(locale.code()) {
+                updated.load_symbol_json(
+                    &packs.symbol_json,
+                    PathBuf::from(format!("<derived:speech:symbol:{}>", locale.code())),
+                )?;
+            }
+        }
+        *self = updated;
+        Ok(())
     }
 
     /// Backward-compatible alias for the embedded seed set.

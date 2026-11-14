@@ -1,0 +1,132 @@
+{
+  "repository": "https://github.com/unicode-org/cldr-json",
+  "revision": "4d06be52b51bb2f75688d0abe55c52a66afed790",
+  "release": "48.0.0",
+  "license": "Unicode License v3; see LICENSE-CLDR-ANNOTATIONS.txt",
+  "selection": "tts annotation only for the listed baseline symbols; heart VS16 maps to the same base heart annotation, plus maps to ➕, equals maps to 🟰. No synonym expansion or fixture-derived labels.",
+  "sources": [
+    {
+      "language": "en",
+      "path": "cldr-json/cldr-annotations-full/annotations/en/annotations.json",
+      "sha256": "f22083cb86dffb63a643d5bacb5d9899f82d2fa5d388ad4f3aed72184acef505",
+      "bytes": 438314
+    },
+    {
+      "language": "es",
+      "path": "cldr-json/cldr-annotations-full/annotations/es/annotations.json",
+      "sha256": "339cdf9ae5fe6d3250d3c53b95ff6d8a4dae96c7c0d279756ee7a73c43c84b56",
+      "bytes": 404739
+    },
+    {
+      "language": "zh",
+      "path": "cldr-json/cldr-annotations-full/annotations/zh/annotations.json",
+      "sha256": "8d2dfe9bf41894bd17c9c1a1906a31bf0ccc06204bf4b77c2ab2b0d8f79a5fdf",
+      "bytes": 420265
+    },
+    {
+      "language": "hi",
+      "path": "cldr-json/cldr-annotations-full/annotations/hi/annotations.json",
+      "sha256": "ffca03eeb25ca34f7b9e14e0d35a02c2c5081b35297736f969be94aaa5c2fb37",
+      "bytes": 616793
+    },
+    {
+      "language": "ar",
+      "path": "cldr-json/cldr-annotations-full/annotations/ar/annotations.json",
+      "sha256": "bd722b651c4461e0b3e48a886bb4bac2db970f8567029c5442ce82b6f07e8346",
+      "bytes": 571155
+    },
+    {
+      "language": "fr",
+      "path": "cldr-json/cldr-annotations-full/annotations/fr/annotations.json",
+      "sha256": "ec6535a2ec5183bfd8e6d053152246a2f6b4093db379df9d71026479c4fd5043",
+      "bytes": 468750
+    },
+    {
+      "language": "pt",
+      "path": "cldr-json/cldr-annotations-full/annotations/pt/annotations.json",
+      "sha256": "ebaa8e177bdafd49afe17e126274215565a420c53823f7082733b672a02c06cb",
+      "bytes": 453224
+    },
+    {
+      "language": "ru",
+      "path": "cldr-json/cldr-annotations-full/annotations/ru/annotations.json",
+      "sha256": "c483d312051dbea379bcd2ac6dec6f2712572c0c9a5d073031f4702b030e99a9",
+      "bytes": 565199
+    },
+    {
+      "language": "bn",
+      "path": "cldr-json/cldr-annotations-full/annotations/bn/annotations.json",
+      "sha256": "6a31c21977729f545f0d181605a6a761484120d60579b97176b92f008213d91d",
+      "bytes": 631485
+    },
+    {
+      "language": "ur",
+      "path": "cldr-json/cldr-annotations-full/annotations/ur/annotations.json",
+      "sha256": "19771b481698e7266d6150dbd17835dc907858c2ccc40e411aa5e7d48e29f2a9",
+      "bytes": 558601
+    },
+    {
+      "language": "id",
+      "path": "cldr-json/cldr-annotations-full/annotations/id/annotations.json",
+      "sha256": "05012824e827cdb81337f6e77cdbc1f6ff09ca5dd9111b5f62dcd49c28146449",
+      "bytes": 443474
+    },
+    {
+      "language": "de",
+      "path": "cldr-json/cldr-annotations-full/annotations/de/annotations.json",
+      "sha256": "bfd22f5226d874843a28b6efec01db7e47dfae4ed802eceab8b416550f09e3c2",
+      "bytes": 449918
+    },
+    {
+      "language": "ja",
+      "path": "cldr-json/cldr-annotations-full/annotations/ja/annotations.json",
+      "sha256": "737ce4bea3d52d904f7744eb7653ea55100c99232255609a913f69a5a8c3d6c1",
+      "bytes": 438000
+    },
+    {
+      "language": "pa",
+      "path": "cldr-json/cldr-annotations-full/annotations/pa/annotations.json",
+      "sha256": "3b0cc7ac30dcc5300a87a4e5df1cc037d8156394212b9bcbb985254203c66834",
+      "bytes": 628367
+    },
+    {
+      "language": "mr",
+      "path": "cldr-json/cldr-annotations-full/annotations/mr/annotations.json",
+      "sha256": "5c02c901c8990d3fabdd628c1cf8a98f5f00c2103bcd9ff1023ce0ed202ad250",
+      "bytes": 676736
+    },
+    {
+      "language": "te",
+      "path": "cldr-json/cldr-annotations-full/annotations/te/annotations.json",
+      "sha256": "d190cbec6f6013a63846815ac9ab7a1ee4340295dfab32b794a43e86af0858f7",
+      "bytes": 767686
+    },
+    {
+      "language": "tr",
+      "path": "cldr-json/cldr-annotations-full/annotations/tr/annotations.json",
+      "sha256": "203f92597ad0dbffde89083cb760c1585843e52f488c0c7866406f2ef6e881cc",
+      "bytes": 445208
+    },
+    {
+      "language": "ta",
+      "path": "cldr-json/cldr-annotations-full/annotations/ta/annotations.json",
+      "sha256": "2da0f95d50594095ee3f9d039b5eb6082f3fe7727b6fdfe3537b827056ace683",
+      "bytes": 723097
+    },
+    {
+      "language": "vi",
+      "path": "cldr-json/cldr-annotations-full/annotations/vi/annotations.json",
+      "sha256": "2fa41952f1c994b4ae8e17c0e4d8eb74ac9ca9fdaeff77ea390044cc9c995df9",
+      "bytes": 434328
+    },
+    {
+      "language": "ko",
+      "path": "cldr-json/cldr-annotations-full/annotations/ko/annotations.json",
+      "sha256": "197be7720f3cc64126fee01bad5fdb668e51de5674ce5ce5ada0bd5028f3417e",
+      "bytes": 472803
+    }
+  ],
+  "license_sha256": "220ba0e1c43b99530d2d5bdb892a99dca0989414f51ab695ecd90163eaa1ec3b",
+  "license_path": "LICENSE",
+  "license_url": "https://raw.githubusercontent.com/unicode-org/cldr-json/4d06be52b51bb2f75688d0abe55c52a66afed790/LICENSE"
+}

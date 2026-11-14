@@ -23,10 +23,11 @@
 //! tail of a space-grouped number.
 
 use super::{
-    AbbrevContext, Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem,
-    OrdinalMarker, Unit,
+    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
+    Unit,
 };
 use crate::speech::normalization::CoverageLevel;
+use crate::speech::{numbers, types::SpeechLocale};
 
 /// Portuguese rule set.
 pub(crate) struct Portuguese;
@@ -37,70 +38,6 @@ enum Gender {
     Masculine,
     Feminine,
 }
-
-const SMALL: [&str; 20] = [
-    "zero",
-    "um",
-    "dois",
-    "três",
-    "quatro",
-    "cinco",
-    "seis",
-    "sete",
-    "oito",
-    "nove",
-    "dez",
-    "onze",
-    "doze",
-    "treze",
-    "catorze",
-    "quinze",
-    "dezesseis",
-    "dezessete",
-    "dezoito",
-    "dezenove",
-];
-
-const TENS: [&str; 10] = [
-    "",
-    "",
-    "vinte",
-    "trinta",
-    "quarenta",
-    "cinquenta",
-    "sessenta",
-    "setenta",
-    "oitenta",
-    "noventa",
-];
-
-const HUNDREDS: [&str; 10] = [
-    "",
-    "cento",
-    "duzentos",
-    "trezentos",
-    "quatrocentos",
-    "quinhentos",
-    "seiscentos",
-    "setecentos",
-    "oitocentos",
-    "novecentos",
-];
-
-const MONTHS: [&str; 12] = [
-    "janeiro",
-    "fevereiro",
-    "março",
-    "abril",
-    "maio",
-    "junho",
-    "julho",
-    "agosto",
-    "setembro",
-    "outubro",
-    "novembro",
-    "dezembro",
-];
 
 /// Masculine ordinal units 1..=9.
 const ORD_UNITS: [&str; 10] = [
@@ -151,130 +88,10 @@ fn looks_like_group_tail(word: &str) -> bool {
     bytes.len() > 3 && bytes[..3].iter().all(u8::is_ascii_digit) && !bytes[3].is_ascii_digit()
 }
 
-fn small(n: u64, gender: Gender, br: bool) -> &'static str {
-    match (n, gender, br) {
-        (1, Gender::Feminine, _) => "uma",
-        (2, Gender::Feminine, _) => "duas",
-        (16, _, false) => "dezasseis",
-        (17, _, false) => "dezassete",
-        (19, _, false) => "dezanove",
-        _ => SMALL[n as usize],
-    }
-}
-
-fn below_100(n: u64, gender: Gender, br: bool) -> String {
-    debug_assert!(n < 100);
-    if n < 20 {
-        return small(n, gender, br).to_string();
-    }
-    let tens = TENS[(n / 10) as usize];
-    match n % 10 {
-        0 => tens.to_string(),
-        unit => format!("{tens} e {}", small(unit, gender, br)),
-    }
-}
-
-fn below_1000(n: u64, gender: Gender, br: bool) -> String {
-    debug_assert!(n < 1000);
-    if n == 100 {
-        return "cem".to_string();
-    }
-    let hundreds = (n / 100) as usize;
-    let rest = n % 100;
-    let head = match (hundreds, gender) {
-        (0, _) => return below_100(rest, gender, br),
-        (1, _) | (_, Gender::Masculine) => HUNDREDS[hundreds].to_string(),
-        (_, Gender::Feminine) => {
-            let masculine = HUNDREDS[hundreds];
-            format!("{}as", &masculine[..masculine.len() - 2])
-        }
-    };
-    if rest == 0 {
-        head
-    } else {
-        format!("{head} e {}", below_100(rest, gender, br))
-    }
-}
-
-/// Joins `(value, words)` components. The connector `e` goes before the
-/// last component when its value is below 100 or a round hundred.
-fn join_components(components: &[(u64, String)]) -> String {
-    let mut out = String::new();
-    for (i, (value, words)) in components.iter().enumerate() {
-        if i > 0 {
-            let last = i == components.len() - 1;
-            if last && (*value < 100 || value % 100 == 0) {
-                out.push_str(" e ");
-            } else {
-                out.push(' ');
-            }
-        }
-        out.push_str(words);
-    }
-    out
-}
-
-/// Components of `n < 1_000_000` (thousands, then units).
-fn thousands_components(n: u64, gender: Gender, br: bool, out: &mut Vec<(u64, String)>) {
-    let thousands = n / 1000;
-    let units = n % 1000;
-    if thousands == 1 {
-        out.push((1, "mil".to_string()));
-    } else if thousands > 1 {
-        out.push((
-            thousands,
-            format!("{} mil", below_1000(thousands, gender, br)),
-        ));
-    }
-    if units > 0 {
-        out.push((units, below_1000(units, gender, br)));
-    }
-}
-
-fn scale_component(value: u64, singular: &str, plural: &str, br: bool) -> String {
-    if value == 1 {
-        format!("um {singular}")
-    } else {
-        format!("{} {plural}", below_1000(value, Gender::Masculine, br))
-    }
-}
-
-/// Exact Portuguese cardinal for `n <= 999_999_999_999_999`.
+/// Shared integer composition with locale-specific presentation.
 fn cardinal(n: u64, gender: Gender, locale: &str) -> String {
-    if n == 0 {
-        return "zero".to_string();
-    }
-    let br = brazilian(locale);
-    let mut components: Vec<(u64, String)> = Vec::with_capacity(5);
-    if br {
-        let scales = [
-            (1_000_000_000_000, "trilhão", "trilhões"),
-            (1_000_000_000, "bilhão", "bilhões"),
-            (1_000_000, "milhão", "milhões"),
-        ];
-        for (size, singular, plural) in scales {
-            let value = (n / size) % 1000;
-            if value > 0 {
-                components.push((value, scale_component(value, singular, plural, br)));
-            }
-        }
-    } else {
-        let billions = n / 1_000_000_000_000;
-        if billions > 0 {
-            components.push((billions, scale_component(billions, "bilião", "biliões", br)));
-        }
-        // Long scale: thousands of millions are "mil milhões".
-        let millions = (n / 1_000_000) % 1_000_000;
-        if millions == 1 {
-            components.push((1, "um milhão".to_string()));
-        } else if millions > 1 {
-            let mut inner = Vec::with_capacity(2);
-            thousands_components(millions, Gender::Masculine, br, &mut inner);
-            components.push((millions, format!("{} milhões", join_components(&inner))));
-        }
-    }
-    thousands_components(n % 1_000_000, gender, br, &mut components);
-    join_components(&components)
+    numbers::portuguese_cardinal(n, gender == Gender::Feminine, brazilian(locale))
+        .expect("normalization cardinal range is checked")
 }
 
 /// `true` when a noun after `n` is introduced by `de` (`um milhão de reais`).
@@ -288,11 +105,12 @@ fn fraction_words(frac: &str, br: bool) -> String {
     let bytes = frac.as_bytes();
     if bytes.len() == 1 || (bytes.len() == 2 && bytes[0] != b'0') {
         let value = frac.parse::<u64>().unwrap_or(0);
-        return below_100(value, Gender::Masculine, br);
+        return numbers::portuguese_cardinal(value, false, br)
+            .expect("fraction digits are bounded");
     }
     bytes
         .iter()
-        .map(|d| SMALL[usize::from(d - b'0')])
+        .map(|d| numbers::digit_word(d - b'0', SpeechLocale::Pt).expect("validated digit"))
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -424,13 +242,7 @@ impl LanguageRules for Portuguese {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        matches!(locale, "pt-BR" | "pt-PT").then_some(Conventions {
-            decimal: ',',
-            group: '.',
-            separators_unambiguous: false,
-            date_order: DateOrder::DayMonth,
-            dollar: None,
-        })
+        Conventions::for_locale("pt", locale)
     }
 
     fn number(&self, amount: &Amount, locale: &str) -> Option<String> {
@@ -447,7 +259,9 @@ impl LanguageRules for Portuguese {
         Some(
             digits
                 .bytes()
-                .map(|digit| SMALL[usize::from(digit - b'0')])
+                .map(|digit| {
+                    numbers::digit_word(digit - b'0', SpeechLocale::Pt).expect("validated digit")
+                })
                 .collect::<Vec<_>>()
                 .join(" "),
         )
@@ -535,7 +349,7 @@ impl LanguageRules for Portuguese {
     }
 
     fn date(&self, year: u32, month: u32, day: u32, locale: &str) -> Option<String> {
-        let month_name = MONTHS.get(month.checked_sub(1)? as usize)?;
+        let month_name = crate::speech::lexicons::month(SpeechLocale::Pt, month)?;
         let day_words = if day == 1 && brazilian(locale) {
             "primeiro".to_string()
         } else {

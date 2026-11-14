@@ -82,8 +82,8 @@ fn gender_and_plural_agreement_is_applied_to_quantities() {
         assert!(r.fully_supported, "{locale:?} {r:?}");
         assert_eq!(r.text, expected, "{locale:?}");
     }
-    // Do not perform blind feminine substring replacements inside millions.
-    let unsupported = single(
+    // Scale nouns stay masculine while the following noun requires its connector.
+    let large = single(
         SpeechLocale::Es,
         "200000000 h",
         SpeechValue::Measure {
@@ -91,8 +91,52 @@ fn gender_and_plural_agreement_is_applied_to_quantities() {
             value: n("200000000", None),
         },
     );
-    assert!(!unsupported.fully_supported);
-    assert_eq!(unsupported.text, "200000000 h");
+    assert!(large.fully_supported);
+    assert_eq!(large.text, "doscientos millones de horas");
+}
+
+#[test]
+fn arabic_implicit_unit_forms_keep_explicit_decimal_precision() {
+    for (integer, fraction, unit, expected) in [
+        ("1", "000", "s", "واحد فاصلة صفر صفر صفر ثانية"),
+        ("2", "000", "s", "اثنان فاصلة صفر صفر صفر ثانية"),
+        ("2", "00", "min", "اثنان فاصلة صفر صفر دقيقة"),
+    ] {
+        let source = format!("{integer}.{fraction} {unit}");
+        let result = single(
+            SpeechLocale::Ar,
+            &source,
+            SpeechValue::Measure {
+                unit: unit.into(),
+                value: n(integer, Some(fraction)),
+            },
+        );
+        assert_eq!(result.text, expected, "{source}");
+        assert!(result.fully_supported);
+        assert!(result.readings[0].reason.is_none());
+    }
+    for (integer, expected) in [("1", "ثانية"), ("2", "ثانيتان")] {
+        let result = single(
+            SpeechLocale::Ar,
+            &format!("{integer} s"),
+            SpeechValue::Measure {
+                unit: "s".into(),
+                value: n(integer, None),
+            },
+        );
+        assert_eq!(result.text, expected);
+    }
+    let mut negative = n("1", Some("000"));
+    negative.negative = true;
+    let result = single(
+        SpeechLocale::Ar,
+        "-1.000 s",
+        SpeechValue::Measure {
+            unit: "s".into(),
+            value: negative,
+        },
+    );
+    assert_eq!(result.text, "سالب واحد فاصلة صفر صفر صفر ثانية");
 }
 
 #[test]
@@ -224,6 +268,7 @@ fn money_reads_minor_units_and_preserves_unhandled_precision_or_currency() {
             Some("01"),
             "one British pound and one penny",
         ),
+        (SpeechLocale::Ar, "USD", "1", None, "دولار واحد"),
     ] {
         let r = single(
             locale,
@@ -240,7 +285,6 @@ fn money_reads_minor_units_and_preserves_unhandled_precision_or_currency() {
         (SpeechLocale::Es, "PEN", Some("123")),
         (SpeechLocale::En, "ZZZ", None),
         (SpeechLocale::En, "JPY", Some("01")),
-        (SpeechLocale::Ar, "USD", None),
     ] {
         let r = single(
             locale,

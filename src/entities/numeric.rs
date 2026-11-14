@@ -1,6 +1,8 @@
 //! Standalone number entity scanning (digit runs not glued to letters).
 
+use crate::core::numeric::scan_unsigned_decimal;
 use crate::core::types::EntityMention;
+use crate::core::unicode::{ascii_decimal_digit as digit, is_word_letter};
 
 use super::currency::normalize_amount;
 use super::normalize::{claim, is_claimed, push_mention};
@@ -15,28 +17,14 @@ pub(crate) fn scan_numbers(
     let mut index = 0;
     while index < chars.len() {
         let (offset, ch) = chars[index];
-        if !ch.is_ascii_digit() || claimed[offset] {
+        if digit(ch).is_none() || claimed[offset] {
             index += 1;
             continue;
         }
-        let mut end = offset + ch.len_utf8();
+        let end = scan_unsigned_decimal(text, offset).expect("decimal start checked above");
         let mut cursor = index + 1;
-        let mut digits = 1;
-        while cursor < chars.len() {
-            let (_, next) = chars[cursor];
-            if next.is_ascii_digit() {
-                digits += 1;
-                end += next.len_utf8();
-                cursor += 1;
-            } else if matches!(next, '.' | ',')
-                && cursor + 1 < chars.len()
-                && chars[cursor + 1].1.is_ascii_digit()
-            {
-                end += next.len_utf8();
-                cursor += 1;
-            } else {
-                break;
-            }
+        while cursor < chars.len() && chars[cursor].0 < end {
+            cursor += 1;
         }
         // Standalone digit runs only: skip digits glued to letters (`abc123`
         // is a token, not a number entity).
@@ -44,12 +32,11 @@ pub(crate) fn scan_numbers(
             && text[..offset]
                 .chars()
                 .next_back()
-                .is_some_and(|prev| prev.is_alphanumeric());
-        let glued_right = text[end..]
-            .chars()
-            .next()
-            .is_some_and(|next| next.is_alphanumeric() && !next.is_ascii_digit());
-        if digits > 0 && !glued_left && !glued_right && !is_claimed(claimed, offset, end) {
+                .is_some_and(|prev| prev.is_alphanumeric() || is_word_letter(prev));
+        let glued_right = text[end..].chars().next().is_some_and(|next| {
+            (next.is_alphanumeric() || is_word_letter(next)) && digit(next).is_none()
+        });
+        if !glued_left && !glued_right && !is_claimed(claimed, offset, end) {
             claim(claimed, offset, end);
             push_mention(
                 mentions,

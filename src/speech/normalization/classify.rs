@@ -10,10 +10,10 @@
 //! Every matcher requires the *whole* core to match. Anything else is left
 //! byte-for-byte as written. Ambiguous shapes are preserved and reported.
 
-use super::lexer::{Field, is_protected_identifier, scan_fields};
+use super::lexer::{Field, LexicalSource, is_protected_identifier};
 use super::rules::{
-    AbbrevContext, Amount, Conventions, Currency, DateOrder, LanguageRules, Meridiem,
-    OrdinalMarker, UNIT_FORMS, Unit, unit_from_str, valid_date,
+    AbbrevContext, Amount, Conventions, Currency, LanguageRules, Meridiem, OrdinalMarker,
+    UNIT_FORMS, Unit, unit_from_str, valid_date,
 };
 use super::{
     ChangeKind, Confidence, NormalizationWarning, NormalizeOptions, ReadingStyle, TextChange,
@@ -65,54 +65,40 @@ fn strip_sign(raw: &str) -> (bool, &str) {
     }
 }
 
-fn valid_first_group(group: &str) -> bool {
-    (1..=3).contains(&group.len()) && !group.starts_with('0')
-}
-
-fn grouped(groups: &[&str]) -> bool {
-    groups.len() >= 2 && valid_first_group(groups[0]) && groups[1..].iter().all(|g| g.len() == 3)
-}
-
-fn integer(negative: bool, digits: &str) -> NumParse {
-    if digits.len() > 15 {
+/// Convert the shared exact parser's value to this API's bounded legacy amount.
+/// Separator, grouping and decimal-field extraction live in `speech::core`;
+/// this adapter retains legacy padding/context and 15/12-digit budgets.
+fn shared_amount(negative: bool, raw: &str, decimal: char, canonical_count: bool) -> NumParse {
+    let mut options = crate::speech::SpeechOptions::new(crate::speech::SpeechLocale::En);
+    options.decimal_separator = Some(decimal);
+    let Ok(mut value) = crate::speech::core::parse_number(raw, &options) else {
+        return NumParse::NotNumber;
+    };
+    if canonical_count {
+        value = crate::speech::core::canonical_count(&value);
+    }
+    if value.integer.len() > 15
+        || value
+            .fraction
+            .as_ref()
+            .is_some_and(|fraction| fraction.len() > MAX_FRACTION_DIGITS)
+    {
         return NumParse::TooLarge;
     }
-    match digits.parse::<u64>() {
-        Ok(int) if int <= MAX_INTEGER => NumParse::Value(Amount {
-            negative,
-            int,
-            frac: None,
-        }),
-        _ => NumParse::TooLarge,
-    }
-}
-
-/// Read a zero-padded count in a quantity context. Leading zeros are only
-/// dropped here, after the caller has established that the token is a count;
-/// the original span is still what the change replaces.
-fn quantity_integer(negative: bool, digits: &str) -> NumParse {
-    let significant = digits.trim_start_matches('0');
-    integer(
+    let Ok(int) = value.integer.parse::<u64>() else {
+        return NumParse::TooLarge;
+    };
+    NumParse::Value(Amount {
         negative,
-        if significant.is_empty() {
-            "0"
-        } else {
-            significant
-        },
-    )
+        int,
+        frac: value.fraction,
+    })
 }
 
-fn decimal(negative: bool, int_digits: &str, frac: &str) -> NumParse {
-    if frac.len() > MAX_FRACTION_DIGITS {
-        return NumParse::TooLarge;
-    }
-    match integer(negative, int_digits) {
-        NumParse::Value(mut amount) => {
-            amount.frac = Some(frac.to_string());
-            NumParse::Value(amount)
-        }
-        other => other,
-    }
+fn shared_shape(raw: &str, decimal: char) -> bool {
+    let mut options = crate::speech::SpeechOptions::new(crate::speech::SpeechLocale::En);
+    options.decimal_separator = Some(decimal);
+    crate::speech::core::parse_number(raw, &options).is_ok()
 }
 
 /// Parse a plain number written with the locale's separators.
@@ -141,13 +127,13 @@ pub(crate) fn parse_number_in(raw: &str, conv: &Conventions, context: NumberCont
     if bytes.is_empty()
         || !bytes
             .iter()
-            .all(|b| b.is_ascii_digit() || *b == b'.' || *b == b',')
+            .all(|b| b.is_ascii_digit() || matches!(b, b'.' | b','))
         || !bytes[0].is_ascii_digit()
         || !bytes[bytes.len() - 1].is_ascii_digit()
     {
         return NumParse::NotNumber;
     }
-    let separators: Vec<char> = body.chars().filter(|c| *c == '.' || *c == ',').collect();
+    let separators: Vec<char> = body.chars().filter(|c| matches!(c, '.' | ',')).collect();
     if separators.len() > 8 {
         return NumParse::NotNumber;
     }
@@ -155,84 +141,104 @@ pub(crate) fn parse_number_in(raw: &str, conv: &Conventions, context: NumberCont
     if groups.iter().any(|g| g.is_empty()) {
         return NumParse::NotNumber;
     }
+    // These are interpretation policies. The shared parser alone owns valid
+    // grouped-digit shapes and extraction of exact integer/fraction strings.
     match separators.len() {
         0 => {
-            if body.len() > 1 && body.starts_with('0') {
-                // Leading-zero sequences are IDs in plain prose. A count
-                // before a noun is the one context where they are provably
-                // padded integers (`007 errores`).
-                return if quantity_ctx {
-                    quantity_integer(negative, body)
-                } else {
-                    NumParse::Ambiguous
-                };
+            if body.len() > 1 && body.starts_with('0') && !quantity_ctx {
+                return NumParse::Ambiguous;
             }
-            integer(negative, body)
+            shared_amount(negative, body, conv.decimal, quantity_ctx)
         }
         1 => {
-            let (int_part, rest) = (groups[0], groups[1]);
-            let sep = separators[0];
-            if valid_first_group(int_part) && rest.len() == 3 {
+            let (first, tail, sep) = (groups[0], groups[1], separators[0]);
+            if (1..=3).contains(&first.len()) && !first.starts_with('0') && tail.len() == 3 {
                 if sep == conv.group
                     && (conv.separators_unambiguous || currency_ctx || quantity_ctx)
                 {
-                    return integer(negative, &format!("{int_part}{rest}"));
+                    return shared_amount(negative, body, conv.decimal, false);
                 }
                 if sep == conv.decimal && conv.separators_unambiguous && !currency_ctx {
-                    return decimal(negative, int_part, rest);
+                    return shared_amount(negative, body, conv.decimal, false);
                 }
                 return NumParse::Ambiguous;
             }
-            if sep == conv.decimal && (int_part == "0" || !int_part.starts_with('0')) {
-                return decimal(negative, int_part, rest);
-            }
-            // The separator is not the locale decimal. With no valid
-            // three-digit grouping it cannot be a group separator, so two
-            // shapes are unambiguous even in a comma/dot locale:
-            // a leading-zero decimal (`0.05`, `-0.0001`) and a high-precision
-            // decimal (`3.1415926535`, four or more fractional digits).
-            // `3.14`, `12.5` and `1.234` stay ambiguous on purpose.
-            let leading_zero = int_part == "0";
-            let high_precision = rest.len() >= 4;
-            if (leading_zero || high_precision) && (int_part == "0" || !int_part.starts_with('0')) {
-                return decimal(negative, int_part, rest);
+            if (sep == conv.decimal || first == "0" || tail.len() >= 4)
+                && (first == "0" || !first.starts_with('0'))
+            {
+                return shared_amount(negative, body, sep, false);
             }
             NumParse::Ambiguous
         }
         count => {
+            // Legacy grouped quantities require a nonzero initial group;
+            // the shared parser intentionally also represents padded fields.
+            if groups[0].starts_with('0') {
+                return NumParse::NotNumber;
+            }
             let last = separators[count - 1];
             let head = &separators[..count - 1];
-            if separators.iter().all(|c| *c == conv.group) {
-                return if grouped(&groups) {
-                    integer(negative, &groups.concat())
-                } else {
-                    NumParse::NotNumber
-                };
+            if separators.iter().all(|c| *c == conv.group)
+                || last == conv.decimal && head.iter().all(|c| *c == conv.group)
+            {
+                return shared_amount(negative, body, conv.decimal, false);
             }
-            let int_groups = &groups[..groups.len() - 1];
-            let frac = groups[groups.len() - 1];
-            if last == conv.decimal && head.iter().all(|c| *c == conv.group) {
-                return if grouped(int_groups) {
-                    decimal(negative, &int_groups.concat(), frac)
-                } else {
-                    NumParse::NotNumber
-                };
-            }
-            // Other convention (`1,234.56` under es, `1.234.567` under en).
-            if separators.iter().all(|c| *c == conv.decimal) {
-                return if grouped(&groups) {
-                    NumParse::Ambiguous
-                } else {
-                    NumParse::NotNumber
-                };
-            }
-            if last == conv.group && head.iter().all(|c| *c == conv.decimal) && grouped(int_groups)
+            if (separators.iter().all(|c| *c == conv.decimal)
+                || last == conv.group && head.iter().all(|c| *c == conv.decimal))
+                && shared_shape(body, conv.group)
             {
                 return NumParse::Ambiguous;
             }
             NumParse::NotNumber
         }
     }
+}
+
+/// Adapt shared date semantics to the versioned API's existing warning policy.
+/// Unambiguous day/month order wins before an explicit locale default; the
+/// versioned four-digit-year profile remains restricted to years 1000–9999.
+fn shared_date_fields(
+    raw: &str,
+    conv: &Conventions,
+    locale_explicit: bool,
+) -> Result<(u32, u32, u32), WarningCode> {
+    use crate::speech::temporal::{TemporalValue, parse_numeric_date};
+    use crate::speech::{DateOrder as Order, SpeechLocale, SpeechOptions};
+    let mut options = SpeechOptions::new(SpeechLocale::En);
+    let extract = |value: Option<TemporalValue>| match value {
+        Some(TemporalValue::Date {
+            year: Some(year),
+            month: Some(month),
+            day: Some(day),
+            ..
+        }) => year
+            .parse::<u32>()
+            .ok()
+            .filter(|year| *year >= 1000)
+            .map(|year| (year, month, day)),
+        _ => None,
+    };
+    if let Some(fields) = extract(parse_numeric_date(raw, &options)) {
+        return Ok(fields);
+    }
+    let year_width = raw
+        .split(['/', '-'])
+        .find(|part| part.len() == 4)
+        .and_then(|s| s.parse::<u32>().ok());
+    if year_width.is_some_and(|year| year < 1000) {
+        return Err(WarningCode::InvalidDate);
+    }
+    // A strict DMY probe identifies a genuinely ambiguous shape after the
+    // shared RejectAmbiguous pass failed. There is no second calendar parser.
+    options.date_order = Order::DayMonthYear;
+    if extract(parse_numeric_date(raw, &options)).is_none() {
+        return Err(WarningCode::InvalidDate);
+    }
+    if !locale_explicit {
+        return Err(WarningCode::AmbiguousDate);
+    }
+    options.date_order = conv.date_order;
+    extract(parse_numeric_date(raw, &options)).ok_or(WarningCode::InvalidDate)
 }
 
 /// Parse `mantissa e exponent` / `mantissa E exponent` (scientific notation).
@@ -242,89 +248,40 @@ pub(crate) fn parse_number_in(raw: &str, conv: &Conventions, context: NumberCont
 /// `None` for malformed shapes or an exponent with more than two digits
 /// (preserved as written).
 fn parse_scientific(raw: &str) -> Option<(Amount, i32)> {
-    let (mantissa_raw, exponent_raw) = raw.split_once(['e', 'E'])?;
-    let (negative, body) = strip_sign(mantissa_raw);
-    let (exp_negative, exp_digits) = strip_sign(exponent_raw);
-    if !all_digits(exp_digits) || exp_digits.len() > 2 {
+    use crate::speech::shapes::{self, ShapePolicy};
+    let options = crate::speech::SpeechOptions::new(crate::speech::SpeechLocale::En);
+    let shape = shapes::scientific(raw, 0, &options, ShapePolicy::Versioned)?;
+    if shape.end != raw.len() {
         return None;
     }
-    let exponent: i32 = exp_digits.parse().ok()?;
-    let exponent = if exp_negative { -exponent } else { exponent };
-    let groups: Vec<&str> = body.split(['.', ',']).collect();
-    let separators = body.chars().filter(|c| matches!(c, '.' | ',')).count();
-    let amount = match (groups.as_slice(), separators) {
-        ([digits], 0) => match integer(negative, digits) {
-            NumParse::Value(value) => value,
-            _ => return None,
+    Some((
+        Amount {
+            negative: shape.mantissa.negative,
+            int: shape.mantissa.integer.parse().ok()?,
+            frac: shape.mantissa.fraction,
         },
-        ([int_part, frac], 1) => {
-            if !all_digits(int_part)
-                || !all_digits(frac)
-                || (int_part.len() > 1 && int_part.starts_with('0'))
-            {
-                return None;
-            }
-            match decimal(negative, int_part, frac) {
-                NumParse::Value(value) => value,
-                _ => return None,
-            }
-        }
-        _ => return None,
-    };
-    Some((amount, exponent))
+        shape.exponent,
+    ))
 }
 
 /// Parse attached durations: `1h`, `1h30`, `1h30min`, `1h30min15s`, `30min`,
 /// `45s`. The bare number after `h` is minutes. Returns
 /// `(hours, minutes, seconds)`; at least one component is present.
 fn parse_duration(raw: &str) -> Option<(u64, u64, u64)> {
-    // `1h`, `1h30`, `1h30min`, `1h30min15s`, `1h30s`.
-    if let Some((hours, rest)) = raw.split_once('h') {
-        if !all_digits(hours) {
-            return None;
-        }
-        let hours = hours.parse::<u64>().ok()?;
-        if rest.is_empty() {
-            return Some((hours, 0, 0));
-        }
-        let (minutes, rest) = leading_digits(rest)?;
-        let minutes = minutes.parse::<u64>().ok()?;
-        if rest.is_empty() {
-            return Some((hours, minutes, 0));
-        }
-        // `1h30s` reads the bare seconds after `h`.
-        if matches!(rest, "s" | "sec") {
-            return Some((hours, 0, minutes));
-        }
-        // An explicit `min` (followed by optional seconds) or a bare `s`.
-        let rest = rest.strip_prefix("min").unwrap_or(rest);
-        if rest.is_empty() {
-            return Some((hours, minutes, 0));
-        }
-        let seconds = rest
-            .strip_suffix("sec")
-            .or_else(|| rest.strip_suffix('s'))
-            .filter(|n| all_digits(n))?;
-        return Some((hours, minutes, seconds.parse().ok()?));
+    use crate::speech::shapes::{self, DurationUnit, ShapePolicy};
+    let shape = shapes::duration(raw, 0, ShapePolicy::Versioned)?;
+    if shape.end != raw.len() {
+        return None;
     }
-    if let Some(number) = raw.strip_suffix("min").filter(|n| all_digits(n)) {
-        return Some((0, number.parse().ok()?, 0));
+    let (mut hours, mut minutes, mut seconds) = (0, 0, 0);
+    for component in shape.components {
+        match component.unit {
+            DurationUnit::Hours => hours = component.value,
+            DurationUnit::Minutes => minutes = component.value,
+            DurationUnit::Seconds => seconds = component.value,
+        }
     }
-    if let Some(number) = raw
-        .strip_suffix("sec")
-        .or_else(|| raw.strip_suffix('s'))
-        .filter(|n| all_digits(n))
-    {
-        return Some((0, 0, number.parse().ok()?));
-    }
-    None
-}
-
-/// Split a leading run of ASCII digits: `("30", "min15s")`. `None` when the
-/// string does not start with a digit.
-fn leading_digits(raw: &str) -> Option<(&str, &str)> {
-    let end = raw.find(|c: char| !c.is_ascii_digit()).unwrap_or(raw.len());
-    (end > 0).then(|| raw.split_at(end))
+    Some((hours, minutes, seconds))
 }
 
 fn all_digits(raw: &str) -> bool {
@@ -412,9 +369,9 @@ struct Classifier<'a> {
     warnings: Vec<NormalizationWarning>,
 }
 
-/// Classify `text` for the options' language and locale.
+/// Classify the shared lexical source for the options' language and locale.
 pub(crate) fn classify(
-    text: &str,
+    source: &LexicalSource<'_>,
     rules: &dyn LanguageRules,
     opts: &NormalizeOptions,
 ) -> (Vec<TextChange>, Vec<NormalizationWarning>) {
@@ -422,13 +379,13 @@ pub(crate) fn classify(
         return (Vec::new(), Vec::new());
     };
     let mut classifier = Classifier {
-        text,
+        text: source.text(),
         rules,
         conv,
         locale: &opts.locale,
         locale_explicit: opts.locale_explicit,
         style: opts.reading_style,
-        fields: scan_fields(text),
+        fields: source.fields(),
         changes: Vec::new(),
         warnings: Vec::new(),
     };
@@ -750,6 +707,9 @@ impl<'a> Classifier<'a> {
         // original byte-for-byte so existing callers do not change.
         if self.style == ReadingStyle::Natural
             && let Some((hours, minutes, seconds)) = parse_duration(core)
+            && [hours, minutes, seconds]
+                .iter()
+                .all(|value| *value <= MAX_INTEGER)
             && let Some(spoken) = self.rules.duration(hours, minutes, seconds, self.locale)
         {
             self.change(ChangeKind::Unit, start, end, spoken);
@@ -862,17 +822,34 @@ impl<'a> Classifier<'a> {
             return;
         }
         match parts.as_slice() {
-            [numerator, denominator] => {
+            [_, _] => {
+                use crate::speech::shapes::{self, RelationValue, ShapePolicy};
+                let options = crate::speech::SpeechOptions::new(crate::speech::SpeechLocale::En);
+                let values = shapes::relation(core, 0, &options, ShapePolicy::Versioned)
+                    .filter(|shape| shape.end == core.len())
+                    .and_then(|shape| match shape.value {
+                        RelationValue::Fraction {
+                            numerator,
+                            denominator,
+                        } => Some((
+                            numerator.integer.parse::<u64>().ok()?,
+                            denominator.integer.parse::<u64>().ok()?,
+                        )),
+                        _ => None,
+                    });
                 if self.style == ReadingStyle::Natural
-                    && let (Ok(numerator), Ok(denominator)) =
-                        (numerator.parse::<u64>(), denominator.parse::<u64>())
-                    && denominator > 0
+                    && let Some((numerator, denominator)) = values
+                    && numerator <= MAX_INTEGER
+                    && denominator <= MAX_INTEGER
                     && let Some(spoken) = self.rules.fraction(numerator, denominator, self.locale)
                 {
                     self.change(ChangeKind::Fraction, start, end, spoken);
                 } else {
                     self.warn(WarningCode::AmbiguousFraction, start, end);
                 }
+            }
+            [year, month, day] if year.len() == 4 && month.len() <= 2 && day.len() <= 2 => {
+                self.calendar_date(core, start, end)
             }
             [a, b, year] if a.len() <= 2 && b.len() <= 2 => match year.len() {
                 4 => self.slash_date(a, b, year, start, end),
@@ -884,31 +861,19 @@ impl<'a> Classifier<'a> {
     }
 
     fn slash_date(&mut self, a: &str, b: &str, year: &str, start: usize, end: usize) {
-        let (Ok(a), Ok(b), Ok(year)) = (a.parse::<u32>(), b.parse::<u32>(), year.parse::<u32>())
-        else {
-            return;
-        };
-        let day_month = valid_date(year, b, a);
-        let month_day = valid_date(year, a, b);
-        let (month, day) = match (day_month, month_day) {
-            (false, false) => {
-                self.warn(WarningCode::InvalidDate, start, end);
-                return;
+        // Field joining and four-digit-year acceptance remain API policies;
+        // calendar structure/order/validity are decoded by the shared core.
+        self.calendar_date(&format!("{a}/{b}/{year}"), start, end);
+    }
+
+    fn calendar_date(&mut self, raw: &str, start: usize, end: usize) {
+        match shared_date_fields(raw, &self.conv, self.locale_explicit) {
+            Ok((year, month, day)) => {
+                if let Some(spoken) = self.rules.date(year, month, day, self.locale) {
+                    self.change(ChangeKind::Date, start, end, spoken);
+                }
             }
-            (true, false) => (b, a),
-            (false, true) => (a, b),
-            (true, true) if a == b => (a, a),
-            (true, true) if self.locale_explicit => match self.conv.date_order {
-                DateOrder::DayMonth => (b, a),
-                DateOrder::MonthDay => (a, b),
-            },
-            (true, true) => {
-                self.warn(WarningCode::AmbiguousDate, start, end);
-                return;
-            }
-        };
-        if let Some(spoken) = self.rules.date(year, month, day, self.locale) {
-            self.change(ChangeKind::Date, start, end, spoken);
+            Err(warning) => self.warn(warning, start, end),
         }
     }
 
@@ -923,20 +888,7 @@ impl<'a> Classifier<'a> {
         {
             return;
         }
-        let (Ok(year), Ok(month), Ok(day)) = (
-            year.parse::<u32>(),
-            month.parse::<u32>(),
-            day.parse::<u32>(),
-        ) else {
-            return;
-        };
-        if !valid_date(year, month, day) {
-            self.warn(WarningCode::InvalidDate, start, end);
-            return;
-        }
-        if let Some(spoken) = self.rules.date(year, month, day, self.locale) {
-            self.change(ChangeKind::Date, start, end, spoken);
-        }
+        self.calendar_date(core, start, end);
     }
 
     /// Clock times (`15:30`, `3:30 PM`) and ratios (`1:2`, warned).
@@ -987,7 +939,31 @@ impl<'a> Classifier<'a> {
                         consumed = next + 1;
                     }
                 }
-                let (Ok(h), Ok(m)) = (hour.parse::<u32>(), minute.parse::<u32>()) else {
+                // The legacy API owns joining/punctuation and wording; the
+                // shared clock decoder owns numeric fields and AM/PM bounds.
+                let clock_source = format!(
+                    "{clock}{}",
+                    match meridiem {
+                        Some(Meridiem::Am) => " am",
+                        Some(Meridiem::Pm) => " pm",
+                        None => "",
+                    }
+                );
+                let options = crate::speech::SpeechOptions::new(crate::speech::SpeechLocale::En);
+                let (_, parsed) = crate::speech::temporal::parse_numeric_time(
+                    &clock_source,
+                    0,
+                    clock_source.len(),
+                    &options,
+                );
+                let crate::speech::temporal::TemporalValue::Clock {
+                    hour: h,
+                    minute: Some(m),
+                    second: None,
+                    ..
+                } = parsed
+                else {
+                    self.warn(WarningCode::AmbiguousTime, start, end);
                     return consumed;
                 };
                 match self
@@ -1013,16 +989,19 @@ impl<'a> Classifier<'a> {
     fn range(&mut self, index: usize) -> usize {
         let field = self.fields[index];
         let core = self.core(index);
-        let parts: Vec<&str> = core.split('–').collect();
-        let [from, to] = parts.as_slice() else {
+        use crate::speech::shapes::{self, RelationValue, ShapePolicy};
+        let options = crate::speech::SpeechOptions::new(crate::speech::SpeechLocale::En);
+        let Some(shape) = shapes::relation(core, 0, &options, ShapePolicy::Versioned)
+            .filter(|shape| shape.end == core.len())
+        else {
             return index + 1;
         };
-        let (Some(from), Some(to)) = (plain_integer(from), plain_integer(to)) else {
+        let RelationValue::Range { from, to } = shape.value else {
             return index + 1;
         };
-        if from >= to {
+        let (Ok(from), Ok(to)) = (from.integer.parse::<u64>(), to.integer.parse::<u64>()) else {
             return index + 1;
-        }
+        };
         let mut end = field.core_end;
         let mut consumed = index + 1;
         let mut unit = None;
@@ -1147,20 +1126,21 @@ impl<'a> Classifier<'a> {
 
 #[cfg(test)]
 mod tests {
+    use super::super::rules::DateOrder;
     use super::*;
 
     const ES: Conventions = Conventions {
         decimal: ',',
         group: '.',
         separators_unambiguous: false,
-        date_order: DateOrder::DayMonth,
+        date_order: DateOrder::DayMonthYear,
         dollar: None,
     };
     const EN: Conventions = Conventions {
         decimal: '.',
         group: ',',
         separators_unambiguous: true,
-        date_order: DateOrder::MonthDay,
+        date_order: DateOrder::MonthDayYear,
         dollar: Some(Currency::Usd),
     };
 

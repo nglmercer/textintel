@@ -4,8 +4,9 @@
 //! decoding, or leetspeak rewrites. Unsupported structured values retain their
 //! source text and report a reason instead of inventing a pronunciation.
 
+use super::core::valid_date;
 use super::lexicons::{currency_name, month, unit_pattern};
-use super::numbers::{verbalize_number, verbalize_number_feminine};
+use super::numbers::{verbalize_number, verbalize_number_feminine, verbalize_with_options};
 use super::parser::parse_for_speech;
 use super::types::{
     NumberReading, NumberValue, SpeechDocument, SpeechLocale, SpeechNormalization, SpeechOptions,
@@ -17,7 +18,7 @@ pub fn normalize_for_speech(
     text: &str,
     options: &SpeechOptions,
 ) -> Result<SpeechNormalization, TextIntelError> {
-    verbalize_document(&parse_for_speech(text, options)?)
+    verbalize_document_with_options(&parse_for_speech(text, options)?, options)
 }
 
 /// Verbalize a document, rejecting externally constructed invalid span maps.
@@ -25,6 +26,32 @@ pub fn normalize_for_speech(
 pub fn verbalize_document(
     document: &SpeechDocument,
 ) -> Result<SpeechNormalization, TextIntelError> {
+    verbalize_document_with_options(document, &SpeechOptions::new(document.locale))
+}
+
+/// Render an already parsed document using explicit shared reading conventions.
+pub fn verbalize_document_with_options(
+    document: &SpeechDocument,
+    options: &SpeechOptions,
+) -> Result<SpeechNormalization, TextIntelError> {
+    options.validate()?;
+    let length = document.text.chars().count();
+    if length > options.max_input_chars {
+        return Err(TextIntelError::InputTooLong {
+            length,
+            maximum: options.max_input_chars,
+        });
+    }
+    if document.spans.len() > options.max_spans {
+        return Err(TextIntelError::TooManySegments {
+            maximum: options.max_spans,
+        });
+    }
+    if document.locale != options.locale {
+        return Err(TextIntelError::InvalidConfiguration(
+            "document and rendering locales must agree".into(),
+        ));
+    }
     let mut cursor = 0;
     let mut text = String::new();
     let mut readings = Vec::with_capacity(document.spans.len());
@@ -39,12 +66,17 @@ pub fn verbalize_document(
         cursor = span.end;
         let (spoken, reason) = match &span.value {
             SpeechValue::Text => (Some(span.source.clone()), None),
-            SpeechValue::Number { value, reading } => (verbalize_number(value, document.locale, *reading), Some("number form or range is not supported for this locale".to_string())),
-            SpeechValue::Date { year, month, day } => (date(document.locale, *year, *month, *day), Some("date value or date grammar is not supported for this locale".to_string())),
-            SpeechValue::Time { hour, minute, second } => (time(document.locale, *hour, *minute, *second), Some("time value or time grammar is not supported for this locale".to_string())),
-            SpeechValue::Currency { code, value } => (money(document.locale, code, value), Some("currency, fractional precision, or currency grammar is not supported for this locale".to_string())),
-            SpeechValue::Percent { value } => (quantity(document.locale, "concentr-percent", value), Some("percent grammar or number range is not supported for this locale".to_string())),
-            SpeechValue::Measure { unit, value } => (unit_key(unit).and_then(|key| quantity(document.locale, key, value)), Some("unit, agreement, or number range is not supported for this locale".to_string())),
+            SpeechValue::Number { value, reading } => (verbalize_with_options(value, options, *reading), Some("number form or range is not supported for this locale".to_string())),
+            SpeechValue::Date { year, month, day } => (super::temporal::render_date(*year,*month,*day,document.locale,options), Some("date value or date grammar is not supported for this locale".to_string())),
+            SpeechValue::Time { hour, minute, second } => (super::temporal::render_time(*hour,*minute,*second,document.locale,options), Some("time value or time grammar is not supported for this locale".to_string())),
+            SpeechValue::InflectedNumber {..} => (super::grammar::render(&span.value,options),Some("numeric inflection is unsupported for this language or value".into())),
+            SpeechValue::MeasuredExpression {..} => (super::quantities::render(&span.value,&span.source,options),Some("measured expression grammar is unsupported".into())),
+            SpeechValue::LabelledNumber {..} => (super::quantities::render(&span.value,&span.source,options),Some("labelled quantity reading is unsupported".into())),
+            SpeechValue::Expression {value} => (super::expressions::render(value,options),Some("expression grammar is unsupported for this locale".into())),
+            SpeechValue::Temporal { value } => (super::temporal::render(value,document.locale,options), Some("temporal value or reading grammar is unsupported".into())),
+            SpeechValue::Currency { code, value } => (super::quantities::render(&span.value,&span.source,options).or_else(||money(document.locale, code, value)), Some("currency, fractional precision, or currency grammar is not supported for this locale".to_string())),
+            SpeechValue::Percent { value } => (super::quantities::render(&span.value,&span.source,options).or_else(||quantity(document.locale, "concentr-percent", value)), Some("percent grammar or number range is not supported for this locale".to_string())),
+            SpeechValue::Measure { unit, value } => (super::quantities::render(&span.value,&span.source,options).or_else(||unit_key(unit).and_then(|key| quantity(document.locale, key, value))), Some("unit, agreement, or number range is not supported for this locale".to_string())),
             SpeechValue::Identifier { kind } => (None, Some(format!("identifier {kind:?} requires an explicit application reading policy"))),
             SpeechValue::Ambiguous { reason } => (None, Some(reason.clone())),
         };
@@ -58,7 +90,16 @@ pub fn verbalize_document(
             source: span.source.clone(),
             spoken,
             supported,
-            reason: if supported { None } else { reason },
+            reason: if supported {
+                match &span.value {
+                    SpeechValue::Temporal { value } => {
+                        super::temporal::diagnostic(value).map(str::to_owned)
+                    }
+                    _ => None,
+                }
+            } else {
+                reason
+            },
         });
     }
     if cursor != document.text.len() {
@@ -74,7 +115,7 @@ pub fn verbalize_document(
     })
 }
 
-fn value(integer: u32) -> NumberValue {
+pub(super) fn value(integer: u32) -> NumberValue {
     NumberValue {
         negative: false,
         integer: integer.to_string(),
@@ -82,23 +123,11 @@ fn value(integer: u32) -> NumberValue {
     }
 }
 
-fn cardinal(locale: SpeechLocale, n: u32) -> Option<String> {
+pub(super) fn cardinal(locale: SpeechLocale, n: u32) -> Option<String> {
     verbalize_number(&value(n), locale, NumberReading::Cardinal)
 }
 
-fn valid_date(year: u32, month: u32, day: u32) -> bool {
-    let leap = year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
-    let last = match month {
-        2 if leap => 29,
-        2 => 28,
-        4 | 6 | 9 | 11 => 30,
-        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
-        _ => 0,
-    };
-    (1..=9999).contains(&year) && (1..=last).contains(&day)
-}
-
-fn date(locale: SpeechLocale, year: u32, m: u32, day: u32) -> Option<String> {
+pub(super) fn date(locale: SpeechLocale, year: u32, m: u32, day: u32) -> Option<String> {
     use SpeechLocale::*;
     if !valid_date(year, m, day) {
         return None;
@@ -120,13 +149,12 @@ fn date(locale: SpeechLocale, year: u32, m: u32, day: u32) -> Option<String> {
                 .collect::<String>();
             format!("{year}年{month_name}{day_words}日")
         }
-        Ja => {
-            let year = year_words
-                .strip_suffix("よん")
-                .map(|prefix| format!("{prefix}よ"))
-                .unwrap_or(year_words);
-            format!("{year}ねん{}{}", japanese_month(m)?, japanese_day(day)?)
-        }
+        Ja => format!(
+            "{}{}{}",
+            japanese_year(year)?,
+            japanese_month(m)?,
+            japanese_day(day)?
+        ),
         Ko => format!("{year_words}년 {} {day_words}일", korean_month(m)?),
         Vi => format!(
             "ngày {day_words} tháng {} năm {year_words}",
@@ -145,7 +173,7 @@ fn date(locale: SpeechLocale, year: u32, m: u32, day: u32) -> Option<String> {
     })
 }
 
-fn english_day(day: u32) -> Option<&'static str> {
+pub(super) fn english_day(day: u32) -> Option<&'static str> {
     const DAYS: [&str; 31] = [
         "first",
         "second",
@@ -181,7 +209,7 @@ fn english_day(day: u32) -> Option<&'static str> {
     ];
     DAYS.get(day.checked_sub(1)? as usize).copied()
 }
-fn german_day(day: u32) -> Option<&'static str> {
+pub(super) fn german_day(day: u32) -> Option<&'static str> {
     const DAYS: [&str; 31] = [
         "erster",
         "zweiter",
@@ -217,7 +245,18 @@ fn german_day(day: u32) -> Option<&'static str> {
     ];
     DAYS.get(day.checked_sub(1)? as usize).copied()
 }
-fn japanese_month(month: u32) -> Option<&'static str> {
+/// Calendar/era year counter; four before 年 retains the established よねん.
+pub(super) fn japanese_year(year: u32) -> Option<String> {
+    if year == 0 {
+        return None;
+    }
+    Some(format!(
+        "{}ねん",
+        replace_suffix(cardinal(SpeechLocale::Ja, year)?, "よん", "よ")
+    ))
+}
+
+pub(super) fn japanese_month(month: u32) -> Option<&'static str> {
     [
         "いちがつ",
         "にがつ",
@@ -235,7 +274,7 @@ fn japanese_month(month: u32) -> Option<&'static str> {
     .get(month.checked_sub(1)? as usize)
     .copied()
 }
-fn japanese_day(day: u32) -> Option<String> {
+pub(super) fn japanese_day(day: u32) -> Option<String> {
     let irregular = match day {
         1 => Some("ついたち"),
         2 => Some("ふつか"),
@@ -248,15 +287,21 @@ fn japanese_day(day: u32) -> Option<String> {
         9 => Some("ここのか"),
         10 => Some("とおか"),
         14 => Some("じゅうよっか"),
+        // Japan Foundation Marugoto Starter wordbook, calendar/date table:
+        // https://www.marugoto-online.jp/a1/support/pdf/MarugotoStarterWordbook_jpn.pdf
+        17 => Some("じゅうしちにち"),
+        19 => Some("じゅうくにち"),
         20 => Some("はつか"),
         24 => Some("にじゅうよっか"),
+        27 => Some("にじゅうしちにち"),
+        29 => Some("にじゅうくにち"),
         _ => None,
     };
     irregular
         .map(str::to_string)
         .or_else(|| cardinal(SpeechLocale::Ja, day).map(|v| format!("{v}にち")))
 }
-fn korean_month(month: u32) -> Option<String> {
+pub(super) fn korean_month(month: u32) -> Option<String> {
     match month {
         6 => Some("유월".into()),
         10 => Some("시월".into()),
@@ -264,7 +309,7 @@ fn korean_month(month: u32) -> Option<String> {
         _ => None,
     }
 }
-fn russian_day(day: u32) -> Option<&'static str> {
+pub(super) fn russian_day(day: u32) -> Option<&'static str> {
     [
         "первое",
         "второе",
@@ -301,7 +346,7 @@ fn russian_day(day: u32) -> Option<&'static str> {
     .get(day.checked_sub(1)? as usize)
     .copied()
 }
-fn russian_year(year: u32) -> Option<String> {
+pub(super) fn russian_year(year: u32) -> Option<String> {
     const SMALL: [&str; 20] = [
         "",
         "первого",
@@ -426,7 +471,7 @@ fn conjunction(locale: SpeechLocale) -> &'static str {
         Ko => "",
     }
 }
-fn join_parts(locale: SpeechLocale, parts: &[String]) -> String {
+pub(super) fn join_parts(locale: SpeechLocale, parts: &[String]) -> String {
     if locale == SpeechLocale::Ar {
         return parts.join(" و");
     }
@@ -441,26 +486,21 @@ fn join_parts(locale: SpeechLocale, parts: &[String]) -> String {
         parts.join(&format!(" {connector} "))
     }
 }
-fn time(locale: SpeechLocale, hour: u32, minute: u32, second: Option<u32>) -> Option<String> {
+pub(super) fn time(
+    locale: SpeechLocale,
+    hour: u32,
+    minute: Option<u32>,
+    second: Option<u32>,
+) -> Option<String> {
     use SpeechLocale::*;
-    if hour > 23 || minute > 59 || second.is_some_and(|s| s > 59) {
+    if hour > 23 || minute.is_some_and(|m| m > 59) || second.is_some_and(|s| s > 59) {
         return None;
     }
     if locale == Ja {
-        let h = match hour % 10 {
-            0 if hour == 0 => "れい".into(),
-            4 => cardinal(locale, hour)?
-                .strip_suffix("よん")
-                .map(|s| format!("{s}よ"))?,
-            7 => cardinal(locale, hour)?
-                .strip_suffix("なな")
-                .map(|s| format!("{s}しち"))?,
-            9 => cardinal(locale, hour)?
-                .strip_suffix("きゅう")
-                .map(|s| format!("{s}く"))?,
-            _ => cardinal(locale, hour)?,
-        };
-        let mut s = format!("{h}じ{}", japanese_minutes(minute)?);
+        let mut s = japanese_hour(hour)?;
+        if let Some(minute) = minute {
+            s.push_str(&japanese_minutes(minute)?);
+        }
         if let Some(sec) = second {
             s.push_str(&format!("{}びょう", cardinal(locale, sec)?));
         }
@@ -472,18 +512,20 @@ fn time(locale: SpeechLocale, hour: u32, minute: u32, second: Option<u32>) -> Op
         } else {
             cardinal(locale, hour)?
         };
-        let mut s = format!("{h}点{}分", cardinal(locale, minute)?);
+        let mut s = format!("{h}点");
+        if let Some(minute) = minute {
+            s.push_str(&format!("{}分", cardinal(locale, minute)?));
+        }
         if let Some(sec) = second {
             s.push_str(&format!("{}秒", cardinal(locale, sec)?));
         }
         return Some(s);
     }
     if locale == Ko {
-        let mut s = format!(
-            "{} 시 {} 분",
-            korean_native(hour)?,
-            cardinal(locale, minute)?
-        );
+        let mut s = format!("{} 시", korean_native(hour)?);
+        if let Some(minute) = minute {
+            s.push_str(&format!(" {} 분", cardinal(locale, minute)?));
+        }
         if let Some(sec) = second {
             s.push_str(&format!(" {} 초", cardinal(locale, sec)?));
         }
@@ -516,25 +558,41 @@ fn time(locale: SpeechLocale, hour: u32, minute: u32, second: Option<u32>) -> Op
             "الثانية والعشرون",
             "الثالثة والعشرون",
         ];
-        let mut parts = vec![
-            format!("الساعة {}", HOURS[hour as usize]),
-            quantity(locale, "duration-minute", &value(minute))?,
-        ];
+        let mut parts = vec![format!("الساعة {}", HOURS[hour as usize])];
+        if let Some(minute) = minute {
+            parts.push(quantity(locale, "duration-minute", &value(minute))?);
+        }
         if let Some(sec) = second {
             parts.push(quantity(locale, "duration-second", &value(sec))?);
         }
         return Some(join_parts(locale, &parts));
     }
-    let mut parts = vec![
-        quantity(locale, "duration-hour", &value(hour))?,
-        quantity(locale, "duration-minute", &value(minute))?,
-    ];
+    let mut parts = vec![quantity(locale, "duration-hour", &value(hour))?];
+    if let Some(minute) = minute {
+        parts.push(quantity(locale, "duration-minute", &value(minute))?);
+    }
     if let Some(sec) = second {
         parts.push(quantity(locale, "duration-second", &value(sec))?);
     }
     Some(join_parts(locale, &parts))
 }
-fn japanese_minutes(n: u32) -> Option<String> {
+/// Clock-hour counter shared by complete times and optional temporal fields.
+/// Duration hours use じかん and intentionally have a different suffix rule.
+pub(super) fn japanese_hour(hour: u32) -> Option<String> {
+    if hour > 23 {
+        return None;
+    }
+    let h = match hour % 10 {
+        0 if hour == 0 => "れい".into(),
+        4 => replace_suffix(cardinal(SpeechLocale::Ja, hour)?, "よん", "よ"),
+        7 => replace_suffix(cardinal(SpeechLocale::Ja, hour)?, "なな", "しち"),
+        9 => replace_suffix(cardinal(SpeechLocale::Ja, hour)?, "きゅう", "く"),
+        _ => cardinal(SpeechLocale::Ja, hour)?,
+    };
+    Some(format!("{h}じ"))
+}
+
+pub(super) fn japanese_minutes(n: u32) -> Option<String> {
     if n > 99 {
         return None;
     }
@@ -570,7 +628,7 @@ fn japanese_minutes(n: u32) -> Option<String> {
         ))
     }
 }
-fn korean_native(n: u32) -> Option<String> {
+pub(super) fn korean_native(n: u32) -> Option<String> {
     const U: [&str; 10] = [
         "영", "한", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉",
     ];
@@ -597,7 +655,7 @@ fn korean_native(n: u32) -> Option<String> {
     ))
 }
 
-fn plural(locale: SpeechLocale, n: &NumberValue) -> Option<&'static str> {
+pub(super) fn plural(locale: SpeechLocale, n: &NumberValue) -> Option<&'static str> {
     let i = n.integer.parse::<u64>().ok()?;
     let v = n.fraction.as_ref().map_or(0, String::len);
     let fraction_zero = n
@@ -630,7 +688,7 @@ fn plural(locale: SpeechLocale, n: &NumberValue) -> Option<&'static str> {
     })
 }
 
-fn unit_key(unit: &str) -> Option<&'static str> {
+pub(super) fn unit_key(unit: &str) -> Option<&'static str> {
     Some(match unit {
         "m" | "length-meter" => "length-meter",
         "km" | "length-kilometer" => "length-kilometer",
@@ -645,7 +703,7 @@ fn unit_key(unit: &str) -> Option<&'static str> {
         _ => return None,
     })
 }
-fn quantity(locale: SpeechLocale, key: &str, n: &NumberValue) -> Option<String> {
+pub(super) fn quantity(locale: SpeechLocale, key: &str, n: &NumberValue) -> Option<String> {
     if key == "concentr-percent" {
         return percent(locale, n);
     }
@@ -654,6 +712,17 @@ fn quantity(locale: SpeechLocale, key: &str, n: &NumberValue) -> Option<String> 
     verbalize_number(n, locale, NumberReading::Cardinal)?;
     let category = plural(locale, n)?;
     let (pattern, gender) = unit_pattern(locale, key, category)?;
+    // An implicit one/dual pattern cannot carry written decimal precision.
+    // In particular, Arabic 1.000 and 2.000 must not collapse to ثانية/ثانيتان.
+    let (pattern, gender) = if n.fraction.is_some() && !pattern.contains("{0}") {
+        let explicit = unit_pattern(locale, key, "other")?;
+        if !explicit.0.contains("{0}") {
+            return None;
+        }
+        explicit
+    } else {
+        (pattern, gender)
+    };
     if locale == SpeechLocale::Ja && n.fraction.is_none() {
         let sign = if n.negative { "マイナス" } else { "" };
         if key == "duration-hour" {
@@ -691,9 +760,8 @@ fn quantity(locale: SpeechLocale, key: &str, n: &NumberValue) -> Option<String> 
     } else {
         agreed_number(locale, n, gender)?
     };
-    let result = pattern
-        .replace("{0}", &number)
-        .replace(['\u{00a0}', '\u{202f}'], " ");
+    let result =
+        noun_quantity_pattern(locale, n, pattern, &number).replace(['\u{00a0}', '\u{202f}'], " ");
     Some(
         if locale == SpeechLocale::Vi && key == "temperature-celsius" {
             result.replace("độ C", "độ xê")
@@ -731,7 +799,11 @@ fn percent(locale: SpeechLocale, n: &NumberValue) -> Option<String> {
     })
 }
 
-fn agreed_number(locale: SpeechLocale, n: &NumberValue, gender: Option<&str>) -> Option<String> {
+pub(super) fn agreed_number(
+    locale: SpeechLocale,
+    n: &NumberValue,
+    gender: Option<&str>,
+) -> Option<String> {
     use SpeechLocale::*;
     let words = verbalize_number(n, locale, NumberReading::Cardinal)?;
     if n.fraction.is_some() {
@@ -753,12 +825,8 @@ fn agreed_number(locale: SpeechLocale, n: &NumberValue, gender: Option<&str>) ->
         }
         Ru if feminine => return verbalize_number_feminine(n, locale, NumberReading::Cardinal),
         Ar if feminine => {
-            let word = arabic_feminine(u32::try_from(integer).ok()?)?;
-            result = if n.negative {
-                format!("سالب {word}")
-            } else {
-                word
-            };
+            return verbalize_number_feminine(n, locale, NumberReading::Cardinal)
+                .map(super::numbers::arabic_construct_count);
         }
         Ta if integer == 1 => {
             result = if n.negative {
@@ -784,63 +852,40 @@ fn replace_suffix(value: String, from: &str, to: &str) -> String {
         .map(|prefix| format!("{prefix}{to}"))
         .unwrap_or(value)
 }
-fn arabic_feminine(n: u32) -> Option<String> {
-    const SMALL: [&str; 20] = [
-        "صفر",
-        "واحدة",
-        "اثنتان",
-        "ثلاث",
-        "أربع",
-        "خمس",
-        "ست",
-        "سبع",
-        "ثمان",
-        "تسع",
-        "عشر",
-        "إحدى عشرة",
-        "اثنتا عشرة",
-        "ثلاث عشرة",
-        "أربع عشرة",
-        "خمس عشرة",
-        "ست عشرة",
-        "سبع عشرة",
-        "ثماني عشرة",
-        "تسع عشرة",
-    ];
-    const TENS: [&str; 10] = [
-        "",
-        "",
-        "عشرون",
-        "ثلاثون",
-        "أربعون",
-        "خمسون",
-        "ستون",
-        "سبعون",
-        "ثمانون",
-        "تسعون",
-    ];
-    if n < 20 {
-        return Some(SMALL[n as usize].into());
-    }
-    if n > 99 {
-        return None;
-    }
-    if n.is_multiple_of(10) {
-        Some(TENS[(n / 10) as usize].into())
-    } else {
-        Some(format!(
-            "{} و{}",
-            if n % 10 == 1 {
-                "إحدى"
-            } else {
-                SMALL[(n % 10) as usize]
-            },
-            TENS[(n / 10) as usize]
-        ))
+/// Grammatical currency gender shared by integer and fractional money readers.
+pub(super) fn currency_gender(locale: SpeechLocale, code: &str) -> Option<&'static str> {
+    use SpeechLocale::*;
+    match locale {
+        Es | Pt | Fr if matches!(code, "GBP" | "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
+        Ru if matches!(code, "JPY" | "KRW" | "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
+        De if matches!(code, "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
+        _ => Some("masculine"),
     }
 }
+/// Place a semantic quantity into a noun pattern, including Romance scale links.
+pub(super) fn noun_quantity_pattern(
+    locale: SpeechLocale,
+    n: &NumberValue,
+    pattern: &str,
+    number: &str,
+) -> String {
+    let exact_millions = matches!(locale, SpeechLocale::Es | SpeechLocale::Pt)
+        && n.integer
+            .parse::<u64>()
+            .is_ok_and(|n| n >= 1_000_000 && n.is_multiple_of(1_000_000))
+        && n.fraction
+            .as_ref()
+            .is_none_or(|f| f.bytes().all(|b| b == b'0'));
+    let pattern =
+        if exact_millions && pattern.starts_with("{0} ") && !pattern.starts_with("{0} de ") {
+            pattern.replacen("{0} ", "{0} de ", 1)
+        } else {
+            pattern.to_string()
+        };
+    pattern.replace("{0}", number)
+}
 
-fn money(locale: SpeechLocale, code: &str, n: &NumberValue) -> Option<String> {
+pub(super) fn money(locale: SpeechLocale, code: &str, n: &NumberValue) -> Option<String> {
     use SpeechLocale::*;
     // Arabic currency numerals need case-aware agreement with the currency
     // noun; CLDR display names alone cannot supply that grammar.
@@ -857,12 +902,7 @@ fn money(locale: SpeechLocale, code: &str, n: &NumberValue) -> Option<String> {
     {
         return None;
     }
-    let gender = match locale {
-        Es | Pt | Fr if matches!(code, "GBP" | "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
-        Ru if matches!(code, "JPY" | "KRW" | "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
-        De if matches!(code, "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
-        _ => Some("masculine"),
-    };
+    let gender = currency_gender(locale, code);
     if matches!(locale, En | Es)
         && let Some(fraction) = &n.fraction
     {
@@ -941,5 +981,10 @@ fn money(locale: SpeechLocale, code: &str, n: &NumberValue) -> Option<String> {
     } else {
         name.to_string()
     };
-    Some(format!("{number} {name}"))
+    Some(noun_quantity_pattern(
+        locale,
+        n,
+        &format!("{{0}} {name}"),
+        &number,
+    ))
 }

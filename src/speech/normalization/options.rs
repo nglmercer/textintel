@@ -1,6 +1,6 @@
 //! Normalization mode, limits, language/locale validation and resolution.
 //!
-//! The locale table here is the single source of truth for supported
+//! The shared speech locale registry is the source of truth for supported
 //! pronunciation locales (see `docs/SPEECH.md`). Locales are never
 //! inferred from the machine location or the UI language.
 
@@ -8,44 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use super::NormalizeError;
 
-/// How written numbers and times are read.
-///
-/// [`ReadingStyle::Precise`] is the compatibility default: it reproduces the
-/// original `tn-v1` readings (for example `15:30` -> "quince treinta" in
-/// Spanish). [`ReadingStyle::Natural`] is opt-in conversational speech and
-/// [`ReadingStyle::Digits`] reads applicable integers digit by digit.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum ReadingStyle {
-    /// Literal, high-precision reading. Compatibility default.
-    #[default]
-    Precise,
-    /// Conversational wording (for example `12:30` -> "doce y media").
-    Natural,
-    /// Digit-by-digit reading where the language provides it.
-    Digits,
-}
-
-impl ReadingStyle {
-    /// Parse `"precise"`, `"natural"` or `"digits"` (trimmed, case-insensitive).
-    pub fn parse(raw: &str) -> Option<Self> {
-        match raw.trim().to_ascii_lowercase().as_str() {
-            "precise" | "literal" => Some(Self::Precise),
-            "natural" => Some(Self::Natural),
-            "digits" | "digit" => Some(Self::Digits),
-            _ => None,
-        }
-    }
-
-    /// Stable lowercase name.
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Precise => "precise",
-            Self::Natural => "natural",
-            Self::Digits => "digits",
-        }
-    }
-}
+pub use crate::speech::types::ReadingStyle;
 
 /// Normalization mode requested by the caller or configuration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -175,7 +138,7 @@ impl NormalizeOptions {
                 if primary != language {
                     return Err(NormalizeError::LocaleLanguageMismatch);
                 }
-                if !locales_for(&language).contains(&tag.as_str()) {
+                if crate::speech::locales::for_locale(&tag).is_none() {
                     return Err(NormalizeError::UnsupportedLocale);
                 }
                 (tag, true)
@@ -193,37 +156,18 @@ impl NormalizeOptions {
     }
 }
 
-/// Supported languages: (language, locales, default locale).
-pub(crate) const LOCALE_TABLE: &[(&str, &[&str], &str)] = &[
-    ("es", &["es-ES", "es-MX", "es-PE"], "es-ES"),
-    ("en", &["en-US", "en-GB"], "en-US"),
-    ("pt", &["pt-BR", "pt-PT"], "pt-BR"),
-    ("fr", &["fr-FR"], "fr-FR"),
-    ("de", &["de-DE"], "de-DE"),
-    ("it", &["it-IT"], "it-IT"),
-    ("ru", &["ru-RU"], "ru-RU"),
-    ("zh", &["zh-CN", "zh-TW"], "zh-CN"),
-    ("ja", &["ja-JP"], "ja-JP"),
-    ("ko", &["ko-KR"], "ko-KR"),
-];
-
 /// `true` when `tag` is a supported locale (case-insensitive, canonicalized).
 pub fn is_supported_locale(tag: &str) -> bool {
     let Some(tag) = canonical_locale(tag) else {
         return false;
     };
-    LOCALE_TABLE
-        .iter()
-        .any(|(_, locales, _)| locales.contains(&tag.as_str()))
+    crate::speech::locales::for_locale(&tag).is_some()
 }
 
 /// Documented default locale for a speech language, if it has rules.
 pub fn default_locale_for(language: &str) -> Option<&'static str> {
     let language = canonical_language(language)?;
-    LOCALE_TABLE
-        .iter()
-        .find(|(lang, _, _)| *lang == language)
-        .map(|(_, _, default)| *default)
+    crate::speech::locales::for_language(&language).map(|entry| entry.default_locale)
 }
 
 /// Supported locales for a speech language (empty when none).
@@ -231,10 +175,8 @@ pub fn locales_for(language: &str) -> &'static [&'static str] {
     let Some(language) = canonical_language(language) else {
         return &[];
     };
-    LOCALE_TABLE
-        .iter()
-        .find(|(lang, _, _)| *lang == language)
-        .map(|(_, locales, _)| *locales)
+    crate::speech::locales::for_language(&language)
+        .map(|entry| entry.locales)
         .unwrap_or(&[])
 }
 

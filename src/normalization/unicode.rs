@@ -8,22 +8,7 @@ pub fn nfkc(text: &str) -> String {
     text.nfkc().collect()
 }
 
-/// A combining mark in the generic combining-diacritics blocks (covers
-/// Latin, Greek, Cyrillic, Turkish, Polish, Vietnamese, and other
-/// accent/stacking marks). Script-specific marks (Arabic harakat, Hebrew
-/// points, Indic matras, ...) are deliberately NOT matched: inside those
-/// scripts the marks can carry lexical weight, so stripping stays
-/// conservative.
-fn is_generic_combining_mark(character: char) -> bool {
-    matches!(
-        character,
-        '\u{0300}'..='\u{036f}'
-            | '\u{1ab0}'..='\u{1aff}'
-            | '\u{1dc0}'..='\u{1dff}'
-            | '\u{20d0}'..='\u{20ff}'
-            | '\u{fe20}'..='\u{fe2f}'
-    )
-}
+use crate::core::unicode::is_generic_diacritic;
 
 /// Strip generic combining diacritics (NFD, then drop combining marks).
 /// Accents distinguish presentation, not word identity for similarity
@@ -39,9 +24,7 @@ pub fn strip_diacritics(text: &str) -> String {
     if text.is_ascii() {
         return text.to_string();
     }
-    text.nfd()
-        .filter(|ch| !is_generic_combining_mark(*ch))
-        .collect()
+    text.nfd().filter(|ch| !is_generic_diacritic(*ch)).collect()
 }
 
 /// Rust has no standard-library Unicode case-fold API. NFKC followed by

@@ -74,12 +74,8 @@ impl Feature {
     }
 }
 
-/// Day/month order of numeric slash dates in a locale.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum DateOrder {
-    DayMonth,
-    MonthDay,
-}
+// Reuse the public semantic order; per-locale legacy policy stays below.
+pub(crate) use crate::speech::types::DateOrder;
 
 /// Locale conventions used by the classifier.
 #[derive(Clone, Copy, Debug)]
@@ -98,6 +94,27 @@ pub(crate) struct Conventions {
     pub date_order: DateOrder,
     /// Currency a bare `$` denotes, when it is unambiguous for the locale.
     pub dollar: Option<Currency>,
+}
+
+impl Conventions {
+    /// Adapt the shared regional registry without depending on SpeechLocale:
+    /// Italian and versioned-only regions retain their established support.
+    pub(crate) fn for_locale(language: &str, locale: &str) -> Option<Self> {
+        let profile = crate::speech::locales::for_locale(locale)?;
+        if profile.language != language {
+            return None;
+        }
+        Some(Self {
+            decimal: profile.decimal_separator,
+            group: profile.grouping_separator,
+            separators_unambiguous: profile.separators_unambiguous,
+            date_order: profile.legacy_year_final_date_order,
+            dollar: match profile.dollar_currency {
+                Some("USD") => Some(Currency::Usd),
+                _ => None,
+            },
+        })
+    }
 }
 
 /// Currencies with explicit symbols or ISO codes.
@@ -479,20 +496,7 @@ pub(crate) fn overall(levels: impl Iterator<Item = CoverageLevel>) -> CoverageLe
     }
 }
 
-/// Days in a Gregorian month, `None` for an invalid month.
-pub(crate) fn days_in_month(year: u32, month: u32) -> Option<u32> {
-    let leap = (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400);
-    match month {
-        1 | 3 | 5 | 7 | 8 | 10 | 12 => Some(31),
-        4 | 6 | 9 | 11 => Some(30),
-        2 => Some(if leap { 29 } else { 28 }),
-        _ => None,
-    }
-}
-
-/// `true` for a valid Gregorian date with a four-digit year.
+/// Gregorian calendar validation with the versioned front end's year policy.
 pub(crate) fn valid_date(year: u32, month: u32, day: u32) -> bool {
-    (1000..=9999).contains(&year)
-        && day >= 1
-        && days_in_month(year, month).is_some_and(|max| day <= max)
+    year >= 1000 && crate::core::calendar::valid_date(year, month, day)
 }

@@ -547,7 +547,7 @@ fn add_record(records: &mut BTreeMap<IndexKey, Vec<LexiconRecord>>, record: Lexi
 fn lexical_words(text: &str) -> Vec<String> {
     let normalized = casefold_text(text);
     normalized
-        .split(|ch: char| !ch.is_alphabetic())
+        .split(|ch: char| !crate::core::unicode::is_word_letter(ch))
         .filter(|word| !word.is_empty())
         .map(normalize_key)
         .filter(|word| !word.is_empty())

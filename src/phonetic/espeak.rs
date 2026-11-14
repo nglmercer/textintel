@@ -4,7 +4,8 @@
 //! model download) and parses `--ipa` output with the crate's [`parse_ipa`]
 //! tokenizer. Language coverage follows the voices shipped by the installed
 //! espeak-ng build; [`EspeakNgG2PProvider::supported_languages`] lists the
-//! curated default mapping and any installed voice can be forced with
+//! curated base-language mapping. Regional/script tags select that base voice,
+//! without promising dialect-specific pronunciation. A voice can be forced with
 //! [`EspeakNgG2PProvider::for_voice`].
 //!
 //! [`parse_ipa`]: crate::phonetic::parse_ipa
@@ -29,8 +30,9 @@ const DEFAULT_VOICE: &str = "en";
 const TOOL_CONFIDENCE: f64 = 0.8;
 
 /// Curated language code to espeak-ng voice mapping. Coverage depends on the
-/// installed espeak-ng build; unknown languages fall back to the default
-/// voice and any voice can be forced explicitly.
+/// installed espeak-ng build; unknown languages fall back to English unless
+/// a voice is explicitly forced. A mapping does not verify that
+/// the installed build contains the selected voice.
 const VOICES: &[(&str, &str)] = &[
     ("af", "af"),
     ("am", "am"),
@@ -129,7 +131,7 @@ pub struct EspeakVoice {
 #[derive(Debug, Clone)]
 pub struct EspeakNgG2PProvider {
     binary: PathBuf,
-    default_voice: String,
+    forced_voice: Option<String>,
     timeout: std::time::Duration,
 }
 
@@ -140,7 +142,7 @@ impl Default for EspeakNgG2PProvider {
     fn default() -> Self {
         Self {
             binary: PathBuf::from(DEFAULT_BINARY),
-            default_voice: DEFAULT_VOICE.to_string(),
+            forced_voice: None,
             timeout: DEFAULT_ESPEAK_TIMEOUT,
         }
     }
@@ -158,10 +160,15 @@ impl EspeakNgG2PProvider {
         self
     }
 
-    /// Force a specific espeak-ng voice (also reported as the dialect).
-    /// Accepts forms like `"en-US"`, `"pt-BR"`, `"es-419"`.
+    /// Force an espeak-ng voice for every request, overriding curated mapping.
+    /// The selected voice is reported as the candidate's dialect. Instance
+    /// capabilities are restricted to its recognized base-language family;
+    /// an unknown voice name advertises no languages. A request outside that
+    /// family receives reduced confidence. The static language catalog does
+    /// not change, and installed availability is still checked by execution.
+    /// Accepts installed voice names such as `"en-US"`, `"pt-BR"`, `"es-419"`.
     pub fn for_voice(mut self, voice: impl Into<String>) -> Self {
-        self.default_voice = voice.into();
+        self.forced_voice = Some(voice.into());
         self
     }
 
@@ -184,7 +191,7 @@ impl EspeakNgG2PProvider {
         match find_binary(DEFAULT_BINARY) {
             Some(binary) => Ok(Self {
                 binary,
-                default_voice: DEFAULT_VOICE.to_string(),
+                forced_voice: None,
                 timeout: DEFAULT_ESPEAK_TIMEOUT,
             }),
             None => Err(ProviderError::new(
@@ -200,7 +207,9 @@ impl EspeakNgG2PProvider {
         find_binary(DEFAULT_BINARY).is_some()
     }
 
-    /// Languages covered by the curated default voice mapping.
+    /// Languages in the curated default voice catalog, independent of instance
+    /// overrides or installed availability. See provider capabilities for the
+    /// language scope of a forced-voice instance.
     pub fn supported_languages() -> Vec<String> {
         let mut languages: Vec<String> = VOICES
             .iter()
@@ -211,23 +220,31 @@ impl EspeakNgG2PProvider {
         languages
     }
 
-    /// Voice used for `language`, or the configured default voice.
+    /// Forced voice when configured; otherwise the curated base voice for
+    /// `language`, falling back to English for unknown language families.
+    /// Tags are case-insensitive and accept `-` / `_` separators. Regional and
+    /// script subtags do not select a separate dialect voice.
     pub fn voice_for(&self, language: &str) -> &str {
-        let requested = language.to_lowercase();
-        for (code, voice) in VOICES {
-            if *code == requested {
-                return voice;
-            }
-        }
-        &self.default_voice
+        self.forced_voice
+            .as_deref()
+            .unwrap_or_else(|| Self::mapped_voice(language).unwrap_or(DEFAULT_VOICE))
     }
 
-    /// True when `language` has a curated voice mapping. Anything else falls
-    /// back to the default voice at reduced confidence (see
+    /// True when `language` belongs to a curated base voice mapping. This does
+    /// not certify a regional voice or its availability in the installed build.
+    /// This static catalog lookup is independent of any forced instance voice.
+    /// Without an override, other families fall back to English at reduced confidence (see
     /// [`G2PProviderTrait::phonemize`]) instead of pretending full coverage.
     pub fn is_supported_language(language: &str) -> bool {
-        let requested = language.to_lowercase();
-        VOICES.iter().any(|(code, _)| *code == requested)
+        Self::mapped_voice(language).is_some()
+    }
+
+    fn mapped_voice(language: &str) -> Option<&'static str> {
+        let requested = super::language_family(language);
+        VOICES
+            .iter()
+            .find(|(code, _)| code.eq_ignore_ascii_case(requested))
+            .map(|(_, voice)| *voice)
     }
 
     /// Voices installed with this espeak-ng binary (`espeak-ng --voices`).
@@ -238,8 +255,9 @@ impl EspeakNgG2PProvider {
     }
 
     fn run(&self, text: &str, voice: &str) -> Result<String, ProviderError> {
-        // Text travels as one argv element; no shell is ever involved.
-        self.run_command(&["-q", "--ipa=3", "-v", voice, text])
+        // Text travels as one argv element after getopt's option terminator.
+        // No shell is involved, and leading '-' stays source text.
+        self.run_command(&["-q", "--ipa=3", "-v", voice, "--", text])
     }
 
     /// Run the binary with argv (no shell) under the configured timeout.
@@ -346,25 +364,31 @@ fn capture_pipe<R: std::io::Read + Send + 'static>(
 }
 
 /// Parse `espeak-ng --voices` table output. The header line and malformed
-/// rows are skipped; parsing never fails the whole call.
+/// rows are skipped; parsing never fails the whole call. The tool combines
+/// age/gender in one column; separately written age and gender are also accepted
+/// for compatibility. Other-language aliases are not part of the voice file.
 pub fn parse_voices_table(stdout: &str) -> Vec<EspeakVoice> {
     let mut voices = Vec::new();
     for line in stdout.lines() {
         let fields: Vec<&str> = line.split_whitespace().collect();
-        if fields.len() < 6 {
+        if fields.len() < 5 || fields[0].parse::<u32>().is_err() {
             continue;
         }
-        if fields[0].eq_ignore_ascii_case("pty") {
+        let (age, gender, name, file) = if let Some((age, gender)) = fields[2].split_once('/') {
+            (age, gender, fields[3], fields[4])
+        } else if fields.len() >= 6 {
+            (fields[2], fields[3], fields[4], fields[5])
+        } else {
             continue;
-        }
-        if fields[0].parse::<u32>().is_err() {
+        };
+        if (age != "--" && age.parse::<u8>().is_err()) || !matches!(gender, "M" | "F" | "-") {
             continue;
         }
         voices.push(EspeakVoice {
             language: fields[1].to_string(),
-            gender: fields[3].to_string(),
-            name: fields[4].to_string(),
-            file: fields[5..].join(" "),
+            gender: gender.to_string(),
+            name: name.to_string(),
+            file: file.to_string(),
         });
     }
     voices
@@ -403,10 +427,86 @@ fn is_executable(path: &Path) -> bool {
 
 /// Parse raw `--ipa` stdout into display IPA, phoneme tokens, and a syllable
 /// estimate (vowel-nucleus groups, at least one per non-empty output).
+/// eSpeak's ZWJ ties and recognized language-switch annotations are tool
+/// metadata, so they are removed before tokenization. Other parenthesized
+/// content is preserved. This is deliberately separate from generic IPA parsing.
 pub fn parse_espeak_ipa(stdout: &str) -> (String, Vec<String>, usize) {
-    let ipa = stdout.trim().to_string();
+    let (ipa, _) = clean_espeak_ipa(stdout);
+    tokenize_espeak_ipa(ipa)
+}
+
+fn tokenize_espeak_ipa(ipa: String) -> (String, Vec<String>, usize) {
     let phonemes = parse_ipa(&ipa);
-    (ipa, phonemes.clone(), syllable_nuclei(&phonemes))
+    let syllables = syllable_nuclei(&phonemes);
+    (ipa, phonemes, syllables)
+}
+
+/// eSpeak NG WritePhMnemonic emits `(table)` for phonSWITCH; --ipa=3 inserts
+/// U+200D ties, including inside those annotations. These are output controls,
+/// not IPA phonemes. Names are bounded to the curated languages and verified
+/// phoneme-table aliases, so arbitrary optional IPA or prose is not erased.
+/// Sources at revision 4870adfa25b1a32b4361592f1be8a40337c58d6c:
+/// https://github.com/espeak-ng/espeak-ng/blob/4870adfa25b1a32b4361592f1be8a40337c58d6c/src/libespeak-ng/dictionary.c#L457-L461
+/// https://github.com/espeak-ng/espeak-ng/blob/4870adfa25b1a32b4361592f1be8a40337c58d6c/src/espeak-ng.c#L518-L520
+/// https://github.com/espeak-ng/espeak-ng/blob/4870adfa25b1a32b4361592f1be8a40337c58d6c/phsource/phonemes
+fn clean_espeak_ipa(stdout: &str) -> (String, Vec<&'static str>) {
+    let untied = stdout.replace('\u{200d}', "");
+    let mut remaining = untied.as_str();
+    let mut ipa = String::with_capacity(remaining.len());
+    let mut switches = Vec::new();
+    while let Some(start) = remaining.find('(') {
+        ipa.push_str(&remaining[..start]);
+        remaining = &remaining[start..];
+        if let Some(close) = remaining
+            .as_bytes()
+            .iter()
+            .take(32)
+            .position(|byte| *byte == b')')
+            && let Some(family) = switch_family(&remaining[1..close])
+        {
+            switches.push(family);
+            // Keep adjacent phonemes separate across a table switch.
+            ipa.push(' ');
+            remaining = &remaining[close + 1..];
+        } else {
+            // Preserve the entire unknown parenthesized group, including
+            // nested optional IPA, without reconsidering its interior as metadata.
+            let mut depth = 0usize;
+            let mut end = remaining.len();
+            for (offset, ch) in remaining.char_indices() {
+                match ch {
+                    '(' => depth += 1,
+                    ')' => {
+                        depth -= 1;
+                        if depth == 0 {
+                            end = offset + 1;
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            ipa.push_str(&remaining[..end]);
+            remaining = &remaining[end..];
+        }
+    }
+    ipa.push_str(remaining);
+    (ipa.trim().to_string(), switches)
+}
+
+fn switch_family(table: &str) -> Option<&'static str> {
+    match table {
+        "cmn" => Some("zh"),
+        "en-n" | "en-rp" | "en-sc" | "en-us" | "en-us-nyc" | "en-wi" | "en-wm" => Some("en"),
+        "es-la" => Some("es"),
+        "pt-pt" => Some("pt"),
+        "ru-lv" => Some("ru"),
+        "vi-hue" | "vi-sgn" => Some("vi"),
+        _ => VOICES
+            .iter()
+            .find(|(code, _)| *code == table)
+            .map(|(code, _)| *code),
+    }
 }
 
 fn syllable_nuclei(phonemes: &[String]) -> usize {
@@ -427,8 +527,14 @@ fn syllable_nuclei(phonemes: &[String]) -> usize {
 
 /// Recover 0-based indices of primary-stressed syllables from raw espeak-ng
 /// IPA output. `ˈ` marks the onset of the stressed syllable; `ˌ` (secondary)
-/// is ignored. Returns an empty vector when no primary marker is present.
+/// is ignored. Tool controls are removed before counting. Returns an empty
+/// vector when no primary marker is present.
 pub fn primary_stress_syllables(ipa: &str) -> Vec<usize> {
+    let (ipa, _) = clean_espeak_ipa(ipa);
+    primary_stress_syllables_clean(&ipa)
+}
+
+fn primary_stress_syllables_clean(ipa: &str) -> Vec<usize> {
     let mut stressed = Vec::new();
     let mut offset = 0;
     for chunk in ipa.split_whitespace() {
@@ -458,11 +564,25 @@ pub fn primary_stress_syllables(ipa: &str) -> Vec<usize> {
 
 impl G2PProviderTrait for EspeakNgG2PProvider {
     fn phonemize(&self, text: &str, language: &str) -> Result<PhoneticCandidate, ProviderError> {
-        let exact = Self::is_supported_language(language);
         let voice = self.voice_for(language).to_string();
+        let matching_voice = Self::mapped_voice(&voice)
+            .is_some_and(|family| family.eq_ignore_ascii_case(super::language_family(language)));
         let stdout = self.run(text, &voice)?;
-        let (ipa, phonemes, syllables) = parse_espeak_ipa(&stdout);
-        let stress = primary_stress_syllables(&ipa);
+        let (ipa, switches) = clean_espeak_ipa(&stdout);
+        let switched_language = switches
+            .iter()
+            .any(|family| !family.eq_ignore_ascii_case(super::language_family(language)));
+        let (ipa, phonemes, syllables) = tokenize_espeak_ipa(ipa);
+        let stress = primary_stress_syllables_clean(&ipa);
+        let confidence = if text.is_empty() || phonemes.is_empty() {
+            0.0
+        } else if matching_voice && !switched_language {
+            TOOL_CONFIDENCE
+        } else {
+            // Unknown/mismatched selected voice or a foreign-language switch:
+            // the tool produced output, but not uniform requested-language coverage.
+            0.5
+        };
         Ok(PhoneticCandidate {
             source: text.to_string(),
             language: language.to_string(),
@@ -479,15 +599,7 @@ impl G2PProviderTrait for EspeakNgG2PProvider {
                 Some(stress)
             },
             syllables,
-            confidence: if text.is_empty() {
-                0.0
-            } else if exact {
-                TOOL_CONFIDENCE
-            } else {
-                // Default-voice fallback for an unmapped language: usable but
-                // explicitly discounted, never presented as full coverage.
-                0.5
-            },
+            confidence,
         })
     }
 
@@ -504,8 +616,14 @@ impl G2PProviderTrait for EspeakNgG2PProvider {
     }
 
     fn capabilities(&self) -> ProviderCapabilities {
+        let languages = match &self.forced_voice {
+            Some(voice) => Self::mapped_voice(voice)
+                .map(|family| vec![family.to_string()])
+                .unwrap_or_default(),
+            None => Self::supported_languages(),
+        };
         ProviderCapabilities::new(PROVIDER)
-            .with_languages(Self::supported_languages())
+            .with_languages(languages)
             .with_quality(CapabilityLevel::Production)
     }
 }
@@ -513,6 +631,23 @@ impl G2PProviderTrait for EspeakNgG2PProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(unix)]
+    fn retry_on_text_file_busy<T>(
+        mut attempt: impl FnMut() -> Result<T, ProviderError>,
+    ) -> Result<T, ProviderError> {
+        // Some filesystems briefly return ETXTBSY for a newly closed script.
+        // Retry only that fixture-creation race; preserve all actual tool errors.
+        for _ in 0..19 {
+            match attempt() {
+                Err(error) if error.message.contains("Text file busy") => {
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                }
+                result => return result,
+            }
+        }
+        attempt()
+    }
 
     #[test]
     fn parses_espeak_ipa_output() {
@@ -533,6 +668,7 @@ mod tests {
         assert_eq!(provider.voice_for("xx-unknown"), "en");
         let forced = EspeakNgG2PProvider::new().for_voice("en-US");
         assert_eq!(forced.voice_for("xx-unknown"), "en-US");
+        assert_eq!(forced.voice_for("es-MX"), "en-US");
         let languages = EspeakNgG2PProvider::supported_languages();
         assert!(languages.contains(&"es".to_string()));
         assert!(languages.contains(&"ja".to_string()));
@@ -607,7 +743,7 @@ mod tests {
         let provider = EspeakNgG2PProvider::new()
             .with_binary(&script)
             .for_voice("es");
-        let candidate = provider.phonemize("hola", "es").unwrap();
+        let candidate = retry_on_text_file_busy(|| provider.phonemize("hola", "es")).unwrap();
         assert_eq!(candidate.ipa.as_deref(), Some("olˈa"));
         assert_eq!(candidate.phonemes, parse_ipa("olˈa"));
         assert_eq!(candidate.syllables, 2);
@@ -638,7 +774,7 @@ mod tests {
         let provider = EspeakNgG2PProvider::new()
             .with_binary(&path)
             .with_timeout(std::time::Duration::from_secs(5));
-        let output = provider.run_command(&[]).unwrap();
+        let output = retry_on_text_file_busy(|| provider.run_command(&[])).unwrap();
         assert_eq!(output.len(), 131072);
         std::fs::remove_file(path).unwrap();
     }

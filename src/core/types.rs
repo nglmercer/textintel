@@ -490,7 +490,7 @@ pub struct ComparisonResult {
     #[serde(default)]
     pub transliteration_confidence: Option<f64>,
     pub obfuscation_similarity: Option<f64>,
-    /// Short alias retained for callers from the Python MVP.
+    /// Short alias retained for compatibility with earlier callers.
     pub obfuscation: Option<f64>,
     /// Lexicon validity of the pair: the weaker side's `lexicon_coverage`.
     /// Confusable pairs (`their`/`there`) score near 1.0 while typo pairs

@@ -1,0 +1,159 @@
+{
+  "detector": "NgramLanguageDetector with shared Unicode-word handling; default abstention threshold, no per-query tuning",
+  "limitations": "UDHR is one legal-domain source; handwritten prose is small and not native-speaker-certified. Counts are observed results, not production-accuracy guarantees.",
+  "native_prose": {
+    "by_language": {
+      "bn": {
+        "cases": 1,
+        "top1": 0,
+        "top3": 1,
+        "unknown_first": 1
+      },
+      "mr": {
+        "cases": 1,
+        "top1": 1,
+        "top3": 1,
+        "unknown_first": 0
+      },
+      "pa": {
+        "cases": 1,
+        "top1": 1,
+        "top3": 1,
+        "unknown_first": 0
+      },
+      "ta": {
+        "cases": 1,
+        "top1": 0,
+        "top3": 1,
+        "unknown_first": 1
+      },
+      "te": {
+        "cases": 1,
+        "top1": 0,
+        "top3": 1,
+        "unknown_first": 1
+      },
+      "ur": {
+        "cases": 1,
+        "top1": 1,
+        "top3": 1,
+        "unknown_first": 0
+      },
+      "vi": {
+        "cases": 1,
+        "top1": 1,
+        "top3": 1,
+        "unknown_first": 0
+      }
+    },
+    "corpus_version": "native-prose-heldout-v1",
+    "failures": [
+      {
+        "candidates": [
+          {
+            "language": "unknown",
+            "probability": 0.8408463803242132
+          },
+          {
+            "language": "bn",
+            "probability": 0.15915361967578684
+          }
+        ],
+        "expected": "bn",
+        "id": "native-bn-children"
+      },
+      {
+        "candidates": [
+          {
+            "language": "unknown",
+            "probability": 0.5628938809215299
+          },
+          {
+            "language": "ta",
+            "probability": 0.43710611907847
+          }
+        ],
+        "expected": "ta",
+        "id": "native-ta-children"
+      },
+      {
+        "candidates": [
+          {
+            "language": "unknown",
+            "probability": 0.8300322325786286
+          },
+          {
+            "language": "te",
+            "probability": 0.1699677674213714
+          }
+        ],
+        "expected": "te",
+        "id": "native-te-children"
+      }
+    ],
+    "totals": {
+      "cases": 7,
+      "top1": 4,
+      "top3": 7,
+      "unknown_first": 3
+    }
+  },
+  "udhr_articles21_30": {
+    "by_language": {
+      "bn": {
+        "cases": 21,
+        "top1": 21,
+        "top3": 21,
+        "unknown_first": 0
+      },
+      "mr": {
+        "cases": 21,
+        "top1": 21,
+        "top3": 21,
+        "unknown_first": 0
+      },
+      "pa": {
+        "cases": 21,
+        "top1": 21,
+        "top3": 21,
+        "unknown_first": 0
+      },
+      "ta": {
+        "cases": 21,
+        "top1": 21,
+        "top3": 21,
+        "unknown_first": 0
+      },
+      "te": {
+        "cases": 21,
+        "top1": 21,
+        "top3": 21,
+        "unknown_first": 0
+      },
+      "ur": {
+        "cases": 21,
+        "top1": 21,
+        "top3": 21,
+        "unknown_first": 0
+      },
+      "vi": {
+        "cases": 21,
+        "top1": 21,
+        "top3": 21,
+        "unknown_first": 0
+      }
+    },
+    "corpus_version": "udhr-588b3f4-articles21-30-v1",
+    "failures": [],
+    "totals": {
+      "cases": 147,
+      "top1": 147,
+      "top3": 147,
+      "unknown_first": 0
+    }
+  },
+  "measured_on": "2026-11-14",
+  "profile_selection": "UDHR preamble and articles1–20, pinned588b3f4; heldout21–30; unchanged native prose prompts",
+  "source_manifest": "resources/udhr-provenance.json",
+  "reproduce": "TEXTINTEL_LID_REPORT_PATH=target/coverage/lid-udhr-report.json cargo test --locked --no-default-features --test language_profile_corpus"
+}

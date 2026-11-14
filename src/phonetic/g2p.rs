@@ -120,12 +120,28 @@ fn phonemes_for(folded: &str, language: &str) -> Vec<String> {
     phonemes
 }
 
-/// Honest coverage: Latin-script rules only. Unknown scripts keep
-/// their (unreliable) phoneme guess but are marked low confidence
-/// instead of being presented as accurate pronunciations.
-fn confidence_for(folded: &str, phonemes: &[String]) -> f64 {
+/// The advertised rules are base-language rules, including regional callers
+/// using that language. This selects the rule family, not a dialect model.
+fn supported_rule_language(language: &str) -> Option<&'static str> {
+    let base = super::language_family(language);
+    if base.eq_ignore_ascii_case("es") {
+        Some("es")
+    } else if base.eq_ignore_ascii_case("en") {
+        Some("en")
+    } else {
+        None
+    }
+}
+
+/// Confidence describes the requested rule coverage as well as input script.
+/// Unsupported languages retain the generic heuristic result for compatibility,
+/// with confidence capped at the unsupported-script level.
+fn confidence_for(folded: &str, phonemes: &[String], language: &str) -> f64 {
     if phonemes.is_empty() {
         return 0.0;
+    }
+    if supported_rule_language(language).is_none() {
+        return 0.15;
     }
     let scripts = scripts_in(folded);
     let latin = scripts.iter().any(|script| script == "Latin");
@@ -142,13 +158,14 @@ fn confidence_for(folded: &str, phonemes: &[String]) -> f64 {
 impl G2PProviderTrait for RuleBasedG2PProvider {
     fn phonemize(&self, text: &str, language: &str) -> Result<PhoneticCandidate, ProviderError> {
         let folded = casefold_text(text);
-        let phonemes = phonemes_for(&folded, language);
+        let rule_language = supported_rule_language(language).unwrap_or(language);
+        let phonemes = phonemes_for(&folded, rule_language);
         let ipa = if phonemes.is_empty() {
             None
         } else {
             Some(phonemes.join(""))
         };
-        let confidence = confidence_for(&folded, &phonemes);
+        let confidence = confidence_for(&folded, &phonemes, language);
         Ok(PhoneticCandidate {
             source: text.to_string(),
             language: language.to_string(),
@@ -173,8 +190,9 @@ impl G2PProviderTrait for RuleBasedG2PProvider {
         // skipping the IPA join, syllable scan, and per-phoneme feature
         // labels that scoring never reads.
         let folded = casefold_text(text);
-        let phonemes = phonemes_for(&folded, language);
-        let confidence = confidence_for(&folded, &phonemes);
+        let rule_language = supported_rule_language(language).unwrap_or(language);
+        let phonemes = phonemes_for(&folded, rule_language);
+        let confidence = confidence_for(&folded, &phonemes, language);
         Ok((phonemes, confidence))
     }
 
@@ -182,7 +200,7 @@ impl G2PProviderTrait for RuleBasedG2PProvider {
         ProviderCapabilities::new("rule_based_g2p")
             .with_languages(["es", "en"])
             .with_quality(CapabilityLevel::Basic)
-            .with_fallback("Latin-script rules only; unknown scripts yield low confidence")
+            .with_fallback("English/Spanish Latin-script rules; other languages and scripts retain low-confidence heuristic output")
     }
 }
 

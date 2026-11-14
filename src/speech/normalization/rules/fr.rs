@@ -20,43 +20,14 @@
 //! noun (`1 maison`, `21 voitures`) is preserved as ambiguous (un/une).
 
 use super::{
-    AbbrevContext, Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem,
-    OrdinalMarker, Unit,
+    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
+    Unit,
 };
 use crate::speech::normalization::CoverageLevel;
+use crate::speech::{numbers, types::SpeechLocale};
 
 /// French rule set.
 pub(crate) struct French;
-
-const SMALL: [&str; 17] = [
-    "zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze",
-    "douze", "treize", "quatorze", "quinze", "seize",
-];
-
-const TENS: [&str; 7] = [
-    "",
-    "",
-    "vingt",
-    "trente",
-    "quarante",
-    "cinquante",
-    "soixante",
-];
-
-const MONTHS: [&str; 12] = [
-    "janvier",
-    "février",
-    "mars",
-    "avril",
-    "mai",
-    "juin",
-    "juillet",
-    "août",
-    "septembre",
-    "octobre",
-    "novembre",
-    "décembre",
-];
 
 /// Function words after which a number keeps its standalone reading.
 const STANDALONE_FOLLOWERS: &[&str] = &[
@@ -78,90 +49,9 @@ fn possible_group_tail(int: u64, has_fraction: bool) -> bool {
     has_fraction && (100..=999).contains(&int)
 }
 
-fn small(n: u64, feminine: bool) -> &'static str {
-    if n == 1 && feminine {
-        "une"
-    } else {
-        SMALL[n as usize]
-    }
-}
-
-/// `plural_ok`: `quatre-vingts` keeps its `s` (false before `mille`).
-fn below_100(n: u64, feminine: bool, plural_ok: bool) -> String {
-    debug_assert!(n < 100);
-    match n {
-        0..=16 => small(n, feminine).to_string(),
-        17..=19 => format!("dix-{}", SMALL[(n - 10) as usize]),
-        71 => "soixante et onze".to_string(),
-        70..=79 => format!("soixante-{}", below_100(n - 60, feminine, true)),
-        80 if plural_ok => "quatre-vingts".to_string(),
-        80 => "quatre-vingt".to_string(),
-        81..=99 => format!("quatre-vingt-{}", below_100(n - 80, feminine, true)),
-        _ => {
-            let tens = TENS[(n / 10) as usize];
-            match n % 10 {
-                0 => tens.to_string(),
-                1 => format!("{tens} et {}", small(1, feminine)),
-                unit => format!("{tens}-{}", SMALL[unit as usize]),
-            }
-        }
-    }
-}
-
-/// `plural_ok`: `cents` and `quatre-vingts` keep their `s`.
-fn below_1000(n: u64, feminine: bool, plural_ok: bool) -> String {
-    debug_assert!(n < 1000);
-    let hundreds = n / 100;
-    let rest = n % 100;
-    if hundreds == 0 {
-        return below_100(rest, feminine, plural_ok);
-    }
-    let mut out = if hundreds == 1 {
-        "cent".to_string()
-    } else {
-        format!("{} cent", SMALL[hundreds as usize])
-    };
-    if rest == 0 {
-        if hundreds > 1 && plural_ok {
-            out.push('s');
-        }
-    } else {
-        out.push(' ');
-        out.push_str(&below_100(rest, feminine, plural_ok));
-    }
-    out
-}
-
-/// Exact French cardinal (long scale) for `n <= 999_999_999_999_999`.
+/// Shared integer composition with locale-specific presentation.
 fn cardinal(n: u64, feminine: bool) -> String {
-    if n == 0 {
-        return "zéro".to_string();
-    }
-    let mut parts: Vec<String> = Vec::with_capacity(5);
-    let scales = [
-        (1_000_000_000_000, "billion", "billions"),
-        (1_000_000_000, "milliard", "milliards"),
-        (1_000_000, "million", "millions"),
-    ];
-    for (size, singular, plural) in scales {
-        let value = (n / size) % 1000;
-        match value {
-            0 => {}
-            1 => parts.push(format!("un {singular}")),
-            _ => parts.push(format!("{} {plural}", below_1000(value, false, true))),
-        }
-    }
-    let thousands = (n / 1000) % 1000;
-    match thousands {
-        0 => {}
-        1 => parts.push("mille".to_string()),
-        _ => parts.push(format!("{} mille", below_1000(thousands, false, false))),
-    }
-    let units = n % 1000;
-    if units > 0 {
-        parts.push(below_1000(units, feminine, true));
-    }
-    parts.join(" ")
+    numbers::french_cardinal(n, feminine, true).expect("normalization cardinal range is checked")
 }
 
 /// `true` when a noun after `n` is introduced by `de` (`un million d'euros`).
@@ -185,11 +75,11 @@ fn fraction_words(frac: &str) -> String {
     let bytes = frac.as_bytes();
     if bytes.len() == 1 || (bytes.len() == 2 && bytes[0] != b'0') {
         let value = frac.parse::<u64>().unwrap_or(0);
-        return below_100(value, false, true);
+        return cardinal(value, false);
     }
     bytes
         .iter()
-        .map(|d| SMALL[usize::from(d - b'0')])
+        .map(|d| numbers::digit_word(d - b'0', SpeechLocale::Fr).expect("validated digit"))
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -282,15 +172,7 @@ impl LanguageRules for French {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        (locale == "fr-FR").then_some(Conventions {
-            decimal: ',',
-            // French groups with spaces, which the lexer splits. No group
-            // character is recognized inside a digit field.
-            group: '\u{202f}',
-            separators_unambiguous: false,
-            date_order: DateOrder::DayMonth,
-            dollar: None,
-        })
+        Conventions::for_locale("fr", locale)
     }
 
     fn number(&self, amount: &Amount, _locale: &str) -> Option<String> {
@@ -307,7 +189,9 @@ impl LanguageRules for French {
         Some(
             digits
                 .bytes()
-                .map(|digit| SMALL[usize::from(digit - b'0')])
+                .map(|digit| {
+                    numbers::digit_word(digit - b'0', SpeechLocale::Fr).expect("validated digit")
+                })
                 .collect::<Vec<_>>()
                 .join(" "),
         )
@@ -364,7 +248,7 @@ impl LanguageRules for French {
     }
 
     fn date(&self, year: u32, month: u32, day: u32, _locale: &str) -> Option<String> {
-        let month_name = MONTHS.get(month.checked_sub(1)? as usize)?;
+        let month_name = crate::speech::lexicons::month(SpeechLocale::Fr, month)?;
         let day_words = if day == 1 {
             "premier".to_string()
         } else {

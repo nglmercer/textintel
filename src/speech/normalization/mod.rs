@@ -26,13 +26,13 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 mod classify;
-#[allow(dead_code)]
-mod dictionary;
-mod lexer;
+
+use super::lexer;
 mod options;
 mod render;
 mod rules;
 pub mod segments;
+mod shared;
 
 #[cfg(test)]
 mod tests;
@@ -44,11 +44,9 @@ pub use options::{
 
 /// Version of the rule set. Participates in [`SpeechText::identity`].
 ///
-/// `tn-v2.1` keeps the `tn-v2` architecture but changes numeric semantics:
-/// padded integers are read as counts before a common noun, Spanish quantity
-/// grouping such as `10.005 solicitudes` is resolved, and `digits` preserves
-/// the written digit sequence (including leading zeros).
-pub const RULESET_VERSION: &str = "tn-v2.1";
+/// `tn-v3` shares lexical/calendar/number primitives and extends the API to
+/// every typed speech language. Cache identities change when semantics change.
+pub const RULESET_VERSION: &str = "tn-v3";
 
 /// Stable feature keys used in coverage maps.
 pub const FEATURE_KEYS: [&str; 11] = [
@@ -181,6 +179,8 @@ pub enum NormalizeError {
     OutputTooLong { max_chars: usize },
     #[error("spoken text expansion exceeds the configured ratio")]
     ExpansionTooLarge,
+    #[error("speech reading options or input structure are invalid")]
+    InvalidReadingOptions,
     #[error("speech language is not a valid language code")]
     InvalidLanguage,
     #[error("locale is not a valid BCP-47 tag")]
@@ -204,7 +204,18 @@ pub fn normalize(text: &str, opts: &NormalizeOptions) -> Result<NormalizedText, 
         },
     )?;
     let language_rules = rules::for_language(&opts.language);
-    let coverage = rules::coverage_map(language_rules);
+    let mut coverage = if shared::uses_shared(&opts.language) {
+        shared::coverage()
+    } else {
+        rules::coverage_map(language_rules)
+    };
+    if opts.language.parse::<crate::speech::SpeechLocale>().is_ok() {
+        for (key, level) in shared::coverage() {
+            if coverage[&key] == CoverageLevel::None && level != CoverageLevel::None {
+                coverage.insert(key, level);
+            }
+        }
+    }
 
     let (changes, warnings) = match opts.mode {
         NormalizationMode::Off => (Vec::new(), Vec::new()),
@@ -222,7 +233,16 @@ pub fn normalize(text: &str, opts: &NormalizeOptions) -> Result<NormalizedText, 
                 }],
             )
         }
-        NormalizationMode::Auto => classify::classify(text, language_rules, opts),
+        NormalizationMode::Auto => {
+            let source = lexer::LexicalSource::new(text);
+            if shared::uses_shared(&opts.language) {
+                shared::classify(&source, opts)?
+            } else {
+                let (mut changes, mut warnings) = classify::classify(&source, language_rules, opts);
+                shared::augment(&source, opts, language_rules, &mut changes, &mut warnings)?;
+                (changes, warnings)
+            }
+        }
     };
     let spoken = if changes.is_empty() {
         text.to_string()
@@ -288,7 +308,7 @@ impl SpeechText {
         self.spoken
     }
 
-    /// Stable identity, e.g. `"tn-v2.1|auto|es|es-PE|precise"`. Contains no user text.
+    /// Stable identity, e.g. `"tn-v3|auto|es|es-PE|precise"`. Contains no user text.
     pub fn identity(&self) -> &str {
         &self.identity
     }
@@ -313,13 +333,27 @@ pub struct LanguageCoverage {
 
 /// One entry per supported language, for `/api/info` and the UI.
 pub fn language_coverage() -> Vec<LanguageCoverage> {
-    options::LOCALE_TABLE
+    let shared_scope = shared::coverage();
+    crate::speech::locales::LANGUAGES
         .iter()
-        .map(|(language, locales, default_locale)| {
+        .map(|entry| {
+            let (language, locales, default_locale) =
+                (entry.code, entry.locales, entry.default_locale);
             let language_rules = rules::for_language(language);
             let features: BTreeMap<&'static str, CoverageLevel> = rules::Feature::ALL
                 .iter()
-                .map(|feature| (feature.key(), language_rules.coverage(*feature)))
+                .map(|feature| {
+                    (
+                        feature.key(),
+                        if language.parse::<crate::speech::SpeechLocale>().is_ok()
+                            && language_rules.coverage(*feature) == CoverageLevel::None
+                        {
+                            shared_scope[feature.key()]
+                        } else {
+                            language_rules.coverage(*feature)
+                        },
+                    )
+                })
                 .collect();
             LanguageCoverage {
                 language,

@@ -259,7 +259,10 @@ fn locale_helpers() {
 #[test]
 fn coverage_reporting() {
     let all = language_coverage();
-    assert_eq!(all.len(), 10);
+    assert_eq!(all.len(), crate::speech::locales::LANGUAGES.len());
+    for language in crate::speech::SpeechLocale::ALL {
+        assert!(all.iter().any(|entry| entry.language == language.code()));
+    }
     for entry in &all {
         assert_eq!(entry.features.len(), FEATURE_KEYS.len());
         for key in FEATURE_KEYS {
@@ -273,7 +276,9 @@ fn coverage_reporting() {
             "pt" | "fr" | "de" | "it" | "ru" | "zh" | "ja" | "ko" => {
                 assert_eq!(entry.rules, CoverageLevel::Partial, "{}", entry.language);
             }
-            other => panic!("unexpected language {other}"),
+            _ => {
+                assert_eq!(entry.rules, CoverageLevel::Partial);
+            }
         }
         assert!(entry.locales.contains(&entry.default_locale));
     }
@@ -319,7 +324,7 @@ fn spec_preview_example() {
         "S/ 150,50"
     );
     assert!(result.warnings.is_empty());
-    assert_eq!(result.ruleset_version, "tn-v2.1");
+    assert_eq!(result.ruleset_version, "tn-v3");
 }
 
 #[test]
@@ -386,9 +391,17 @@ fn spanish_ambiguity() {
         spoken("01/02/2026", "es", Some("es-PE")),
         "primero de febrero de dos mil veintiséis"
     );
-    assert_eq!(es("3:30 pm"), vec![WarningCode::AmbiguousTime]);
+    assert!(es("3:30 pm").is_empty());
+    assert_eq!(
+        spoken("3:30 pm", "es", Some("es-PE")),
+        "quince horas y treinta minutos"
+    );
     assert_eq!(es("25:00"), vec![WarningCode::AmbiguousTime]);
-    assert_eq!(es("10:30:15"), vec![WarningCode::AmbiguousTime]);
+    assert!(es("10:30:15").is_empty());
+    assert_eq!(
+        spoken("10:30:15", "es", Some("es-PE")),
+        "diez horas y treinta minutos y quince segundos"
+    );
 }
 
 #[test]
@@ -540,19 +553,24 @@ fn unicode_is_preserved() {
 }
 
 #[test]
-fn pass_through_languages() {
-    // Inputs that stay unchanged: an unknown language, and the attached CJK
-    // dates that the zh/ja/ko rules deliberately preserve.
-    for (language, text) in [
-        ("zh", "2026年10月26日"),
-        ("ja", "2026年10月26日"),
-        ("ko", "2026년 10월 26일"),
-        ("nl", "12 euro"),
+fn attached_calendar_components_and_unknown_languages() {
+    for (language, source, expected) in [
+        ("zh", "2026年10月26日", "二零二六年十月二十六日"),
+        (
+            "ja",
+            "2026年10月26日",
+            "にせんにじゅうろくねんじゅうがつにじゅうろくにち",
+        ),
+        ("ko", "2026년 10월 26일", "이천이십육년 시월 이십육일"),
     ] {
-        let result = normalize(text, &opts(language, None)).unwrap();
-        assert_eq!(result.spoken, text, "{language}");
-        assert!(result.changes.is_empty() && result.warnings.is_empty());
+        let result = normalize(source, &opts(language, None)).unwrap();
+        assert_eq!(result.spoken, expected, "{language}");
+        assert!(!result.changes.is_empty());
+        assert!(result.warnings.is_empty());
     }
+    let result = normalize("12 euro", &opts("nl", None)).unwrap();
+    assert_eq!(result.spoken, "12 euro");
+    assert!(result.changes.is_empty() && result.warnings.is_empty());
 }
 
 #[test]
@@ -628,12 +646,12 @@ fn speech_text_identity() {
     let o = opts("es", Some("es-PE"));
     let prepared = SpeechText::prepare("Son 5.", &o).unwrap();
     assert_eq!(prepared.as_str(), "Son cinco.");
-    assert_eq!(prepared.identity(), "tn-v2.1|auto|es|es-PE|precise");
+    assert_eq!(prepared.identity(), "tn-v3|auto|es|es-PE|precise");
     assert!(prepared.changed());
     let mut off = o.clone();
     off.mode = NormalizationMode::Off;
     let raw = SpeechText::prepare("Son 5.", &off).unwrap();
-    assert_eq!(raw.identity(), "tn-v2.1|off|es|es-PE|precise");
+    assert_eq!(raw.identity(), "tn-v3|off|es|es-PE|precise");
     assert!(!raw.changed());
     assert_eq!(raw.into_string(), "Son 5.");
 }
@@ -1247,9 +1265,9 @@ fn identity_includes_the_reading_style() {
     ] {
         let o = styled_opts("es", Some("es-PE"), style);
         let prepared = SpeechText::prepare("Son 5.", &o).unwrap();
-        assert_eq!(prepared.identity(), format!("tn-v2.1|auto|es|es-PE|{name}"));
+        assert_eq!(prepared.identity(), format!("tn-v3|auto|es|es-PE|{name}"));
     }
-    assert_eq!(RULESET_VERSION, "tn-v2.1");
+    assert_eq!(RULESET_VERSION, "tn-v3");
     assert_eq!(ReadingStyle::parse("literal"), Some(ReadingStyle::Precise));
     assert_eq!(ReadingStyle::parse("digit"), Some(ReadingStyle::Digits));
     assert_eq!(

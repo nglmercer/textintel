@@ -1,6 +1,8 @@
 //! Currency entity scanning (symbol-prefixed amounts and `100 USD` forms).
 
+use crate::core::numeric::scan_unsigned_decimal;
 use crate::core::types::EntityMention;
+use crate::core::unicode::{ascii_decimal_digit as digit, is_word_letter};
 
 use super::normalize::{claim, is_claimed, push_mention};
 
@@ -30,7 +32,14 @@ const CURRENCY_CODES: &[&str] = &[
 
 pub(crate) fn normalize_amount(raw: &str) -> String {
     raw.chars()
-        .filter(|ch| ch.is_ascii_digit() || matches!(ch, '.' | ','))
+        .filter_map(|ch| {
+            digit(ch).or(match ch {
+                '.' | ',' => Some(ch),
+                '٫' => Some('.'),
+                '٬' => Some(','),
+                _ => None,
+            })
+        })
         .collect()
 }
 
@@ -56,25 +65,11 @@ pub(crate) fn scan_currency(
                 end += 1;
                 cursor += 1;
             }
-            let amount_start = cursor;
-            let mut digits = 0;
-            while cursor < chars.len() {
-                let (_, next) = chars[cursor];
-                if next.is_ascii_digit() {
-                    digits += 1;
-                    end += next.len_utf8();
+            if let Some(amount_end) = scan_unsigned_decimal(text, end) {
+                end = amount_end;
+                while cursor < chars.len() && chars[cursor].0 < end {
                     cursor += 1;
-                } else if matches!(next, '.' | ',')
-                    && cursor + 1 < chars.len()
-                    && chars[cursor + 1].1.is_ascii_digit()
-                {
-                    end += next.len_utf8();
-                    cursor += 1;
-                } else {
-                    break;
                 }
-            }
-            if digits > 0 && cursor > amount_start {
                 if !is_claimed(claimed, offset, end) {
                     claim(claimed, offset, end);
                     let amount = normalize_amount(&text[offset..end]);
@@ -94,18 +89,20 @@ pub(crate) fn scan_currency(
         }
         index += 1;
     }
-    // Amount-first form (`100 USD`): word scan over ASCII alphanumerics.
+    // Amount-first form (`100 USD`): decimal digits plus ASCII currency codes.
     let mut word_start: Option<usize> = None;
     let mut words: Vec<(usize, usize)> = Vec::new();
     for (offset, ch) in text.char_indices() {
-        let numeric_separator = matches!(ch, '.' | ',')
-            && offset > 0
-            && text.as_bytes()[offset - 1].is_ascii_digit()
-            && text
-                .as_bytes()
-                .get(offset + 1)
-                .is_some_and(u8::is_ascii_digit);
-        if ch.is_ascii_alphanumeric() || numeric_separator {
+        let numeric_separator = matches!(ch, '.' | ',' | '٫' | '٬')
+            && text[..offset]
+                .chars()
+                .next_back()
+                .is_some_and(|c| digit(c).is_some())
+            && text[offset + ch.len_utf8()..]
+                .chars()
+                .next()
+                .is_some_and(|c| digit(c).is_some());
+        if ch.is_alphanumeric() || is_word_letter(ch) || numeric_separator {
             if word_start.is_none() {
                 word_start = Some(offset);
             }
@@ -124,11 +121,7 @@ pub(crate) fn scan_currency(
         }
         let amount_raw = &text[amount_start..amount_end];
         let code_raw = &text[code_start..code_end];
-        if !amount_raw.chars().any(|ch| ch.is_ascii_digit())
-            || !amount_raw
-                .chars()
-                .all(|ch| ch.is_ascii_digit() || matches!(ch, '.' | ','))
-        {
+        if scan_unsigned_decimal(amount_raw, 0) != Some(amount_raw.len()) {
             continue;
         }
         if code_raw.len() == 3

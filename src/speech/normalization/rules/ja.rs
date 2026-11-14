@@ -25,14 +25,12 @@
 //! a Japanese convention; when both day/month readings are valid under an
 //! explicit locale, month/day is used.
 
-use super::{Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem, Unit};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, Unit};
 use crate::speech::normalization::CoverageLevel;
+use crate::speech::{numbers, types::SpeechLocale};
 
 /// Japanese rule set.
 pub(crate) struct Japanese;
-
-const DIGITS: [char; 10] = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-const SECTION_UNITS: [&str; 4] = ["", "万", "億", "兆"];
 
 /// `true` when `word` starts with exactly three digits followed by a
 /// non-digit: the second half of a space-grouped number.
@@ -52,63 +50,30 @@ fn is_cjk_letter(c: char) -> bool {
     )
 }
 
-/// One section `1..=9999`. `before_unit`: followed by 万/億/兆, so an
-/// exact thousand is `一千` (`一千万`).
-fn section(n: u64, before_unit: bool, out: &mut String) {
-    let places = [
-        (n / 1000, '千'),
-        ((n / 100) % 10, '百'),
-        ((n / 10) % 10, '十'),
-    ];
-    for (i, (d, place)) in places.into_iter().enumerate() {
-        match d {
-            0 => {}
-            1 if !(i == 0 && before_unit && n == 1000) => out.push(place),
-            _ => {
-                out.push(DIGITS[d as usize]);
-                out.push(place);
-            }
-        }
-    }
-    let units = n % 10;
-    if units > 0 {
-        out.push(DIGITS[units as usize]);
-    }
-}
-
-/// Exact kanji cardinal for `n <= 999_999_999_999_999`.
 fn cardinal(n: u64) -> String {
-    if n == 0 {
-        return "零".to_string();
-    }
-    let sections = [
-        n % 10_000,
-        (n / 10_000) % 10_000,
-        (n / 100_000_000) % 10_000,
-        (n / 1_000_000_000_000) % 10_000,
-    ];
-    let mut out = String::new();
-    for idx in (0..4).rev() {
-        let value = sections[idx];
-        if value == 0 {
-            continue;
-        }
-        if idx > 0 && value == 1 {
-            // 一万, 一億, 一兆.
-            out.push('一');
-        } else {
-            section(value, idx > 0, &mut out);
-        }
-        out.push_str(SECTION_UNITS[idx]);
-    }
-    out
+    let value = crate::speech::types::NumberValue {
+        negative: false,
+        integer: n.to_string(),
+        fraction: None,
+    };
+    numbers::verbalize_number_with_options(
+        &value,
+        SpeechLocale::Ja,
+        crate::speech::types::NumberReading::Cardinal,
+        crate::speech::types::ReadingStyle::Precise,
+        crate::speech::types::NumberNotation::Orthographic,
+    )
+    .expect("normalization cardinal range is checked")
+}
+fn digit_word(digit: u8) -> &'static str {
+    numbers::cjk_digit_word(digit).expect("validated digit")
 }
 
 fn unsigned_words(amount: &Amount) -> String {
     let mut out = cardinal(amount.int);
     if let Some(frac) = &amount.frac {
         out.push('点');
-        out.extend(frac.bytes().map(|d| DIGITS[usize::from(d - b'0')]));
+        out.extend(frac.bytes().map(|d| digit_word(d - b'0')));
     }
     out
 }
@@ -139,13 +104,7 @@ impl LanguageRules for Japanese {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        (locale == "ja-JP").then_some(Conventions {
-            decimal: '.',
-            group: ',',
-            separators_unambiguous: true,
-            date_order: DateOrder::MonthDay,
-            dollar: None,
-        })
+        Conventions::for_locale("ja", locale)
     }
 
     fn number(&self, amount: &Amount, _locale: &str) -> Option<String> {
@@ -159,7 +118,7 @@ impl LanguageRules for Japanese {
         Some(
             digits
                 .bytes()
-                .map(|digit| DIGITS[usize::from(digit - b'0')].to_string())
+                .map(|digit| digit_word(digit - b'0').to_string())
                 .collect(),
         )
     }

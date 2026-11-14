@@ -1,0 +1,41 @@
+{
+  "version": "native-prose-heldout-v1",
+  "purpose": "Seven handwritten native-script challenges held out before adding UDHR profiles. Language labels are intended source languages; text is not independently native-speaker certified. No complete challenge is inserted into a language profile.",
+  "cases": [
+    {
+      "id": "native-bn-children",
+      "language": "bn",
+      "text": "শিশুরা উঠোনে হাসিমুখে খেলছে"
+    },
+    {
+      "id": "native-mr-children",
+      "language": "mr",
+      "text": "मुलांनी अंगणामध्ये आनंदाने खेळायला सुरुवात केली"
+    },
+    {
+      "id": "native-pa-children",
+      "language": "pa",
+      "text": "ਬੱਚੇ ਵਿਹੜੇ ਵਿੱਚ ਖੁਸ਼ੀ ਨਾਲ ਖੇਡਦੇ ਹਨ"
+    },
+    {
+      "id": "native-ta-children",
+      "language": "ta",
+      "text": "குழந்தைகள் முற்றத்தில் மகிழ்ச்சியாக விளையாடுகிறார்கள்"
+    },
+    {
+      "id": "native-te-children",
+      "language": "te",
+      "text": "పిల్లలు ఆవరణలో ఆనందంగా ఆడుతున్నారు"
+    },
+    {
+      "id": "native-ur-children",
+      "language": "ur",
+      "text": "بچے صحن میں خوشی سے کھیل رہے ہیں"
+    },
+    {
+      "id": "native-vi-children",
+      "language": "vi",
+      "text": "Những đứa trẻ đang vui đùa ngoài sân"
+    }
+  ]
+}

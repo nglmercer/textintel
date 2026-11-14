@@ -1,0 +1,3636 @@
+{
+  "schema": "textintel-espeak-runtime-audit-v1",
+  "status": "verified",
+  "provenance": {
+    "source": {
+      "release": "1.52.0",
+      "commit": "4870adfa25b1a32b4361592f1be8a40337c58d6c",
+      "archive_url": "https://codeload.github.com/espeak-ng/espeak-ng/tar.gz/4870adfa25b1a32b4361592f1be8a40337c58d6c",
+      "archive_sha256": "cd83f84c4e495f281ac14e919aecf2834306ec1ea1b498de8ef6000f3a0f90de",
+      "official_build_instructions": "https://github.com/espeak-ng/espeak-ng/blob/1.52.0/docs/building.md",
+      "license_file": "target/tools/espeak-audit/espeak-ng-4870adfa25b1a32b4361592f1be8a40337c58d6c/COPYING"
+    },
+    "build": {
+      "commands": [
+        "./autogen.sh",
+        "./configure --prefix=/home/meme/Documentos/GitHub/textintel/target/tools/espeak-audit/install --without-pcaudiolib --without-sonic --without-mbrola --without-speechplayer CC=/usr/bin/gcc CXX=/usr/bin/g++",
+        "make -j4 src/espeak-ng src/speak-ng",
+        "make",
+        "make install"
+      ],
+      "optional_audio_backends_enabled": false,
+      "global_packages_installed": false,
+      "binary": "/home/meme/Documentos/GitHub/textintel/target/tools/espeak-audit/install/bin/espeak-ng",
+      "binary_sha256": "589bfe00e66a1085396b045aadab662ec98effeaeeb8f43fea2a2465bbade71e",
+      "library": "/home/meme/Documentos/GitHub/textintel/target/tools/espeak-audit/install/lib/libespeak-ng.so.1.1.51",
+      "library_sha256": "9b7df2334741a71c32bb0ab632f7b8e562000e4ae441d10049bf0da825d32a6e",
+      "data_file_count": 461,
+      "data_manifest_sha256": "b048e09ce3334fc9c76bad300914bd3119c2f683c31317ef703a4d21ed0b9f4e",
+      "tool_versions": {
+        "gcc": "gcc (GCC) 16.2.1 20260810",
+        "make": "GNU Make 4.4.1",
+        "autoconf": "autoconf (GNU Autoconf) 2.73",
+        "automake": "automake (GNU automake) 1.19",
+        "libtoolize": "libtoolize (GNU libtool) 2.6.2",
+        "architecture": "x86_64"
+      },
+      "version_output": "eSpeak NG text-to-speech: 1.52.0  Data at: /home/meme/Documentos/GitHub/textintel/target/tools/espeak-audit/install/share/espeak-ng-data",
+      "working_directory": "target/tools/espeak-audit/espeak-ng-4870adfa25b1a32b4361592f1be8a40337c58d6c"
+    },
+    "quality_limit": "Operational voice/IPA audit only; no native-speaker, linguistic or acoustic quality certification. Phrase probes are independently authored native-script strings, not pronunciation gold.",
+    "source_audit_sha256": {
+      "examples/espeak.rs": "b314a8bb1dcada81339cdd1af2836d342e19d118fce4c13d98c0ccca48bc793d",
+      "src/phonetic/mod.rs": "063b7e67cd2d48f379869f850ac725c075847b80cc88e1ccd037aca0c2d374b9",
+      "src/phonetic/g2p.rs": "3f04409acb3a4a8a71dc10664b48725688f0a30103657a00bf4a4dd7aeddcae6",
+      "src/phonetic/espeak.rs": "2f1365a6da103e4b44bef806e086b0aec7c281b1aff3c58ee85869929671b710",
+      "src/phonetic/ipa.rs": "b48552a733fccbce556b66f51d66f843a4f14e801dc009acba9fae31d0f5dbb3"
+    },
+    "runtime_reproduction_commands": [
+      "cargo build --locked --lib --features phonetic-espeak --example espeak",
+      "target/debug/examples/espeak --binary target/tools/espeak-audit/install/bin/espeak-ng --json",
+      "rustc --edition=2024 target/tools/espeak-audit/probe/main.rs --extern textintel=target/debug/libtextintel.rlib -L dependency=target/debug/deps -o target/tools/espeak-audit/probe/run",
+      "target/tools/espeak-audit/probe/run target/tools/espeak-audit/install/bin/espeak-ng",
+      "rustc --edition=2024 target/tools/espeak-audit/probe/override.rs --extern textintel=target/debug/libtextintel.rlib -L dependency=target/debug/deps -o target/tools/espeak-audit/probe/override",
+      "target/tools/espeak-audit/probe/override target/tools/espeak-audit/install/bin/espeak-ng",
+      "rustc --edition=2024 target/tools/espeak-audit/probe/guard.rs --extern textintel=target/debug/libtextintel.rlib -L dependency=target/debug/deps -o target/tools/espeak-audit/probe/guard",
+      "target/tools/espeak-audit/probe/guard target/tools/espeak-audit/install/bin/espeak-ng"
+    ],
+    "archived_audit_helpers": {
+      "target/tools/espeak-audit/probe/guard.rs": {
+        "language": "rust",
+        "sha256": "3c5b4217b25de565d766c26c928a1f4ef1f6f47ae79c5aa6bde2ecdf53a28e44",
+        "source": "use std::{fs, path::Path, process::Command};\nuse textintel::core::providers::G2PProvider;\nuse textintel::phonetic::{EspeakNgG2PProvider, parse_espeak_ipa};\nfn main() {\n    let binary=std::env::args().nth(1).expect(\"binary path\");\n    let provider=EspeakNgG2PProvider::new().with_binary(&binary);\n    let output=Path::new(\"target/tools/espeak-audit/negative-literal\");\n    fs::create_dir_all(output).unwrap();\n    for (index,source) in [\"--help\",\"-12\",\"-vfr\"].into_iter().enumerate() {\n        let before=Command::new(&binary).args([\"-q\",\"--ipa=3\",\"-v\",\"en\",source]).output().unwrap();\n        let guarded=Command::new(&binary).args([\"-q\",\"--ipa=3\",\"-v\",\"en\",\"--\",source]).output().unwrap();\n        fs::write(output.join(format!(\"{index}-before.stdout\")),&before.stdout).unwrap();\n        fs::write(output.join(format!(\"{index}-before.stderr\")),&before.stderr).unwrap();\n        fs::write(output.join(format!(\"{index}-guarded.stdout\")),&guarded.stdout).unwrap();\n        fs::write(output.join(format!(\"{index}-guarded.stderr\")),&guarded.stderr).unwrap();\n        let expected=parse_espeak_ipa(&String::from_utf8(guarded.stdout).unwrap()).0;\n        let candidate=provider.phonemize(source,\"en\").unwrap();\n        let ipa=candidate.ipa.unwrap_or_default();\n        assert_eq!(candidate.source,source);\n        assert_eq!(ipa,expected);\n        assert!(!ipa.is_empty());\n        assert!(!candidate.phonemes.is_empty());\n        println!(\"OK\\t{source}\\t{}\\t{}\\t{}\\t{}\\t{}\\t{}\\t{}\\t{ipa}\",before.status.code().unwrap_or(-1),guarded.status.code().unwrap_or(-1),candidate.source==source,ipa==expected,candidate.dialect.unwrap_or_default(),candidate.confidence,candidate.phonemes.len());\n    }\n}\n"
+      },
+      "target/tools/espeak-audit/probe/main.rs": {
+        "language": "rust",
+        "sha256": "644628491f66752f32306b7e2ceeb72a5b303b74b8ca6d5edd33d862b7f3fbc9",
+        "source": "use textintel::core::providers::G2PProvider;\nuse textintel::phonetic::EspeakNgG2PProvider;\nuse textintel::speech::{SpeechLocale, locales};\n\nfn main() {\n    let binary = std::env::args().nth(1).expect(\"binary path\");\n    let provider = EspeakNgG2PProvider::new().with_binary(&binary);\n    match provider.installed_voices() {\n        Ok(voices) => println!(\"VOICES\\t{}\", voices.len()),\n        Err(error) => println!(\"VOICES_ERROR\\t{error}\"),\n    }\n    let samples = [\n        (\"en\", \"The small boat crossed the quiet river.\"),\n        (\"es\", \"La biblioteca abre temprano cada mañana.\"),\n        (\"zh\", \"清晨的阳光照进安静的房间。\"),\n        (\"hi\", \"बच्चे बगीचे में रंगीन फूल देख रहे हैं।\"),\n        (\"ar\", \"تفتح المكتبة أبوابها في الصباح الباكر.\"),\n        (\"fr\", \"Le jardin devient calme après la pluie.\"),\n        (\"pt\", \"As crianças caminham perto da biblioteca.\"),\n        (\"ru\", \"Утром над рекой поднимается лёгкий туман.\"),\n        (\"bn\", \"সকালে নদীর পাশে পাখিরা গান গায়।\"),\n        (\"ur\", \"صبح کے وقت باغ میں پرندے گاتے ہیں۔\"),\n        (\"id\", \"Anak-anak membaca buku di taman.\"),\n        (\"de\", \"Am Morgen liegt Nebel über dem Fluss.\"),\n        (\"ja\", \"静かな庭で小さな鳥が歌っています。\"),\n        (\"pa\", \"ਸਵੇਰੇ ਬਾਗ ਵਿੱਚ ਪੰਛੀ ਗਾਉਂਦੇ ਹਨ।\"),\n        (\"mr\", \"सकाळी बागेत पक्षी गाणी गातात.\"),\n        (\"te\", \"ఉదయం తోటలో పక్షులు పాటలు పాడుతున్నాయి.\"),\n        (\"tr\", \"Çocuklar bahçede sessizce kitap okuyor.\"),\n        (\"ta\", \"காலையில் தோட்டத்தில் பறவைகள் பாடுகின்றன.\"),\n        (\"vi\", \"Buổi sáng, những chú chim hót trong vườn.\"),\n        (\"ko\", \"아침에 작은 새들이 정원에서 노래합니다.\"),\n    ];\n    for locale in SpeechLocale::ALL {\n        let code = locale.code();\n        let source = samples.iter().find(|(language, _)| *language == code).unwrap().1;\n        let profile = locales::for_language(code).unwrap();\n        let mut tags = Vec::new();\n        for tag in std::iter::once(code).chain(std::iter::once(profile.default_locale)).chain(profile.typed_aliases.iter().copied()) {\n            if !tags.contains(&tag) { tags.push(tag); }\n        }\n        for tag in tags {\n            let voice = provider.voice_for(tag);\n            match provider.phonemize(source, tag) {\n                Ok(candidate) => println!(\"OK\\t{code}\\t{tag}\\t{voice}\\t{}\\t{}\\t{}\\t{}\\t{}\", candidate.confidence, candidate.phonemes.len(), candidate.syllables, source, candidate.ipa.unwrap_or_default().replace(['\\n','\\t'], \" \")),\n                Err(error) => println!(\"ERROR\\t{code}\\t{tag}\\t{voice}\\t{source}\\t{error}\"),\n            }\n        }\n    }\n}\n"
+      },
+      "target/tools/espeak-audit/probe/override.rs": {
+        "language": "rust",
+        "sha256": "43117fa910c6ddc63e68ebeb57843538df8719d12aadbfab2fea9db9aaa268eb",
+        "source": "use textintel::core::providers::G2PProvider;\nuse textintel::phonetic::EspeakNgG2PProvider;\nfn main() {\n    let binary=std::env::args().nth(1).expect(\"binary path\");\n    let provider=EspeakNgG2PProvider::new().with_binary(binary).for_voice(\"es-419\");\n    println!(\"CAPABILITIES\\t{}\",provider.capabilities().languages.join(\",\"));\n    for (tag,text) in [(\"es-MX\",\"La casa es pequeña.\"),(\"fr\",\"La maison est petite.\")] {\n        match provider.phonemize(text,tag) {\n            Ok(candidate)=>println!(\"OK\\t{tag}\\t{}\\t{}\\t{}\\t{text}\\t{}\",provider.voice_for(tag),candidate.dialect.unwrap_or_default(),candidate.confidence,candidate.ipa.unwrap_or_default()),\n            Err(error)=>println!(\"ERROR\\t{tag}\\t{text}\\t{error}\"),\n        }\n    }\n}\n"
+      }
+    },
+    "helper_reproduction_note": "For the recorded standalone rustc commands, restore each archived source at its recorded path. These are audit helpers, not library implementations. The committed public example needs no restoration."
+  },
+  "scope": {
+    "minimum_language_set": "SpeechLocale::ALL",
+    "expected_languages": 20,
+    "text_samples": "Independent, agent-authored native-script phrases; not pronunciation gold.",
+    "validation": "CLI execution, configured voice and IPA generation only. No native-speaker or acoustic evaluation.",
+    "regional_aliases": "Map to curated language-family voice; no claim of regional accent implementation."
+  },
+  "summary": {
+    "raw_voice_count": 141,
+    "cli_base_language_count": 20,
+    "cli_exit_zero": 20,
+    "cli_nonempty_ipa": 20,
+    "observed_character_name_fallback_languages": [
+      "ja"
+    ],
+    "accuracy_rate": null,
+    "provider_voice_count": 141,
+    "provider_probe_count": 46,
+    "provider_errors": 0,
+    "provider_nonempty_ipa_and_phones": 46,
+    "example_base_locales": 20,
+    "example_aliases": 29,
+    "example_successful_locales": 20,
+    "override_probe_count": 2,
+    "override_errors": 0,
+    "negative_literal_input_checks": 3,
+    "negative_literal_input_success": 3
+  },
+  "cli": {
+    "raw_voice_rows": [
+      {
+        "priority": 5,
+        "language": "af",
+        "age_gender": "--/M",
+        "name": "Afrikaans",
+        "file": "gmw/af",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "am",
+        "age_gender": "--/M",
+        "name": "Amharic",
+        "file": "sem/am",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "an",
+        "age_gender": "--/M",
+        "name": "Aragonese",
+        "file": "roa/an",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ar",
+        "age_gender": "--/M",
+        "name": "Arabic",
+        "file": "sem/ar",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "as",
+        "age_gender": "--/M",
+        "name": "Assamese",
+        "file": "inc/as",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "az",
+        "age_gender": "--/M",
+        "name": "Azerbaijani",
+        "file": "trk/az",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ba",
+        "age_gender": "--/M",
+        "name": "Bashkir",
+        "file": "trk/ba",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "be",
+        "age_gender": "--/M",
+        "name": "Belarusian",
+        "file": "zle/be",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "bg",
+        "age_gender": "--/M",
+        "name": "Bulgarian",
+        "file": "zls/bg",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "bn",
+        "age_gender": "--/M",
+        "name": "Bengali",
+        "file": "inc/bn",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "bpy",
+        "age_gender": "--/M",
+        "name": "Bishnupriya_Manipuri",
+        "file": "inc/bpy",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "bs",
+        "age_gender": "--/M",
+        "name": "Bosnian",
+        "file": "zls/bs",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ca",
+        "age_gender": "--/M",
+        "name": "Catalan",
+        "file": "roa/ca",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ca-ba",
+        "age_gender": "--/M",
+        "name": "Catalan_(Balearic)",
+        "file": "roa/ca-ba",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ca-nw",
+        "age_gender": "--/M",
+        "name": "Catalan_(North-western)",
+        "file": "roa/ca-nw",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ca-va",
+        "age_gender": "--/M",
+        "name": "Catalan_(Valencian)",
+        "file": "roa/ca-va",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "chr-US-Qaaa-x-west",
+        "age_gender": "--/M",
+        "name": "Cherokee_",
+        "file": "iro/chr",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "cmn",
+        "age_gender": "--/M",
+        "name": "Chinese_(Mandarin,_latin_as_English)",
+        "file": "sit/cmn",
+        "other_languages": "(zh-cmn 5)(zh 5)"
+      },
+      {
+        "priority": 5,
+        "language": "cmn-latn-pinyin",
+        "age_gender": "--/M",
+        "name": "Chinese_(Mandarin,_latin_as_Pinyin)",
+        "file": "sit/cmn-Latn-pinyin",
+        "other_languages": "(zh-cmn 5)(zh 5)"
+      },
+      {
+        "priority": 5,
+        "language": "cs",
+        "age_gender": "--/M",
+        "name": "Czech",
+        "file": "zlw/cs",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "cv",
+        "age_gender": "--/M",
+        "name": "Chuvash",
+        "file": "trk/cv",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "cy",
+        "age_gender": "--/M",
+        "name": "Welsh",
+        "file": "cel/cy",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "da",
+        "age_gender": "--/M",
+        "name": "Danish",
+        "file": "gmq/da",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "de",
+        "age_gender": "--/M",
+        "name": "German",
+        "file": "gmw/de",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "el",
+        "age_gender": "--/M",
+        "name": "Greek",
+        "file": "grk/el",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "en-029",
+        "age_gender": "--/M",
+        "name": "English_(Caribbean)",
+        "file": "gmw/en-029",
+        "other_languages": "(en 10)"
+      },
+      {
+        "priority": 2,
+        "language": "en-gb",
+        "age_gender": "--/M",
+        "name": "English_(Great_Britain)",
+        "file": "gmw/en",
+        "other_languages": "(en 2)"
+      },
+      {
+        "priority": 5,
+        "language": "en-gb-scotland",
+        "age_gender": "--/M",
+        "name": "English_(Scotland)",
+        "file": "gmw/en-GB-scotland",
+        "other_languages": "(en 4)"
+      },
+      {
+        "priority": 5,
+        "language": "en-gb-x-gbclan",
+        "age_gender": "--/M",
+        "name": "English_(Lancaster)",
+        "file": "gmw/en-GB-x-gbclan",
+        "other_languages": "(en-gb 3)(en 5)"
+      },
+      {
+        "priority": 5,
+        "language": "en-gb-x-gbcwmd",
+        "age_gender": "--/M",
+        "name": "English_(West_Midlands)",
+        "file": "gmw/en-GB-x-gbcwmd",
+        "other_languages": "(en-gb 9)(en 9)"
+      },
+      {
+        "priority": 5,
+        "language": "en-gb-x-rp",
+        "age_gender": "--/M",
+        "name": "English_(Received_Pronunciation)",
+        "file": "gmw/en-GB-x-rp",
+        "other_languages": "(en-gb 4)(en 5)"
+      },
+      {
+        "priority": 5,
+        "language": "en-shaw",
+        "age_gender": "--/M",
+        "name": "English_(Shavian_alphabet)",
+        "file": "gmw/en-Shaw",
+        "other_languages": ""
+      },
+      {
+        "priority": 2,
+        "language": "en-us",
+        "age_gender": "--/M",
+        "name": "English_(America)",
+        "file": "gmw/en-US",
+        "other_languages": "(en 3)"
+      },
+      {
+        "priority": 5,
+        "language": "en-us-nyc",
+        "age_gender": "--/M",
+        "name": "English_(America,_New_York_City)",
+        "file": "gmw/en-US-nyc",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "eo",
+        "age_gender": "--/M",
+        "name": "Esperanto",
+        "file": "art/eo",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "es",
+        "age_gender": "--/M",
+        "name": "Spanish_(Spain)",
+        "file": "roa/es",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "es-419",
+        "age_gender": "--/M",
+        "name": "Spanish_(Latin_America)",
+        "file": "roa/es-419",
+        "other_languages": "(es-mx 6)"
+      },
+      {
+        "priority": 5,
+        "language": "et",
+        "age_gender": "--/M",
+        "name": "Estonian",
+        "file": "urj/et",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "eu",
+        "age_gender": "--/M",
+        "name": "Basque",
+        "file": "eu",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "fa",
+        "age_gender": "--/M",
+        "name": "Persian",
+        "file": "ira/fa",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "fa-latn",
+        "age_gender": "--/M",
+        "name": "Persian_(Pinglish)",
+        "file": "ira/fa-Latn",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "fi",
+        "age_gender": "--/M",
+        "name": "Finnish",
+        "file": "urj/fi",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "fo",
+        "age_gender": "--/M",
+        "name": "Faroese",
+        "file": "gmq/fo",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "fr-be",
+        "age_gender": "--/M",
+        "name": "French_(Belgium)",
+        "file": "roa/fr-BE",
+        "other_languages": "(fr 8)"
+      },
+      {
+        "priority": 5,
+        "language": "fr-ch",
+        "age_gender": "--/M",
+        "name": "French_(Switzerland)",
+        "file": "roa/fr-CH",
+        "other_languages": "(fr 8)"
+      },
+      {
+        "priority": 5,
+        "language": "fr-fr",
+        "age_gender": "--/M",
+        "name": "French_(France)",
+        "file": "roa/fr",
+        "other_languages": "(fr 5)"
+      },
+      {
+        "priority": 5,
+        "language": "ga",
+        "age_gender": "--/M",
+        "name": "Gaelic_(Irish)",
+        "file": "cel/ga",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "gd",
+        "age_gender": "--/M",
+        "name": "Gaelic_(Scottish)",
+        "file": "cel/gd",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "gn",
+        "age_gender": "--/M",
+        "name": "Guarani",
+        "file": "sai/gn",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "grc",
+        "age_gender": "--/M",
+        "name": "Greek_(Ancient)",
+        "file": "grk/grc",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "gu",
+        "age_gender": "--/M",
+        "name": "Gujarati",
+        "file": "inc/gu",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "hak",
+        "age_gender": "--/M",
+        "name": "Hakka_Chinese",
+        "file": "sit/hak",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "haw",
+        "age_gender": "--/M",
+        "name": "Hawaiian",
+        "file": "map/haw",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "he",
+        "age_gender": "--/M",
+        "name": "Hebrew",
+        "file": "sem/he",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "hi",
+        "age_gender": "--/M",
+        "name": "Hindi",
+        "file": "inc/hi",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "hr",
+        "age_gender": "--/M",
+        "name": "Croatian",
+        "file": "zls/hr",
+        "other_languages": "(hbs 5)"
+      },
+      {
+        "priority": 5,
+        "language": "ht",
+        "age_gender": "--/M",
+        "name": "Haitian_Creole",
+        "file": "roa/ht",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "hu",
+        "age_gender": "--/M",
+        "name": "Hungarian",
+        "file": "urj/hu",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "hy",
+        "age_gender": "--/M",
+        "name": "Armenian_(East_Armenia)",
+        "file": "ine/hy",
+        "other_languages": "(hy-arevela 5)"
+      },
+      {
+        "priority": 5,
+        "language": "hyw",
+        "age_gender": "--/M",
+        "name": "Armenian_(West_Armenia)",
+        "file": "ine/hyw",
+        "other_languages": "(hy-arevmda 5)(hy 8)"
+      },
+      {
+        "priority": 5,
+        "language": "ia",
+        "age_gender": "--/M",
+        "name": "Interlingua",
+        "file": "art/ia",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "id",
+        "age_gender": "--/M",
+        "name": "Indonesian",
+        "file": "poz/id",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "io",
+        "age_gender": "--/M",
+        "name": "Ido",
+        "file": "art/io",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "is",
+        "age_gender": "--/M",
+        "name": "Icelandic",
+        "file": "gmq/is",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "it",
+        "age_gender": "--/M",
+        "name": "Italian",
+        "file": "roa/it",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ja",
+        "age_gender": "--/M",
+        "name": "Japanese",
+        "file": "jpx/ja",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "jbo",
+        "age_gender": "--/M",
+        "name": "Lojban",
+        "file": "art/jbo",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ka",
+        "age_gender": "--/M",
+        "name": "Georgian",
+        "file": "ccs/ka",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "kaa",
+        "age_gender": "--/M",
+        "name": "Karakalpak",
+        "file": "trk/kaa",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "kk",
+        "age_gender": "--/M",
+        "name": "Kazakh",
+        "file": "trk/kk",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "kl",
+        "age_gender": "--/M",
+        "name": "Greenlandic",
+        "file": "esx/kl",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "kn",
+        "age_gender": "--/M",
+        "name": "Kannada",
+        "file": "dra/kn",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ko",
+        "age_gender": "--/M",
+        "name": "Korean",
+        "file": "ko",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "kok",
+        "age_gender": "--/M",
+        "name": "Konkani",
+        "file": "inc/kok",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ku",
+        "age_gender": "--/M",
+        "name": "Kurdish",
+        "file": "ira/ku",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ky",
+        "age_gender": "--/M",
+        "name": "Kyrgyz",
+        "file": "trk/ky",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "la",
+        "age_gender": "--/M",
+        "name": "Latin",
+        "file": "itc/la",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "lb",
+        "age_gender": "--/M",
+        "name": "Luxembourgish",
+        "file": "gmw/lb",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "lfn",
+        "age_gender": "--/M",
+        "name": "Lingua_Franca_Nova",
+        "file": "art/lfn",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "lt",
+        "age_gender": "--/M",
+        "name": "Lithuanian",
+        "file": "bat/lt",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ltg",
+        "age_gender": "--/M",
+        "name": "Latgalian",
+        "file": "bat/ltg",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "lv",
+        "age_gender": "--/M",
+        "name": "Latvian",
+        "file": "bat/lv",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "mi",
+        "age_gender": "--/M",
+        "name": "Māori",
+        "file": "poz/mi",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "mk",
+        "age_gender": "--/M",
+        "name": "Macedonian",
+        "file": "zls/mk",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ml",
+        "age_gender": "--/M",
+        "name": "Malayalam",
+        "file": "dra/ml",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "mr",
+        "age_gender": "--/M",
+        "name": "Marathi",
+        "file": "inc/mr",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ms",
+        "age_gender": "--/M",
+        "name": "Malay",
+        "file": "poz/ms",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "mt",
+        "age_gender": "--/M",
+        "name": "Maltese",
+        "file": "sem/mt",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "mto",
+        "age_gender": "--/M",
+        "name": "Totontepec_Mixe",
+        "file": "miz/mto",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "my",
+        "age_gender": "--/M",
+        "name": "Myanmar_(Burmese)",
+        "file": "sit/my",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "nb",
+        "age_gender": "--/M",
+        "name": "Norwegian_Bokmål",
+        "file": "gmq/nb",
+        "other_languages": "(no 5)"
+      },
+      {
+        "priority": 5,
+        "language": "nci",
+        "age_gender": "--/M",
+        "name": "Nahuatl_(Classical)",
+        "file": "azc/nci",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ne",
+        "age_gender": "--/M",
+        "name": "Nepali",
+        "file": "inc/ne",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "nl",
+        "age_gender": "--/M",
+        "name": "Dutch",
+        "file": "gmw/nl",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "nog",
+        "age_gender": "--/M",
+        "name": "Nogai",
+        "file": "trk/nog",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "om",
+        "age_gender": "--/M",
+        "name": "Oromo",
+        "file": "cus/om",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "or",
+        "age_gender": "--/M",
+        "name": "Oriya",
+        "file": "inc/or",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "pa",
+        "age_gender": "--/M",
+        "name": "Punjabi",
+        "file": "inc/pa",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "pap",
+        "age_gender": "--/M",
+        "name": "Papiamento",
+        "file": "roa/pap",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "piqd",
+        "age_gender": "--/M",
+        "name": "Klingon",
+        "file": "art/piqd",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "pl",
+        "age_gender": "--/M",
+        "name": "Polish",
+        "file": "zlw/pl",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "pt",
+        "age_gender": "--/M",
+        "name": "Portuguese_(Portugal)",
+        "file": "roa/pt",
+        "other_languages": "(pt-pt 5)"
+      },
+      {
+        "priority": 5,
+        "language": "pt-br",
+        "age_gender": "--/M",
+        "name": "Portuguese_(Brazil)",
+        "file": "roa/pt-BR",
+        "other_languages": "(pt 6)"
+      },
+      {
+        "priority": 5,
+        "language": "py",
+        "age_gender": "--/M",
+        "name": "Pyash",
+        "file": "art/py",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "qdb",
+        "age_gender": "--/M",
+        "name": "Lang_Belta",
+        "file": "art/qdb",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "qu",
+        "age_gender": "--/M",
+        "name": "Quechua",
+        "file": "qu",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "quc",
+        "age_gender": "--/M",
+        "name": "K'iche'",
+        "file": "myn/quc",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "qya",
+        "age_gender": "--/M",
+        "name": "Quenya",
+        "file": "art/qya",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ro",
+        "age_gender": "--/M",
+        "name": "Romanian",
+        "file": "roa/ro",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ru",
+        "age_gender": "--/M",
+        "name": "Russian",
+        "file": "zle/ru",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ru-cl",
+        "age_gender": "--/M",
+        "name": "Russian_(Classic)",
+        "file": "zle/ru-cl",
+        "other_languages": ""
+      },
+      {
+        "priority": 2,
+        "language": "ru-lv",
+        "age_gender": "--/M",
+        "name": "Russian_(Latvia)",
+        "file": "zle/ru-LV",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "sd",
+        "age_gender": "--/M",
+        "name": "Sindhi",
+        "file": "inc/sd",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "shn",
+        "age_gender": "--/M",
+        "name": "Shan_(Tai_Yai)",
+        "file": "tai/shn",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "si",
+        "age_gender": "--/M",
+        "name": "Sinhala",
+        "file": "inc/si",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "sjn",
+        "age_gender": "--/M",
+        "name": "Sindarin",
+        "file": "art/sjn",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "sk",
+        "age_gender": "--/M",
+        "name": "Slovak",
+        "file": "zlw/sk",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "sl",
+        "age_gender": "--/M",
+        "name": "Slovenian",
+        "file": "zls/sl",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "smj",
+        "age_gender": "--/M",
+        "name": "Lule_Saami",
+        "file": "urj/smj",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "sq",
+        "age_gender": "--/M",
+        "name": "Albanian",
+        "file": "ine/sq",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "sr",
+        "age_gender": "--/M",
+        "name": "Serbian",
+        "file": "zls/sr",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "sv",
+        "age_gender": "--/M",
+        "name": "Swedish",
+        "file": "gmq/sv",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "sw",
+        "age_gender": "--/M",
+        "name": "Swahili",
+        "file": "bnt/sw",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ta",
+        "age_gender": "--/M",
+        "name": "Tamil",
+        "file": "dra/ta",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "te",
+        "age_gender": "--/M",
+        "name": "Telugu",
+        "file": "dra/te",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "th",
+        "age_gender": "--/M",
+        "name": "Thai",
+        "file": "tai/th",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ti",
+        "age_gender": "--/M",
+        "name": "Tigrinya",
+        "file": "sem/ti",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "tk",
+        "age_gender": "--/M",
+        "name": "Turkmen",
+        "file": "trk/tk",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "tn",
+        "age_gender": "--/M",
+        "name": "Setswana",
+        "file": "bnt/tn",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "tr",
+        "age_gender": "--/M",
+        "name": "Turkish",
+        "file": "trk/tr",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "tt",
+        "age_gender": "--/M",
+        "name": "Tatar",
+        "file": "trk/tt",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ug",
+        "age_gender": "--/M",
+        "name": "Uyghur",
+        "file": "trk/ug",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "uk",
+        "age_gender": "--/M",
+        "name": "Ukrainian",
+        "file": "zle/uk",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "ur",
+        "age_gender": "--/M",
+        "name": "Urdu",
+        "file": "inc/ur",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "uz",
+        "age_gender": "--/M",
+        "name": "Uzbek",
+        "file": "trk/uz",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "vi",
+        "age_gender": "--/M",
+        "name": "Vietnamese_(Northern)",
+        "file": "aav/vi",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "vi-vn-x-central",
+        "age_gender": "--/M",
+        "name": "Vietnamese_(Central)",
+        "file": "aav/vi-VN-x-central",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "vi-vn-x-south",
+        "age_gender": "--/M",
+        "name": "Vietnamese_(Southern)",
+        "file": "aav/vi-VN-x-south",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "xex",
+        "age_gender": "--/M",
+        "name": "xextan-test",
+        "file": "art/xex",
+        "other_languages": ""
+      },
+      {
+        "priority": 5,
+        "language": "yue",
+        "age_gender": "--/M",
+        "name": "Chinese_(Cantonese)",
+        "file": "sit/yue",
+        "other_languages": "(zh-yue 5)(zh 8)"
+      },
+      {
+        "priority": 5,
+        "language": "yue",
+        "age_gender": "--/M",
+        "name": "Chinese_(Cantonese,_latin_as_Jyutping)",
+        "file": "sit/yue-Latn-jyutping",
+        "other_languages": "(zh-yue 5)(zh 8)"
+      }
+    ],
+    "raw_voice_count": 141,
+    "probes": [
+      {
+        "language": "en",
+        "voice_requested": "en",
+        "source": "The small boat crossed the quiet river.",
+        "exit_code": 0,
+        "stdout": "ðə smˈɔːl bˈə‍ʊt kɹˈɒst ðə kwˈa‍ɪ‍ət ɹˈɪvə",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 2  en-gb           --/M      English_(Great_Britain) gmw/en               (en 2)\n 3  en-uk           --/M      english-mb-en1     mb/mb-en1            (en-gb 3)(en 2)\n 2  en-us           --/M      English_(America)  gmw/en-US            (en 3)\n 5  en-gb-scotland  --/M      English_(Scotland) gmw/en-GB-scotland   (en 4)\n 5  en-gb-x-gbclan  --/M      English_(Lancaster) gmw/en-GB-x-gbclan   (en-gb 3)(en 5)\n 5  en-gb-x-rp      --/M      English_(Received_Pronunciation) gmw/en-GB-x-rp       (en-gb 4)(en 5)\n 5  en-us           --/M      us-mbrola-2        mb/mb-us2            (en 7)\n 5  en-us           --/F      us-mbrola-1        mb/mb-us1            (en 8)\n 5  en-us           --/M      us-mbrola-3        mb/mb-us3            (en 8)\n 5  en-gb-x-gbcwmd  --/M      English_(West_Midlands) gmw/en-GB-x-gbcwmd   (en-gb 9)(en 9)\n 9  en              --/F      en-german-1        mb/mb-de1-en         \n 9  en              --/M      en-german-2        mb/mb-de2-en         \n 9  en              --/F      en-german-3        mb/mb-de3-en         \n 9  en              --/M      en-german-4        mb/mb-de4-en         \n 9  en              --/F      en-german-5        mb/mb-de5-en         \n 9  en              --/M      en-german-6        mb/mb-de6-en         \n 9  en              --/M      en-greek           mb/mb-gr2-en         \n 9  en              --/M      en-romanian        mb/mb-ro1-en         \n 5  en-029          --/M      English_(Caribbean) gmw/en-029           (en 10)\n10  en              --/M      en-dutch           mb/mb-nl2-en         \n10  en              --/M      en-french-1        mb/mb-fr1-en         \n10  en              --/F      en-french-4        mb/mb-fr4-en         \n10  en              --/F      en-hungarian       mb/mb-hu1-en         \n10  en              --/F      en-swedish-f       mb/mb-sw2-en         \n11  en              --/M      en-afrikaans       mb/mb-af1-en         \n11  en              --/F      en-polish          mb/mb-pl1-en         \n11  en              --/M      en-swedish         mb/mb-sw1-en         \n 5  en-shaw         --/M      English_(Shavian_alphabet) gmw/en-Shaw          \n 5  variant         --/M      Storm              !v/Storm             (en-us 5)\n 5  en-us-nyc       --/M      English_(America,_New_York_City) gmw/en-US-nyc        \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "es",
+        "voice_requested": "es",
+        "source": "La biblioteca abre temprano cada mañana.",
+        "exit_code": 0,
+        "stdout": "la βˌiβliotˈeka ˈaβɾe tempɾˈano kˈaða maɲˈana",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 3  es-es           --/F      spanish-mbrola-3   mb/mb-es3            (es 3)\n 4  es-es           --/M      spanish-mbrola-4   mb/mb-es4            (es 4)\n 5  es              --/M      Spanish_(Spain)    roa/es               \n 7  es-es           --/M      spanish-mbrola-1   mb/mb-es1            (es 7)\n 7  es-es           --/M      spanish-mbrola-2   mb/mb-es2            (es 7)\n 7  es-mx           --/M      mexican-mbrola-1   mb/mb-mx1            (es 8)\n 7  es-mx           --/M      mexican-mbrola-2   mb/mb-mx2            (es 8)\n 7  es-vz           --/M      venezuala-mbrola-1 mb/mb-vz1            (es 8)\n 5  es-419          --/M      Spanish_(Latin_America) roa/es-419           (es-mx 6)\n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "zh",
+        "voice_requested": "zh",
+        "source": "清晨的阳光照进安静的房间。",
+        "exit_code": 0,
+        "stdout": "t‍ɕ‍hi5ŋt‍s.‍hˈəɜn təɜ jˈi‍ɑɜŋ kwˈɑ5ŋ t‍s.ˈɑ‍u5 t‍ɕˈi5n ˈa5n t‍ɕˈi5ŋ tə1 fˈɑɜŋ t‍ɕˈi‍ɛ5n",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  cmn             --/M      Chinese_(Mandarin,_latin_as_English) sit/cmn              (zh-cmn 5)(zh 5)\n 5  cmn-latn-pinyin --/M      Chinese_(Mandarin,_latin_as_Pinyin) sit/cmn-Latn-pinyin  (zh-cmn 5)(zh 5)\n 5  zh              --/M      chinese-mb-cn1     mb/mb-cn1            \n 5  yue             --/M      Chinese_(Cantonese) sit/yue              (zh-yue 5)(zh 8)\n 5  yue             --/M      Chinese_(Cantonese,_latin_as_Jyutping) sit/yue-Latn-jyutping (zh-yue 5)(zh 8)\n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "hi",
+        "voice_requested": "hi",
+        "source": "बच्चे बगीचे में रंगीन फूल देख रहे हैं।",
+        "exit_code": 0,
+        "stdout": "bˈʌcːeː bəɡˈiːceː mẽː ɾəŋɡˈiːn pʰˈuːl dˈeːkʰ ɾˌəheː hɛ̃",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 1  hi              --/M      hindi-mbrola-1     mb/mb-in1            \n 2  hi              --/F      hindi-mbrola-2     mb/mb-in2            \n 5  hi              --/M      Hindi              inc/hi               \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "ar",
+        "voice_requested": "ar",
+        "source": "تفتح المكتبة أبوابها في الصباح الباكر.",
+        "exit_code": 0,
+        "stdout": "tˈafatːˌaħ ʔalmˈaktabˌa ʔbˈuːaːbhˌaː fˈiː ʔas̪s̪ˈabaːħ ʔalbˈaːkir",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 1  ar              --/M      arabic-mbrola-1    mb/mb-ar1            \n 2  ar              --/M      arabic-mbrola-2    mb/mb-ar2            \n 5  ar              --/M      Arabic             sem/ar               \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "fr",
+        "voice_requested": "fr",
+        "source": "Le jardin devient calme après la pluie.",
+        "exit_code": 0,
+        "stdout": "lə- ʒaʁdˈɛ̃ dəvjˈɛ̃ kˈalm apʁˌɛ la- plyˈi",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  fr-fr           --/M      French_(France)    roa/fr               (fr 5)\n 7  fr-fr           --/M      french-mbrola-1    mb/mb-fr1            (fr 7)\n 7  fr-fr           --/F      french-mbrola-4    mb/mb-fr4            (fr 7)\n 5  fr-be           --/M      French_(Belgium)   roa/fr-BE            (fr 8)\n 5  fr-ch           --/M      French_(Switzerland) roa/fr-CH            (fr 8)\n 8  fr-fr           --/F      french-mbrola-2    mb/mb-fr2            (fr 8)\n 8  fr-fr           --/M      french-mbrola-3    mb/mb-fr3            (fr 8)\n 8  fr-fr           --/M      french-mbrola-6    mb/mb-fr6            (fr 8)\n 8  fr              --/M      french-mbrola-7    mb/mb-fr7            \n 6  fr-be           --/M      french-mbrola-5    mb/mb-fr5            (fr 9)\n 6  fr-ca           --/M      fr-canadian-mbrola-1 mb/mb-ca1            (fr 10)\n 6  fr-ca           --/M      fr-canadian-mbrola-2 mb/mb-ca2            (fr 10)\n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "pt",
+        "voice_requested": "pt",
+        "source": "As crianças caminham perto da biblioteca.",
+        "exit_code": 0,
+        "stdout": "ɐʃ kɹˌiˈɐ̃ŋsɐʃ kɐmˈiɲɐ̃‍ʊ̃ pˈɛɾətʊ dɐ bˌibliutˈɛkɐ",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  pt              --/M      Portuguese_(Portugal) roa/pt               (pt-pt 5)\n 5  pt-br           --/M      Portuguese_(Brazil) roa/pt-BR            (pt 6)\n 7  pt-pt           --/F      portugal-mbrola-1  mb/mb-pt1            (pt 7)\n 6  pt-br           --/M      brazil-mbrola-1    mb/mb-br1            (pt 8)\n 6  pt-br           --/F      brazil-mbrola-2    mb/mb-br2            (pt 8)\n 6  pt-br           --/M      brazil-mbrola-3    mb/mb-br3            (pt 8)\n 6  pt-br           --/F      brazil-mbrola-4    mb/mb-br4            (pt 8)\n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "ru",
+        "voice_requested": "ru",
+        "source": "Утром над рекой поднимается лёгкий туман.",
+        "exit_code": 0,
+        "stdout": "ˈutrʌm nɑt rʲikˈoj pʌdnʲimˈɑjit‍sʌ ɭʲˈɵxkʲij tumˈɑn",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  ru              --/M      Russian            zle/ru               \n 2  ru-lv           --/M      Russian_(Latvia)   zle/ru-LV            \n 5  ru-cl           --/M      Russian_(Classic)  zle/ru-cl            \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "bn",
+        "voice_requested": "bn",
+        "source": "সকালে নদীর পাশে পাখিরা গান গায়।",
+        "exit_code": 0,
+        "stdout": "ʃˈɔkalˌe nˈodiɾ pˈaʃe pˈakʰiɾˌa ɡˈan ɡˈaj",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  bn              --/M      Bengali            inc/bn               \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "ur",
+        "voice_requested": "ur",
+        "source": "صبح کے وقت باغ میں پرندے گاتے ہیں۔",
+        "exit_code": 0,
+        "stdout": "ʂˌəbˈah keː ʋˈaqt bˈaːɣ mˈẽ parˈɪndeː ɡˌaːteː hẽ",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  ur              --/M      Urdu               inc/ur               \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "id",
+        "voice_requested": "id",
+        "source": "Anak-anak membaca buku di taman.",
+        "exit_code": 0,
+        "stdout": "ˈanakˈanak məmbˈat‍ʃa bˈuku di tˈaman",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  id              --/M      Indonesian         poz/id               \n 7  id              --/M      indonesian-mbrola-1 mb/mb-id1            \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "de",
+        "voice_requested": "de",
+        "source": "Am Morgen liegt Nebel über dem Fluss.",
+        "exit_code": 0,
+        "stdout": "am mˈɔɾɡən lˈiːkt nˈeːbəl ˌyːbɜ deːm flˈʊs",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  de              --/M      German             gmw/de               \n 6  de              --/F      german-mbrola-1    mb/mb-de1            \n 6  de              --/M      german-mbrola-2    mb/mb-de2            \n 6  de              --/F      german-mbrola-3    mb/mb-de3            \n 6  de              --/M      german-mbrola-4    mb/mb-de4            \n 6  de              --/M      german-mbrola-6    mb/mb-de6            \n 7  de              --/F      german-mbrola-5    mb/mb-de5            \n 7  de              --/F      german-mbrola-7    mb/mb-de7            \n 8  de              --/M      german-mbrola-8    mb/mb-de8            \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "ja",
+        "voice_requested": "ja",
+        "source": "静かな庭で小さな鳥が歌っています。",
+        "exit_code": 0,
+        "stdout": "(‍e‍n)t‍ʃˈa‍ɪniːz(‍j‍a)lˈe̞tə kˈä nˈä (‍e‍n)t‍ʃˈa‍ɪniːz(‍j‍a)lˈe̞tə tˈe̞ (‍e‍n)d‍ʒˈapəniːz(‍j‍a)lˈe̞tə (‍e‍n)t‍ʃˈa‍ɪniːz(‍j‍a)lˈe̞tə sˈä nˈä (‍e‍n)t‍ʃˈa‍ɪniːz(‍j‍a)lˈe̞tə kˈä (‍e‍n)d‍ʒˈapəniːz(‍j‍a)lˈe̞tə (‍e‍n)t‍ʃˈa‍ɪniːz(‍j‍a)lˈe̞tə ʔ tˈe̞ ˈi mˈä sˈɯ‍ᵝ",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [
+          "(en)",
+          "(ja)",
+          "(en)",
+          "(ja)",
+          "(en)",
+          "(ja)",
+          "(en)",
+          "(ja)",
+          "(en)",
+          "(ja)",
+          "(en)",
+          "(ja)",
+          "(en)",
+          "(ja)"
+        ],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 1  ja              --/M      japanese-mbrola-1  mb/mb-jp1            \n 2  ja              --/F      japanese-mbrola-2  mb/mb-jp2            \n 3  ja              --/F      japanese-mbrola-3  mb/mb-jp3            \n 5  ja              --/M      Japanese           jpx/ja               \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "pa",
+        "voice_requested": "pa",
+        "source": "ਸਵੇਰੇ ਬਾਗ ਵਿੱਚ ਪੰਛੀ ਗਾਉਂਦੇ ਹਨ।",
+        "exit_code": 0,
+        "stdout": "səvˈeɾe bˈaɡ vɪc pˈʌncʰi ɡˈaʊ̃dˌe hən",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  pa              --/M      Punjabi            inc/pa               \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "mr",
+        "voice_requested": "mr",
+        "source": "सकाळी बागेत पक्षी गाणी गातात.",
+        "exit_code": 0,
+        "stdout": "səkˈaːɭi baːɡˈeːt pˈʌkʃi ɡˈaːɳi ɡaːtˈaːt",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  mr              --/M      Marathi            inc/mr               \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "te",
+        "voice_requested": "te",
+        "source": "ఉదయం తోటలో పక్షులు పాటలు పాడుతున్నాయి.",
+        "exit_code": 0,
+        "stdout": "ˈudajan tˈoːʈaloː pˈakʂulu pˈaːʈalu pˈaːɖutˌunnaːji",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  te              --/M      Telugu             dra/te               \n 5  te              --/F      telugu-mbrola-1    mb/mb-tl1            \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "tr",
+        "voice_requested": "tr",
+        "source": "Çocuklar bahçede sessizce kitap okuyor.",
+        "exit_code": 0,
+        "stdout": "t‍ʃod‍ʒʊkɫˈar bˈaht‍ʃɛdɛ sˈɛssɪzd‍ʒɛ kitˈap okˈujɔr",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  tr              --/M      Turkish            trk/tr               \n 7  tr              --/M      turkish-mbrola-1   mb/mb-tr1            \n 7  tr              --/F      turkish-mbrola-1   mb/mb-tr2            \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "ta",
+        "voice_requested": "ta",
+        "source": "காலையில் தோட்டத்தில் பறவைகள் பாடுகின்றன.",
+        "exit_code": 0,
+        "stdout": "kˈaːla‍ɪjil tˈoːʈʈʌttil pˈʌrʌvˌa‍ɪɡʌɭ pˈaːɖʉɡˌinrʌnʌ",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  ta              --/M      Tamil              dra/ta               \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "vi",
+        "voice_requested": "vi",
+        "source": "Buổi sáng, những chú chim hót trong vườn.",
+        "exit_code": 0,
+        "stdout": "bˈu‍ə4j sˈaːɜŋ\nɲˌy5ŋ t‍ʃˈuɜ t‍ʃˈi1m hˈɔɜt̪ t‍ʃˈɔ1ŋ vˈy‍ə2n",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  vi              --/M      Vietnamese_(Northern) aav/vi               \n 5  vi-vn-x-central --/M      Vietnamese_(Central) aav/vi-VN-x-central  \n 5  vi-vn-x-south   --/M      Vietnamese_(Southern) aav/vi-VN-x-south    \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      },
+      {
+        "language": "ko",
+        "voice_requested": "ko",
+        "source": "아침에 작은 새들이 정원에서 노래합니다.",
+        "exit_code": 0,
+        "stdout": "ˈɐt‍ʃhimˌe t‍ɕɐqˈɯn sˈɛdɯɾˌi t‍ɕˈʌŋwʌnˌesʌnˈoɾɛhˌɐpnidˌɐ",
+        "stderr": "",
+        "nonempty_ipa": true,
+        "language_switch_markers": [],
+        "voice_query_stdout": "Pty Language       Age/Gender VoiceName          File                 Other Languages\n 5  ko              --/M      Korean             ko                   \n",
+        "voice_query_stderr": "",
+        "quality_assessed": false
+      }
+    ],
+    "japanese_kana_controls": [
+      {
+        "language": "ja",
+        "source": "しずかなにわでことりがうたっています。",
+        "exit_code": 0,
+        "stdout": "ɕˌizɯ‍ᵝkˌänänˌiwädˌe̞ko̞tˌo̞ɽiɡˌäɯ‍ᵝtˌätte̞imˈäsɯ‍ᵝ",
+        "stderr": "",
+        "language_switch_markers": []
+      },
+      {
+        "language": "ja",
+        "source": "カタカナとひらがなをよみます。",
+        "exit_code": 0,
+        "stdout": "kˌätäkˌänätˌo̞çiɽˌäɡänˌäo̞jˌo̞mimˈäsɯ‍ᵝ",
+        "stderr": "",
+        "language_switch_markers": []
+      }
+    ],
+    "arabic_diacritized_control": {
+      "source": "تَفْتَحُ الْمَكْتَبَةُ أَبْوَابَهَا فِي الصَّبَاحِ الْبَاكِرِ.",
+      "voice": "ar",
+      "exit_code": 0,
+      "stdout": "tˈaftaħˌu almaktˈabatˌu ʔabwˈaːbahˌaː fiː ʔas̪s̪ːˈa.baːħˌi albˈaːkirˌi",
+      "stderr": ""
+    },
+    "upstream_scope_notes": {
+      "primary_source": "https://github.com/espeak-ng/espeak-ng/blob/1.52.0/docs/languages.md",
+      "ja": "Documented input: Hiragana and Katakana. Mixed Kanji probe contains character-name fallback and is partial.",
+      "ar": "Documented input: fully diacritized Arabic. Unvocalized probe is outside this upstream input scope even when execution succeeds."
+    }
+  },
+  "provider_before_fix": {
+    "installed_voice_count": 21,
+    "note": "Real output exposed the previous parser bug: Age/Gender is combined and five fields are sufficient. final_provider records the corrected live run.",
+    "raw_tsv_sha256": "31c62d251166c4993e7f78bdfad2bd4eb94c5c6b5cc6e26811d667c7fa838ac3"
+  },
+  "final_provider": {
+    "installed_voice_count": 141,
+    "probes": [
+      {
+        "language": "en",
+        "tag": "en",
+        "voice": "en",
+        "confidence": 0.8,
+        "phoneme_count": 26,
+        "estimated_syllables": 8,
+        "source": "The small boat crossed the quiet river.",
+        "ipa": "ðə smˈɔːl bˈəʊt kɹˈɒst ðə kwˈaɪət ɹˈɪvə",
+        "error": null
+      },
+      {
+        "language": "en",
+        "tag": "en-US",
+        "voice": "en",
+        "confidence": 0.8,
+        "phoneme_count": 26,
+        "estimated_syllables": 8,
+        "source": "The small boat crossed the quiet river.",
+        "ipa": "ðə smˈɔːl bˈəʊt kɹˈɒst ðə kwˈaɪət ɹˈɪvə",
+        "error": null
+      },
+      {
+        "language": "es",
+        "tag": "es",
+        "voice": "es",
+        "confidence": 0.8,
+        "phoneme_count": 34,
+        "estimated_syllables": 14,
+        "source": "La biblioteca abre temprano cada mañana.",
+        "ipa": "la βˌiβliotˈeka ˈaβɾe tempɾˈano kˈaða maɲˈana",
+        "error": null
+      },
+      {
+        "language": "es",
+        "tag": "es-ES",
+        "voice": "es",
+        "confidence": 0.8,
+        "phoneme_count": 34,
+        "estimated_syllables": 14,
+        "source": "La biblioteca abre temprano cada mañana.",
+        "ipa": "la βˌiβliotˈeka ˈaβɾe tempɾˈano kˈaða maɲˈana",
+        "error": null
+      },
+      {
+        "language": "es",
+        "tag": "es-MX",
+        "voice": "es",
+        "confidence": 0.8,
+        "phoneme_count": 34,
+        "estimated_syllables": 14,
+        "source": "La biblioteca abre temprano cada mañana.",
+        "ipa": "la βˌiβliotˈeka ˈaβɾe tempɾˈano kˈaða maɲˈana",
+        "error": null
+      },
+      {
+        "language": "es",
+        "tag": "es-PE",
+        "voice": "es",
+        "confidence": 0.8,
+        "phoneme_count": 34,
+        "estimated_syllables": 14,
+        "source": "La biblioteca abre temprano cada mañana.",
+        "ipa": "la βˌiβliotˈeka ˈaβɾe tempɾˈano kˈaða maɲˈana",
+        "error": null
+      },
+      {
+        "language": "zh",
+        "tag": "zh",
+        "voice": "zh",
+        "confidence": 0.8,
+        "phoneme_count": 56,
+        "estimated_syllables": 12,
+        "source": "清晨的阳光照进安静的房间。",
+        "ipa": "tɕhi5ŋts.hˈəɜn təɜ jˈiɑɜŋ kwˈɑ5ŋ ts.ˈɑu5 tɕˈi5n ˈa5n tɕˈi5ŋ tə1 fˈɑɜŋ tɕˈiɛ5n",
+        "error": null
+      },
+      {
+        "language": "zh",
+        "tag": "zh-CN",
+        "voice": "zh",
+        "confidence": 0.8,
+        "phoneme_count": 56,
+        "estimated_syllables": 12,
+        "source": "清晨的阳光照进安静的房间。",
+        "ipa": "tɕhi5ŋts.hˈəɜn təɜ jˈiɑɜŋ kwˈɑ5ŋ ts.ˈɑu5 tɕˈi5n ˈa5n tɕˈi5ŋ tə1 fˈɑɜŋ tɕˈiɛ5n",
+        "error": null
+      },
+      {
+        "language": "zh",
+        "tag": "zh-Hans",
+        "voice": "zh",
+        "confidence": 0.8,
+        "phoneme_count": 56,
+        "estimated_syllables": 12,
+        "source": "清晨的阳光照进安静的房间。",
+        "ipa": "tɕhi5ŋts.hˈəɜn təɜ jˈiɑɜŋ kwˈɑ5ŋ ts.ˈɑu5 tɕˈi5n ˈa5n tɕˈi5ŋ tə1 fˈɑɜŋ tɕˈiɛ5n",
+        "error": null
+      },
+      {
+        "language": "zh",
+        "tag": "zh-Hans-CN",
+        "voice": "zh",
+        "confidence": 0.8,
+        "phoneme_count": 56,
+        "estimated_syllables": 12,
+        "source": "清晨的阳光照进安静的房间。",
+        "ipa": "tɕhi5ŋts.hˈəɜn təɜ jˈiɑɜŋ kwˈɑ5ŋ ts.ˈɑu5 tɕˈi5n ˈa5n tɕˈi5ŋ tə1 fˈɑɜŋ tɕˈiɛ5n",
+        "error": null
+      },
+      {
+        "language": "hi",
+        "tag": "hi",
+        "voice": "hi",
+        "confidence": 0.8,
+        "phoneme_count": 32,
+        "estimated_syllables": 13,
+        "source": "बच्चे बगीचे में रंगीन फूल देख रहे हैं।",
+        "ipa": "bˈʌcːeː bəɡˈiːceː mẽː ɾəŋɡˈiːn pʰˈuːl dˈeːkʰ ɾˌəheː hɛ̃",
+        "error": null
+      },
+      {
+        "language": "hi",
+        "tag": "hi-IN",
+        "voice": "hi",
+        "confidence": 0.8,
+        "phoneme_count": 32,
+        "estimated_syllables": 13,
+        "source": "बच्चे बगीचे में रंगीन फूल देख रहे हैं।",
+        "ipa": "bˈʌcːeː bəɡˈiːceː mẽː ɾəŋɡˈiːn pʰˈuːl dˈeːkʰ ɾˌəheː hɛ̃",
+        "error": null
+      },
+      {
+        "language": "ar",
+        "tag": "ar",
+        "voice": "ar",
+        "confidence": 0.8,
+        "phoneme_count": 42,
+        "estimated_syllables": 16,
+        "source": "تفتح المكتبة أبوابها في الصباح الباكر.",
+        "ipa": "tˈafatːˌaħ ʔalmˈaktabˌa ʔbˈuːaːbhˌaː fˈiː ʔas̪s̪ˈabaːħ ʔalbˈaːkir",
+        "error": null
+      },
+      {
+        "language": "ar",
+        "tag": "ar-SA",
+        "voice": "ar",
+        "confidence": 0.8,
+        "phoneme_count": 42,
+        "estimated_syllables": 16,
+        "source": "تفتح المكتبة أبوابها في الصباح الباكر.",
+        "ipa": "tˈafatːˌaħ ʔalmˈaktabˌa ʔbˈuːaːbhˌaː fˈiː ʔas̪s̪ˈabaːħ ʔalbˈaːkir",
+        "error": null
+      },
+      {
+        "language": "fr",
+        "tag": "fr",
+        "voice": "fr",
+        "confidence": 0.8,
+        "phoneme_count": 28,
+        "estimated_syllables": 10,
+        "source": "Le jardin devient calme après la pluie.",
+        "ipa": "lə- ʒaʁdˈɛ̃ dəvjˈɛ̃ kˈalm apʁˌɛ la- plyˈi",
+        "error": null
+      },
+      {
+        "language": "fr",
+        "tag": "fr-FR",
+        "voice": "fr",
+        "confidence": 0.8,
+        "phoneme_count": 28,
+        "estimated_syllables": 10,
+        "source": "Le jardin devient calme après la pluie.",
+        "ipa": "lə- ʒaʁdˈɛ̃ dəvjˈɛ̃ kˈalm apʁˌɛ la- plyˈi",
+        "error": null
+      },
+      {
+        "language": "pt",
+        "tag": "pt",
+        "voice": "pt",
+        "confidence": 0.8,
+        "phoneme_count": 35,
+        "estimated_syllables": 14,
+        "source": "As crianças caminham perto da biblioteca.",
+        "ipa": "ɐʃ kɹˌiˈɐ̃ŋsɐʃ kɐmˈiɲɐ̃ʊ̃ pˈɛɾətʊ dɐ bˌibliutˈɛkɐ",
+        "error": null
+      },
+      {
+        "language": "pt",
+        "tag": "pt-BR",
+        "voice": "pt",
+        "confidence": 0.8,
+        "phoneme_count": 35,
+        "estimated_syllables": 14,
+        "source": "As crianças caminham perto da biblioteca.",
+        "ipa": "ɐʃ kɹˌiˈɐ̃ŋsɐʃ kɐmˈiɲɐ̃ʊ̃ pˈɛɾətʊ dɐ bˌibliutˈɛkɐ",
+        "error": null
+      },
+      {
+        "language": "ru",
+        "tag": "ru",
+        "voice": "ru",
+        "confidence": 0.8,
+        "phoneme_count": 36,
+        "estimated_syllables": 14,
+        "source": "Утром над рекой поднимается лёгкий туман.",
+        "ipa": "ˈutrʌm nɑt rʲikˈoj pʌdnʲimˈɑjitsʌ ɭʲˈɵxkʲij tumˈɑn",
+        "error": null
+      },
+      {
+        "language": "ru",
+        "tag": "ru-RU",
+        "voice": "ru",
+        "confidence": 0.8,
+        "phoneme_count": 36,
+        "estimated_syllables": 14,
+        "source": "Утром над рекой поднимается лёгкий туман.",
+        "ipa": "ˈutrʌm nɑt rʲikˈoj pʌdnʲimˈɑjitsʌ ɭʲˈɵxkʲij tumˈɑn",
+        "error": null
+      },
+      {
+        "language": "bn",
+        "tag": "bn",
+        "voice": "bn",
+        "confidence": 0.8,
+        "phoneme_count": 28,
+        "estimated_syllables": 12,
+        "source": "সকালে নদীর পাশে পাখিরা গান গায়।",
+        "ipa": "ʃˈɔkalˌe nˈodiɾ pˈaʃe pˈakʰiɾˌa ɡˈan ɡˈaj",
+        "error": null
+      },
+      {
+        "language": "bn",
+        "tag": "bn-BD",
+        "voice": "bn",
+        "confidence": 0.8,
+        "phoneme_count": 28,
+        "estimated_syllables": 12,
+        "source": "সকালে নদীর পাশে পাখিরা গান গায়।",
+        "ipa": "ʃˈɔkalˌe nˈodiɾ pˈaʃe pˈakʰiɾˌa ɡˈan ɡˈaj",
+        "error": null
+      },
+      {
+        "language": "ur",
+        "tag": "ur",
+        "voice": "ur",
+        "confidence": 0.8,
+        "phoneme_count": 29,
+        "estimated_syllables": 12,
+        "source": "صبح کے وقت باغ میں پرندے گاتے ہیں۔",
+        "ipa": "ʂˌəbˈah keː ʋˈaqt bˈaːɣ mˈẽ parˈɪndeː ɡˌaːteː hẽ",
+        "error": null
+      },
+      {
+        "language": "ur",
+        "tag": "ur-PK",
+        "voice": "ur",
+        "confidence": 0.8,
+        "phoneme_count": 29,
+        "estimated_syllables": 12,
+        "source": "صبح کے وقت باغ میں پرندے گاتے ہیں۔",
+        "ipa": "ʂˌəbˈah keː ʋˈaqt bˈaːɣ mˈẽ parˈɪndeː ɡˌaːteː hẽ",
+        "error": null
+      },
+      {
+        "language": "id",
+        "tag": "id",
+        "voice": "id",
+        "confidence": 0.8,
+        "phoneme_count": 26,
+        "estimated_syllables": 12,
+        "source": "Anak-anak membaca buku di taman.",
+        "ipa": "ˈanakˈanak məmbˈatʃa bˈuku di tˈaman",
+        "error": null
+      },
+      {
+        "language": "id",
+        "tag": "id-ID",
+        "voice": "id",
+        "confidence": 0.8,
+        "phoneme_count": 26,
+        "estimated_syllables": 12,
+        "source": "Anak-anak membaca buku di taman.",
+        "ipa": "ˈanakˈanak məmbˈatʃa bˈuku di tˈaman",
+        "error": null
+      },
+      {
+        "language": "de",
+        "tag": "de",
+        "voice": "de",
+        "confidence": 0.8,
+        "phoneme_count": 27,
+        "estimated_syllables": 10,
+        "source": "Am Morgen liegt Nebel über dem Fluss.",
+        "ipa": "am mˈɔɾɡən lˈiːkt nˈeːbəl ˌyːbɜ deːm flˈʊs",
+        "error": null
+      },
+      {
+        "language": "de",
+        "tag": "de-DE",
+        "voice": "de",
+        "confidence": 0.8,
+        "phoneme_count": 27,
+        "estimated_syllables": 10,
+        "source": "Am Morgen liegt Nebel über dem Fluss.",
+        "ipa": "am mˈɔɾɡən lˈiːkt nˈeːbəl ˌyːbɜ deːm flˈʊs",
+        "error": null
+      },
+      {
+        "language": "ja",
+        "tag": "ja",
+        "voice": "ja",
+        "confidence": 0.5,
+        "phoneme_count": 88,
+        "estimated_syllables": 39,
+        "source": "静かな庭で小さな鳥が歌っています。",
+        "ipa": "tʃˈaɪniːz lˈe̞tə kˈä nˈä  tʃˈaɪniːz lˈe̞tə tˈe̞  dʒˈapəniːz lˈe̞tə  tʃˈaɪniːz lˈe̞tə sˈä nˈä  tʃˈaɪniːz lˈe̞tə kˈä  dʒˈapəniːz lˈe̞tə  tʃˈaɪniːz lˈe̞tə ʔ tˈe̞ ˈi mˈä sˈɯᵝ",
+        "error": null
+      },
+      {
+        "language": "ja",
+        "tag": "ja-JP",
+        "voice": "ja",
+        "confidence": 0.5,
+        "phoneme_count": 88,
+        "estimated_syllables": 39,
+        "source": "静かな庭で小さな鳥が歌っています。",
+        "ipa": "tʃˈaɪniːz lˈe̞tə kˈä nˈä  tʃˈaɪniːz lˈe̞tə tˈe̞  dʒˈapəniːz lˈe̞tə  tʃˈaɪniːz lˈe̞tə sˈä nˈä  tʃˈaɪniːz lˈe̞tə kˈä  dʒˈapəniːz lˈe̞tə  tʃˈaɪniːz lˈe̞tə ʔ tˈe̞ ˈi mˈä sˈɯᵝ",
+        "error": null
+      },
+      {
+        "language": "pa",
+        "tag": "pa",
+        "voice": "pa",
+        "confidence": 0.8,
+        "phoneme_count": 25,
+        "estimated_syllables": 10,
+        "source": "ਸਵੇਰੇ ਬਾਗ ਵਿੱਚ ਪੰਛੀ ਗਾਉਂਦੇ ਹਨ।",
+        "ipa": "səvˈeɾe bˈaɡ vɪc pˈʌncʰi ɡˈaʊ̃dˌe hən",
+        "error": null
+      },
+      {
+        "language": "pa",
+        "tag": "pa-IN",
+        "voice": "pa",
+        "confidence": 0.8,
+        "phoneme_count": 25,
+        "estimated_syllables": 10,
+        "source": "ਸਵੇਰੇ ਬਾਗ ਵਿੱਚ ਪੰਛੀ ਗਾਉਂਦੇ ਹਨ।",
+        "ipa": "səvˈeɾe bˈaɡ vɪc pˈʌncʰi ɡˈaʊ̃dˌe hən",
+        "error": null
+      },
+      {
+        "language": "pa",
+        "tag": "pa-Guru",
+        "voice": "pa",
+        "confidence": 0.8,
+        "phoneme_count": 25,
+        "estimated_syllables": 10,
+        "source": "ਸਵੇਰੇ ਬਾਗ ਵਿੱਚ ਪੰਛੀ ਗਾਉਂਦੇ ਹਨ।",
+        "ipa": "səvˈeɾe bˈaɡ vɪc pˈʌncʰi ɡˈaʊ̃dˌe hən",
+        "error": null
+      },
+      {
+        "language": "pa",
+        "tag": "pa-Guru-IN",
+        "voice": "pa",
+        "confidence": 0.8,
+        "phoneme_count": 25,
+        "estimated_syllables": 10,
+        "source": "ਸਵੇਰੇ ਬਾਗ ਵਿੱਚ ਪੰਛੀ ਗਾਉਂਦੇ ਹਨ।",
+        "ipa": "səvˈeɾe bˈaɡ vɪc pˈʌncʰi ɡˈaʊ̃dˌe hən",
+        "error": null
+      },
+      {
+        "language": "mr",
+        "tag": "mr",
+        "voice": "mr",
+        "confidence": 0.8,
+        "phoneme_count": 25,
+        "estimated_syllables": 11,
+        "source": "सकाळी बागेत पक्षी गाणी गातात.",
+        "ipa": "səkˈaːɭi baːɡˈeːt pˈʌkʃi ɡˈaːɳi ɡaːtˈaːt",
+        "error": null
+      },
+      {
+        "language": "mr",
+        "tag": "mr-IN",
+        "voice": "mr",
+        "confidence": 0.8,
+        "phoneme_count": 25,
+        "estimated_syllables": 11,
+        "source": "सकाळी बागेत पक्षी गाणी गातात.",
+        "ipa": "səkˈaːɭi baːɡˈeːt pˈʌkʃi ɡˈaːɳi ɡaːtˈaːt",
+        "error": null
+      },
+      {
+        "language": "te",
+        "tag": "te",
+        "voice": "te",
+        "confidence": 0.8,
+        "phoneme_count": 36,
+        "estimated_syllables": 17,
+        "source": "ఉదయం తోటలో పక్షులు పాటలు పాడుతున్నాయి.",
+        "ipa": "ˈudajan tˈoːʈaloː pˈakʂulu pˈaːʈalu pˈaːɖutˌunnaːji",
+        "error": null
+      },
+      {
+        "language": "te",
+        "tag": "te-IN",
+        "voice": "te",
+        "confidence": 0.8,
+        "phoneme_count": 36,
+        "estimated_syllables": 17,
+        "source": "ఉదయం తోటలో పక్షులు పాటలు పాడుతున్నాయి.",
+        "ipa": "ˈudajan tˈoːʈaloː pˈakʂulu pˈaːʈalu pˈaːɖutˌunnaːji",
+        "error": null
+      },
+      {
+        "language": "tr",
+        "tag": "tr",
+        "voice": "tr",
+        "confidence": 0.8,
+        "phoneme_count": 34,
+        "estimated_syllables": 14,
+        "source": "Çocuklar bahçede sessizce kitap okuyor.",
+        "ipa": "tʃodʒʊkɫˈar bˈahtʃɛdɛ sˈɛssɪzdʒɛ kitˈap okˈujɔr",
+        "error": null
+      },
+      {
+        "language": "tr",
+        "tag": "tr-TR",
+        "voice": "tr",
+        "confidence": 0.8,
+        "phoneme_count": 34,
+        "estimated_syllables": 14,
+        "source": "Çocuklar bahçede sessizce kitap okuyor.",
+        "ipa": "tʃodʒʊkɫˈar bˈahtʃɛdɛ sˈɛssɪzdʒɛ kitˈap okˈujɔr",
+        "error": null
+      },
+      {
+        "language": "ta",
+        "tag": "ta",
+        "voice": "ta",
+        "confidence": 0.8,
+        "phoneme_count": 36,
+        "estimated_syllables": 15,
+        "source": "காலையில் தோட்டத்தில் பறவைகள் பாடுகின்றன.",
+        "ipa": "kˈaːlaɪjil tˈoːʈʈʌttil pˈʌrʌvˌaɪɡʌɭ pˈaːɖʉɡˌinrʌnʌ",
+        "error": null
+      },
+      {
+        "language": "ta",
+        "tag": "ta-IN",
+        "voice": "ta",
+        "confidence": 0.8,
+        "phoneme_count": 36,
+        "estimated_syllables": 15,
+        "source": "காலையில் தோட்டத்தில் பறவைகள் பாடுகின்றன.",
+        "ipa": "kˈaːlaɪjil tˈoːʈʈʌttil pˈʌrʌvˌaɪɡʌɭ pˈaːɖʉɡˌinrʌnʌ",
+        "error": null
+      },
+      {
+        "language": "vi",
+        "tag": "vi",
+        "voice": "vi",
+        "confidence": 0.8,
+        "phoneme_count": 33,
+        "estimated_syllables": 8,
+        "source": "Buổi sáng, những chú chim hót trong vườn.",
+        "ipa": "bˈuə4j sˈaːɜŋ ɲˌy5ŋ tʃˈuɜ tʃˈi1m hˈɔɜt̪ tʃˈɔ1ŋ vˈyə2n",
+        "error": null
+      },
+      {
+        "language": "vi",
+        "tag": "vi-VN",
+        "voice": "vi",
+        "confidence": 0.8,
+        "phoneme_count": 33,
+        "estimated_syllables": 8,
+        "source": "Buổi sáng, những chú chim hót trong vườn.",
+        "ipa": "bˈuə4j sˈaːɜŋ ɲˌy5ŋ tʃˈuɜ tʃˈi1m hˈɔɜt̪ tʃˈɔ1ŋ vˈyə2n",
+        "error": null
+      },
+      {
+        "language": "ko",
+        "tag": "ko",
+        "voice": "ko",
+        "confidence": 0.8,
+        "phoneme_count": 39,
+        "estimated_syllables": 17,
+        "source": "아침에 작은 새들이 정원에서 노래합니다.",
+        "ipa": "ˈɐtʃhimˌe tɕɐqˈɯn sˈɛdɯɾˌi tɕˈʌŋwʌnˌesʌnˈoɾɛhˌɐpnidˌɐ",
+        "error": null
+      },
+      {
+        "language": "ko",
+        "tag": "ko-KR",
+        "voice": "ko",
+        "confidence": 0.8,
+        "phoneme_count": 39,
+        "estimated_syllables": 17,
+        "source": "아침에 작은 새들이 정원에서 노래합니다.",
+        "ipa": "ˈɐtʃhimˌe tɕɐqˈɯn sˈɛdɯɾˌi tɕˈʌŋwʌnˌesʌnˈoɾɛhˌɐpnidˌɐ",
+        "error": null
+      }
+    ],
+    "default_locale_and_typed_alias_matrix": true,
+    "probe_count": 46,
+    "errors": [],
+    "runtime_degraded_probes": [
+      "ja",
+      "ja-JP"
+    ],
+    "raw_cli_preserved": true,
+    "note": "Final frozen provider source. Confidence and syllable counts are provider heuristics, not accuracy measurements."
+  },
+  "public_example": {
+    "command": "cargo run --locked --features phonetic-espeak --example espeak -- --binary target/tools/espeak-audit/install/bin/espeak-ng --json",
+    "direct_execution_command": "target/debug/examples/espeak --binary target/tools/espeak-audit/install/bin/espeak-ng --json",
+    "output_sha256": "31ece864e89c60c1ff7a0e5e8b8be05be45b1d273513e91776dde111f1cb38ab",
+    "result": {
+      "binary": {
+        "discovery": "explicit",
+        "installed_voice_count": 141,
+        "inventory_error": null,
+        "requested_path": "target/tools/espeak-audit/install/bin/espeak-ng"
+      },
+      "confidence_note": "Uncalibrated provider marker, reported unchanged; a reduced value does not repair or validate a reading.",
+      "locales": [
+        {
+          "aliases": [
+            {
+              "actual_voice": "en",
+              "error": null,
+              "expected_voice": "en",
+              "ipa": "həlˈəʊ",
+              "mapped": true,
+              "phonemes": [
+                "h",
+                "ə",
+                "l",
+                "ə",
+                "ʊ"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "en-GB",
+              "success": true,
+              "text": "hello",
+              "voice_available": true,
+              "voice_listed": true
+            },
+            {
+              "actual_voice": "en",
+              "error": null,
+              "expected_voice": "en",
+              "ipa": "həlˈəʊ",
+              "mapped": true,
+              "phonemes": [
+                "h",
+                "ə",
+                "l",
+                "ə",
+                "ʊ"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "en-US",
+              "success": true,
+              "text": "hello",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "en",
+            "error": null,
+            "expected_voice": "en",
+            "ipa": "həlˈəʊ",
+            "mapped": true,
+            "phonemes": [
+              "h",
+              "ə",
+              "l",
+              "ə",
+              "ʊ"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "en",
+            "success": true,
+            "text": "hello",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "en",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "es",
+              "error": null,
+              "expected_voice": "es",
+              "ipa": "ˈola",
+              "mapped": true,
+              "phonemes": [
+                "o",
+                "l",
+                "a"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "es-ES",
+              "success": true,
+              "text": "hola",
+              "voice_available": true,
+              "voice_listed": true
+            },
+            {
+              "actual_voice": "es",
+              "error": null,
+              "expected_voice": "es",
+              "ipa": "ˈola",
+              "mapped": true,
+              "phonemes": [
+                "o",
+                "l",
+                "a"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "es-MX",
+              "success": true,
+              "text": "hola",
+              "voice_available": true,
+              "voice_listed": true
+            },
+            {
+              "actual_voice": "es",
+              "error": null,
+              "expected_voice": "es",
+              "ipa": "ˈola",
+              "mapped": true,
+              "phonemes": [
+                "o",
+                "l",
+                "a"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "es-PE",
+              "success": true,
+              "text": "hola",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "es",
+            "error": null,
+            "expected_voice": "es",
+            "ipa": "ˈola",
+            "mapped": true,
+            "phonemes": [
+              "o",
+              "l",
+              "a"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "es",
+            "success": true,
+            "text": "hola",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "es",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "zh",
+              "error": null,
+              "expected_voice": "zh",
+              "ipa": "niɜχˈɑu2",
+              "mapped": true,
+              "phonemes": [
+                "n",
+                "i",
+                "ɜ",
+                "χ",
+                "ɑ",
+                "u",
+                "2"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "zh-CN",
+              "success": true,
+              "text": "你好",
+              "voice_available": true,
+              "voice_listed": false
+            },
+            {
+              "actual_voice": "zh",
+              "error": null,
+              "expected_voice": "zh",
+              "ipa": "niɜχˈɑu2",
+              "mapped": true,
+              "phonemes": [
+                "n",
+                "i",
+                "ɜ",
+                "χ",
+                "ɑ",
+                "u",
+                "2"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "zh-Hans",
+              "success": true,
+              "text": "你好",
+              "voice_available": true,
+              "voice_listed": false
+            },
+            {
+              "actual_voice": "zh",
+              "error": null,
+              "expected_voice": "zh",
+              "ipa": "niɜχˈɑu2",
+              "mapped": true,
+              "phonemes": [
+                "n",
+                "i",
+                "ɜ",
+                "χ",
+                "ɑ",
+                "u",
+                "2"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "zh-Hans-CN",
+              "success": true,
+              "text": "你好",
+              "voice_available": true,
+              "voice_listed": false
+            },
+            {
+              "actual_voice": "zh",
+              "error": null,
+              "expected_voice": "zh",
+              "ipa": "niɜχˈɑu2",
+              "mapped": true,
+              "phonemes": [
+                "n",
+                "i",
+                "ɜ",
+                "χ",
+                "ɑ",
+                "u",
+                "2"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "zh-TW",
+              "success": true,
+              "text": "你好",
+              "voice_available": true,
+              "voice_listed": false
+            }
+          ],
+          "base": {
+            "actual_voice": "zh",
+            "error": null,
+            "expected_voice": "zh",
+            "ipa": "niɜχˈɑu2",
+            "mapped": true,
+            "phonemes": [
+              "n",
+              "i",
+              "ɜ",
+              "χ",
+              "ɑ",
+              "u",
+              "2"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "zh",
+            "success": true,
+            "text": "你好",
+            "voice_available": true,
+            "voice_listed": false
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "zh",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "hi",
+              "error": null,
+              "expected_voice": "hi",
+              "ipa": "nəmˈʌsteː",
+              "mapped": true,
+              "phonemes": [
+                "n",
+                "ə",
+                "m",
+                "ʌ",
+                "s",
+                "t",
+                "e"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "hi-IN",
+              "success": true,
+              "text": "नमस्ते",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "hi",
+            "error": null,
+            "expected_voice": "hi",
+            "ipa": "nəmˈʌsteː",
+            "mapped": true,
+            "phonemes": [
+              "n",
+              "ə",
+              "m",
+              "ʌ",
+              "s",
+              "t",
+              "e"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "hi",
+            "success": true,
+            "text": "नमस्ते",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "hi",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "ar",
+              "error": null,
+              "expected_voice": "ar",
+              "ipa": "mˈarħabˌan",
+              "mapped": true,
+              "phonemes": [
+                "m",
+                "a",
+                "r",
+                "ħ",
+                "a",
+                "b",
+                "a",
+                "n"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "ar-SA",
+              "success": true,
+              "text": "مَرْحَبًا",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "ar",
+            "error": null,
+            "expected_voice": "ar",
+            "ipa": "mˈarħabˌan",
+            "mapped": true,
+            "phonemes": [
+              "m",
+              "a",
+              "r",
+              "ħ",
+              "a",
+              "b",
+              "a",
+              "n"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "ar",
+            "success": true,
+            "text": "مَرْحَبًا",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [
+            {
+              "actual_voice": "ar",
+              "error": null,
+              "expected_voice": "ar",
+              "ipa": "mrħbˈaː",
+              "mapped": true,
+              "phonemes": [
+                "m",
+                "r",
+                "ħ",
+                "b",
+                "a"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "ar",
+              "success": true,
+              "text": "مرحبا",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "ar",
+          "scope": "Fully vocalized Arabic sample; compare the unvocalized control. Neither result is a native pronunciation gold.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "fr",
+              "error": null,
+              "expected_voice": "fr",
+              "ipa": "bɔ̃ʒˈuʁ",
+              "mapped": true,
+              "phonemes": [
+                "b",
+                "ɔ",
+                "ʒ",
+                "u",
+                "ʁ"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "fr-FR",
+              "success": true,
+              "text": "bonjour",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "fr",
+            "error": null,
+            "expected_voice": "fr",
+            "ipa": "bɔ̃ʒˈuʁ",
+            "mapped": true,
+            "phonemes": [
+              "b",
+              "ɔ",
+              "ʒ",
+              "u",
+              "ʁ"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "fr",
+            "success": true,
+            "text": "bonjour",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "fr",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "pt",
+              "error": null,
+              "expected_voice": "pt",
+              "ipa": "ɔlˈa",
+              "mapped": true,
+              "phonemes": [
+                "ɔ",
+                "l",
+                "a"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "pt-BR",
+              "success": true,
+              "text": "olá",
+              "voice_available": true,
+              "voice_listed": true
+            },
+            {
+              "actual_voice": "pt",
+              "error": null,
+              "expected_voice": "pt",
+              "ipa": "ɔlˈa",
+              "mapped": true,
+              "phonemes": [
+                "ɔ",
+                "l",
+                "a"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "pt-PT",
+              "success": true,
+              "text": "olá",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "pt",
+            "error": null,
+            "expected_voice": "pt",
+            "ipa": "ɔlˈa",
+            "mapped": true,
+            "phonemes": [
+              "ɔ",
+              "l",
+              "a"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "pt",
+            "success": true,
+            "text": "olá",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "pt",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "ru",
+              "error": null,
+              "expected_voice": "ru",
+              "ipa": "prʲivʲˈet",
+              "mapped": true,
+              "phonemes": [
+                "p",
+                "r",
+                "i",
+                "v",
+                "e",
+                "t"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "ru-RU",
+              "success": true,
+              "text": "привет",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "ru",
+            "error": null,
+            "expected_voice": "ru",
+            "ipa": "prʲivʲˈet",
+            "mapped": true,
+            "phonemes": [
+              "p",
+              "r",
+              "i",
+              "v",
+              "e",
+              "t"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "ru",
+            "success": true,
+            "text": "привет",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "ru",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "bn",
+              "error": null,
+              "expected_voice": "bn",
+              "ipa": "nˈɔmɔʃkˌaɾ",
+              "mapped": true,
+              "phonemes": [
+                "n",
+                "ɔ",
+                "m",
+                "ɔ",
+                "ʃ",
+                "k",
+                "a",
+                "ɾ"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "bn-BD",
+              "success": true,
+              "text": "নমস্কার",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "bn",
+            "error": null,
+            "expected_voice": "bn",
+            "ipa": "nˈɔmɔʃkˌaɾ",
+            "mapped": true,
+            "phonemes": [
+              "n",
+              "ɔ",
+              "m",
+              "ɔ",
+              "ʃ",
+              "k",
+              "a",
+              "ɾ"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "bn",
+            "success": true,
+            "text": "নমস্কার",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "bn",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "ur",
+              "error": null,
+              "expected_voice": "ur",
+              "ipa": "səlˈaːm",
+              "mapped": true,
+              "phonemes": [
+                "s",
+                "ə",
+                "l",
+                "a",
+                "m"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "ur-PK",
+              "success": true,
+              "text": "سلام",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "ur",
+            "error": null,
+            "expected_voice": "ur",
+            "ipa": "səlˈaːm",
+            "mapped": true,
+            "phonemes": [
+              "s",
+              "ə",
+              "l",
+              "a",
+              "m"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "ur",
+            "success": true,
+            "text": "سلام",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "ur",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "id",
+              "error": null,
+              "expected_voice": "id",
+              "ipa": "səlˈamat",
+              "mapped": true,
+              "phonemes": [
+                "s",
+                "ə",
+                "l",
+                "a",
+                "m",
+                "a",
+                "t"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "id-ID",
+              "success": true,
+              "text": "selamat",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "id",
+            "error": null,
+            "expected_voice": "id",
+            "ipa": "səlˈamat",
+            "mapped": true,
+            "phonemes": [
+              "s",
+              "ə",
+              "l",
+              "a",
+              "m",
+              "a",
+              "t"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "id",
+            "success": true,
+            "text": "selamat",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "id",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "de",
+              "error": null,
+              "expected_voice": "de",
+              "ipa": "hˈaloː",
+              "mapped": true,
+              "phonemes": [
+                "h",
+                "a",
+                "l",
+                "o"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "de-DE",
+              "success": true,
+              "text": "hallo",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "de",
+            "error": null,
+            "expected_voice": "de",
+            "ipa": "hˈaloː",
+            "mapped": true,
+            "phonemes": [
+              "h",
+              "a",
+              "l",
+              "o"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "de",
+            "success": true,
+            "text": "hallo",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "de",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "ja",
+              "error": null,
+              "expected_voice": "ja",
+              "ipa": "tʃˈaɪniːz lˈe̞tə  tʃˈaɪniːz lˈe̞tə  tʃˈaɪniːz lˈe̞tə",
+              "mapped": true,
+              "phonemes": [
+                "tʃ",
+                "aɪ",
+                "n",
+                "i",
+                "z",
+                "l",
+                "e",
+                "t",
+                "ə",
+                "tʃ",
+                "aɪ",
+                "n",
+                "i",
+                "z",
+                "l",
+                "e",
+                "t",
+                "ə",
+                "tʃ",
+                "aɪ",
+                "n",
+                "i",
+                "z",
+                "l",
+                "e",
+                "t",
+                "ə"
+              ],
+              "provider_confidence": 0.5,
+              "requested_locale": "ja-JP",
+              "success": true,
+              "text": "日本語",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "ja",
+            "error": null,
+            "expected_voice": "ja",
+            "ipa": "tʃˈaɪniːz lˈe̞tə  tʃˈaɪniːz lˈe̞tə  tʃˈaɪniːz lˈe̞tə",
+            "mapped": true,
+            "phonemes": [
+              "tʃ",
+              "aɪ",
+              "n",
+              "i",
+              "z",
+              "l",
+              "e",
+              "t",
+              "ə",
+              "tʃ",
+              "aɪ",
+              "n",
+              "i",
+              "z",
+              "l",
+              "e",
+              "t",
+              "ə",
+              "tʃ",
+              "aɪ",
+              "n",
+              "i",
+              "z",
+              "l",
+              "e",
+              "t",
+              "ə"
+            ],
+            "provider_confidence": 0.5,
+            "requested_locale": "ja",
+            "success": true,
+            "text": "日本語",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [
+            {
+              "actual_voice": "ja",
+              "error": null,
+              "expected_voice": "ja",
+              "ipa": "nihˈo̞ŋɡo̞",
+              "mapped": true,
+              "phonemes": [
+                "n",
+                "i",
+                "h",
+                "o",
+                "ŋ",
+                "ɡ",
+                "o"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "ja",
+              "success": true,
+              "text": "にほんご",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "ja",
+          "scope": "Kanji probe outside eSpeak NG 1.52's documented hiragana/katakana scope; compare the kana control. Runtime success does not certify a Kanji reading.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "pa",
+              "error": null,
+              "expected_voice": "pa",
+              "ipa": "sˈʌtɪ sɾˈi ˌəkˈal",
+              "mapped": true,
+              "phonemes": [
+                "s",
+                "ʌ",
+                "t",
+                "ɪ",
+                "s",
+                "ɾ",
+                "i",
+                "ə",
+                "k",
+                "a",
+                "l"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "pa-Guru",
+              "success": true,
+              "text": "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ",
+              "voice_available": true,
+              "voice_listed": true
+            },
+            {
+              "actual_voice": "pa",
+              "error": null,
+              "expected_voice": "pa",
+              "ipa": "sˈʌtɪ sɾˈi ˌəkˈal",
+              "mapped": true,
+              "phonemes": [
+                "s",
+                "ʌ",
+                "t",
+                "ɪ",
+                "s",
+                "ɾ",
+                "i",
+                "ə",
+                "k",
+                "a",
+                "l"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "pa-Guru-IN",
+              "success": true,
+              "text": "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ",
+              "voice_available": true,
+              "voice_listed": true
+            },
+            {
+              "actual_voice": "pa",
+              "error": null,
+              "expected_voice": "pa",
+              "ipa": "sˈʌtɪ sɾˈi ˌəkˈal",
+              "mapped": true,
+              "phonemes": [
+                "s",
+                "ʌ",
+                "t",
+                "ɪ",
+                "s",
+                "ɾ",
+                "i",
+                "ə",
+                "k",
+                "a",
+                "l"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "pa-IN",
+              "success": true,
+              "text": "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "pa",
+            "error": null,
+            "expected_voice": "pa",
+            "ipa": "sˈʌtɪ sɾˈi ˌəkˈal",
+            "mapped": true,
+            "phonemes": [
+              "s",
+              "ʌ",
+              "t",
+              "ɪ",
+              "s",
+              "ɾ",
+              "i",
+              "ə",
+              "k",
+              "a",
+              "l"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "pa",
+            "success": true,
+            "text": "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "pa",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "mr",
+              "error": null,
+              "expected_voice": "mr",
+              "ipa": "nˌəmskˈaːɾ",
+              "mapped": true,
+              "phonemes": [
+                "n",
+                "ə",
+                "m",
+                "s",
+                "k",
+                "a",
+                "ɾ"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "mr-IN",
+              "success": true,
+              "text": "नमस्कार",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "mr",
+            "error": null,
+            "expected_voice": "mr",
+            "ipa": "nˌəmskˈaːɾ",
+            "mapped": true,
+            "phonemes": [
+              "n",
+              "ə",
+              "m",
+              "s",
+              "k",
+              "a",
+              "ɾ"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "mr",
+            "success": true,
+            "text": "नमस्कार",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "mr",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "te",
+              "error": null,
+              "expected_voice": "te",
+              "ipa": "nˈamaskˌaːran",
+              "mapped": true,
+              "phonemes": [
+                "n",
+                "a",
+                "m",
+                "a",
+                "s",
+                "k",
+                "a",
+                "r",
+                "a",
+                "n"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "te-IN",
+              "success": true,
+              "text": "నమస్కారం",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "te",
+            "error": null,
+            "expected_voice": "te",
+            "ipa": "nˈamaskˌaːran",
+            "mapped": true,
+            "phonemes": [
+              "n",
+              "a",
+              "m",
+              "a",
+              "s",
+              "k",
+              "a",
+              "r",
+              "a",
+              "n"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "te",
+            "success": true,
+            "text": "నమస్కారం",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "te",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "tr",
+              "error": null,
+              "expected_voice": "tr",
+              "ipa": "mˈɛrhaba",
+              "mapped": true,
+              "phonemes": [
+                "m",
+                "ɛ",
+                "r",
+                "h",
+                "a",
+                "b",
+                "a"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "tr-TR",
+              "success": true,
+              "text": "merhaba",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "tr",
+            "error": null,
+            "expected_voice": "tr",
+            "ipa": "mˈɛrhaba",
+            "mapped": true,
+            "phonemes": [
+              "m",
+              "ɛ",
+              "r",
+              "h",
+              "a",
+              "b",
+              "a"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "tr",
+            "success": true,
+            "text": "merhaba",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "tr",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "ta",
+              "error": null,
+              "expected_voice": "ta",
+              "ipa": "vˈʌɳʌkkʌm",
+              "mapped": true,
+              "phonemes": [
+                "v",
+                "ʌ",
+                "ɳ",
+                "ʌ",
+                "k",
+                "k",
+                "ʌ",
+                "m"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "ta-IN",
+              "success": true,
+              "text": "வணக்கம்",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "ta",
+            "error": null,
+            "expected_voice": "ta",
+            "ipa": "vˈʌɳʌkkʌm",
+            "mapped": true,
+            "phonemes": [
+              "v",
+              "ʌ",
+              "ɳ",
+              "ʌ",
+              "k",
+              "k",
+              "ʌ",
+              "m"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "ta",
+            "success": true,
+            "text": "வணக்கம்",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "ta",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "vi",
+              "error": null,
+              "expected_voice": "vi",
+              "ipa": "tʃˈaː2w",
+              "mapped": true,
+              "phonemes": [
+                "tʃ",
+                "a",
+                "2",
+                "w"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "vi-VN",
+              "success": true,
+              "text": "chào",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "vi",
+            "error": null,
+            "expected_voice": "vi",
+            "ipa": "tʃˈaː2w",
+            "mapped": true,
+            "phonemes": [
+              "tʃ",
+              "a",
+              "2",
+              "w"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "vi",
+            "success": true,
+            "text": "chào",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "vi",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        },
+        {
+          "aliases": [
+            {
+              "actual_voice": "ko",
+              "error": null,
+              "expected_voice": "ko",
+              "ipa": "ˈɐnnjʌŋhˌɐsejˌo",
+              "mapped": true,
+              "phonemes": [
+                "ɐ",
+                "n",
+                "n",
+                "j",
+                "ʌ",
+                "ŋ",
+                "h",
+                "ɐ",
+                "s",
+                "e",
+                "j",
+                "o"
+              ],
+              "provider_confidence": 0.8,
+              "requested_locale": "ko-KR",
+              "success": true,
+              "text": "안녕하세요",
+              "voice_available": true,
+              "voice_listed": true
+            }
+          ],
+          "base": {
+            "actual_voice": "ko",
+            "error": null,
+            "expected_voice": "ko",
+            "ipa": "ˈɐnnjʌŋhˌɐsejˌo",
+            "mapped": true,
+            "phonemes": [
+              "ɐ",
+              "n",
+              "n",
+              "j",
+              "ʌ",
+              "ŋ",
+              "h",
+              "ɐ",
+              "s",
+              "e",
+              "j",
+              "o"
+            ],
+            "provider_confidence": 0.8,
+            "requested_locale": "ko",
+            "success": true,
+            "text": "안녕하세요",
+            "voice_available": true,
+            "voice_listed": true
+          },
+          "controls": [],
+          "controls_count_toward_success": false,
+          "error": null,
+          "locale": "ko",
+          "scope": "One short native-script sample; no complete script, vocabulary, dialect or linguistic accuracy claim.",
+          "success": true
+        }
+      ],
+      "planned_locales": 20,
+      "probed_locales": 20,
+      "purpose": "G2P runtime execution, mapping and nonempty-output audit; not linguistic accuracy, whole-script coverage, native-sound or audio validation.",
+      "schema_version": 1,
+      "skipped": false,
+      "success": true,
+      "successful_locales": 20,
+      "voice_listing_note": "Listing membership is informative only: official aliases such as en/zh may execute en-gb/cmn voices."
+    },
+    "direct_and_cargo_outputs_identical_before_final_override_change": true,
+    "final_execution": "Direct example binary rebuilt after the option-terminator guard; bypasses the Cargo runner."
+  },
+  "artifact_paths": {
+    "source_archive": "target/tools/espeak-audit/espeak-ng-4870adfa.tar.gz",
+    "raw_voices": "target/tools/espeak-audit/voices.txt",
+    "data_manifest": "target/tools/espeak-audit/data-sha256.txt",
+    "provider_probe_source": "target/tools/espeak-audit/probe/main.rs",
+    "override_probe_source": "target/tools/espeak-audit/probe/override.rs",
+    "guard_probe_source": "target/tools/espeak-audit/probe/guard.rs"
+  },
+  "source_scope_notes": {
+    "primary_source": "https://github.com/espeak-ng/espeak-ng/blob/1.52.0/docs/languages.md",
+    "ja": "Documented input: Hiragana and Katakana. Mixed Kanji probe contains character-name fallback and is partial.",
+    "ar": "Documented input: fully diacritized Arabic. Unvocalized probe is outside this upstream input scope even when execution succeeds."
+  },
+  "limitations": [
+    {
+      "language": "ja",
+      "observed": "Mixed Kanji/kana phrase causes English character-name announcements in upstream raw output. Cleaned IPA still pronounces those announcements; lowering confidence does not repair the reading.",
+      "controls": "Hiragana/Katakana controls returned IPA without language-switch markers.",
+      "upstream_documented_input": "Hiragana and Katakana syllabary."
+    },
+    {
+      "language": "ar",
+      "observed": "Unvocalized Arabic phrase yields IPA but is outside the upstream documented input restriction.",
+      "controls": "A fully vocalized phrase is retained separately.",
+      "upstream_documented_input": "Fully diacritized Arabic."
+    },
+    {
+      "language": "all",
+      "observed": "No native/acoustic gold was evaluated. Nonempty IPA and successful process exit establish execution, not correct pronunciation. Regional tags route to curated family voices, not certified regional accents."
+    }
+  ],
+  "forced_voice_contrasts": {
+    "configured_voice": "es-419",
+    "instance_capability_languages": [
+      "es"
+    ],
+    "probes": [
+      {
+        "requested_language": "es-MX",
+        "voice_selected": "es-419",
+        "actual_voice": "es-419",
+        "provider_confidence": 0.8,
+        "source": "La casa es pequeña.",
+        "ipa": "la kˈasa ˈes pekˈeɲa",
+        "error": null
+      },
+      {
+        "requested_language": "fr",
+        "voice_selected": "es-419",
+        "actual_voice": "es-419",
+        "provider_confidence": 0.5,
+        "source": "La maison est petite.",
+        "ipa": "la mˈaɪson ˈest petˈite",
+        "error": null
+      }
+    ],
+    "scope_note": "A forced voice overrides mapped requests. Only the Spanish family is advertised; a French request still uses the forced voice with reduced confidence, not French pronunciation support."
+  },
+  "artifact_sha256": {
+    "raw_voices": "351602903b45b44b88a19fc3ea702da186e764b4b027feff6a1dc86241c7c1ae",
+    "raw_cli_probes": "88ea0de4303e1e8e8ca386cc3faf9aae36bf5dc00cff649573ee5abe687e7472",
+    "final_provider_tsv": "c6f8968959c56fa1e5aeb5006ee090e9f9b9b723fd3faa1bc568bf7819aa9efb",
+    "override_tsv": "31a65c4a5f5f238a37ab6c49db5f7823bf8646f1d0698edf1666669f7878f944",
+    "phrase_probe_source": "644628491f66752f32306b7e2ceeb72a5b303b74b8ca6d5edd33d862b7f3fbc9",
+    "override_probe_source": "43117fa910c6ddc63e68ebeb57843538df8719d12aadbfab2fea9db9aaa268eb",
+    "public_example_output": "31ece864e89c60c1ff7a0e5e8b8be05be45b1d273513e91776dde111f1cb38ab",
+    "guard_probe_source": "3c5b4217b25de565d766c26c928a1f4ef1f6f47ae79c5aa6bde2ecdf53a28e44",
+    "negative_literal_tsv": "5571ca9eef37562de2d514180ed9cac0a4053f78c493c5b4175aad105c316dec"
+  },
+  "negative_literal_input_checks": {
+    "scope": "Leading-hyphen source text is one argv item after --; no shell is involved. This is option separation, not pronunciation quality validation.",
+    "checks": [
+      {
+        "source": "--help",
+        "language": "en",
+        "without_terminator": {
+          "argv": [
+            "-q",
+            "--ipa=3",
+            "-v",
+            "en",
+            "--help"
+          ],
+          "exit_code": 0,
+          "stdout": "\neSpeak NG text-to-speech: 1.52.0  Data at: /home/meme/Documentos/GitHub/textintel/target/tools/espeak-audit/install/share/espeak-ng-data\n\nespeak-ng [options] [\"<words>\"]\n\n-f <text file>   Text file to speak\n--stdin    Read text input from stdin at once till to the end of a stream.\n\nIf neither -f nor --stdin are provided, then <words> from arguments are spoken,\nor text is spoken from stdin, read separately one line by line at a time.\n\n-a <integer>\n\t   Amplitude, 0 to 200, default is 100\n-d <device>\n\t   Use the specified device to speak the audio on. If not specified, the\n\t   default audio device is used.\n-g <integer>\n\t   Word gap. Pause between words, units of 10mS at the default speed\n-k <integer>\n\t   Indicate capital letters with: 1=sound, 2=the word \"capitals\",\n\t   higher values indicate a pitch increase (try -k20).\n-l <integer>\n\t   Line length. If not zero (which is the default), consider\n\t   lines less than this length as end-of-clause\n-p <integer>\n\t   Pitch adjustment, 0 to 99, default is 50\n-P <integer>\n\t   Pitch range adjustment, 0 to 99, default is 50\n-s <integer>\n\t   Speed in approximate words per minute. The default is 175\n-v <voice name>\n\t   Use voice file of this name from espeak-ng-data/voices\n-w <wave file name>\n\t   Write speech to this WAV file, rather than speaking it directly\n-b\t   Input text encoding, 1=UTF8, 2=8 bit, 4=16 bit \n-m\t   Interpret SSML markup, and ignore other < > tags\n--ssml-break=<percentage>\n\t   Set SSML break time multiplier, default is 100\n-q\t   Quiet, don't produce any speech (may be useful with -x)\n-x\t   Write phoneme mnemonics to stdout\n-X\t   Write phonemes mnemonics and translation trace to stdout\n-z\t   No final sentence pause at the end of the text\n-D\t   Enable deterministic random mode\n--compile=<voice name>\n\t   Compile pronunciation rules and dictionary from the current\n\t   directory. <voice name> specifies the language\n--compile-debug=<voice name>\n\t   Compile pronunciation rules and dictionary from the current\n\t   directory, including line numbers for use with -X.\n\t   <voice name> specifies the language\n--compile-intonations\n\t   Compile the intonation data\n--compile-phonemes=<phsource-dir>\n\t   Compile the phoneme data using <phsource-dir> or the default phsource directory\n--ipa      Write phonemes to stdout using International Phonetic Alphabet\n--path=\"<path>\"\n\t   Specifies the directory containing the espeak-ng-data directory\n--pho      Write mbrola phoneme data (.pho) to stdout or to the file in --phonout\n--phonout=\"<filename>\"\n\t   Write phoneme output from -x -X --ipa and --pho to this file\n--punct=\"<characters>\"\n\t   Speak the names of punctuation characters during speaking.  If\n\t   =<characters> is omitted, all punctuation is spoken.\n--sep=<character>\n\t   Separate phonemes (from -x --ipa) with <character>.\n\t   Default is space, z means ZWJN character.\n--split=<minutes>\n\t   Starts a new WAV file every <minutes>.  Used with -w\n--stdout   Write speech output to stdout\n--tie=<character>\n\t   Use a tie character within multi-letter phoneme names.\n\t   Default is U+361, z means ZWJ character.\n--version  Shows version number and date, and location of espeak-ng-data\n--voices=<language>\n\t   List the available voices for the specified language.\n\t   If <language> is omitted, then list all voices.\n--load     Load voice from a file in current directory by name.\n-h, --help Show this help.\n",
+          "stderr": "",
+          "observed_problem": "help text returned instead of IPA"
+        },
+        "with_terminator": {
+          "argv": [
+            "-q",
+            "--ipa=3",
+            "-v",
+            "en",
+            "--",
+            "--help"
+          ],
+          "exit_code": 0,
+          "stdout": "hˈɛlp\n",
+          "stderr": ""
+        },
+        "api": {
+          "method": "EspeakNgG2PProvider::with_binary(...).phonemize(source, \"en\")",
+          "source_preserved": true,
+          "matches_terminated_cli_ipa": true,
+          "voice": "en",
+          "provider_confidence": 0.8,
+          "phoneme_count": 4,
+          "ipa": "hˈɛlp",
+          "error": null
+        }
+      },
+      {
+        "source": "-12",
+        "language": "en",
+        "without_terminator": {
+          "argv": [
+            "-q",
+            "--ipa=3",
+            "-v",
+            "en",
+            "-12"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "/home/meme/Documentos/GitHub/textintel/target/tools/espeak-audit/install/bin/espeak-ng: invalid option -- '1'\n",
+          "observed_problem": "empty output and invalid option diagnostic despite exit zero"
+        },
+        "with_terminator": {
+          "argv": [
+            "-q",
+            "--ipa=3",
+            "-v",
+            "en",
+            "--",
+            "-12"
+          ],
+          "exit_code": 0,
+          "stdout": "mˈa‍ɪnəs twˈɛlv\n",
+          "stderr": ""
+        },
+        "api": {
+          "method": "EspeakNgG2PProvider::with_binary(...).phonemize(source, \"en\")",
+          "source_preserved": true,
+          "matches_terminated_cli_ipa": true,
+          "voice": "en",
+          "provider_confidence": 0.8,
+          "phoneme_count": 10,
+          "ipa": "mˈaɪnəs twˈɛlv",
+          "error": null
+        }
+      },
+      {
+        "source": "-vfr",
+        "language": "en",
+        "without_terminator": {
+          "argv": [
+            "-q",
+            "--ipa=3",
+            "-v",
+            "en",
+            "-vfr"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "observed_problem": "text consumed as voice-option syntax, leaving empty output"
+        },
+        "with_terminator": {
+          "argv": [
+            "-q",
+            "--ipa=3",
+            "-v",
+            "en",
+            "--",
+            "-vfr"
+          ],
+          "exit_code": 0,
+          "stdout": "vˌiːˌɛfˈɑː\n",
+          "stderr": ""
+        },
+        "api": {
+          "method": "EspeakNgG2PProvider::with_binary(...).phonemize(source, \"en\")",
+          "source_preserved": true,
+          "matches_terminated_cli_ipa": true,
+          "voice": "en",
+          "provider_confidence": 0.8,
+          "phoneme_count": 5,
+          "ipa": "vˌiːˌɛfˈɑː",
+          "error": null
+        }
+      }
+    ],
+    "helper_source": "target/tools/espeak-audit/probe/guard.rs",
+    "helper_source_sha256": "3c5b4217b25de565d766c26c928a1f4ef1f6f47ae79c5aa6bde2ecdf53a28e44"
+  }
+}

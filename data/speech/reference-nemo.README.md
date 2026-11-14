@@ -71,7 +71,7 @@ Category totals: number 120, date 106, currency 109, time 99, measure 110.
 The other eight supported locales have no matching fixture files at this pinned
 revision and are not represented here.
 
-## Explicit interpretation policy
+## Original automatic-comparison policy
 
 Every case uses `date_order: "reject_ambiguous"`; the language alone does not
 choose a regional interpretation of numeric dates. Decimal separators are
@@ -80,6 +80,28 @@ settings were chosen before evaluation and are recorded in the source metadata.
 They describe this comparison configuration, not every regional convention.
 An upstream fixture that assumes a different interpretation can therefore expose
 a deliberate policy difference.
+
+## Reviewed comparison policy and variants
+
+[`reference-policy.json`](reference-policy.json) is a separate, explicit
+application policy added while implementing the revealed formats. It selects
+natural/orthographic rendering, category-derived interpretation hints, source
+locale date conventions, currency-symbol assignments and one Arabic unit alias.
+Run this policy and the original automatic mode separately; their scores do not
+measure the same inference task. Neither the case strings nor original spoken
+alternatives were changed.
+
+The evaluator reports literal agreement and bounded reviewed variants as separate
+counts. Named variant rules operate on validated typed values and preserve
+numbers, signs, units, precision, qualifiers and surrounding prose. Invalid dates,
+misspellings and unreviewed differences remain failures. `--accept-variants`
+changes the exit gate, not the original-gold report. See the
+[case-by-case review](../../docs/SPEECH-REFERENCE-REVIEW.md) and
+[current coverage snapshot](../../docs/COVERAGE.md).
+
+This sample has now guided implementation and rule review. Its independent
+upstream origin does **not** make the current results held-out accuracy.
+Unseen, independently reviewed application text is still needed for that claim.
 
 ## Reproducing and checking the sample
 

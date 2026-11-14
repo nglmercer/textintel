@@ -309,11 +309,11 @@ fn resource_loader_indexes_seed_languages_and_supports_custom_packs() {
     assert_eq!(
         loader.languages(),
         vec![
-            "ar", "de", "en", "es", "fr", "hi", "id", "it", "ja", "ko", "nl", "pl", "pt", "ru",
-            "tr", "zh"
+            "ar", "bn", "de", "en", "es", "fr", "hi", "id", "it", "ja", "ko", "mr", "nl", "pa",
+            "pl", "pt", "ru", "ta", "te", "tr", "ur", "vi", "zh"
         ]
     );
-    assert!(loader.language_count() == 16);
+    assert_eq!(loader.language_count(), 23);
     assert!(loader.word_count() > 100);
     assert!(loader.contains_in_language("A", "en"));
     assert!(loader.contains_in_language("ejemplo", "es"));
@@ -323,7 +323,8 @@ fn resource_loader_indexes_seed_languages_and_supports_custom_packs() {
             .contains(&"en".to_string())
     );
     let resource_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources");
-    let from_disk = ResourceLoader::from_resource_root(resource_root).unwrap();
+    let mut from_disk = ResourceLoader::from_resource_root(resource_root).unwrap();
+    from_disk.add_speech_resources().unwrap();
     assert_eq!(from_disk.languages(), loader.languages());
     assert_eq!(from_disk.symbol_count(), loader.symbol_count());
 

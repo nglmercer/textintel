@@ -58,6 +58,12 @@ impl SpeechCorpus {
                     || !matches!(
                         span.kind.as_str(),
                         "number"
+                            | "labelled_number"
+                            | "scientific"
+                            | "fraction"
+                            | "range"
+                            | "ordinal"
+                            | "duration"
                             | "date"
                             | "time"
                             | "currency"
@@ -65,6 +71,7 @@ impl SpeechCorpus {
                             | "measure"
                             | "identifier"
                             | "ambiguous"
+                            | "invalid_date"
                     )
                 {
                     return Err(invalid(format!("invalid gold span in {}", case.id)));
@@ -82,6 +89,10 @@ pub struct SpeechSliceMetrics {
     pub parse_exact: usize,
     pub spoken_cases: usize,
     pub spoken_exact: usize,
+    #[serde(default)]
+    pub spoken_variant: usize,
+    #[serde(default)]
+    pub spoken_accepted: usize,
     pub fully_supported: usize,
     pub expected_spans: usize,
     pub predicted_spans: usize,
@@ -101,16 +112,137 @@ impl SpeechSliceMetrics {
 fn ratio(n: usize, d: usize) -> f64 {
     if d == 0 { 0.0 } else { n as f64 / d as f64 }
 }
+/// Explicit evaluation conventions, kept separate from immutable reference gold.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct SpeechEvaluationPolicy {
+    pub reading_style: Option<ReadingStyle>,
+    pub number_notation: Option<NumberNotation>,
+    pub currency_naming: Option<CurrencyNaming>,
+    pub clock_policy: Option<ClockPolicy>,
+    pub invalid_date_policy: Option<InvalidDatePolicy>,
+    /// Use the caller-supplied corpus category as a semantic say-as hint.
+    pub category_hints: bool,
+    pub locales: BTreeMap<String, SpeechLocaleEvaluationPolicy>,
+}
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct SpeechLocaleEvaluationPolicy {
+    pub infer_decimal_separator: bool,
+    pub date_order: Option<DateOrder>,
+    pub decimal_separator: Option<char>,
+    pub currency_symbols: BTreeMap<String, String>,
+    pub unit_aliases: BTreeMap<String, String>,
+}
+impl SpeechEvaluationPolicy {
+    pub fn validate(&self) -> Result<(), TextIntelError> {
+        for (code, local) in &self.locales {
+            let locale = code
+                .parse::<SpeechLocale>()
+                .map_err(TextIntelError::InvalidConfiguration)?;
+            if locale.code() != code {
+                return Err(TextIntelError::InvalidConfiguration(
+                    "evaluation locale keys must be canonical base-language codes".into(),
+                ));
+            }
+            let mut options = SpeechOptions::new(locale);
+            options.decimal_separator = local.decimal_separator;
+            options.currency_symbols = local.currency_symbols.clone();
+            options.unit_aliases = local.unit_aliases.clone();
+            options.validate()?;
+        }
+        Ok(())
+    }
+}
+/// Identical inputs/options whose reference outputs have no common alternative.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SpeechReferenceConflict {
+    pub locale: SpeechLocale,
+    pub text: String,
+    pub case_ids: Vec<String>,
+    pub unavoidable_exact_failures: usize,
+}
+impl SpeechCorpus {
+    /// Audit contradictory spoken gold without dropping or rewriting any cases.
+    pub fn reference_conflicts(&self) -> Vec<SpeechReferenceConflict> {
+        self.reference_conflicts_with_policy(&SpeechEvaluationPolicy::default())
+    }
+    pub fn reference_conflicts_with_policy(
+        &self,
+        policy: &SpeechEvaluationPolicy,
+    ) -> Vec<SpeechReferenceConflict> {
+        let mut groups: BTreeMap<String, Vec<&SpeechCase>> = BTreeMap::new();
+        for case in self.cases.iter().filter(|c| !c.spoken.is_empty()) {
+            let key = serde_json::to_string(&(&case.text, options_for_case(case, policy)))
+                .expect("serializable reference fields");
+            groups.entry(key).or_default().push(case);
+        }
+        let mut conflicts = Vec::new();
+        for cases in groups.values().filter(|v| v.len() > 1) {
+            let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
+            for case in cases {
+                let alternatives: std::collections::BTreeSet<_> =
+                    case.spoken.iter().map(String::as_str).collect();
+                for alternative in alternatives {
+                    *counts.entry(alternative).or_default() += 1;
+                }
+            }
+            let best = counts.values().max().copied().unwrap_or(0);
+            if best < cases.len() {
+                conflicts.push(SpeechReferenceConflict {
+                    locale: cases[0].locale,
+                    text: cases[0].text.clone(),
+                    case_ids: cases.iter().map(|c| c.id.clone()).collect(),
+                    unavoidable_exact_failures: cases.len() - best,
+                });
+            }
+        }
+        conflicts
+    }
+}
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SpeechFailure {
     pub id: String,
+    pub locale: SpeechLocale,
+    pub category: String,
+    pub expected_spoken: Vec<String>,
     pub expected: Option<Vec<ExpectedSpeechSpan>>,
     pub predicted: Vec<ExpectedSpeechSpan>,
     pub spoken: Option<String>,
     pub error: Option<String>,
 }
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SpeechVariantAcceptance {
+    pub id: String,
+    pub reference: String,
+    pub rules: Vec<String>,
+}
+/// A retained source diagnostic, including literal readings that generated
+/// speech successfully. Rendering support does not imply calendar validity.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct SpeechCaseDiagnostic {
+    pub case_id: String,
+    pub locale: SpeechLocale,
+    pub kind: String,
+    pub start: usize,
+    pub end: usize,
+    pub source: String,
+    pub spoken: String,
+    pub reading_supported: bool,
+    pub reason: String,
+}
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SpeechEvalReport {
+    #[serde(default)]
+    pub policy: SpeechEvaluationPolicy,
+    #[serde(default)]
+    pub reference_conflicts: Vec<SpeechReferenceConflict>,
+    #[serde(default)]
+    pub exact_spoken_ceiling: usize,
+    #[serde(default)]
+    pub variant_matches: Vec<SpeechVariantAcceptance>,
+    #[serde(default)]
+    pub variants_by_rule: BTreeMap<String, usize>,
     pub corpus_version: String,
     pub purpose: String,
     pub totals: SpeechSliceMetrics,
@@ -118,10 +250,19 @@ pub struct SpeechEvalReport {
     pub by_category: BTreeMap<String, SpeechSliceMetrics>,
     pub failures: Vec<SpeechFailure>,
     pub unresolved_by_reason: BTreeMap<String, usize>,
+    #[serde(default)]
+    pub diagnostics: Vec<SpeechCaseDiagnostic>,
+    #[serde(default)]
+    pub diagnostics_by_reason: BTreeMap<String, usize>,
 }
 pub fn speech_kind(value: &SpeechValue) -> &'static str {
     match value {
         SpeechValue::Text => "text",
+        SpeechValue::InflectedNumber { .. } => "number",
+        SpeechValue::MeasuredExpression { .. } => "measure",
+        SpeechValue::LabelledNumber { .. } => "labelled_number",
+        SpeechValue::Expression { value } => super::expressions::kind(value),
+        SpeechValue::Temporal { value } => super::temporal::kind(value),
         SpeechValue::Number { .. } => "number",
         SpeechValue::Date { .. } => "date",
         SpeechValue::Time { .. } => "time",
@@ -132,10 +273,73 @@ pub fn speech_kind(value: &SpeechValue) -> &'static str {
         SpeechValue::Ambiguous { .. } => "ambiguous",
     }
 }
+fn options_for_case(case: &SpeechCase, policy: &SpeechEvaluationPolicy) -> SpeechOptions {
+    let mut options = SpeechOptions::new(case.locale);
+    options.date_order = case.date_order;
+    options.decimal_separator = case.decimal_separator;
+    if let Some(style) = policy.reading_style {
+        options.reading_style = style;
+    }
+    if let Some(notation) = policy.number_notation {
+        options.number_notation = notation;
+    }
+    if let Some(naming) = policy.currency_naming {
+        options.currency_naming = naming;
+    }
+    if let Some(clock_policy) = policy.clock_policy {
+        options.clock_policy = clock_policy;
+    }
+    if let Some(invalid_date_policy) = policy.invalid_date_policy {
+        options.invalid_date_policy = invalid_date_policy;
+    }
+    if policy.category_hints {
+        options.interpret_as = match case.category.as_str() {
+            "number" => SpeechInterpretation::Number,
+            "date" => SpeechInterpretation::Date,
+            "time" => SpeechInterpretation::Time,
+            "currency" => SpeechInterpretation::Currency,
+            "measure" => SpeechInterpretation::Measure,
+            _ => SpeechInterpretation::Auto,
+        };
+    }
+    if let Some(local) = policy.locales.get(case.locale.code()) {
+        if let Some(order) = local.date_order {
+            options.date_order = order;
+        }
+        if local.infer_decimal_separator {
+            options.decimal_separator = None;
+        }
+        if let Some(separator) = local.decimal_separator {
+            options.decimal_separator = Some(separator);
+        }
+        options.currency_symbols = local.currency_symbols.clone();
+        options.unit_aliases = local.unit_aliases.clone();
+    }
+    options
+}
 /// Evaluate all fixtures, including unsupported and failed cases in denominators.
 pub fn evaluate_speech(corpus: &SpeechCorpus) -> Result<SpeechEvalReport, TextIntelError> {
+    evaluate_speech_with_policy(corpus, &SpeechEvaluationPolicy::default())
+}
+/// Evaluate under explicit shared rendering/source conventions, retaining all rows.
+pub fn evaluate_speech_with_policy(
+    corpus: &SpeechCorpus,
+    policy: &SpeechEvaluationPolicy,
+) -> Result<SpeechEvalReport, TextIntelError> {
     corpus.validate()?;
+    policy.validate()?;
+    let conflicts = corpus.reference_conflicts_with_policy(policy);
+    let ceiling = corpus.cases.iter().filter(|c| !c.spoken.is_empty()).count()
+        - conflicts
+            .iter()
+            .map(|c| c.unavoidable_exact_failures)
+            .sum::<usize>();
     let mut report = SpeechEvalReport {
+        policy: policy.clone(),
+        reference_conflicts: conflicts,
+        exact_spoken_ceiling: ceiling,
+        variant_matches: Vec::new(),
+        variants_by_rule: BTreeMap::new(),
         corpus_version: corpus.version.clone(),
         purpose: corpus.purpose.clone(),
         totals: Default::default(),
@@ -143,14 +347,15 @@ pub fn evaluate_speech(corpus: &SpeechCorpus) -> Result<SpeechEvalReport, TextIn
         by_category: BTreeMap::new(),
         failures: Vec::new(),
         unresolved_by_reason: BTreeMap::new(),
+        diagnostics: Vec::new(),
+        diagnostics_by_reason: BTreeMap::new(),
     };
     for case in &corpus.cases {
-        let mut options = SpeechOptions::new(case.locale);
-        options.date_order = case.date_order;
-        options.decimal_separator = case.decimal_separator;
+        let options = options_for_case(case, policy);
         let parsed = super::parser::parse_for_speech(&case.text, &options);
         let mut predicted = Vec::new();
         let mut spoken = None;
+        let mut variant = None;
         let mut fully_supported = false;
         let mut error = None;
         let mut parsed_ok = false;
@@ -168,18 +373,48 @@ pub fn evaluate_speech(corpus: &SpeechCorpus) -> Result<SpeechEvalReport, TextIn
                         kind: speech_kind(&s.value).into(),
                     })
                     .collect();
-                match super::verbalize::normalize_for_speech(&case.text, &options) {
+                match super::verbalize::verbalize_document_with_options(&doc, &options) {
                     Ok(result) => {
-                        for reading in result.readings.iter().filter(|r| !r.supported) {
-                            *report
-                                .unresolved_by_reason
-                                .entry(
-                                    reading
-                                        .reason
-                                        .clone()
-                                        .unwrap_or_else(|| "unsupported".into()),
+                        for (span, reading) in doc.spans.iter().zip(&result.readings) {
+                            if let Some(reason) = &reading.reason {
+                                *report
+                                    .diagnostics_by_reason
+                                    .entry(reason.clone())
+                                    .or_insert(0) += 1;
+                                report.diagnostics.push(SpeechCaseDiagnostic {
+                                    case_id: case.id.clone(),
+                                    locale: case.locale,
+                                    kind: speech_kind(&span.value).into(),
+                                    start: reading.start,
+                                    end: reading.end,
+                                    source: reading.source.clone(),
+                                    spoken: reading.spoken.clone(),
+                                    reading_supported: reading.supported,
+                                    reason: reason.clone(),
+                                });
+                            }
+                            if !reading.supported {
+                                *report
+                                    .unresolved_by_reason
+                                    .entry(
+                                        reading
+                                            .reason
+                                            .clone()
+                                            .unwrap_or_else(|| "unsupported".into()),
+                                    )
+                                    .or_insert(0) += 1;
+                            }
+                        }
+                        if result.fully_supported && !case.spoken.contains(&result.text) {
+                            variant = case.spoken.iter().find_map(|reference| {
+                                super::variants::compare_spoken(
+                                    &doc,
+                                    &options,
+                                    &result.text,
+                                    reference,
                                 )
-                                .or_insert(0) += 1;
+                                .map(|matched| (reference.clone(), matched))
+                            });
                         }
                         spoken = Some(result.text);
                         fully_supported = result.fully_supported;
@@ -212,6 +447,8 @@ pub fn evaluate_speech(corpus: &SpeechCorpus) -> Result<SpeechEvalReport, TextIn
             metrics.parse_exact += usize::from(parse_exact);
             metrics.spoken_cases += usize::from(!case.spoken.is_empty());
             metrics.spoken_exact += usize::from(spoken_exact);
+            metrics.spoken_variant += usize::from(variant.is_some());
+            metrics.spoken_accepted += usize::from(spoken_exact || variant.is_some());
             metrics.fully_supported += usize::from(fully_supported);
             if let Some(expected) = &case.expected_spans {
                 metrics.expected_spans += expected.len();
@@ -219,12 +456,25 @@ pub fn evaluate_speech(corpus: &SpeechCorpus) -> Result<SpeechEvalReport, TextIn
                 metrics.correct_spans += correct;
             }
         }
+        if let Some((reference, matched)) = variant {
+            for rule in &matched.rules {
+                *report.variants_by_rule.entry(rule.clone()).or_default() += 1;
+            }
+            report.variant_matches.push(SpeechVariantAcceptance {
+                id: case.id.clone(),
+                reference,
+                rules: matched.rules,
+            });
+        }
         if (case.expected_spans.is_some() && !parse_exact)
             || error.is_some()
             || (!case.spoken.is_empty() && !spoken_exact)
         {
             report.failures.push(SpeechFailure {
                 id: case.id.clone(),
+                locale: case.locale,
+                category: case.category.clone(),
+                expected_spoken: case.spoken.clone(),
                 expected: case.expected_spans.clone(),
                 predicted,
                 spoken,
@@ -233,4 +483,30 @@ pub fn evaluate_speech(corpus: &SpeechCorpus) -> Result<SpeechEvalReport, TextIn
         }
     }
     Ok(report)
+}
+
+impl SpeechEvalReport {
+    /// Select a gate explicitly; the original exact failure list is never hidden.
+    pub fn passes(&self, accept_reviewed_variants: bool) -> bool {
+        self.failures.iter().all(|failure| {
+            if failure.error.is_some()
+                || failure
+                    .expected
+                    .as_ref()
+                    .is_some_and(|expected| expected != &failure.predicted)
+            {
+                return false;
+            }
+            failure.expected_spoken.is_empty()
+                || failure
+                    .spoken
+                    .as_ref()
+                    .is_some_and(|spoken| failure.expected_spoken.contains(spoken))
+                || (accept_reviewed_variants
+                    && self
+                        .variant_matches
+                        .iter()
+                        .any(|matched| matched.id == failure.id))
+        })
+    }
 }

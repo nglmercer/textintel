@@ -1,7 +1,10 @@
 //! Explicit speech parsing, normalization, and corpus evaluation.
 use super::common::print_json;
 use textintel::cli::ParsedArgs;
-use textintel::speech::{DateOrder, SpeechLocale, SpeechOptions};
+use textintel::speech::{
+    ClockPolicy, CurrencyNaming, DateOrder, InvalidDatePolicy, NumberNotation, ReadingStyle,
+    SpeechInterpretation, SpeechLocale, SpeechOptions,
+};
 
 fn options(parsed: &ParsedArgs) -> Result<SpeechOptions, Box<dyn std::error::Error>> {
     let locale: SpeechLocale = parsed.required_value("locale")?.parse()?;
@@ -9,8 +12,11 @@ fn options(parsed: &ParsedArgs) -> Result<SpeechOptions, Box<dyn std::error::Err
     options.date_order = match parsed.value("date-order").unwrap_or("reject") {
         "dmy" => DateOrder::DayMonthYear,
         "mdy" => DateOrder::MonthDayYear,
+        "ymd" => DateOrder::YearMonthDay,
         "reject" => DateOrder::RejectAmbiguous,
-        other => return Err(format!("unknown date order {other:?}; use dmy|mdy|reject").into()),
+        other => {
+            return Err(format!("unknown date order {other:?}; use dmy|mdy|ymd|reject").into());
+        }
     };
     options.decimal_separator = match parsed.value("decimal-separator") {
         None => None,
@@ -19,7 +25,58 @@ fn options(parsed: &ParsedArgs) -> Result<SpeechOptions, Box<dyn std::error::Err
         Some("٫" | "arabic") => Some('٫'),
         Some(other) => return Err(format!("unsupported decimal separator {other:?}").into()),
     };
+    if let Some(style) = parsed.value("reading-style") {
+        options.reading_style = ReadingStyle::parse(style)
+            .ok_or("unknown reading style; use precise|natural|digits")?;
+    }
+    if let Some(notation) = parsed.value("number-notation") {
+        options.number_notation = notation_option(notation)?;
+    }
+    if let Some(naming) = parsed.value("currency-naming") {
+        options.currency_naming = currency_naming_option(naming)?;
+    }
+    if let Some(clock_policy) = parsed.value("clock-policy") {
+        options.clock_policy = clock_policy_option(clock_policy)?;
+    }
+    if let Some(invalid_date_policy) = parsed.value("invalid-date-policy") {
+        options.invalid_date_policy = invalid_date_policy_option(invalid_date_policy)?;
+    }
+    if let Some(kind) = parsed.value("interpret-as") {
+        options.interpret_as = match kind {
+            "auto" => SpeechInterpretation::Auto,
+            "number" => SpeechInterpretation::Number,
+            "date" => SpeechInterpretation::Date,
+            "time" => SpeechInterpretation::Time,
+            "currency" => SpeechInterpretation::Currency,
+            "measure" => SpeechInterpretation::Measure,
+            "duration" => SpeechInterpretation::Duration,
+            _ => return Err("unknown semantic speech hint".into()),
+        };
+    }
+    if let Some(code) = parsed.value("currency") {
+        options.default_currency = Some(code.to_ascii_uppercase());
+    }
     Ok(options)
+}
+fn notation_option(value: &str) -> Result<NumberNotation, Box<dyn std::error::Error>> {
+    match value {
+        "phonetic" => Ok(NumberNotation::Phonetic),
+        "orthographic" => Ok(NumberNotation::Orthographic),
+        _ => Err("unknown number notation; use phonetic|orthographic".into()),
+    }
+}
+fn currency_naming_option(value: &str) -> Result<CurrencyNaming, Box<dyn std::error::Error>> {
+    CurrencyNaming::parse(value).ok_or_else(|| "unknown currency naming; use style|full".into())
+}
+fn clock_policy_option(value: &str) -> Result<ClockPolicy, Box<dyn std::error::Error>> {
+    ClockPolicy::parse(value)
+        .ok_or_else(|| "unknown clock policy; use strict|normalize-redundant-period".into())
+}
+fn invalid_date_policy_option(
+    value: &str,
+) -> Result<InvalidDatePolicy, Box<dyn std::error::Error>> {
+    InvalidDatePolicy::parse(value)
+        .ok_or_else(|| "unknown invalid date policy; use preserve|read-components".into())
 }
 pub fn parse(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> {
     let result =
@@ -63,7 +120,30 @@ pub fn evaluate(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> 
             .positional(0)
             .unwrap_or("data/speech/evaluation.json"),
     )?;
-    let result = textintel::speech::evaluation::evaluate_speech(&corpus)?;
+    let mut policy = if let Some(path) = parsed.value("speech-policy") {
+        serde_json::from_str(&std::fs::read_to_string(path)?)?
+    } else {
+        textintel::speech::evaluation::SpeechEvaluationPolicy::default()
+    };
+    if let Some(style) = parsed.value("reading-style") {
+        policy.reading_style = Some(
+            ReadingStyle::parse(style)
+                .ok_or("unknown reading style; use precise|natural|digits")?,
+        );
+    }
+    if let Some(notation) = parsed.value("number-notation") {
+        policy.number_notation = Some(notation_option(notation)?);
+    }
+    if let Some(naming) = parsed.value("currency-naming") {
+        policy.currency_naming = Some(currency_naming_option(naming)?);
+    }
+    if let Some(clock_policy) = parsed.value("clock-policy") {
+        policy.clock_policy = Some(clock_policy_option(clock_policy)?);
+    }
+    if let Some(invalid_date_policy) = parsed.value("invalid-date-policy") {
+        policy.invalid_date_policy = Some(invalid_date_policy_option(invalid_date_policy)?);
+    }
+    let result = textintel::speech::evaluation::evaluate_speech_with_policy(&corpus, &policy)?;
     if parsed.flag("json") {
         print_json(&result)?;
     } else {
@@ -76,6 +156,22 @@ pub fn evaluate(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> 
             result.totals.spoken_exact,
             result.totals.spoken_cases,
             result.totals.fully_supported
+        );
+        println!(
+            "spoken_variants={} accepted={}/{} reference_exact_ceiling={}",
+            result.totals.spoken_variant,
+            result.totals.spoken_accepted,
+            result.totals.spoken_cases,
+            result.exact_spoken_ceiling
+        );
+        println!(
+            "diagnostics={} supported_with_diagnostic={}",
+            result.diagnostics.len(),
+            result
+                .diagnostics
+                .iter()
+                .filter(|diagnostic| diagnostic.reading_supported)
+                .count()
         );
         for (locale, metrics) in &result.by_locale {
             println!(
@@ -91,5 +187,5 @@ pub fn evaluate(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> 
             eprintln!("failed: {}", failure.id);
         }
     }
-    Ok(i32::from(!result.failures.is_empty()))
+    Ok(i32::from(!result.passes(parsed.flag("accept-variants"))))
 }

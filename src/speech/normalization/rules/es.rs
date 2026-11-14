@@ -13,10 +13,14 @@
 //! (`21 casas`, `200 personas`) is preserved as ambiguous.
 
 use super::{
-    AbbrevContext, Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem,
-    OrdinalMarker, Unit,
+    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
+    Unit,
 };
 use crate::speech::normalization::{CoverageLevel, ReadingStyle};
+use crate::speech::{
+    numbers,
+    types::{NumberReading, NumberValue, SpeechLocale},
+};
 
 /// Spanish rule set.
 pub(crate) struct Spanish;
@@ -32,93 +36,6 @@ pub(crate) enum Form {
     Feminine,
 }
 
-const SMALL: [&str; 30] = [
-    "cero",
-    "uno",
-    "dos",
-    "tres",
-    "cuatro",
-    "cinco",
-    "seis",
-    "siete",
-    "ocho",
-    "nueve",
-    "diez",
-    "once",
-    "doce",
-    "trece",
-    "catorce",
-    "quince",
-    "dieciséis",
-    "diecisiete",
-    "dieciocho",
-    "diecinueve",
-    "veinte",
-    "veintiuno",
-    "veintidós",
-    "veintitrés",
-    "veinticuatro",
-    "veinticinco",
-    "veintiséis",
-    "veintisiete",
-    "veintiocho",
-    "veintinueve",
-];
-
-const TENS: [&str; 10] = [
-    "",
-    "",
-    "",
-    "treinta",
-    "cuarenta",
-    "cincuenta",
-    "sesenta",
-    "setenta",
-    "ochenta",
-    "noventa",
-];
-
-const HUNDREDS: [&str; 10] = [
-    "",
-    "ciento",
-    "doscientos",
-    "trescientos",
-    "cuatrocientos",
-    "quinientos",
-    "seiscientos",
-    "setecientos",
-    "ochocientos",
-    "novecientos",
-];
-
-const HUNDREDS_FEM: [&str; 10] = [
-    "",
-    "ciento",
-    "doscientas",
-    "trescientas",
-    "cuatrocientas",
-    "quinientas",
-    "seiscientas",
-    "setecientas",
-    "ochocientas",
-    "novecientas",
-];
-
-const MONTHS: [&str; 12] = [
-    "enero",
-    "febrero",
-    "marzo",
-    "abril",
-    "mayo",
-    "junio",
-    "julio",
-    "agosto",
-    "septiembre",
-    "octubre",
-    "noviembre",
-    "diciembre",
-];
-
 /// Function words after which a number keeps its standalone reading.
 const STANDALONE_FOLLOWERS: &[&str] = &[
     "a", "al", "como", "con", "cuando", "de", "del", "desde", "durante", "e", "el", "en", "entre",
@@ -127,103 +44,28 @@ const STANDALONE_FOLLOWERS: &[&str] = &[
     "sin", "sobre", "son", "su", "sus", "tras", "u", "y",
 ];
 
-fn below_100(n: u64, form: Form) -> String {
-    debug_assert!(n < 100);
-    match n {
-        1 => match form {
-            Form::Masculine => "uno",
-            Form::Apocope => "un",
-            Form::Feminine => "una",
-        }
-        .to_string(),
-        21 => match form {
-            Form::Masculine => "veintiuno",
-            Form::Apocope => "veintiún",
-            Form::Feminine => "veintiuna",
-        }
-        .to_string(),
-        0..30 => SMALL[n as usize].to_string(),
-        _ => {
-            let tens = TENS[(n / 10) as usize];
-            match n % 10 {
-                0 => tens.to_string(),
-                unit => format!("{tens} y {}", below_100(unit, form)),
-            }
-        }
-    }
-}
-
-fn below_1000(n: u64, form: Form) -> String {
-    debug_assert!(n < 1000);
-    if n == 100 {
-        return "cien".to_string();
-    }
-    let hundreds = (n / 100) as usize;
-    let rest = n % 100;
-    let mut parts: Vec<String> = Vec::with_capacity(2);
-    if hundreds > 0 {
-        let table = if form == Form::Feminine {
-            &HUNDREDS_FEM
-        } else {
-            &HUNDREDS
-        };
-        parts.push(table[hundreds].to_string());
-    }
-    if rest > 0 || hundreds == 0 {
-        parts.push(below_100(rest, form));
-    }
-    parts.join(" ")
-}
-
-/// `n < 1_000_000`, `n > 0`.
-fn below_million(n: u64, form: Form) -> String {
-    let thousands = n / 1000;
-    let rest = n % 1000;
-    let mut parts: Vec<String> = Vec::with_capacity(3);
-    if thousands == 1 {
-        parts.push("mil".to_string());
-    } else if thousands > 1 {
-        let multiplier_form = if form == Form::Feminine {
-            Form::Feminine
-        } else {
-            Form::Apocope
-        };
-        parts.push(below_1000(thousands, multiplier_form));
-        parts.push("mil".to_string());
-    }
-    if rest > 0 {
-        parts.push(below_1000(rest, form));
-    }
-    parts.join(" ")
-}
-
-/// Exact Spanish cardinal for `n <= 999_999_999_999_999` (long scale:
-/// `millón`, `mil millones`, `billón`).
+/// Exact Spanish cardinal; grammar selects a presentation form over the
+/// shared integer composition and lexicon rather than recomposing numbers.
 pub(crate) fn cardinal(n: u64, form: Form) -> String {
-    if n == 0 {
-        return "cero".to_string();
+    let value = NumberValue {
+        negative: false,
+        integer: n.to_string(),
+        fraction: None,
+    };
+    let words = match form {
+        Form::Feminine => {
+            numbers::verbalize_number_feminine(&value, SpeechLocale::Es, NumberReading::Cardinal)
+        }
+        Form::Masculine | Form::Apocope => {
+            numbers::verbalize_number(&value, SpeechLocale::Es, NumberReading::Cardinal)
+        }
     }
-    let billions = n / 1_000_000_000_000;
-    let millions = (n / 1_000_000) % 1_000_000;
-    let low = n % 1_000_000;
-    let mut parts: Vec<String> = Vec::with_capacity(4);
-    if billions == 1 {
-        parts.push("un billón".to_string());
-    } else if billions > 1 {
-        parts.push(format!("{} billones", below_1000(billions, Form::Apocope)));
+    .expect("normalization cardinal range is checked before rendering");
+    if form == Form::Apocope {
+        numbers::spanish_apocope(&words)
+    } else {
+        words
     }
-    if millions == 1 {
-        parts.push("un millón".to_string());
-    } else if millions > 1 {
-        parts.push(format!(
-            "{} millones",
-            below_million(millions, Form::Apocope)
-        ));
-    }
-    if low > 0 {
-        parts.push(below_million(low, form));
-    }
-    parts.join(" ")
 }
 
 /// `true` when a noun after `n` must be introduced by `de`
@@ -233,7 +75,7 @@ fn needs_de(n: u64) -> bool {
 }
 
 fn digit_word(d: u8) -> &'static str {
-    SMALL[usize::from(d - b'0')]
+    numbers::digit_word(d - b'0', SpeechLocale::Es).expect("validated decimal digit")
 }
 
 /// Fractional part: one digit or two digits without a leading zero are read
@@ -243,7 +85,7 @@ fn fraction_words(frac: &str) -> String {
     let bytes = frac.as_bytes();
     if bytes.len() == 1 || (bytes.len() == 2 && bytes[0] != b'0') {
         let value = frac.parse::<u64>().unwrap_or(0);
-        return below_100(value, Form::Masculine);
+        return cardinal(value, Form::Masculine);
     }
     bytes
         .iter()
@@ -468,13 +310,7 @@ impl LanguageRules for Spanish {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        matches!(locale, "es-ES" | "es-MX" | "es-PE").then_some(Conventions {
-            decimal: ',',
-            group: '.',
-            separators_unambiguous: false,
-            date_order: DateOrder::DayMonth,
-            dollar: None,
-        })
+        Conventions::for_locale("es", locale)
     }
 
     fn number(&self, amount: &Amount, _locale: &str) -> Option<String> {
@@ -574,7 +410,7 @@ impl LanguageRules for Spanish {
     }
 
     fn date(&self, year: u32, month: u32, day: u32, _locale: &str) -> Option<String> {
-        let month_name = MONTHS.get(month.checked_sub(1)? as usize)?;
+        let month_name = crate::speech::lexicons::month(SpeechLocale::Es, month)?;
         let day_words = if day == 1 {
             "primero".to_string()
         } else {

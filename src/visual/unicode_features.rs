@@ -1,3 +1,4 @@
+use crate::core::unicode::{is_combining_mark, is_generic_diacritic};
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::core::types::UnicodeFeatures;
@@ -27,15 +28,6 @@ fn is_joiner(ch: char) -> bool {
 
 fn is_full_width(ch: char) -> bool {
     matches!(ch as u32, 0xff01..=0xff60 | 0xffe0..=0xffee)
-}
-
-fn is_combining_mark(ch: char) -> bool {
-    let code = ch as u32;
-    (0x0300..=0x036f).contains(&code)
-        || (0x1ab0..=0x1aff).contains(&code)
-        || (0x1dc0..=0x1dff).contains(&code)
-        || (0x20d0..=0x20ff).contains(&code)
-        || (0xfe20..=0xfe2f).contains(&code)
 }
 
 fn is_invisible(ch: char) -> bool {
@@ -128,7 +120,8 @@ pub fn analyze_unicode(text: &str) -> UnicodeFeatures {
     suspicious += (invisible_characters.len() as f64 * 0.1).min(0.3);
     suspicious += (unusual_whitespace.len() as f64 * 0.05).min(0.2);
     suspicious += (bidirectional_controls.len() as f64 * 0.25).min(0.5);
-    if !combining_characters.is_empty() {
+    // Native script marks are ordinary orthography, not an extra spoof signal.
+    if text.chars().any(is_generic_diacritic) {
         suspicious += 0.05;
     }
     suspicious += (variation_selectors.len() as f64 * 0.02).min(0.1);

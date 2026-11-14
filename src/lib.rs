@@ -107,8 +107,9 @@ pub use transliteration::{
 };
 
 pub use speech::{
-    DateOrder, NumberReading, NumberValue, SpeechDocument, SpeechLocale, SpeechNormalization,
-    SpeechOptions, SpeechReading, SpeechSpan, SpeechValue, parse_for_speech,
+    ClockPolicy, CurrencyNaming, DateOrder, InvalidDatePolicy, NumberNotation, NumberReading,
+    NumberValue, ReadingStyle, SpeechDocument, SpeechInterpretation, SpeechLocale,
+    SpeechNormalization, SpeechOptions, SpeechReading, SpeechSpan, SpeechValue, parse_for_speech,
 };
 
-pub use speech::{normalize_for_speech, verbalize_document};
+pub use speech::{normalize_for_speech, verbalize_document, verbalize_document_with_options};

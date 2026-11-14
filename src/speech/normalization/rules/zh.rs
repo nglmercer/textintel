@@ -28,35 +28,30 @@
 //! convention; when both day/month readings are valid under an explicit
 //! locale, month/day is used.
 
-use super::{Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem, Unit};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, Unit};
 use crate::speech::normalization::CoverageLevel;
+use crate::speech::numbers;
 
 /// Chinese rule set.
 pub(crate) struct Chinese;
 
-const DIGITS: [char; 10] = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-const PLACES: [char; 4] = ['千', '百', '十', '\0'];
-
 /// Script-dependent characters.
 struct Script {
-    wan: &'static str,
-    yi: &'static str,
+    traditional: bool,
     point: &'static str,
     negative: &'static str,
     two: &'static str,
 }
 
 const SIMPLIFIED: Script = Script {
-    wan: "万",
-    yi: "亿",
+    traditional: false,
     point: "点",
     negative: "负",
     two: "两",
 };
 
 const TRADITIONAL: Script = Script {
-    wan: "萬",
-    yi: "億",
+    traditional: true,
     point: "點",
     negative: "負",
     two: "兩",
@@ -88,71 +83,13 @@ fn is_cjk_letter(c: char) -> bool {
     )
 }
 
-/// One section `1..=9999`. `leading`: the section starts the number, so
-/// 10..=19 drop the leading `一` (`十五`).
-fn section(n: u64, leading: bool, out: &mut String) {
-    let digits = [n / 1000, (n / 100) % 10, (n / 10) % 10, n % 10];
-    let mut started = false;
-    let mut zero_pending = false;
-    for (i, d) in digits.into_iter().enumerate() {
-        if d == 0 {
-            if started {
-                zero_pending = true;
-            }
-            continue;
-        }
-        if zero_pending {
-            out.push('零');
-            zero_pending = false;
-        }
-        if !(leading && !started && i == 2 && d == 1) {
-            out.push(DIGITS[d as usize]);
-        }
-        if PLACES[i] != '\0' {
-            out.push(PLACES[i]);
-        }
-        started = true;
-    }
-}
-
-/// Exact Hanzi cardinal for `n <= 999_999_999_999_999`.
+/// Shared Hanzi composition with an explicit script presentation.
 fn cardinal(n: u64, script: &Script) -> String {
-    if n == 0 {
-        return "零".to_string();
-    }
-    let sections = [
-        n % 10_000,
-        (n / 10_000) % 10_000,
-        (n / 100_000_000) % 10_000,
-        (n / 1_000_000_000_000) % 10_000,
-    ];
-    let units = ["", script.wan, script.yi, ""];
-    let mut out = String::new();
-    let mut first = true;
-    let mut gap = false;
-    for idx in (0..4).rev() {
-        let value = sections[idx];
-        if value == 0 {
-            if !first {
-                gap = true;
-            }
-            continue;
-        }
-        if !first && (gap || value < 1000) {
-            out.push('零');
-        }
-        section(value, first, &mut out);
-        if idx == 3 {
-            // 10^12: 万亿 / 萬億.
-            out.push_str(script.wan);
-            out.push_str(script.yi);
-        } else {
-            out.push_str(units[idx]);
-        }
-        first = false;
-        gap = false;
-    }
-    out
+    numbers::chinese_cardinal(n, script.traditional)
+        .expect("normalization cardinal range is checked")
+}
+fn digit_word(digit: u8) -> &'static str {
+    numbers::cjk_digit_word(digit).expect("validated digit")
 }
 
 /// Cardinal before a currency or a measure: exactly two is `两`.
@@ -165,10 +102,7 @@ fn counted(n: u64, script: &Script) -> String {
 }
 
 fn digits_words(digits: &str) -> String {
-    digits
-        .bytes()
-        .map(|d| DIGITS[usize::from(d - b'0')])
-        .collect()
+    digits.bytes().map(|d| digit_word(d - b'0')).collect()
 }
 
 /// Unsigned reading (`三点一四`).
@@ -211,13 +145,7 @@ impl LanguageRules for Chinese {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        matches!(locale, "zh-CN" | "zh-TW").then_some(Conventions {
-            decimal: '.',
-            group: ',',
-            separators_unambiguous: true,
-            date_order: DateOrder::MonthDay,
-            dollar: None,
-        })
+        Conventions::for_locale("zh", locale)
     }
 
     fn number(&self, amount: &Amount, locale: &str) -> Option<String> {
@@ -231,7 +159,7 @@ impl LanguageRules for Chinese {
         Some(
             digits
                 .bytes()
-                .map(|digit| DIGITS[usize::from(digit - b'0')].to_string())
+                .map(|digit| digit_word(digit - b'0').to_string())
                 .collect(),
         )
     }
@@ -345,7 +273,7 @@ impl LanguageRules for Chinese {
             0 => {}
             1..=9 => {
                 out.push('零');
-                out.push(DIGITS[minute as usize]);
+                out.push_str(digit_word(minute as u8));
                 out.push('分');
             }
             _ => {

@@ -15,8 +15,8 @@
 //! `21 case`) is preserved as ambiguous (un/uno/una).
 
 use super::{
-    AbbrevContext, Amount, Conventions, Currency, DateOrder, Feature, LanguageRules, Meridiem,
-    OrdinalMarker, Unit,
+    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
+    Unit,
 };
 use crate::speech::normalization::CoverageLevel;
 
@@ -293,13 +293,7 @@ impl LanguageRules for Italian {
     }
 
     fn conventions(&self, locale: &str) -> Option<Conventions> {
-        (locale == "it-IT").then_some(Conventions {
-            decimal: ',',
-            group: '.',
-            separators_unambiguous: false,
-            date_order: DateOrder::DayMonth,
-            dollar: None,
-        })
+        Conventions::for_locale("it", locale)
     }
 
     fn number(&self, amount: &Amount, _locale: &str) -> Option<String> {

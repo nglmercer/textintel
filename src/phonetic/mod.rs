@@ -14,3 +14,10 @@ pub use features::{articulatory_distance, feature_label};
 pub use g2p::{G2PProvider, NullG2PProvider, RuleBasedG2PProvider};
 pub use ipa::parse_ipa;
 pub use similarity::{phoneme_edit_distance, phonetic_similarity, weighted_phoneme_distance};
+
+/// Resolve a requested tag to its language family for provider lookup. Each
+/// provider still checks its own curated language set without claiming a
+/// regional dialect. The original tag remains available on the candidate.
+fn language_family(language: &str) -> &str {
+    language.trim().split(['-', '_']).next().unwrap_or("")
+}
