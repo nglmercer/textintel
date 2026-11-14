@@ -10,24 +10,33 @@ remain in every spoken denominator. The detailed snapshot is in
 | Evaluation mode | Exact | Additional variants | Exact + variants | Rendering completed |
 |---|---:|---:|---:|---:|
 | Original automatic policy, historical baseline | 156/544 (28.68%) | Not measured | Not measured | — |
-| Same automatic policy, current core | 216/544 (39.71%) | 78/544 | 294/544 (54.04%) | 454/544 |
-| Explicit natural/orthographic corpus policy | 464/544 (85.29%) | 47/544 | 511/544 (93.93%) | 540/544 |
-| Corpus policy + literal invalid-date components | 467/544 (85.85%) | 47/544 | 514/544 (94.49%) | 543/544 |
-| Corpus policy + literal dates + redundant clock normalization | 467/544 (85.85%) | 47/544 | 514/544 (94.49%) | 544/544 |
+| Same automatic policy, current core | 216/544 (39.71%) | 87/544 | 303/544 (55.70%) | 454/544 |
+| Explicit natural/orthographic corpus policy | 464/544 (85.29%) | 49/544 | 513/544 (94.30%) | 540/544 |
+| Corpus policy + literal invalid-date components | 467/544 (85.85%) | 49/544 | 516/544 (94.85%) | 543/544 |
+| Corpus policy + literal dates + redundant clock normalization | 467/544 (85.85%) | 49/544 | 516/544 (94.85%) | 544/544 |
 
 The corpus policy supplies category hints, date order, symbol meanings and one unit
 alias through [`reference-policy.json`](../data/speech/reference-policy.json).
 It is a different inference task from automatic parsing. This external sample
 has now guided development; its upstream origin does not make these results
 held-out accuracy or proof of correctness in all twenty languages.
+This selection covers twelve locales; `bn`, `ur`, `id`, `pa`, `mr`, `te`, `tr`
+and `ta` have no external cases in it. Most locales have only one complete
+spoken gold in the authored corpus. More independently reviewed application text
+is needed to estimate precision across the twenty-language TTS surface.
 
-The authored regression still passes **209/209 exact parses and 25/25 complete
-spoken golds**, including all 205 annotated spans. Its other cases have no spoken
-gold and are not counted as correct utterances. NeMo supplies no span annotations,
-so it cannot establish parser precision/recall. Its `fully_supported` count is
-540/544 under the unchanged reference policy, a rendering diagnostic rather than an accuracy measure.
+The authored regression matches the annotated spans in **209/209 cases**,
+including all 205 expected spans, and passes **25/25 complete spoken golds**.
+Its other cases have no spoken gold and are not counted as correct utterances.
+`parse_exact` compares annotated
+span offsets, source text and kind; its gold schema does not yet assert complete
+numeric, currency or temporal values. Dedicated Rust tests check many such
+values, but this corpus metric is not independent semantic-value accuracy.
+NeMo supplies no span annotations, so it cannot establish parser precision/recall.
+Its `fully_supported` count is 540/544 under the unchanged reference policy, a
+rendering diagnostic rather than an accuracy measure.
 An additional run with `--clock-policy normalize-redundant-period` completes
-541/544 renderings but still accepts 511/544 references. It normalizes `13:10pm`
+541/544 renderings but still accepts 513/544 references. It normalizes `13:10pm`
 to the same time as `1:10pm`; its spoken output still differs from the original
 Chinese reference. The default and checked-in reference policy remain Strict.
 
@@ -35,15 +44,15 @@ The last two rows also select `--invalid-date-policy read-components`. They
 read three impossible dates literally while retaining `invalid_date` values and
 diagnostics. Combining that with redundant clock normalization completes all
 544 renderings; it does not establish 544 correct calendar values or utterances.
-The combined report still has 30 unaccepted reference strings and three explicit
+The combined report still has 28 unaccepted reference strings and three explicit
 invalid-date diagnostics. These diagnostic records remain visible even for the
 three exact literal word matches. Invalid-date readings are excluded from
 variant equivalence. The original automatic policy and reference policy are
 unchanged; the new profiles answer a different transcription question.
 
 The [complete reference review](SPEECH-REFERENCE-REVIEW.md) retains all 80 strict
-mismatches, including the 47 accepted variants. The remaining 33 comprise sixteen
-reference spelling/grammar/pronunciation defects with evidence, ten unaccepted
+mismatches, including the 49 accepted variants. The remaining 31 comprise sixteen
+reference spelling/grammar/pronunciation defects with evidence, eight unaccepted
 Arabic register/agreement differences, three invalid calendar dates, and four
 wording or interpretation-domain disagreements. Adjudications do not add passes.
 Identical Russian `13:05` inputs with incompatible gold impose a literal ceiling
@@ -57,21 +66,21 @@ per file. The earlier cached report containing `/src/src/...` aliases was discar
 
 | Measurement | Covered / instrumented | Percent |
 |---|---:|---:|
-| Entire library and CLI, lines | 27,838 / 31,522 | 88.31% |
-| Entire library and CLI, functions | 2,739 / 3,122 | 87.73% |
-| Speech modules, lines | 14,478 / 15,427 | 93.85% |
+| Entire library and CLI, lines | 27,970 / 31,659 | 88.35% |
+| Entire library and CLI, functions | 2,743 / 3,126 | 87.75% |
+| Speech modules, lines | 14,611 / 15,564 | 93.88% |
 | Phonetic modules, lines | 994 / 1,073 | 92.64% |
 | eSpeak adapter, lines | 432 / 484 | 89.26% |
-| Typed speech parser, lines | 427 / 435 | 98.16% |
+| Typed speech parser, lines | 428 / 435 | 98.39% |
 | Exact number composition, lines | 1,010 / 1,052 | 96.01% |
-| Quantity grammar, lines | 1,229 / 1,325 | 92.75% |
+| Quantity grammar, lines | 1,252 / 1,346 | 93.02% |
 | Temporal grammar, lines | 1,809 / 1,951 | 92.72% |
-| Reviewed variant comparator, lines | 1,057 / 1,092 | 96.79% |
+| Reviewed variant comparator, lines | 1,168 / 1,208 | 96.69% |
 | Shared scientific/duration/fraction/range shapes, lines | 515 / 521 | 98.85% |
 | Regional conventions registry, lines | 35 / 35 | 100.00% |
 | Shared speech lexer, lines | 374 / 375 | 99.73% |
 
-The previous committed snapshot measured 21,013/24,437 lines (85.99%) and
+The earlier baseline at `5917360` measured 21,013/24,437 lines (85.99%) and
 2,215/2,585 functions (85.69%). Executable source grows as grammar is added;
 this is not a fixed-denominator comparison. Inline Rust unit tests remain in
 source coverage, matching the historical filter. JSON lexical data is not an
@@ -81,7 +90,7 @@ establish linguistic or acoustic accuracy.
 
 ### Verification and remaining limits
 
-The complete all-feature/all-target suite passes **713 tests**, as does the
+The complete all-feature/all-target suite passes **719 tests**, as does the
 separate instrumented run. Clippy with
 warnings denied, generated documentation and Rust 1.90 all-target checks without
 default features, both with and without `phonetic-espeak`, pass. Shared-core
@@ -105,8 +114,12 @@ distinct readings. The Rust matrix additionally covers 1,800 combinations of
 seconds, precision, style and notation, plus Korean period contradictions and
 source protections. Full timestamp support remains outside those counts;
 twenty timestamp probes remain complete, unexpanded identifiers. These new
-formats are absent from the selected NeMo sample. All seven existing
-NeMo/authored speech reports remain byte-identical to the preceding snapshot.
+formats are absent from the selected NeMo sample. The subsecond implementation
+in `c3a96f5` left all seven existing NeMo/authored reports byte-identical to its
+preceding snapshot. The current comparison rules add eight German exact-hour
+variants and one Arabic currency variant under automatic policy, and two Arabic
+currency variants under explicit corpus policy. Exact matches, rendered text,
+original gold and case denominators are unchanged by these rules.
 The source-backed English 24-hour correction removes one former exact NeMo
 match; [E1 in the reference review](SPEECH-REFERENCE-REVIEW.md#e1-english-24-hour-whole-hours--corrected-renderer-reference-retained)
 records that reference defect instead of accepting it through a variant.
@@ -135,7 +148,7 @@ cargo +1.90 check --locked --no-default-features --features phonetic-espeak --al
 cargo doc --locked --no-deps --all-features
 RUSTC_WRAPPER= cargo llvm-cov --no-rustc-wrapper --locked \
   --all-features --workspace --json \
-  --output-path target/coverage/goal-subseconds-direct.json \
+  --output-path target/coverage/goal-regional-variants-direct.json \
   --ignore-filename-regex '(/tests/|/benches/|/examples/|/registry/)'
 cargo run --locked --quiet --no-default-features --bin textintel -- \
   eval-speech data/speech/evaluation.json --json

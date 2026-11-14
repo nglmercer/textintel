@@ -8,7 +8,7 @@ not a native-speaker certification of all twenty supported languages.
 ## Reproducible snapshot
 
 The tables below review `target/coverage/speech-nemo-reviewed.json`, SHA-256
-`16ce81ed8fd3d2f83d537adc76cd59c37d5747ea7de48e957d1f7ae9149695c0`,
+`9c009dd673f59175766c4f82f18dad50c1e11ea9ae436c9a4704bcd6cbc90d81`,
 read on 2026-11-14. The report was produced with
 [`reference-policy.json`](../data/speech/reference-policy.json), including explicit
 category hints, currency-symbol assignments, and the Arabic `f` unit alias.
@@ -19,10 +19,10 @@ interpretation.
 | --- | ---: |
 | Selected spoken references | 544 |
 | Exact spoken matches | 464 |
-| Additional bounded variant matches | 47 |
-| Exact or bounded variant matches | 511 |
+| Additional bounded variant matches | 49 |
+| Exact or bounded variant matches | 513 |
 | Strict mismatches, including accepted variants | 80 |
-| Mismatches not accepted by a variant rule | 33 |
+| Mismatches not accepted by a variant rule | 31 |
 | Implementation reports fully supported | 540 |
 
 This table describes the strict reference profile, not the separate literal-
@@ -45,14 +45,15 @@ Apache-2.0; its [license](../data/speech/LICENSE-NEMO-APACHE-2.0.txt) is retaine
 Parallel implementation work can produce a newer report; the hash above fixes the
 scope of this review.
 
-## Findings that remain outside the accepted score
+## Review of reference differences
 
-These are review categories, not extra passes. No category below is added to 511.
+The category table counts only still-unaccepted cases. Separately accepted
+variants are already included in 513; these review categories add no passes.
 
 | Review category | Cases | Decision |
 | --- | ---: | --- |
 | Reference spelling, grammatical, or pronunciation defect with source evidence | 16 | Preserve gold; record a proposed correction separately. |
-| Arabic standard-language agreement versus unreviewed reference register | 10 | Prefer the documented formal reading; do not claim every dialectal reference is universally invalid. |
+| Arabic standard-language agreement versus unreviewed reference register | 8 | Prefer the documented formal reading; do not claim every dialectal reference is universally invalid. |
 | Invalid Gregorian date correctly left unresolved | 3 | Keep the calendar validation and unresolved status. |
 | Unresolved wording/interpretation policy | 2 | Require a declared reading convention or more context. |
 | Spanish mixed-fraction word order under reference review | 1 | Keep the independently supported canonical phrase; do not add a broad reordering equivalence. |
@@ -70,7 +71,7 @@ uses the latter implementation spelling. See also the
 The proposed reference correction is limited to this word, not arbitrary removal
 of Arabic marks, hamza, or madda. All nine affected case IDs appear in the table.
 
-### A2: Arabic count agreement — ten register-sensitive differences
+### A2: Arabic count agreement — two bounded variants and eight pending differences
 
 The implementation chooses formal Arabic quantity grammar: plural counted nouns
 for 3–10, singular accusative for 11–99, and the appropriate numeral gender.
@@ -83,11 +84,36 @@ is an explicit caller alias, not a locale guess.
 
 The original currency references often leave a borrowed currency noun invariant.
 That can reflect a colloquial or annotation convention; the general formal rule
-alone does not certify every dialectal money expression. No generic
+alone does not certify every dialectal money expression. No unrestricted
 singular/plural equivalence or omitted accusative-ending equivalence is warranted
-for TTS. Keep these ten differences unaccepted until a specific register policy
-and native review justify an alternative. The implementation is not a complete
+for TTS. Keep the remaining eight differences unaccepted until their complete register
+and construction are supported. The implementation is not a complete
 Arabic sentence-case analyzer.
+
+There is positive dialect evidence for parts of these constructions, so a
+singular currency noun is not universally an error. [Gadalla (2000), §1,
+example (9)](https://www.academia.edu/64245424/Numerals_in_Standard_Arabic_and_Egyptian_Colloquial_Arabic_A_comparative_study)
+documents masculine singular monetary units with long 3–10 numerals in Egyptian
+speech. [Holes (2016), §3.8, p.137](https://www.academia.edu/105868007/Dialect_Culture_and_Society_in_Eastern_Arabia_Volume_III_Phonology_Morphology_Syntax_Style)
+documents singular dinar among Baḥārna speakers in Bahrain; that study principally
+describes older speakers recorded in the 1970s, not a general modern Kuwaiti norm.
+[Hallberg (2016), §10.3(iv), p.241](https://lup.lub.lu.se/search/publication/530e5fe6-ec77-4e84-9a45-0935598e86a8)
+reports counted nouns without accusative marking in spoken standard Arabic,
+while cautioning against generalization from limited data.
+
+The documented productive construction does justify a bounded integer-only
+variant: a long 3–10 numeral followed by a reviewed masculine singular currency
+unit. Composing that rule with the shared noun/qualifier lexicon accepts
+`nemo-ar-money-0001` and `nemo-ar-money-0010`; the sources do not directly quote
+every generated currency phrase. The rule preserves value, sign and naming
+policy and excludes all decimal and minor-unit compositions, including `.00`.
+This is a regional spoken alternative, not the canonical formal reading or a
+claim of one pan-Arabic dialect.
+For example, the Egyptian/Bahraini tens differ from the nominative tens retained
+in some golds; removing a cent noun's final alif alone does not establish a
+coherent dialectal reading. Review must specify the register, complete numeral,
+minor unit and qualifier together. The Fahrenheit ellipsis needs separate
+adjudication. The other eight cases remain outside the accepted score.
 
 ### R1: Russian reference spelling and agreement — five cases
 
@@ -174,7 +200,7 @@ textintel normalize-speech '३१-०६' --locale hi --reading-style natural -
 This reads “इकतीस जून” while retaining invalid-calendar semantics. Serde spells
 the option `read_components`. Such a comparison needs a separate literal-profile
 report; it does not change the original gold, the three default-policy refusals
-in this ledger, or the 511 accepted comparisons in this snapshot.
+in this ledger, or the 513 accepted comparisons in this snapshot.
 
 `SpeechEvalReport.diagnostics` now retains supported literal warnings even when
 spoken output matches exactly and the case is absent from `failures`.
@@ -242,6 +268,15 @@ adjectival agreement without resolving this mixed-number ellipsis. These support
 keeping the regional-order question separate from the noun-agreement question;
 neither licenses a blanket rejection or acceptance of the original phrase.
 
+Contemporary regional evidence does attest the singular construction in another
+domain: Conaculta's 2014 Hñähñu cookbook, in a recipe attributed to Andrea
+Delgado, uses “una y media taza de agua” ([original work, accessible
+copy](https://www.academia.edu/79684470/Recetario_H%C3%B1%C3%A4h%C3%B1u)).
+This establishes Mexican culinary usage, not a normative rule for the speed
+expression in NeMo. The case therefore remains a documented regional
+construction whose transfer to this measure needs review, rather than a
+demonstrated universal spelling error or an automatically accepted reordering.
+
 This change accompanied genuine fixes outside this corpus case: `3 1/2 h`
 formerly produced singular `tres y media hora`, and `3/2 h` incorrectly used
 adjectival feminine `tres medias de hora` for a mathematical fraction noun.
@@ -279,7 +314,7 @@ This option can make `13:10pm` fully supported for TTS: Natural retains
 `TemporalValue::Clock` at hour 1 PM and yields `一点十分pm`. Precise may instead
 represent the same time as `SpeechValue::Time` at 13:10; the source remains
 `13:10pm` in both cases. The Natural output does not reproduce the reference `十三点十分pm`,
-and it does not add an accepted comparison or change the 511 accepted cases.
+and it does not add an accepted comparison or change the 513 accepted cases.
 The reference policy and original gold remain unchanged and do not select this
 permissive source convention.
 Consequently this row is a documented domain disagreement and remains
@@ -314,7 +349,7 @@ composition, rather than complete native agreement or natural TTS wording.
 
 ## Accepted variants still reported as strict mismatches
 
-The 47 entries marked **variant** below are accepted by named rules in
+The 49 entries marked **variant** below are accepted by named rules in
 [`variants.rs`](../src/speech/variants.rs); their original strings remain unequal.
 The rules operate on typed values and specified numeric components, not a general
 case/accent/punctuation fold. Rule matches can overlap, so counts by rule must not
@@ -383,7 +418,7 @@ retained in the local corpus.
 | [nemo-ar-measure-0008](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_measure.txt#L8) | `"%4.9876"` | `"أربعة وتسعة اَلاف وثمان مئة وستة وسبعون من عشرة آلاف في المائة"` | `"أربعة وتسعة آلاف وثمان مئة وستة وسبعون من عشرة آلاف في المائة"` | A1: reference spelling |
 | [nemo-ar-measure-0009](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_measure.txt#L9) | `"%6,8944"` | `"ستة وثمانية اَلاف وتسع مئة وأربعة وأربعون من عشرة آلاف في المائة"` | `"ستة وثمانية آلاف وتسع مئة وأربعة وأربعون من عشرة آلاف في المائة"` | A1: reference spelling |
 | [nemo-ar-measure-0010](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_measure.txt#L10) | `"%6798,9"` | `"ستة اَلاف وسبع مئة وثمانية وتسعون وتسعة من عشرة في المائة"` | `"ستة آلاف وسبع مئة وثمانية وتسعون وتسعة من عشرة في المائة"` | A1: reference spelling |
-| [nemo-ar-money-0001](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L1) | `"$7"` | `"سبعة دولار"` | `"سبعة دولارات"` | A2: formal agreement / register review |
+| [nemo-ar-money-0001](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L1) | `"$7"` | `"سبعة دولار"` | `"سبعة دولارات"` | variant: arabic_regional_currency_unit_singular |
 | [nemo-ar-money-0002](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L2) | `"$7.50"` | `"سبعة دولار وخمسون سنت"` | `"سبعة دولارات وخمسون سنتا"` | A2: formal agreement / register review |
 | [nemo-ar-money-0003](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L3) | `"$7.05"` | `"سبعة دولار وخمسة سنتات"` | `"سبعة دولارات وخمسة سنتات"` | A2: formal agreement / register review |
 | [nemo-ar-money-0004](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L4) | `"$7.99"` | `"سبعة دولار وتسعة وتسعون سنت"` | `"سبعة دولارات وتسعة وتسعون سنتا"` | A2: formal agreement / register review |
@@ -391,7 +426,7 @@ retained in the local corpus.
 | [nemo-ar-money-0006](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L6) | `"$0.99"` | `"تسعة وتسعون سنت"` | `"تسعة وتسعون سنتا"` | A2: formal agreement / register review |
 | [nemo-ar-money-0007](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L7) | `"€0.99"` | `"تسعة وتسعون سنت"` | `"تسعة وتسعون سنتا"` | A2: formal agreement / register review |
 | [nemo-ar-money-0009](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L9) | `"$9.09"` | `"تسعة دولار وتسعة سنتات"` | `"تسعة دولارات وتسعة سنتات"` | A2: formal agreement / register review |
-| [nemo-ar-money-0010](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L10) | `"5د.ك"` | `"خمسة دينار كويتي"` | `"خمسة دنانير كويتية"` | A2: formal agreement / register review |
+| [nemo-ar-money-0010](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/ar/data_text_normalization/test_cases_money.txt#L10) | `"5د.ك"` | `"خمسة دينار كويتي"` | `"خمسة دنانير كويتية"` | variant: arabic_regional_currency_unit_singular |
 | [nemo-de-date-0001](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/de/data_text_normalization/test_cases_date.txt#L1) | `"24. juli 2013"` | `"vier und zwanzigster juli zwei tausend dreizehn"` | `"vierundzwanzigster Juli zweitausenddreizehn"` | variant: `german_numeric_case`, `german_compound_spacing` |
 | [nemo-de-date-0002](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/de/data_text_normalization/test_cases_date.txt#L2) | `"14. januar"` | `"vierzehnter januar"` | `"vierzehnter Januar"` | variant: `german_numeric_case` |
 | [nemo-de-date-0003](https://github.com/NVIDIA/NeMo-text-processing/blob/ddadfb2a38d2bc6b8cc6232c4f915eb60f500688/tests/nemo_text_processing/de/data_text_normalization/test_cases_date.txt#L3) | `"1. januar"` | `"erster januar"` | `"erster Januar"` | variant: `german_numeric_case` |

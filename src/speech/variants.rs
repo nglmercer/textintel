@@ -133,6 +133,22 @@ pub fn rule_catalog() -> &'static [VariantRuleInfo] {
             ],
         },
         VariantRuleInfo {
+            id: "arabic_regional_currency_unit_singular",
+            rationale: "A regional spoken monetary-unit construction documented in Egyptian Colloquial Arabic (Gadalla §1, example 9) and for dinar among Bahraini Baḥārna speakers (Holes §3.8, p.137): long numeral from 3 through 10 + masculine singular monetary unit. Only one standalone, supported, exactly reparsed Currency with no written fraction and a reviewed noun paradigm permits it. The complete numeral, sign, ISO currency naming policy and country qualifier are generated from the shared core/dictionary. This is not canonical MSA, a universal Arabic dialect rule, or permission to mix decimal/minor-unit registers; feminine/unknown currencies, Digits, prose and partial matches are excluded.",
+            sources: &[
+                "https://www.academia.edu/64245424/Numerals_in_Standard_Arabic_and_Egyptian_Colloquial_Arabic_A_comparative_study",
+                "https://www.academia.edu/105868007/Dialect_Culture_and_Society_in_Eastern_Arabia_Volume_III_Phonology_Morphology_Syntax_Style",
+            ],
+        },
+        VariantRuleInfo {
+            id: "alternative_german_clock_zero_minute_policy",
+            rationale: "One standalone German exact-hour clock may use the existing Precise reading with zero minutes or Natural reading without them. Changing only reading_style must preserve every source span and validated compact clock value; a 24:00 clock instead requires identical source IR without rollover. Seconds, periods, AM/PM, half hours, dates, quantities and surrounding prose are excluded. This is an alternate reading policy, not exact-output accuracy.",
+            sources: &[
+                "https://www.duden.de/sprachwissen/sprachratgeber/Uhrzeitangaben",
+                "https://raw.githubusercontent.com/unicode-org/cldr/release-48/common/main/de.xml",
+            ],
+        },
+        VariantRuleInfo {
             id: "chinese_currency_name_spacing",
             rationale: "For one standalone typed Chinese currency amount, layout whitespace between the unchanged numeric reading and that exact ISO code's shared-lexicon currency name may vary. No spacing inside the currency name, qualification, value, sign or currency identity is changed.",
             sources: &[
@@ -308,7 +324,21 @@ pub fn compare_spoken(
         record(&mut rules, "chinese_currency_name_spacing");
         return Some(VariantMatch { rules });
     }
+    if let Some(currency) = standalone_currency(document)
+        && let Some(regional) =
+            super::quantities::regional_arabic_currency_unit_variant(currency, options)
+        && regional.nfc().eq(right.chars())
+    {
+        record(&mut rules, "arabic_regional_currency_unit_singular");
+        return Some(VariantMatch { rules });
+    }
     if let Some(variant) = currency_minor_unit_policy(document, options, actual, &right) {
+        for rule in variant.rules {
+            record(&mut rules, &rule);
+        }
+        return Some(VariantMatch { rules });
+    }
+    if let Some(variant) = german_clock_zero_minute_policy(document, options, actual, &right) {
         for rule in variant.rules {
             record(&mut rules, &rule);
         }
@@ -532,6 +562,135 @@ fn currency_minor_unit_policy(
         return None;
     }
     let mut rules = vec!["alternative_currency_minor_unit_policy".to_string()];
+    rules.extend(presentation);
+    Some(VariantMatch { rules })
+}
+
+fn standalone_whole_clock(document: &SpeechDocument) -> Option<usize> {
+    use super::temporal::TemporalValue;
+    let mut clock = None;
+    for (index, span) in document.spans.iter().enumerate() {
+        match &span.value {
+            SpeechValue::Time {
+                minute: 0,
+                second: None,
+                ..
+            }
+            | SpeechValue::Temporal {
+                value:
+                    TemporalValue::Clock {
+                        minute: Some(0),
+                        second: None,
+                        period: None,
+                        meridiem: None,
+                        half: false,
+                        ..
+                    },
+            } => {
+                if clock.replace(index).is_some() {
+                    return None;
+                }
+            }
+            SpeechValue::Text if span.source.chars().all(char::is_whitespace) => {}
+            _ => return None,
+        }
+    }
+    clock
+}
+
+fn german_clock_zero_minute_policy(
+    document: &SpeechDocument,
+    options: &SpeechOptions,
+    actual: &str,
+    reference: &str,
+) -> Option<VariantMatch> {
+    if options.locale != SpeechLocale::De
+        || !matches!(
+            options.interpret_as,
+            SpeechInterpretation::Auto | SpeechInterpretation::Time
+        )
+    {
+        return None;
+    }
+    let index = standalone_whole_clock(document)?;
+    let mut alternate_options = options.clone();
+    alternate_options.reading_style = match options.reading_style {
+        ReadingStyle::Precise => ReadingStyle::Natural,
+        ReadingStyle::Natural => ReadingStyle::Precise,
+        ReadingStyle::Digits => return None,
+    };
+    let alternate_document =
+        super::parser::parse_for_speech(&document.text, &alternate_options).ok()?;
+    if standalone_whole_clock(&alternate_document) != Some(index)
+        || document.text != alternate_document.text
+        || document.locale != alternate_document.locale
+        || document.spans.len() != alternate_document.spans.len()
+    {
+        return None;
+    }
+    for (i, (left, right)) in document
+        .spans
+        .iter()
+        .zip(&alternate_document.spans)
+        .enumerate()
+    {
+        if left.start != right.start
+            || left.end != right.end
+            || left.source != right.source
+            || (i != index && left.value != right.value)
+        {
+            return None;
+        }
+    }
+    let original_value = &document.spans[index].value;
+    let alternate_value = &alternate_document.spans[index].value;
+    match (
+        super::temporal::compact_value(original_value),
+        super::temporal::compact_value(alternate_value),
+    ) {
+        (Some(a @ SpeechValue::Time { .. }), Some(b @ SpeechValue::Time { .. })) if a == b => {}
+        // 24:00 is a legitimate TemporalClock, never compact midnight 00:00.
+        // The exception requires identical full IR, including source metadata.
+        (None, None)
+            if document == &alternate_document
+                && matches!(
+                    original_value,
+                    SpeechValue::Temporal {
+                        value: super::temporal::TemporalValue::Clock { hour: 24, .. }
+                    }
+                ) => {}
+        _ => return None,
+    }
+    let alternate =
+        super::verbalize::verbalize_document_with_options(&alternate_document, &alternate_options)
+            .ok()?;
+    if !alternate.fully_supported
+        || alternate
+            .readings
+            .iter()
+            .any(|reading| reading.reason.is_some())
+        || alternate.text == actual
+        || alternate.text.chars().take(65537).count() > 65536
+    {
+        return None;
+    }
+    let generated: String = alternate.text.nfc().collect();
+    let mut presentation = Vec::new();
+    // No recursive policy hopping: compare only the generated clock reading
+    // through the already reviewed German case/compound presentation rules.
+    if generated.trim() != reference
+        && !compare_block(
+            generated.trim(),
+            reference,
+            alternate_value,
+            &document.spans[index].source,
+            &alternate_options,
+            &mut presentation,
+        )
+    {
+        return None;
+    }
+    let mut rules = vec!["alternative_german_clock_zero_minute_policy".to_string()];
     rules.extend(presentation);
     Some(VariantMatch { rules })
 }

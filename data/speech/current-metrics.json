@@ -5,16 +5,17 @@
   "base_commit": "5917360cee6348d55a51fefe9393cc0dd5cc960b",
   "worktree": "uncommitted changes",
   "source_tree": {
-    "sha256": "f7b32ac87fe81aa2b9ede653ad06df8ac0553e9ec3864d11acbd1e79db4cbe59",
+    "sha256": "d63dcbda7f9f47bcb2a908658cca9a74080d5e1d06b18d65e748de0be3c6840a",
     "files": 296,
-    "definition": "SHA256 over sorted relative POSIX path + NUL + file bytes + NUL for all files under src/tests/resources/data/language, plus Cargo.toml/Cargo.lock/build.rs and the three speech corpus/policy JSON inputs. Documentation and generated snapshots excluded."
+    "definition": "SHA256 over sorted relative POSIX path + NUL + file bytes + NUL for all files under src/tests/resources/data/language, plus Cargo.toml/Cargo.lock/build.rs and the three speech corpus/policy JSON inputs. Documentation and generated snapshots excluded.",
+    "parent_commit": "c3a96f544b6585ed9bae69a944f87cdda7c456b6"
   },
   "tools": {
     "rustc": "1.99.0 (b940084d7 2026-09-28)",
     "cargo_llvm_cov": "0.8.7"
   },
   "commands": {
-    "code_coverage": "RUSTC_WRAPPER= cargo llvm-cov --no-rustc-wrapper --locked --all-features --workspace --json --output-path target/coverage/goal-subseconds-direct.json --ignore-filename-regex '(/tests/|/benches/|/examples/|/registry/)'",
+    "code_coverage": "RUSTC_WRAPPER= cargo llvm-cov --no-rustc-wrapper --locked --all-features --workspace --json --output-path target/coverage/goal-regional-variants-direct.json --ignore-filename-regex '(/tests/|/benches/|/examples/|/registry/)'",
     "all_tests": "cargo test --locked --all-features --all-targets",
     "clippy": "cargo clippy --locked --all-features --all-targets -- -D warnings",
     "msrv": "cargo +1.90 check --locked --no-default-features --all-targets",
@@ -33,43 +34,43 @@
     "scope": "142 owned instrumented Rust source files; inline unit tests included; tests/benches/examples/registry paths excluded; one absolute path per file; compiler wrapper bypassed",
     "overall": {
       "lines": {
-        "count": 31522,
-        "covered": 27838,
-        "percent": 88.31292430683332
+        "count": 31659,
+        "covered": 27970,
+        "percent": 88.34770523389874
       },
       "functions": {
-        "count": 3122,
-        "covered": 2739,
-        "percent": 87.73222293401666
+        "count": 3126,
+        "covered": 2743,
+        "percent": 87.74792066538707
       },
       "regions": {
-        "count": 49984,
-        "covered": 44322,
-        "percent": 88.67237516005122
+        "count": 50174,
+        "covered": 44500,
+        "percent": 88.69135408777454
       }
     },
     "speech": {
       "lines": {
-        "count": 15427,
-        "covered": 14478,
-        "percent": 93.84844752706294
+        "count": 15564,
+        "covered": 14611,
+        "percent": 93.87689539964019
       },
       "functions": {
-        "count": 1327,
-        "covered": 1281,
-        "percent": 96.53353428786737
+        "count": 1331,
+        "covered": 1285,
+        "percent": 96.54395191585274
       },
       "regions": {
-        "count": 25019,
-        "covered": 23250,
-        "percent": 92.92937367600624
+        "count": 25209,
+        "covered": 23430,
+        "percent": 92.9429965488516
       }
     },
     "versioned_normalization": {
       "lines": {
         "count": 5655,
-        "covered": 5313,
-        "percent": 93.95225464190982
+        "covered": 5311,
+        "percent": 93.91688770999116
       },
       "functions": {
         "count": 565,
@@ -78,8 +79,8 @@
       },
       "regions": {
         "count": 9414,
-        "covered": 8905,
-        "percent": 94.59315912470788
+        "covered": 8901,
+        "percent": 94.55066921606118
       }
     },
     "selected_file_lines": {
@@ -280,8 +281,8 @@
       },
       "src/speech/normalization/segments.rs": {
         "count": 221,
-        "covered": 219,
-        "percent": 99.09502262443439
+        "covered": 217,
+        "percent": 98.19004524886878
       },
       "src/speech/normalization/shared.rs": {
         "count": 154,
@@ -295,13 +296,13 @@
       },
       "src/speech/parser.rs": {
         "count": 435,
-        "covered": 427,
-        "percent": 98.16091954022988
+        "covered": 428,
+        "percent": 98.39080459770115
       },
       "src/speech/quantities.rs": {
-        "count": 1325,
-        "covered": 1229,
-        "percent": 92.75471698113208
+        "count": 1346,
+        "covered": 1252,
+        "percent": 93.01634472511144
       },
       "src/speech/resource_profiles.rs": {
         "count": 187,
@@ -329,9 +330,9 @@
         "percent": 88.41463414634147
       },
       "src/speech/variants.rs": {
-        "count": 1092,
-        "covered": 1057,
-        "percent": 96.7948717948718
+        "count": 1208,
+        "covered": 1168,
+        "percent": 96.6887417218543
       },
       "src/speech/verbalize.rs": {
         "count": 683,
@@ -341,7 +342,7 @@
     },
     "branches_measured": false,
     "mcdc_measured": false,
-    "raw_report_sha256": "460f8edf30adde826e5caf4f0cc74881f44289127467f905616dfb3a47a40d8e",
+    "raw_report_sha256": "1a57e572db43743fa1d93715d84320aaee04e61a4ca5600c4fdbac3d4a753b9e",
     "phonetic": {
       "lines": {
         "count": 1073,
@@ -362,13 +363,13 @@
   },
   "checks": {
     "all_feature_all_target_tests": {
-      "passed": 713,
+      "passed": 719,
       "failed": 0,
       "ignored": 0,
       "exit_code": 0
     },
     "instrumented_tests": {
-      "passed": 713,
+      "passed": 719,
       "failed": 0,
       "ignored": 0,
       "exit_code": 0
@@ -420,8 +421,8 @@
         "parse_exact": 0,
         "spoken_cases": 544,
         "spoken_exact": 216,
-        "spoken_variant": 78,
-        "spoken_accepted": 294,
+        "spoken_variant": 87,
+        "spoken_accepted": 303,
         "fully_supported": 454,
         "expected_spans": 0,
         "predicted_spans": 0,
@@ -434,8 +435,8 @@
           "parse_exact": 0,
           "spoken_cases": 30,
           "spoken_exact": 2,
-          "spoken_variant": 1,
-          "spoken_accepted": 3,
+          "spoken_variant": 2,
+          "spoken_accepted": 4,
           "fully_supported": 19,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -447,8 +448,8 @@
           "parse_exact": 0,
           "spoken_cases": 50,
           "spoken_exact": 12,
-          "spoken_variant": 20,
-          "spoken_accepted": 32,
+          "spoken_variant": 28,
+          "spoken_accepted": 40,
           "fully_supported": 40,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -592,8 +593,8 @@
           "parse_exact": 0,
           "spoken_cases": 109,
           "spoken_exact": 6,
-          "spoken_variant": 16,
-          "spoken_accepted": 22,
+          "spoken_variant": 17,
+          "spoken_accepted": 23,
           "fully_supported": 72,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -644,8 +645,8 @@
           "parse_exact": 0,
           "spoken_cases": 99,
           "spoken_exact": 23,
-          "spoken_variant": 7,
-          "spoken_accepted": 30,
+          "spoken_variant": 15,
+          "spoken_accepted": 38,
           "fully_supported": 92,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -677,11 +678,13 @@
       },
       "variants_by_rule": {
         "alternative_currency_minor_unit_policy": 9,
+        "alternative_german_clock_zero_minute_policy": 8,
         "alternative_japanese_number_notation": 10,
         "arabic_hundred_spelling": 1,
+        "arabic_regional_currency_unit_singular": 1,
         "chinese_currency_name_spacing": 5,
         "english_hundred_and": 2,
-        "german_compound_spacing": 9,
+        "german_compound_spacing": 10,
         "german_numeric_case": 17,
         "german_unit_compound_spacing": 4,
         "japanese_initial_one_thousand": 1,
@@ -1700,7 +1703,7 @@
         "invalid twelve-hour clock time": 1,
         "unsupported fraction, range, or malformed date": 9
       },
-      "raw_report_sha256": "47d9962c1be88755a3d3fb089b8213acb499b344605c2264660e3c66ef027b09"
+      "raw_report_sha256": "3b95f97366c62060f5589a070b1c2b9b6d535902789c24093c3eac6de3d60ed6"
     },
     "explicit_policy": {
       "policy": {
@@ -1842,6 +1845,20 @@
       ],
       "exact_spoken_ceiling": 543,
       "variant_matches": [
+        {
+          "id": "nemo-ar-money-0001",
+          "reference": "سبعة دولار",
+          "rules": [
+            "arabic_regional_currency_unit_singular"
+          ]
+        },
+        {
+          "id": "nemo-ar-money-0010",
+          "reference": "خمسة دينار كويتي",
+          "rules": [
+            "arabic_regional_currency_unit_singular"
+          ]
+        },
         {
           "id": "nemo-de-date-0001",
           "reference": "vier und zwanzigster juli zwei tausend dreizehn",
@@ -2189,6 +2206,7 @@
       ],
       "variants_by_rule": {
         "alternative_integer_digit_policy": 1,
+        "arabic_regional_currency_unit_singular": 2,
         "english_hundred_and": 2,
         "english_literal_label_separator": 1,
         "german_compound_spacing": 12,
@@ -2213,8 +2231,8 @@
         "parse_exact": 0,
         "spoken_cases": 544,
         "spoken_exact": 464,
-        "spoken_variant": 47,
-        "spoken_accepted": 511,
+        "spoken_variant": 49,
+        "spoken_accepted": 513,
         "fully_supported": 540,
         "expected_spans": 0,
         "predicted_spans": 0,
@@ -2227,8 +2245,8 @@
           "parse_exact": 0,
           "spoken_cases": 30,
           "spoken_exact": 11,
-          "spoken_variant": 0,
-          "spoken_accepted": 11,
+          "spoken_variant": 2,
+          "spoken_accepted": 13,
           "fully_supported": 30,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -2385,8 +2403,8 @@
           "parse_exact": 0,
           "spoken_cases": 109,
           "spoken_exact": 95,
-          "spoken_variant": 2,
-          "spoken_accepted": 97,
+          "spoken_variant": 4,
+          "spoken_accepted": 99,
           "fully_supported": 109,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -4021,7 +4039,7 @@
         "invalid calendar date": 3,
         "invalid twelve-hour clock time": 1
       },
-      "raw_report_sha256": "16ce81ed8fd3d2f83d537adc76cd59c37d5747ea7de48e957d1f7ae9149695c0"
+      "raw_report_sha256": "9c009dd673f59175766c4f82f18dad50c1e11ea9ae436c9a4704bcd6cbc90d81"
     },
     "authored": {
       "policy": {
@@ -5003,8 +5021,8 @@
         "parse_exact": 0,
         "spoken_cases": 544,
         "spoken_exact": 467,
-        "spoken_variant": 47,
-        "spoken_accepted": 514,
+        "spoken_variant": 49,
+        "spoken_accepted": 516,
         "fully_supported": 543,
         "expected_spans": 0,
         "predicted_spans": 0,
@@ -5017,8 +5035,8 @@
           "parse_exact": 0,
           "spoken_cases": 30,
           "spoken_exact": 11,
-          "spoken_variant": 0,
-          "spoken_accepted": 11,
+          "spoken_variant": 2,
+          "spoken_accepted": 13,
           "fully_supported": 30,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -5175,8 +5193,8 @@
           "parse_exact": 0,
           "spoken_cases": 109,
           "spoken_exact": 95,
-          "spoken_variant": 2,
-          "spoken_accepted": 97,
+          "spoken_variant": 4,
+          "spoken_accepted": 99,
           "fully_supported": 109,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -5252,6 +5270,7 @@
       },
       "variants_by_rule": {
         "alternative_integer_digit_policy": 1,
+        "arabic_regional_currency_unit_singular": 2,
         "english_hundred_and": 2,
         "english_literal_label_separator": 1,
         "german_compound_spacing": 12,
@@ -5318,7 +5337,7 @@
         "invalid calendar date": 3,
         "invalid twelve-hour clock time": 1
       },
-      "raw_report_sha256": "0f8ce1f889357bbf2c57cf99ceb76ea15c00482077387b3df73e529f8afc9d8c",
+      "raw_report_sha256": "e3ec903fd2e627eae0c3fdda9fec5f2781637c99aa6fab6a50f89824d6269c39",
       "unaccepted_case_ids": [
         "nemo-ar-cardinal-0001",
         "nemo-ar-cardinal-0003",
@@ -5330,7 +5349,6 @@
         "nemo-ar-measure-0008",
         "nemo-ar-measure-0009",
         "nemo-ar-measure-0010",
-        "nemo-ar-money-0001",
         "nemo-ar-money-0002",
         "nemo-ar-money-0003",
         "nemo-ar-money-0004",
@@ -5338,7 +5356,6 @@
         "nemo-ar-money-0006",
         "nemo-ar-money-0007",
         "nemo-ar-money-0009",
-        "nemo-ar-money-0010",
         "nemo-en-measure-0007",
         "nemo-en-time-0006",
         "nemo-es-measure-0010",
@@ -5487,8 +5504,8 @@
         "parse_exact": 0,
         "spoken_cases": 544,
         "spoken_exact": 467,
-        "spoken_variant": 47,
-        "spoken_accepted": 514,
+        "spoken_variant": 49,
+        "spoken_accepted": 516,
         "fully_supported": 544,
         "expected_spans": 0,
         "predicted_spans": 0,
@@ -5501,8 +5518,8 @@
           "parse_exact": 0,
           "spoken_cases": 30,
           "spoken_exact": 11,
-          "spoken_variant": 0,
-          "spoken_accepted": 11,
+          "spoken_variant": 2,
+          "spoken_accepted": 13,
           "fully_supported": 30,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -5659,8 +5676,8 @@
           "parse_exact": 0,
           "spoken_cases": 109,
           "spoken_exact": 95,
-          "spoken_variant": 2,
-          "spoken_accepted": 97,
+          "spoken_variant": 4,
+          "spoken_accepted": 99,
           "fully_supported": 109,
           "expected_spans": 0,
           "predicted_spans": 0,
@@ -5734,6 +5751,7 @@
       "unresolved_by_reason": {},
       "variants_by_rule": {
         "alternative_integer_digit_policy": 1,
+        "arabic_regional_currency_unit_singular": 2,
         "english_hundred_and": 2,
         "english_literal_label_separator": 1,
         "german_compound_spacing": 12,
@@ -5788,7 +5806,7 @@
       "diagnostics_by_reason": {
         "invalid calendar date": 3
       },
-      "raw_report_sha256": "5ee61dbc78d9e5c18a0798f036b1c2d9120d1b99daeb85df7bf33b5580227ee6",
+      "raw_report_sha256": "bd03b4112e264174ebcfb4e727ddd64bf9cb459bcdcaf9937d0d0a92bf3a23d2",
       "unaccepted_case_ids": [
         "nemo-ar-cardinal-0001",
         "nemo-ar-cardinal-0003",
@@ -5800,7 +5818,6 @@
         "nemo-ar-measure-0008",
         "nemo-ar-measure-0009",
         "nemo-ar-measure-0010",
-        "nemo-ar-money-0001",
         "nemo-ar-money-0002",
         "nemo-ar-money-0003",
         "nemo-ar-money-0004",
@@ -5808,7 +5825,6 @@
         "nemo-ar-money-0006",
         "nemo-ar-money-0007",
         "nemo-ar-money-0009",
-        "nemo-ar-money-0010",
         "nemo-en-measure-0007",
         "nemo-en-time-0006",
         "nemo-es-measure-0010",
@@ -5860,7 +5876,7 @@
       "mrr": 0.8473219043975704,
       "ndcg_at_10": 0.858619718491046
     },
-    "raw_report_sha256": "2644435c629ec795c793ceb48893ee21cce79ef1fa69567f9b5fe12538c4b489"
+    "raw_report_sha256": "219bbadfe7a84a23bf085c4d308610d059a395fe3c8f99e24fae688d471f55fa"
   },
   "library_quality_gate_failures": [
     "gate failure: similarity.roc_auc=0.812 below minimum 0.900",
@@ -6044,8 +6060,8 @@
       "parse_exact": 0,
       "spoken_cases": 544,
       "spoken_exact": 464,
-      "spoken_variant": 47,
-      "spoken_accepted": 511,
+      "spoken_variant": 49,
+      "spoken_accepted": 513,
       "fully_supported": 540,
       "expected_spans": 0,
       "predicted_spans": 0,
@@ -6057,8 +6073,8 @@
       "parse_exact": 0,
       "spoken_cases": 544,
       "spoken_exact": 464,
-      "spoken_variant": 47,
-      "spoken_accepted": 511,
+      "spoken_variant": 49,
+      "spoken_accepted": 513,
       "fully_supported": 541,
       "expected_spans": 0,
       "predicted_spans": 0,
@@ -6102,7 +6118,7 @@
       "spoken": "一点十分pm",
       "error": null
     },
-    "raw_tolerant_report_sha256": "3db5d9de66aff597ca5d8e32850afcca2cf8cf393c501dbcdbad3f0b7f3ca485"
+    "raw_tolerant_report_sha256": "6e67f710737ceccf0d8a634754e66b4e4bd0d969f257571d43557449ada64abf"
   },
   "phonetic_runtime_audit": {
     "path": "data/phonetic/espeak-runtime-audit.json",
@@ -6151,7 +6167,7 @@
   },
   "clock_meridiem_regression_audit": {
     "scope": "Semantic distinctness regression for 3:15 AM versus 3:15 PM in the twenty supported languages; not native linguistic, pronunciation or acoustic accuracy.",
-    "measured_at_utc": "2026-11-14T13:08:30.850747+00:00",
+    "measured_at_utc": "2026-11-14T14:07:10.695989+00:00",
     "options": {
       "interpret_as": "time",
       "reading_style": "natural",
@@ -6159,7 +6175,7 @@
     },
     "am_source": "3:15am",
     "pm_source": "3:15pm",
-    "source_tree_sha256": "f7b32ac87fe81aa2b9ede653ad06df8ac0553e9ec3864d11acbd1e79db4cbe59",
+    "source_tree_sha256": "d63dcbda7f9f47bcb2a908658cca9a74080d5e1d06b18d65e748de0be3c6840a",
     "before": {
       "scope": "Pre-fix CLI observation; binary/source fingerprint was not captured.",
       "locales": 20,
@@ -6454,7 +6470,7 @@
           "collapsed": false
         }
       ],
-      "binary_sha256": "98729600734be4e029460f2b0b461e9fb5f5f40b9e890e981879845c6fea02cf",
+      "binary_sha256": "b6cf6129f5410136a3c2276063148baebf224a4dc2c25eb8c38c49bbfa2d5db8",
       "binary_unchanged_during_probe": true,
       "raw_report_sha256": "5acc335d177183daa0cc8dc8f18dc9b51ed321260f7a6bda666449ad6bf0accc"
     },
@@ -6473,9 +6489,9 @@
   },
   "subsecond_clock_regression_audit": {
     "scope": "CLI integration regression for exact fractional fields and distinct spoken precision; not native linguistic or pronunciation accuracy.",
-    "measured_at_utc": "2026-11-14T13:08:34.659392+00:00",
-    "source_tree_sha256": "f7b32ac87fe81aa2b9ede653ad06df8ac0553e9ec3864d11acbd1e79db4cbe59",
-    "binary_sha256": "98729600734be4e029460f2b0b461e9fb5f5f40b9e890e981879845c6fea02cf",
+    "measured_at_utc": "2026-11-14T14:07:14.575328+00:00",
+    "source_tree_sha256": "d63dcbda7f9f47bcb2a908658cca9a74080d5e1d06b18d65e748de0be3c6840a",
+    "binary_sha256": "b6cf6129f5410136a3c2276063148baebf224a4dc2c25eb8c38c49bbfa2d5db8",
     "binary_unchanged_during_probe": true,
     "options": {
       "reading_style": "natural",
@@ -7184,5 +7200,68 @@
       "natural",
       "--json"
     ]
+  },
+  "variant_comparison_update": {
+    "baseline_commit": "c3a96f544b6585ed9bae69a944f87cdda7c456b6",
+    "scope": "Comparator-only update: source gold, canonical renderings and diagnostics unchanged. Separate valid variants do not improve literal accuracy.",
+    "automatic": {
+      "before_accepted": 294,
+      "after_accepted": 303,
+      "added_german_exact_hour": 8,
+      "added_arabic_regional_currency": 1
+    },
+    "explicit_policy": {
+      "before_accepted": 511,
+      "after_accepted": 513,
+      "added_arabic_regional_currency": 2
+    },
+    "rules": [
+      "alternative_german_clock_zero_minute_policy",
+      "arabic_regional_currency_unit_singular"
+    ]
+  },
+  "evaluation_data_scope": {
+    "minimum_locales": 20,
+    "external_locales": 12,
+    "external_missing_locales": [
+      "bn",
+      "id",
+      "mr",
+      "pa",
+      "ta",
+      "te",
+      "tr",
+      "ur"
+    ],
+    "authored_complete_spoken_cases_by_locale": {
+      "ar": 2,
+      "bn": 1,
+      "de": 1,
+      "en": 2,
+      "es": 2,
+      "fr": 1,
+      "hi": 2,
+      "id": 1,
+      "ja": 1,
+      "ko": 1,
+      "mr": 1,
+      "pa": 1,
+      "pt": 1,
+      "ru": 1,
+      "ta": 1,
+      "te": 1,
+      "tr": 1,
+      "ur": 1,
+      "vi": 1,
+      "zh": 2
+    },
+    "parse_gold_fields": [
+      "start",
+      "end",
+      "source",
+      "kind"
+    ],
+    "complete_semantic_value_gold": false,
+    "scope": "Selected development examples only; neither independent held-out application accuracy nor native pronunciation accuracy."
   }
 }

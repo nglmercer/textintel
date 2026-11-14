@@ -265,6 +265,24 @@ existing accent-folding policy retains script-specific marks.
    vocalization restrictions rather than treating output presence as accuracy. Keep provider
    capability subsets and unavailable/fallback diagnostics explicit.
 
+## Next accuracy work
+
+1. Extend evaluation with optional independently annotated semantic values and a
+   separate denominator. The current `ExpectedSpeechSpan` gold contains offsets,
+   source and kind only: `parse_exact` cannot detect a wrong magnitude, sign,
+   currency or clock field when those labels match. Retain historical span and
+   spoken metrics; add independent sign, decimal-precision, unit and AM/PM
+   contrasts across the twenty locales. The selected NeMo sample covers only
+   twelve locales; `bn ur id pa mr te tr ta` need external annotated examples,
+   and most locales currently have only one authored complete spoken gold.
+2. Add reviewed speech abbreviations through shared resources and context-aware
+   sentence boundaries. Keep chat substitutions opt-in; test ambiguous titles,
+   treatments and document references in prose as well as isolated tokens.
+3. Add complete timestamp IR by composing the existing calendar, clock, exact
+   fraction and lexer primitives. Preserve offset spelling and its semantics,
+   reject incomplete candidates atomically and keep code/data protections. This
+   needs separate parsing and spoken gold; it is absent from the NeMo sample.
+
 ## Verification scope
 
 [`speech_resource_profiles.rs`](../tests/speech_resource_profiles.rs) verifies
@@ -287,7 +305,7 @@ drive prefixes have a separate shared field guard; this is not a complete
 filesystem grammar. Separator regressions check that Arabic marks cannot change
 numeric magnitude under conflicting consumer options.
 The current all-feature/all-target and direct instrumented runs each passed
-713 tests, including regional metadata, full currency naming, fraction/range
+719 tests, including regional metadata, full currency naming, fraction/range
 consolidation, clock policies, the shared lexical protection map and eSpeak
 voice/control regression fixtures. The pinned live eSpeak audit is recorded
 separately from those test counts and does not establish native accuracy.

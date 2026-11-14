@@ -1436,6 +1436,39 @@ fn arabic_currency_is_feminine(code: &str) -> bool {
     matches!(code, "INR" | "PKR" | "IDR" | "TRY")
 }
 
+/// A regional spoken alternative, never the default money renderer. Gadalla
+/// (2000), §1 example 9, documents long numerals 3–10 + masculine singular unit
+/// in Egyptian Colloquial Arabic; Holes (2016), §3.8 p.137, attests singular
+/// dinar among Bahraini Baḥārna speakers. Only reviewed noun paradigms enter
+/// this construction; existing naming policy supplies the complete name.
+pub(super) fn regional_arabic_currency_unit_variant(
+    typed: &SpeechValue,
+    options: &SpeechOptions,
+) -> Option<String> {
+    let SpeechValue::Currency { code, value } = typed else {
+        return None;
+    };
+    if options.locale != SpeechLocale::Ar
+        || options.reading_style == ReadingStyle::Digits
+        || value.fraction.is_some()
+        || arabic_currency_is_feminine(code)
+        || !(3..=10).contains(&value.integer.parse::<u64>().ok()?)
+    {
+        return None;
+    }
+    let name = if options.currency_naming == CurrencyNaming::Full {
+        arabic_full_currency_forms(code)?[0].clone()
+    } else if let Some(forms) = arabic_currency_forms(code) {
+        forms[0].to_string()
+    } else {
+        // The same reviewed masculine noun can underlie another ISO code,
+        // such as Canadian dollars. Keep its lexical country qualifier.
+        arabic_full_currency_forms(code)?[0].clone()
+    };
+    let words = verbalize_with_options(&canonical_count(value), options, NumberReading::Cardinal)?;
+    Some(format!("{words} {name}"))
+}
+
 fn arabic_currency_major(
     code: &str,
     value: &NumberValue,

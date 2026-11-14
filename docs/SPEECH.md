@@ -327,6 +327,17 @@ split or replace the currency name. Variant comparison rejects any reading with
 readings do not gain acceptance through these rewrites. An exact literal match
 under its explicitly selected profile still retains its diagnostic records.
 
+`alternative_german_clock_zero_minute_policy` compares the existing Precise and
+Natural readings of one standalone exact-hour German clock, preserving its
+validated time and source spans. Explicit seconds and AM/PM/period markers are
+excluded; `24:00` requires identical full IR and never becomes `00:00`.
+`arabic_regional_currency_unit_singular` permits a documented regional spoken
+construction only for integer counts 3–10 with a reviewed masculine currency
+noun. It generates the entire amount from the shared number and currency data,
+retains sign and country qualifiers, and excludes written fractions, feminine or
+unknown nouns and surrounding prose. Canonical formal Arabic remains unchanged.
+These are separately reported variants, not extra exact matches.
+
 See [coverage and external development results](COVERAGE.md), the
 [case-by-case reference review](SPEECH-REFERENCE-REVIEW.md), and
 [reference sampling/provenance](../data/speech/reference-nemo.README.md). Code

@@ -695,6 +695,165 @@ fn chinese_currency_spacing_uses_the_exact_iso_names_without_style_changes() {
 }
 
 #[test]
+fn regional_arabic_currency_units_compose_reviewed_masculine_names_and_complete_amounts() {
+    use textintel::speech::CurrencyNaming;
+    let rule = "arabic_regional_currency_unit_singular";
+    for style in [ReadingStyle::Precise, ReadingStyle::Natural] {
+        let mut opts = options(SpeechLocale::Ar);
+        opts.reading_style = style;
+        opts.currency_symbols.insert("$".into(), "USD".into());
+        for (source, canonical, regional) in [
+            ("$7", "سبعة دولارات", "سبعة دولار"),
+            ("5د.ك", "خمسة دنانير كويتية", "خمسة دينار كويتي"),
+            ("USD-9", "سالب تسعة دولارات", "سالب تسعة دولار"),
+        ] {
+            assert_eq!(normalize_for_speech(source, &opts).unwrap().text, canonical);
+            check(source, &opts, regional, rule);
+            // The comparator never accepts a noncanonical `actual` value.
+            let parsed = parse_for_speech(source, &opts).unwrap();
+            assert!(compare_spoken(&parsed, &opts, regional, canonical).is_none());
+        }
+        // Independent lexical expectations over the productive3–10 domain,
+        // rather than looking up whole fixture utterances or changing prefixes.
+        for (amount, number) in [
+            (3, "ثلاثة"),
+            (4, "أربعة"),
+            (5, "خمسة"),
+            (6, "ستة"),
+            (7, "سبعة"),
+            (8, "ثمانية"),
+            (9, "تسعة"),
+            (10, "عشرة"),
+        ] {
+            for (code, singular) in [
+                ("USD", "دولار"),
+                ("GBP", "جنيه"),
+                ("KWD", "دينار كويتي"),
+                ("SAR", "ريال"),
+                ("AED", "درهم"),
+                ("RUB", "روبل"),
+                ("CHF", "فرنك"),
+            ] {
+                check(
+                    &format!("{code}{amount}"),
+                    &opts,
+                    &format!("{number} {singular}"),
+                    rule,
+                );
+            }
+        }
+        check(" \tUSD7\n", &opts, " سبعة دولار ", rule);
+        opts.currency_naming = CurrencyNaming::Full;
+        for (code, qualified_name) in [
+            ("USD", "دولار أمريكي"),
+            ("GBP", "جنيه إسترليني"),
+            ("KWD", "دينار كويتي"),
+            ("SAR", "ريال سعودي"),
+            ("AED", "درهم إماراتي"),
+            ("RUB", "روبل روسي"),
+            ("CHF", "فرنك سويسري"),
+            ("CAD", "دولار كندي"),
+            ("AUD", "دولار أسترالي"),
+            ("NZD", "دولار نيوزيلندي"),
+            ("SGD", "دولار سنغافوري"),
+            ("TWD", "دولار تايواني"),
+            ("BRL", "ريال برازيلي"),
+            ("EGP", "جنيه مصري"),
+        ] {
+            check(
+                &format!("{code}4"),
+                &opts,
+                &format!("أربعة {qualified_name}"),
+                rule,
+            );
+            check(
+                &format!("{code}-6"),
+                &opts,
+                &format!("سالب ستة {qualified_name}"),
+                rule,
+            );
+        }
+    }
+}
+
+#[test]
+fn regional_arabic_currency_units_reject_unreviewed_register_mixes_and_precision_changes() {
+    let mut opts = options(SpeechLocale::Ar);
+    opts.currency_symbols.insert("$".into(), "USD".into());
+    for (source, reference) in [
+        ("$7.05", "سبعة دولار وخمسة سنتات"),
+        ("$7.50", "سبعة دولار وخمسون سنت"),
+        ("$7.99", "سبعة دولار وتسعة وتسعون سنت"),
+        ("$0.99", "تسعة وتسعون سنت"),
+        ("EUR0.99", "تسعة وتسعون سنت"),
+        ("USD7.0", "سبعة دولار"),
+        ("USD7.00", "سبعة دولار"),
+        ("USD7.000", "سبعة دولار"),
+        ("USD7.01", "سبعة دولار"),
+        ("USD1", "واحد دولار"),
+        ("USD2", "اثنان دولار"),
+        ("USD01", "واحد دولار"),
+        ("USD02", "اثنان دولار"),
+        ("USD11", "أحد عشر دولار"),
+        ("USD99", "تسعة وتسعون دولار"),
+        ("USD-7", "سبعة دولار"),
+        ("USD7", "سالب سبعة دولار"),
+        ("USD7", "ثمانية دولار"),
+        ("USD7", "سبعة دينار"),
+        ("USD7", "سبعة دولار أمريكي"),
+        ("السعر USD7", "السعر سبعة دولار"),
+        ("USD7 USD3", "سبعة دولار ثلاثة دولار"),
+        ("INR3", "ثلاث روبية"),
+        ("INR3", "ثلاثة روبية"),
+        ("PKR5", "خمسة روبية"),
+        ("IDR6", "ستة روبية"),
+        ("TRY9", "تسعة ليرة"),
+        ("JPY3", "ثلاثة ين"),
+        ("PLN4", "أربعة زلوتي"),
+    ] {
+        reject(source, &opts, reference);
+    }
+    opts.unit_aliases
+        .insert("f".into(), "temperature-fahrenheit".into());
+    reject("f9", &opts, "تسعة فهرنهايت");
+    opts.currency_naming = textintel::speech::CurrencyNaming::Full;
+    reject("USD7", &opts, "سبعة دولار");
+    reject("USD7", &opts, "سبعة دولار كندي");
+    reject("CAD7", &opts, "سبعة دولار أمريكي");
+    reject("KWD5", &opts, "خمسة دينار");
+    reject("INR3", &opts, "ثلاث روبية هندية");
+    opts.reading_style = ReadingStyle::Digits;
+    reject("USD7", &opts, "سبعة دولار أمريكي");
+}
+
+#[test]
+fn regional_arabic_currency_units_require_the_exact_canonical_locale_and_source_ir() {
+    let opts = options(SpeechLocale::Ar);
+    let document = parse_for_speech("USD7", &opts).unwrap();
+    let canonical = normalize_for_speech("USD7", &opts).unwrap().text;
+    let mut forged = document.clone();
+    if let SpeechValue::Currency { value, .. } = &mut forged.spans[0].value {
+        value.integer = "8".into();
+    } else {
+        panic!("expected Currency");
+    }
+    assert!(compare_spoken(&forged, &opts, "ثمانية دولارات", "ثمانية دولار").is_none());
+    let mut forged = document.clone();
+    if let SpeechValue::Currency { code, .. } = &mut forged.spans[0].value {
+        *code = "SAR".into();
+    }
+    assert!(compare_spoken(&forged, &opts, "سبعة ريالات", "سبعة ريال").is_none());
+    let mut forged = document.clone();
+    forged.locale = SpeechLocale::En;
+    assert!(compare_spoken(&forged, &opts, &canonical, "سبعة دولار").is_none());
+    let english = options(SpeechLocale::En);
+    let foreign = parse_for_speech("USD7", &english).unwrap();
+    let actual = normalize_for_speech("USD7", &english).unwrap();
+    assert!(compare_spoken(&foreign, &english, &actual.text, "سبعة دولار").is_none());
+    assert!(compare_spoken(&foreign, &opts, &canonical, "سبعة دولار").is_none());
+}
+
+#[test]
 fn generated_currency_policies_never_accept_changed_assets_or_values_in_twenty_locales() {
     for locale in SpeechLocale::ALL {
         let mut opts = SpeechOptions::new(locale);
@@ -770,4 +929,148 @@ fn catalog_and_limits_are_auditable() {
     let source = "a".repeat(8193);
     let document = parse_for_speech(&source, &large).unwrap();
     assert!(compare_spoken(&document, &large, &source, &format!(" {source}")).is_none());
+}
+
+#[test]
+fn german_zero_minute_clock_policy_is_symmetric_and_proves_compact_ir_equivalence() {
+    let rule = "alternative_german_clock_zero_minute_policy";
+    for notation in [NumberNotation::Phonetic, NumberNotation::Orthographic] {
+        let mut precise = SpeechOptions::new(SpeechLocale::De);
+        precise.number_notation = notation;
+        let mut natural = precise.clone();
+        natural.reading_style = ReadingStyle::Natural;
+        for (source, short, explicit) in [
+            ("08:00 Uhr", "acht uhr", "acht uhr null minuten"),
+            ("00:00 Uhr", "null uhr", "null uhr null minuten"),
+            ("01:00 Uhr", "ein uhr", "ein uhr null minuten"),
+            ("20:00 Uhr", "zwanzig uhr", "zwanzig uhr null minuten"),
+        ] {
+            check(source, &precise, short, rule);
+            check(source, &natural, explicit, rule);
+        }
+        check(" \t08:00 Uhr\n", &precise, "acht uhr", rule);
+        check("20:00 Uhr", &precise, "Zwanzig uhr", rule);
+    }
+    let precise = SpeechOptions::new(SpeechLocale::De);
+    let mut natural = precise.clone();
+    natural.reading_style = ReadingStyle::Natural;
+    let a = parse_for_speech("08:00 Uhr", &precise).unwrap();
+    let b = parse_for_speech("08:00 Uhr", &natural).unwrap();
+    assert!(matches!(
+        a.spans[0].value,
+        SpeechValue::Time {
+            hour: 8,
+            minute: 0,
+            second: None
+        }
+    ));
+    assert!(matches!(
+        b.spans[0].value,
+        SpeechValue::Temporal {
+            value: textintel::speech::temporal::TemporalValue::Clock {
+                hour: 8,
+                minute: Some(0),
+                second: None,
+                ..
+            }
+        }
+    ));
+    assert_ne!(a, b);
+}
+
+#[test]
+fn german_twenty_four_hour_endpoint_requires_identical_ir_and_never_becomes_midnight_zero() {
+    use textintel::speech::temporal::TemporalValue;
+    let precise = SpeechOptions::new(SpeechLocale::De);
+    let mut natural = precise.clone();
+    natural.reading_style = ReadingStyle::Natural;
+    let a = parse_for_speech("24:00 Uhr", &precise).unwrap();
+    let b = parse_for_speech("24:00 Uhr", &natural).unwrap();
+    assert_eq!(a, b);
+    assert!(matches!(
+        a.spans[0].value,
+        SpeechValue::Temporal {
+            value: TemporalValue::Clock {
+                hour: 24,
+                minute: Some(0),
+                second: None,
+                ..
+            }
+        }
+    ));
+    check(
+        "24:00 Uhr",
+        &precise,
+        "vierundzwanzig uhr",
+        "alternative_german_clock_zero_minute_policy",
+    );
+    check(
+        "24:00 Uhr",
+        &precise,
+        "vier und zwanzig uhr",
+        "alternative_german_clock_zero_minute_policy",
+    );
+    check(
+        "24:00 Uhr",
+        &natural,
+        "vierundzwanzig uhr null minuten",
+        "alternative_german_clock_zero_minute_policy",
+    );
+    reject("24:00 Uhr", &precise, "null uhr");
+    reject("24:00 Uhr", &natural, "null uhr null minuten");
+    reject("24:00", &natural, "vierundzwanzig uhr null minuten");
+    let mut forged = a.clone();
+    if let SpeechValue::Temporal {
+        value: TemporalValue::Clock { hour, .. },
+    } = &mut forged.spans[0].value
+    {
+        *hour = 0;
+    }
+    let actual = normalize_for_speech("24:00 Uhr", &precise).unwrap();
+    assert!(compare_spoken(&forged, &precise, &actual.text, "null uhr").is_none());
+}
+
+#[test]
+fn german_zero_minute_policy_excludes_changed_values_precision_qualifiers_and_prose() {
+    let opts = SpeechOptions::new(SpeechLocale::De);
+    for (source, reference) in [
+        ("08:00 Uhr", "neun uhr"),
+        ("08:00 Uhr", "acht uhr eine minute"),
+        ("08:01 Uhr", "acht uhr"),
+        ("08:00:00 Uhr", "acht uhr null sekunden"),
+        ("08:00:01 Uhr", "acht uhr eine sekunde"),
+        ("08:00:00.0 Uhr", "acht uhr"),
+        ("08:00 Uhr PM", "zwanzig uhr"),
+        ("08:00am", "acht uhr"),
+        ("08:00 Uhr UTC", "acht uhr UTC"),
+        ("Termin 08:00 Uhr", "Termin acht uhr"),
+        ("08:00 Uhr.", "acht uhr."),
+        ("8 h", "acht uhr"),
+        ("8h00min", "acht uhr"),
+        ("8", "acht uhr"),
+        ("2024-08-01", "acht uhr"),
+    ] {
+        reject(source, &opts, reference);
+    }
+    let mut natural = opts.clone();
+    natural.reading_style = ReadingStyle::Natural;
+    reject("8h00min", &natural, "acht uhr null minuten");
+    reject("08:00 Uhr PM", &natural, "zwanzig uhr null minuten");
+    let mut digits = opts.clone();
+    digits.reading_style = ReadingStyle::Digits;
+    reject("08:00 Uhr", &digits, "acht uhr null minuten");
+    let mut number = opts.clone();
+    number.interpret_as = textintel::speech::SpeechInterpretation::Number;
+    reject("08:00 Uhr", &number, "acht uhr");
+    let mut document = parse_for_speech("08:00 Uhr", &opts).unwrap();
+    let actual = normalize_for_speech("08:00 Uhr", &opts).unwrap();
+    document.spans[0].value = SpeechValue::Time {
+        hour: 8,
+        minute: 0,
+        second: Some(0),
+    };
+    assert!(compare_spoken(&document, &opts, &actual.text, "acht uhr").is_none());
+    let mut document = parse_for_speech("08:00 Uhr", &opts).unwrap();
+    document.spans[0].source = "09:00 Uhr".into();
+    assert!(compare_spoken(&document, &opts, &actual.text, "acht uhr").is_none());
 }

@@ -13,6 +13,10 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
   conventions, with explicit interpretation, date/decimal/currency policies,
   exact quantities, calendar forms, fractions, ranges, scientific notation,
   ordinals, durations, and diagnostics for unresolved readings.
+- Add bounded alternate readings for standalone German exact-hour clocks and
+  Arabic integer currency counts 3–10 with reviewed masculine unit nouns,
+  preserving source metadata, value, sign and currency naming. Decimal/register
+  mixtures remain unresolved; default rendering and upstream gold are unchanged.
 - Separate literal and reviewed-variant speech evaluation, preserving original
   corpus gold and reporting contradictory references and named comparison rules.
 - Opt-in full localized currency names through `CurrencyNaming::Full` and
