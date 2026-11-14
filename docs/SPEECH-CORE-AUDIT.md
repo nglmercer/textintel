@@ -255,6 +255,10 @@ existing accent-folding policy retains script-specific marks.
    should not silently become default TTS substitutions. Fifteen of the minimum
    languages lack any chat abbreviation pack, and that says nothing about
    speech abbreviation coverage.
+   Native sentence terminators `؟ ۔ । ॥` are now recognized by the shared
+   core, including runs and closers. Existing abbreviation limitations remain:
+   for example, typed speech preserves `Dr.` rather than using the legacy title
+   expansion, and the global sentence list still lacks contextual German `Nr.`.
 
 6. **Full phonetics/transliteration remains an independent language task.**
    The confidence fix prevents unsupported Latin text from inheriting 0.65
@@ -267,14 +271,18 @@ existing accent-folding policy retains script-specific marks.
 
 ## Next accuracy work
 
-1. Extend evaluation with optional independently annotated semantic values and a
-   separate denominator. The current `ExpectedSpeechSpan` gold contains offsets,
-   source and kind only: `parse_exact` cannot detect a wrong magnitude, sign,
-   currency or clock field when those labels match. Retain historical span and
-   spoken metrics; add independent sign, decimal-precision, unit and AM/PM
-   contrasts across the twenty locales. The selected NeMo sample covers only
-   twelve locales; `bn ur id pa mr te tr ta` need external annotated examples,
-   and most locales currently have only one authored complete spoken gold.
+1. Extend independently reviewed semantic and spoken data. Optional
+   `expected_values` now reuses complete `SpeechSpan` / `SpeechValue` IR, with
+   separate semantic counts and exit gates that cannot accept a wrong value
+   through spoken variants. The new designed matrix checks 560 cases and 540
+   exact value spans across twenty locales, including sign, currency, precision,
+   AM/PM and protected-source contrasts. Its expectations were written before
+   running the parser; it has no spoken gold and is not independent production
+   data. Historical `parse_exact` continues to compare source/kind spans only.
+   The selected NeMo sample covers only twelve locales; `bn ur id pa mr te tr ta`
+   need external annotated examples, and most locales currently have only one
+   authored complete spoken gold. Natural expression types and localized
+   grammar need their own explicit-profile semantic and spoken gold.
 2. Add reviewed speech abbreviations through shared resources and context-aware
    sentence boundaries. Keep chat substitutions opt-in; test ambiguous titles,
    treatments and document references in prose as well as isolated tokens.
@@ -305,7 +313,7 @@ drive prefixes have a separate shared field guard; this is not a complete
 filesystem grammar. Separator regressions check that Arabic marks cannot change
 numeric magnitude under conflicting consumer options.
 The current all-feature/all-target and direct instrumented runs each passed
-719 tests, including regional metadata, full currency naming, fraction/range
+740 tests, including regional metadata, full currency naming, fraction/range
 consolidation, clock policies, the shared lexical protection map and eSpeak
 voice/control regression fixtures. The pinned live eSpeak audit is recorded
 separately from those test counts and does not establish native accuracy.
@@ -348,6 +356,14 @@ and [lira/counting examples](https://uomus.edu.iq/img/lectures21/MUCLecture_2024
 [MANUU's Arabic grammar](https://dde.manuu.edu.in/sites/default/files/2021-12/Arabic%20Grammar%20and%20Communication_0.pdf)
 documents the rupee noun and plural. Implicit one/dual unit patterns no longer
 erase explicit decimal zeros: decimal quantities use a number-bearing pattern.
+
+The designed semantic matrix exposed an additional rendering gap for Arabic
+`EUR 2.00`. Style naming now reads integral one/dual euro amounts through the
+same count helper as existing currencies, while retaining written fraction digits
+in IR. The forms are attested in UN [A/CONF.219/2021/INF/1, p.16 §107](https://digitallibrary.un.org/record/3950930/files/A_CONF.219_2021_INF_1-AR.pdf)
+and [E/C.12/69/D/48/2018, p.2](https://digitallibrary.un.org/record/3993942/files/E_C.12_69_D_48_2018-AR.pdf).
+This adds no complete plural/full-name paradigm and no new comparison variant;
+existing major/minor composition reuses the reviewed cent grammar.
 
 The subsecond regression matrix covers 1,800 language/style/notation/precision
 combinations, plus explicit AM/PM, unsupported suffixes, field bounds and source

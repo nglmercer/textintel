@@ -3,84 +3,85 @@
   "measured_on": "2026-11-14",
   "status": "verified development snapshot; 100% reference agreement remains unresolved",
   "base_commit": "5917360cee6348d55a51fefe9393cc0dd5cc960b",
-  "worktree": "uncommitted changes",
+  "worktree": "measured before commit; source_tree pins the verified inputs",
   "source_tree": {
-    "sha256": "d63dcbda7f9f47bcb2a908658cca9a74080d5e1d06b18d65e748de0be3c6840a",
-    "files": 296,
-    "definition": "SHA256 over sorted relative POSIX path + NUL + file bytes + NUL for all files under src/tests/resources/data/language, plus Cargo.toml/Cargo.lock/build.rs and the three speech corpus/policy JSON inputs. Documentation and generated snapshots excluded.",
-    "parent_commit": "c3a96f544b6585ed9bae69a944f87cdda7c456b6"
+    "sha256": "a3f03a107c0e5bc6fd7690416ad5a784ea72a74fb4e8852342a05fdd4b5ca338",
+    "files": 298,
+    "definition": "SHA256 over sorted relative POSIX path + NUL + file bytes + NUL for all files under src/tests/resources/data/language, plus Cargo.toml/Cargo.lock/build.rs and the four speech corpus/policy JSON inputs (including semantic-values.json). Documentation and generated snapshots excluded.",
+    "parent_commit": "1f6c146dd76f995ded1a0023d99dfdbc8324ada0"
   },
   "tools": {
     "rustc": "1.99.0 (b940084d7 2026-09-28)",
     "cargo_llvm_cov": "0.8.7"
   },
   "commands": {
-    "code_coverage": "RUSTC_WRAPPER= cargo llvm-cov --no-rustc-wrapper --locked --all-features --workspace --json --output-path target/coverage/goal-regional-variants-direct.json --ignore-filename-regex '(/tests/|/benches/|/examples/|/registry/)'",
+    "code_coverage": "RUSTC_WRAPPER= cargo llvm-cov --no-rustc-wrapper --locked --all-features --workspace --json --output-path target/coverage/goal-semantic-values-direct.json --ignore-filename-regex '(/tests/|/benches/|/examples/|/registry/)'",
     "all_tests": "cargo test --locked --all-features --all-targets",
     "clippy": "cargo clippy --locked --all-features --all-targets -- -D warnings",
     "msrv": "cargo +1.90 check --locked --no-default-features --all-targets",
     "docs": "cargo doc --locked --no-deps --all-features",
-    "automatic": "cargo run --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --json",
-    "reviewed": "cargo run --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --speech-policy data/speech/reference-policy.json --json",
-    "authored": "cargo run --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/evaluation.json --json",
-    "library_quality": "cargo run --locked --quiet --no-default-features --bin textintel -- eval data/evaluation --split test --gates data/quality-gates.json --json",
-    "reviewed_tolerant_clock": "cargo run --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --speech-policy data/speech/reference-policy.json --clock-policy normalize-redundant-period --json",
+    "automatic": "cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --json",
+    "reviewed": "cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --speech-policy data/speech/reference-policy.json --json",
+    "authored": "cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/evaluation.json --json",
+    "library_quality": "cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- eval data/evaluation --split test --gates data/quality-gates.json --json",
+    "reviewed_tolerant_clock": "cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --speech-policy data/speech/reference-policy.json --clock-policy normalize-redundant-period --json",
     "phonetic_runtime": "cargo run --locked --features phonetic-espeak --example espeak -- --binary target/tools/espeak-audit/install/bin/espeak-ng --json",
     "msrv_phonetic_espeak": "cargo +1.90 check --locked --no-default-features --features phonetic-espeak --all-targets",
-    "reviewed_literal_date": "cargo run --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --speech-policy data/speech/reference-policy.json --invalid-date-policy read-components --json",
-    "tts_transcription": "cargo run --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --speech-policy data/speech/reference-policy.json --invalid-date-policy read-components --clock-policy normalize-redundant-period --json"
+    "reviewed_literal_date": "cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --speech-policy data/speech/reference-policy.json --invalid-date-policy read-components --json",
+    "tts_transcription": "cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/reference-nemo.json --speech-policy data/speech/reference-policy.json --invalid-date-policy read-components --clock-policy normalize-redundant-period --json",
+    "semantic_values": "cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/semantic-values.json --json"
   },
   "code_coverage": {
     "scope": "142 owned instrumented Rust source files; inline unit tests included; tests/benches/examples/registry paths excluded; one absolute path per file; compiler wrapper bypassed",
     "overall": {
       "lines": {
-        "count": 31659,
-        "covered": 27970,
-        "percent": 88.34770523389874
+        "count": 31954,
+        "covered": 28267,
+        "percent": 88.46153846153847
       },
       "functions": {
-        "count": 3126,
-        "covered": 2743,
-        "percent": 87.74792066538707
+        "count": 3151,
+        "covered": 2768,
+        "percent": 87.8451285306252
       },
       "regions": {
-        "count": 50174,
-        "covered": 44500,
-        "percent": 88.69135408777454
+        "count": 50625,
+        "covered": 44954,
+        "percent": 88.79802469135802
       }
     },
     "speech": {
       "lines": {
-        "count": 15564,
-        "covered": 14611,
-        "percent": 93.87689539964019
+        "count": 15844,
+        "covered": 14892,
+        "percent": 93.99141630901288
       },
       "functions": {
-        "count": 1331,
-        "covered": 1285,
-        "percent": 96.54395191585274
+        "count": 1356,
+        "covered": 1310,
+        "percent": 96.60766961651917
       },
       "regions": {
-        "count": 25209,
-        "covered": 23430,
-        "percent": 92.9429965488516
+        "count": 25649,
+        "covered": 23872,
+        "percent": 93.07185465320285
       }
     },
     "versioned_normalization": {
       "lines": {
-        "count": 5655,
-        "covered": 5311,
-        "percent": 93.91688770999116
+        "count": 5787,
+        "covered": 5445,
+        "percent": 94.09020217729393
       },
       "functions": {
-        "count": 565,
-        "covered": 554,
-        "percent": 98.05309734513274
+        "count": 576,
+        "covered": 565,
+        "percent": 98.09027777777777
       },
       "regions": {
-        "count": 9414,
-        "covered": 8901,
-        "percent": 94.55066921606118
+        "count": 9643,
+        "covered": 9134,
+        "percent": 94.72155968059732
       }
     },
     "selected_file_lines": {
@@ -175,9 +176,9 @@
         "percent": 91.07142857142857
       },
       "src/speech/evaluation.rs": {
-        "count": 363,
-        "covered": 327,
-        "percent": 90.08264462809917
+        "count": 449,
+        "covered": 414,
+        "percent": 92.20489977728285
       },
       "src/speech/expressions.rs": {
         "count": 703,
@@ -280,9 +281,9 @@
         "percent": 94.63087248322148
       },
       "src/speech/normalization/segments.rs": {
-        "count": 221,
-        "covered": 217,
-        "percent": 98.19004524886878
+        "count": 353,
+        "covered": 351,
+        "percent": 99.43342776203966
       },
       "src/speech/normalization/shared.rs": {
         "count": 154,
@@ -300,9 +301,9 @@
         "percent": 98.39080459770115
       },
       "src/speech/quantities.rs": {
-        "count": 1346,
-        "covered": 1252,
-        "percent": 93.01634472511144
+        "count": 1366,
+        "covered": 1270,
+        "percent": 92.97218155197658
       },
       "src/speech/resource_profiles.rs": {
         "count": 187,
@@ -310,9 +311,9 @@
         "percent": 85.02673796791444
       },
       "src/speech/segmentation.rs": {
-        "count": 290,
-        "covered": 284,
-        "percent": 97.93103448275862
+        "count": 332,
+        "covered": 326,
+        "percent": 98.19277108433735
       },
       "src/speech/shapes.rs": {
         "count": 521,
@@ -342,7 +343,7 @@
     },
     "branches_measured": false,
     "mcdc_measured": false,
-    "raw_report_sha256": "1a57e572db43743fa1d93715d84320aaee04e61a4ca5600c4fdbac3d4a753b9e",
+    "raw_report_sha256": "fcc91cdcdd5e2ee25534bef81774bcc25f7da62c4f295dd6d656a50b346abcc0",
     "phonetic": {
       "lines": {
         "count": 1073,
@@ -363,13 +364,13 @@
   },
   "checks": {
     "all_feature_all_target_tests": {
-      "passed": 719,
+      "passed": 740,
       "failed": 0,
       "ignored": 0,
       "exit_code": 0
     },
     "instrumented_tests": {
-      "passed": 719,
+      "passed": 740,
       "failed": 0,
       "ignored": 0,
       "exit_code": 0
@@ -388,7 +389,8 @@
     "phonetic_runtime_audit_verified": true,
     "msrv_phonetic_espeak_all_targets_exit_code": 0,
     "literal_date_nemo_exit_code": 1,
-    "tts_transcription_nemo_exit_code": 1
+    "tts_transcription_nemo_exit_code": 1,
+    "semantic_values_evaluation_exit_code": 0
   },
   "inputs": {
     "data/speech/evaluation.json": {
@@ -399,6 +401,9 @@
     },
     "data/speech/reference-policy.json": {
       "sha256": "a947bf15ef89660e8b24dfe54d397cac4f126805a942c0692c4d8e235a996577"
+    },
+    "data/speech/semantic-values.json": {
+      "sha256": "b8753d1a4313d77ad06f7afaa20df9759cb016e1930cd59d7431bbe7f30b8bbe"
     }
   },
   "original_nemo_gold_unchanged_from_base_commit": true,
@@ -5837,6 +5842,1280 @@
         "nemo-ru-money-0007",
         "nemo-zh-time-0009"
       ]
+    },
+    "semantic_values": {
+      "policy": {
+        "reading_style": null,
+        "number_notation": null,
+        "currency_naming": null,
+        "clock_policy": null,
+        "invalid_date_policy": null,
+        "category_hints": false,
+        "locales": {}
+      },
+      "corpus_version": "1.0.0",
+      "purpose": "Designed exact semantic-value regression matrix for twenty locales. Literal expected IR is authored before parser execution; shared structural templates are not an independent held-out or native-pronunciation benchmark. No spoken gold.",
+      "totals": {
+        "cases": 560,
+        "parse_cases": 540,
+        "parse_exact": 540,
+        "spoken_cases": 0,
+        "spoken_exact": 0,
+        "spoken_variant": 0,
+        "spoken_accepted": 0,
+        "fully_supported": 500,
+        "expected_spans": 520,
+        "predicted_spans": 520,
+        "correct_spans": 520,
+        "semantic": {
+          "cases": 560,
+          "exact": 560,
+          "expected_spans": 540,
+          "predicted_spans": 540,
+          "correct_spans": 540
+        }
+      },
+      "by_locale": {
+        "ar": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "bn": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "de": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "en": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "es": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "fr": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "hi": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "id": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "ja": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "ko": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "mr": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "pa": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "pt": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "ru": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "ta": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "te": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "tr": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "ur": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "vi": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        },
+        "zh": {
+          "cases": 28,
+          "parse_cases": 27,
+          "parse_exact": 27,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 25,
+          "expected_spans": 26,
+          "predicted_spans": 26,
+          "correct_spans": 26,
+          "semantic": {
+            "cases": 28,
+            "exact": 28,
+            "expected_spans": 27,
+            "predicted_spans": 27,
+            "correct_spans": 27
+          }
+        }
+      },
+      "by_category": {
+        "ambiguous": {
+          "cases": 20,
+          "parse_cases": 20,
+          "parse_exact": 20,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 0,
+          "expected_spans": 20,
+          "predicted_spans": 20,
+          "correct_spans": 20,
+          "semantic": {
+            "cases": 20,
+            "exact": 20,
+            "expected_spans": 20,
+            "predicted_spans": 20,
+            "correct_spans": 20
+          }
+        },
+        "currency": {
+          "cases": 40,
+          "parse_cases": 40,
+          "parse_exact": 40,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 40,
+          "expected_spans": 40,
+          "predicted_spans": 40,
+          "correct_spans": 40,
+          "semantic": {
+            "cases": 40,
+            "exact": 40,
+            "expected_spans": 40,
+            "predicted_spans": 40,
+            "correct_spans": 40
+          }
+        },
+        "date": {
+          "cases": 20,
+          "parse_cases": 20,
+          "parse_exact": 20,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 20,
+          "expected_spans": 20,
+          "predicted_spans": 20,
+          "correct_spans": 20,
+          "semantic": {
+            "cases": 20,
+            "exact": 20,
+            "expected_spans": 20,
+            "predicted_spans": 20,
+            "correct_spans": 20
+          }
+        },
+        "identifier": {
+          "cases": 40,
+          "parse_cases": 40,
+          "parse_exact": 40,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 0,
+          "expected_spans": 40,
+          "predicted_spans": 40,
+          "correct_spans": 40,
+          "semantic": {
+            "cases": 40,
+            "exact": 40,
+            "expected_spans": 40,
+            "predicted_spans": 40,
+            "correct_spans": 40
+          }
+        },
+        "measure": {
+          "cases": 40,
+          "parse_cases": 40,
+          "parse_exact": 40,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 40,
+          "expected_spans": 40,
+          "predicted_spans": 40,
+          "correct_spans": 40,
+          "semantic": {
+            "cases": 40,
+            "exact": 40,
+            "expected_spans": 40,
+            "predicted_spans": 40,
+            "correct_spans": 40
+          }
+        },
+        "number": {
+          "cases": 260,
+          "parse_cases": 260,
+          "parse_exact": 260,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 260,
+          "expected_spans": 260,
+          "predicted_spans": 260,
+          "correct_spans": 260,
+          "semantic": {
+            "cases": 260,
+            "exact": 260,
+            "expected_spans": 260,
+            "predicted_spans": 260,
+            "correct_spans": 260
+          }
+        },
+        "plain": {
+          "cases": 20,
+          "parse_cases": 20,
+          "parse_exact": 20,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 20,
+          "expected_spans": 0,
+          "predicted_spans": 0,
+          "correct_spans": 0,
+          "semantic": {
+            "cases": 20,
+            "exact": 20,
+            "expected_spans": 0,
+            "predicted_spans": 0,
+            "correct_spans": 0
+          }
+        },
+        "time": {
+          "cases": 120,
+          "parse_cases": 100,
+          "parse_exact": 100,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 120,
+          "expected_spans": 100,
+          "predicted_spans": 100,
+          "correct_spans": 100,
+          "semantic": {
+            "cases": 120,
+            "exact": 120,
+            "expected_spans": 120,
+            "predicted_spans": 120,
+            "correct_spans": 120
+          }
+        }
+      },
+      "exact_spoken_ceiling": 0,
+      "reference_conflicts": [],
+      "unresolved_by_reason": {
+        "identifier \"code\" requires an explicit application reading policy": 20,
+        "identifier \"structured_data\" requires an explicit application reading policy": 20,
+        "invalid calendar date": 20
+      },
+      "variants_by_rule": {},
+      "diagnostics": [
+        {
+          "case_id": "en-semantic-calendar-invalid",
+          "locale": "en",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "en-semantic-protected-code",
+          "locale": "en",
+          "kind": "identifier",
+          "start": 19,
+          "end": 29,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "en-semantic-protected-json",
+          "locale": "en",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "es-semantic-calendar-invalid",
+          "locale": "es",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "es-semantic-protected-code",
+          "locale": "es",
+          "kind": "identifier",
+          "start": 18,
+          "end": 28,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "es-semantic-protected-json",
+          "locale": "es",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "zh-semantic-calendar-invalid",
+          "locale": "zh",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "zh-semantic-protected-code",
+          "locale": "zh",
+          "kind": "identifier",
+          "start": 16,
+          "end": 26,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "zh-semantic-protected-json",
+          "locale": "zh",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "hi-semantic-calendar-invalid",
+          "locale": "hi",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "hi-semantic-protected-code",
+          "locale": "hi",
+          "kind": "identifier",
+          "start": 23,
+          "end": 33,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "hi-semantic-protected-json",
+          "locale": "hi",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ar-semantic-calendar-invalid",
+          "locale": "ar",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "ar-semantic-protected-code",
+          "locale": "ar",
+          "kind": "identifier",
+          "start": 24,
+          "end": 34,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ar-semantic-protected-json",
+          "locale": "ar",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "fr-semantic-calendar-invalid",
+          "locale": "fr",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "fr-semantic-protected-code",
+          "locale": "fr",
+          "kind": "identifier",
+          "start": 20,
+          "end": 30,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "fr-semantic-protected-json",
+          "locale": "fr",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "pt-semantic-calendar-invalid",
+          "locale": "pt",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "pt-semantic-protected-code",
+          "locale": "pt",
+          "kind": "identifier",
+          "start": 17,
+          "end": 27,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "pt-semantic-protected-json",
+          "locale": "pt",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ru-semantic-calendar-invalid",
+          "locale": "ru",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "ru-semantic-protected-code",
+          "locale": "ru",
+          "kind": "identifier",
+          "start": 34,
+          "end": 44,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ru-semantic-protected-json",
+          "locale": "ru",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "bn-semantic-calendar-invalid",
+          "locale": "bn",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "bn-semantic-protected-code",
+          "locale": "bn",
+          "kind": "identifier",
+          "start": 26,
+          "end": 36,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "bn-semantic-protected-json",
+          "locale": "bn",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ur-semantic-calendar-invalid",
+          "locale": "ur",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "ur-semantic-protected-code",
+          "locale": "ur",
+          "kind": "identifier",
+          "start": 18,
+          "end": 28,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ur-semantic-protected-json",
+          "locale": "ur",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "id-semantic-calendar-invalid",
+          "locale": "id",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "id-semantic-protected-code",
+          "locale": "id",
+          "kind": "identifier",
+          "start": 15,
+          "end": 25,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "id-semantic-protected-json",
+          "locale": "id",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "de-semantic-calendar-invalid",
+          "locale": "de",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "de-semantic-protected-code",
+          "locale": "de",
+          "kind": "identifier",
+          "start": 19,
+          "end": 29,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "de-semantic-protected-json",
+          "locale": "de",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ja-semantic-calendar-invalid",
+          "locale": "ja",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "ja-semantic-protected-code",
+          "locale": "ja",
+          "kind": "identifier",
+          "start": 13,
+          "end": 23,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ja-semantic-protected-json",
+          "locale": "ja",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "pa-semantic-calendar-invalid",
+          "locale": "pa",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "pa-semantic-protected-code",
+          "locale": "pa",
+          "kind": "identifier",
+          "start": 26,
+          "end": 36,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "pa-semantic-protected-json",
+          "locale": "pa",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "mr-semantic-calendar-invalid",
+          "locale": "mr",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "mr-semantic-protected-code",
+          "locale": "mr",
+          "kind": "identifier",
+          "start": 32,
+          "end": 42,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "mr-semantic-protected-json",
+          "locale": "mr",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "te-semantic-calendar-invalid",
+          "locale": "te",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "te-semantic-protected-code",
+          "locale": "te",
+          "kind": "identifier",
+          "start": 22,
+          "end": 32,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "te-semantic-protected-json",
+          "locale": "te",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "tr-semantic-calendar-invalid",
+          "locale": "tr",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "tr-semantic-protected-code",
+          "locale": "tr",
+          "kind": "identifier",
+          "start": 13,
+          "end": 23,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "tr-semantic-protected-json",
+          "locale": "tr",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ta-semantic-calendar-invalid",
+          "locale": "ta",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "ta-semantic-protected-code",
+          "locale": "ta",
+          "kind": "identifier",
+          "start": 28,
+          "end": 38,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ta-semantic-protected-json",
+          "locale": "ta",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "vi-semantic-calendar-invalid",
+          "locale": "vi",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "vi-semantic-protected-code",
+          "locale": "vi",
+          "kind": "identifier",
+          "start": 21,
+          "end": 31,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "vi-semantic-protected-json",
+          "locale": "vi",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ko-semantic-calendar-invalid",
+          "locale": "ko",
+          "kind": "ambiguous",
+          "start": 0,
+          "end": 10,
+          "source": "2023-02-29",
+          "spoken": "2023-02-29",
+          "reading_supported": false,
+          "reason": "invalid calendar date"
+        },
+        {
+          "case_id": "ko-semantic-protected-code",
+          "locale": "ko",
+          "kind": "identifier",
+          "start": 13,
+          "end": 23,
+          "source": "`-12.0010`",
+          "spoken": "`-12.0010`",
+          "reading_supported": false,
+          "reason": "identifier \"code\" requires an explicit application reading policy"
+        },
+        {
+          "case_id": "ko-semantic-protected-json",
+          "locale": "ko",
+          "kind": "identifier",
+          "start": 0,
+          "end": 20,
+          "source": "{\"value\":\"-12.0010\"}",
+          "spoken": "{\"value\":\"-12.0010\"}",
+          "reading_supported": false,
+          "reason": "identifier \"structured_data\" requires an explicit application reading policy"
+        }
+      ],
+      "diagnostics_by_reason": {
+        "identifier \"code\" requires an explicit application reading policy": 20,
+        "identifier \"structured_data\" requires an explicit application reading policy": 20,
+        "invalid calendar date": 20
+      },
+      "failures": [],
+      "raw_report_sha256": "b8269eb3f270f7f2b218bc6b653959a5102bc6ce86569e0b4b28133f6ce76e5f"
     }
   },
   "cardinal_adapter_migration": {
@@ -5876,7 +7155,7 @@
       "mrr": 0.8473219043975704,
       "ndcg_at_10": 0.858619718491046
     },
-    "raw_report_sha256": "219bbadfe7a84a23bf085c4d308610d059a395fe3c8f99e24fae688d471f55fa"
+    "raw_report_sha256": "5f3a901bc29ed0a17778e36c1b68a33edaba0a0625e9ee62768c6e164771f21c"
   },
   "library_quality_gate_failures": [
     "gate failure: similarity.roc_auc=0.812 below minimum 0.900",
@@ -6167,7 +7446,7 @@
   },
   "clock_meridiem_regression_audit": {
     "scope": "Semantic distinctness regression for 3:15 AM versus 3:15 PM in the twenty supported languages; not native linguistic, pronunciation or acoustic accuracy.",
-    "measured_at_utc": "2026-11-14T14:07:10.695989+00:00",
+    "measured_at_utc": "2026-11-14T14:56:49.577038+00:00",
     "options": {
       "interpret_as": "time",
       "reading_style": "natural",
@@ -6175,7 +7454,7 @@
     },
     "am_source": "3:15am",
     "pm_source": "3:15pm",
-    "source_tree_sha256": "d63dcbda7f9f47bcb2a908658cca9a74080d5e1d06b18d65e748de0be3c6840a",
+    "source_tree_sha256": "a3f03a107c0e5bc6fd7690416ad5a784ea72a74fb4e8852342a05fdd4b5ca338",
     "before": {
       "scope": "Pre-fix CLI observation; binary/source fingerprint was not captured.",
       "locales": 20,
@@ -6470,7 +7749,7 @@
           "collapsed": false
         }
       ],
-      "binary_sha256": "b6cf6129f5410136a3c2276063148baebf224a4dc2c25eb8c38c49bbfa2d5db8",
+      "binary_sha256": "94fa88b93b02e3c8eedc73f8d456f88833ac9f653684ef99784ccd4c8c6c64ba",
       "binary_unchanged_during_probe": true,
       "raw_report_sha256": "5acc335d177183daa0cc8dc8f18dc9b51ed321260f7a6bda666449ad6bf0accc"
     },
@@ -6489,9 +7768,9 @@
   },
   "subsecond_clock_regression_audit": {
     "scope": "CLI integration regression for exact fractional fields and distinct spoken precision; not native linguistic or pronunciation accuracy.",
-    "measured_at_utc": "2026-11-14T14:07:14.575328+00:00",
-    "source_tree_sha256": "d63dcbda7f9f47bcb2a908658cca9a74080d5e1d06b18d65e748de0be3c6840a",
-    "binary_sha256": "b6cf6129f5410136a3c2276063148baebf224a4dc2c25eb8c38c49bbfa2d5db8",
+    "measured_at_utc": "2026-11-14T14:56:53.315144+00:00",
+    "source_tree_sha256": "a3f03a107c0e5bc6fd7690416ad5a784ea72a74fb4e8852342a05fdd4b5ca338",
+    "binary_sha256": "94fa88b93b02e3c8eedc73f8d456f88833ac9f653684ef99784ccd4c8c6c64ba",
     "binary_unchanged_during_probe": true,
     "options": {
       "reading_style": "natural",
@@ -7255,13 +8534,28 @@
       "vi": 1,
       "zh": 2
     },
-    "parse_gold_fields": [
+    "scope": "Selected development examples only; neither independent held-out application accuracy nor native pronunciation accuracy.",
+    "legacy_parse_gold_fields": [
       "start",
       "end",
       "source",
       "kind"
     ],
-    "complete_semantic_value_gold": false,
-    "scope": "Selected development examples only; neither independent held-out application accuracy nor native pronunciation accuracy."
+    "legacy_corpora_have_complete_semantic_value_gold": false,
+    "semantic_values": {
+      "cases": 560,
+      "expected_value_spans": 540,
+      "locales": 20,
+      "spoken_gold_cases": 0,
+      "expectations_written_before_parser_run": true,
+      "initial_gold_sha256": "b8753d1a4313d77ad06f7afaa20df9759cb016e1930cd59d7431bbe7f30b8bbe",
+      "scope": "Designed exact-IR structural regression under default Precise/Phonetic/Auto options, not independent native or production accuracy."
+    }
+  },
+  "verification_execution": {
+    "normal_target_directory": "target",
+    "evaluation_target_directory": "target/evaluation-target",
+    "coverage_target_directory": "target/llvm-cov-target",
+    "reason": "Separate build outputs prevent concurrent no-default evaluation builds from replacing the all-feature CLI under test."
   }
 }

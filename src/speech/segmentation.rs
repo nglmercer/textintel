@@ -22,8 +22,11 @@ pub fn split_sentences(text: &str) -> Vec<String> {
 /// [`crate::speech::normalization::segments`]: a `.` only ends a sentence
 /// when followed by whitespace (or the end) and not after a known
 /// abbreviation or initial, so decimals (`3.14`), IP addresses, versions
-/// and URLs are never cut. `? ! ; …` follow the same rule; `。 ？ ！ ；`
-/// and newlines always end a sentence.
+/// and URLs are never cut. `? ! ; …` follow the same rule; `。 ？ ！ ；`,
+/// Arabic `؟`, Urdu `۔`, Indic `। ॥` and newlines also end a sentence
+/// without following whitespace. Mixed/repeated terminators and closing
+/// punctuation stay with the preceding sentence. This shared heuristic is
+/// tailored for speech and does not claim complete Unicode UAX #29 conformance.
 pub fn split_sentences_with_limit(text: &str, max_chars: usize) -> Vec<String> {
     let max_chars = max_chars.max(1);
     let text = text.trim();
@@ -219,6 +222,17 @@ mod tests {
             "3.14",
             "10.0.0.1:8080",
             "https://example.org/a?b=3.14",
+            "https://example.org/سؤال؟x",
+            "www.example.org/سؤال؟x",
+            "WWW.example.org/سؤال؟x",
+            "Www.example.org/سؤال؟x",
+            "https://example.org/甲。x",
+            "https://example.org/甲？x",
+            "https://example.org/甲！x",
+            "WWW.example.org/甲；x",
+            "https://example.org/اردو۔x",
+            "https://example.org/दंड।x",
+            "www.example.org/दंड॥x",
             "v1.2.3",
             "v1.2.3-beta.2",
             "1.21.11",
@@ -261,6 +275,43 @@ mod tests {
         assert_bounded(&chunks, 16);
         assert_covers(&chunks, text);
         assert!(chunks.len() >= 5);
+    }
+
+    #[test]
+    fn native_sentence_boundaries_guide_chunks_without_spaces() {
+        for (first, second) in [
+            ("هل وصلت؟!", "نعم وصلت۔"),
+            ("آپ آگئے۔", "جی آگئے۔"),
+            ("पहला वाक्य।।", "दूसरा वाक्य॥"),
+            ("প্রথম বাক্য।", "দ্বিতীয় বাক্য॥"),
+            ("ਪਹਿਲਾ।", "ਦੂਜਾ॥"),
+            ("पहिले।", "दुसरे॥"),
+            ("最初？！", "次です。"),
+        ] {
+            let text = format!("{first}{second}");
+            let limit = first.chars().count().max(second.chars().count());
+            let chunks = split_sentences_with_limit(&text, limit);
+            assert_bounded(&chunks, limit);
+            assert_eq!(chunks, vec![first, second], "{text}");
+            assert_covers(&chunks, &text);
+        }
+    }
+
+    #[test]
+    fn native_dense_text_and_protected_punctuation_remain_bounded_in_order() {
+        for text in [
+            "هل وصلت؟!نعم وصلت۔".repeat(20),
+            "पहला।।दूसरा॥".repeat(20),
+            "甲？！)」乙。".repeat(20),
+            "نعم؟`أ؟!ب॥` بعد۔التالي! ".repeat(10),
+            "<x title='؟!॥'>نعم۔التالي! ".repeat(10),
+        ] {
+            for limit in [1, 7, 24, 80] {
+                let chunks = split_sentences_with_limit(&text, limit);
+                assert_bounded(&chunks, limit);
+                assert_covers(&chunks, &text);
+            }
+        }
     }
 
     #[test]

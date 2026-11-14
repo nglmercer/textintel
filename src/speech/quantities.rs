@@ -1474,6 +1474,14 @@ fn arabic_currency_major(
     value: &NumberValue,
     options: &SpeechOptions,
 ) -> Option<String> {
+    if code == "EUR" {
+        // Reviewed one/dual forms only, not a complete euro paradigm:
+        // UN A/CONF.219/2021/INF/1, p.16 §107: يورو واحد;
+        // UN E/C.12/69/D/48/2018, p.2: يوروان.
+        // https://digitallibrary.un.org/record/3950930/files/A_CONF.219_2021_INF_1-AR.pdf
+        // https://digitallibrary.un.org/record/3993942/files/E_C.12_69_D_48_2018-AR.pdf
+        return arabic_one_two_count("يورو", "يوروان", value, false);
+    }
     // Standalone (nominative) currency quantities. Small-number agreement is
     // explicit; display names alone do not encode Arabic one/two/3–10 forms.
     arabic_noun_count(
@@ -1482,6 +1490,27 @@ fn arabic_currency_major(
         options,
         arabic_currency_is_feminine(code),
     )
+}
+
+fn arabic_one_two_count(
+    one: &str,
+    dual: &str,
+    value: &NumberValue,
+    feminine: bool,
+) -> Option<String> {
+    if value.fraction.is_some() {
+        return None;
+    }
+    let result = match value.integer.parse::<u64>().ok()? {
+        1 => format!("{one} {}", if feminine { "واحدة" } else { "واحد" }),
+        2 => dual.to_string(),
+        _ => return None,
+    };
+    Some(if value.negative {
+        format!("سالب {result}")
+    } else {
+        result
+    })
 }
 
 fn arabic_currency_forms(code: &str) -> Option<[&'static str; 4]> {
@@ -1526,6 +1555,9 @@ fn arabic_noun_count(
     feminine: bool,
 ) -> Option<String> {
     let n = value.integer.parse::<u64>().ok()?;
+    if matches!(n, 1 | 2) {
+        return arabic_one_two_count(forms[0], forms[1], value, feminine);
+    }
     let mut positive = value.clone();
     positive.negative = false;
     let words = if feminine {
@@ -1534,18 +1566,14 @@ fn arabic_noun_count(
         verbalize_with_options(&positive, options, NumberReading::Cardinal)?
     };
     let words = arabic_construct_count(words);
-    let result = match n {
-        1 => format!("{} {}", forms[0], if feminine { "واحدة" } else { "واحد" }),
-        2 => forms[1].to_string(),
-        _ => format!(
-            "{words} {}",
-            match n % 100 {
-                3..=10 => forms[2],
-                11..=99 => forms[3],
-                _ => forms[0],
-            }
-        ),
-    };
+    let result = format!(
+        "{words} {}",
+        match n % 100 {
+            3..=10 => forms[2],
+            11..=99 => forms[3],
+            _ => forms[0],
+        }
+    );
     Some(if value.negative {
         format!("سالب {result}")
     } else {

@@ -19,6 +19,11 @@ pub struct SpeechCase {
     pub decimal_separator: Option<char>,
     pub category: String,
     pub expected_spans: Option<Vec<ExpectedSpeechSpan>>,
+    /// Complete independently annotated non-Text spans, compared field for
+    /// field. None leaves semantic evaluation unmeasured; Some([]) asserts
+    /// that the source contains no structured spans.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expected_values: Option<Vec<SpeechSpan>>,
     /// Alternative independently annotated complete spoken strings.
     pub spoken: Vec<String>,
 }
@@ -78,6 +83,34 @@ impl SpeechCorpus {
                 }
                 end = span.end;
             }
+            let mut end = 0;
+            for span in case.expected_values.iter().flatten() {
+                if span.start < end
+                    || span.start >= span.end
+                    || case.text.get(span.start..span.end) != Some(span.source.as_str())
+                    || matches!(span.value, SpeechValue::Text)
+                {
+                    return Err(invalid(format!(
+                        "invalid semantic gold span in {}",
+                        case.id
+                    )));
+                }
+                end = span.end;
+            }
+            if let (Some(spans), Some(values)) = (&case.expected_spans, &case.expected_values)
+                && (spans.len() != values.len()
+                    || spans.iter().zip(values).any(|(span, value)| {
+                        span.start != value.start
+                            || span.end != value.end
+                            || span.source != value.source
+                            || span.kind != speech_kind(&value.value)
+                    }))
+            {
+                return Err(invalid(format!(
+                    "contradictory span and semantic gold in {}",
+                    case.id
+                )));
+            }
         }
         Ok(())
     }
@@ -97,6 +130,30 @@ pub struct SpeechSliceMetrics {
     pub expected_spans: usize,
     pub predicted_spans: usize,
     pub correct_spans: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub semantic: Option<SpeechSemanticMetrics>,
+}
+
+/// Exact semantic IR evaluation under the selected parsing options. No numeric
+/// projection, floating-point conversion or spoken-variant rule changes gold.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct SpeechSemanticMetrics {
+    pub cases: usize,
+    pub exact: usize,
+    pub expected_spans: usize,
+    pub predicted_spans: usize,
+    pub correct_spans: usize,
+}
+impl SpeechSemanticMetrics {
+    pub fn accuracy(&self) -> f64 {
+        ratio(self.exact, self.cases)
+    }
+    pub fn precision(&self) -> f64 {
+        ratio(self.correct_spans, self.predicted_spans)
+    }
+    pub fn recall(&self) -> f64 {
+        ratio(self.correct_spans, self.expected_spans)
+    }
 }
 impl SpeechSliceMetrics {
     pub fn parse_accuracy(&self) -> f64 {
@@ -210,6 +267,10 @@ pub struct SpeechFailure {
     pub predicted: Vec<ExpectedSpeechSpan>,
     pub spoken: Option<String>,
     pub error: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expected_values: Option<Vec<SpeechSpan>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub predicted_values: Option<Vec<SpeechSpan>>,
 }
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct SpeechVariantAcceptance {
@@ -354,6 +415,7 @@ pub fn evaluate_speech_with_policy(
         let options = options_for_case(case, policy);
         let parsed = super::parser::parse_for_speech(&case.text, &options);
         let mut predicted = Vec::new();
+        let mut predicted_values = case.expected_values.as_ref().map(|_| Vec::new());
         let mut spoken = None;
         let mut variant = None;
         let mut fully_supported = false;
@@ -362,6 +424,14 @@ pub fn evaluate_speech_with_policy(
         match parsed {
             Ok(doc) => {
                 parsed_ok = true;
+                if let Some(values) = &mut predicted_values {
+                    values.extend(
+                        doc.spans
+                            .iter()
+                            .filter(|span| !matches!(span.value, SpeechValue::Text))
+                            .cloned(),
+                    );
+                }
                 predicted = doc
                     .spans
                     .iter()
@@ -430,6 +500,20 @@ pub fn evaluate_speech_with_policy(
                 .as_ref()
                 .is_some_and(|expected| &predicted == expected);
         let spoken_exact = spoken.as_ref().is_some_and(|s| case.spoken.contains(s));
+        let semantic_exact = parsed_ok
+            && case
+                .expected_values
+                .as_ref()
+                .is_some_and(|expected| predicted_values.as_ref() == Some(expected));
+        let semantic_correct = predicted_values
+            .iter()
+            .flatten()
+            .filter(|predicted| {
+                case.expected_values
+                    .as_ref()
+                    .is_some_and(|expected| expected.contains(predicted))
+            })
+            .count();
         let correct = predicted
             .iter()
             .filter(|p| case.expected_spans.as_ref().is_some_and(|v| v.contains(p)))
@@ -455,6 +539,14 @@ pub fn evaluate_speech_with_policy(
                 metrics.predicted_spans += predicted.len();
                 metrics.correct_spans += correct;
             }
+            if let Some(expected) = &case.expected_values {
+                let semantic = metrics.semantic.get_or_insert_with(Default::default);
+                semantic.cases += 1;
+                semantic.exact += usize::from(semantic_exact);
+                semantic.expected_spans += expected.len();
+                semantic.predicted_spans += predicted_values.as_ref().map_or(0, Vec::len);
+                semantic.correct_spans += semantic_correct;
+            }
         }
         if let Some((reference, matched)) = variant {
             for rule in &matched.rules {
@@ -467,6 +559,7 @@ pub fn evaluate_speech_with_policy(
             });
         }
         if (case.expected_spans.is_some() && !parse_exact)
+            || (case.expected_values.is_some() && !semantic_exact)
             || error.is_some()
             || (!case.spoken.is_empty() && !spoken_exact)
         {
@@ -479,6 +572,8 @@ pub fn evaluate_speech_with_policy(
                 predicted,
                 spoken,
                 error,
+                expected_values: case.expected_values.clone(),
+                predicted_values,
             });
         }
     }
@@ -488,8 +583,20 @@ pub fn evaluate_speech_with_policy(
 impl SpeechEvalReport {
     /// Select a gate explicitly; the original exact failure list is never hidden.
     pub fn passes(&self, accept_reviewed_variants: bool) -> bool {
+        if self
+            .totals
+            .semantic
+            .as_ref()
+            .is_some_and(|semantic| semantic.exact != semantic.cases)
+        {
+            return false;
+        }
         self.failures.iter().all(|failure| {
             if failure.error.is_some()
+                || failure
+                    .expected_values
+                    .as_ref()
+                    .is_some_and(|expected| failure.predicted_values.as_ref() != Some(expected))
                 || failure
                     .expected
                     .as_ref()

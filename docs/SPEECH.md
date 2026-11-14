@@ -262,6 +262,14 @@ and approximate grapheme boundaries. A cluster longer than the hard limit must
 be split. Fragment boundary whitespace can be canonicalized. Empty input produces
 no fragments and zero is treated as a one-character bound.
 
+The shared sentence-boundary core now recognizes Arabic `؟`, Urdu `۔`, and
+Indic `। ॥` without requiring following whitespace. Terminator runs and closing
+punctuation remain together, with code/tag protections and UTF-8 partitions
+retained. These four additions are STerm in [Unicode 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/auxiliary/SentenceBreakProperty.txt).
+ASCII abbreviation/whitespace behavior remains a tailored heuristic; this is not
+full Unicode sentence-boundary conformance or a complete speech-abbreviation
+inventory. The chunker may combine several short sentences within one bound.
+
 ## Evaluation: original gold and reviewed variants
 
 ```sh
@@ -315,6 +323,51 @@ reviewed typed contexts. Comparison never uses rebus/leet normalization, generic
 accent stripping, or a table keyed by reference IDs. Unlisted differences remain
 unresolved. Unit tests include sign, value, unit, prose, and forged-document
 counterexamples.
+
+Cases can additionally provide `expected_values`, an optional array of the
+existing `SpeechSpan` representation, with complete `SpeechValue` payloads:
+
+```json
+{
+  "start": 0,
+  "end": 9,
+  "source": "USD 12.50",
+  "value": {
+    "type": "currency",
+    "code": "USD",
+    "value": { "negative": false, "integer": "12", "fraction": "50" }
+  }
+}
+```
+
+The array describes every non-Text span under the selected parsing options.
+`null` or an absent field leaves value evaluation unmeasured; `[]` explicitly
+expects no typed spans. Validation checks ordered UTF-8 ranges, original source,
+absence of Text spans, and agreement with `expected_spans` when both are supplied.
+It does not derive expected values from the parser or certify the gold itself.
+Different values remain valid annotations that can expose parser failures.
+
+`SpeechSliceMetrics.semantic` is present only for annotated cases. Its `cases`
+and `exact` count complete IR comparisons; `expected_spans`, `predicted_spans`
+and `correct_spans` count full value-and-source matches. Sign, currency identity,
+all fraction digits, clock fields and metadata participate in equality. This is
+exact IR agreement under the selected policy, not equivalence between different
+Precise/Natural representations. A parse error remains in the denominator, and a
+correct kind or spoken string cannot override a value failure. Both exit gates
+reject it, including `--accept-variants`. Failures retain `expected_values` and
+`predicted_values`. The public report gate also rejects semantic totals whose
+`exact` and `cases` differ, so removing failure metadata from deserialized JSON
+cannot conceal a recorded semantic mismatch. Existing corpora and report JSON
+without value annotations
+retain their original span and spoken metrics.
+
+The separate [semantic regression matrix](../data/speech/semantic-values.README.md)
+covers all twenty locales with independently written structural expectations.
+It contains no spoken gold and does not establish native pronunciation accuracy.
+
+```sh
+textintel eval-speech data/speech/semantic-values.json --json
+```
 
 Two additional rules remain narrowly scoped: `alternative_currency_minor_unit_policy`
 permits the existing Precise/Natural decimal-versus-major/minor readings only for

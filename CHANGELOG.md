@@ -9,6 +9,10 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ### Added
 
+- Optional complete typed-value gold and separate semantic evaluation metrics,
+  preserving exact signs, currency identities, time fields and decimal precision.
+  Value failures remain failures under both spoken comparison gates. A separate
+  structural regression corpus exercises the twenty-language core.
 - Experimental typed speech parsing and rendering for twenty language
   conventions, with explicit interpretation, date/decimal/currency policies,
   exact quantities, calendar forms, fractions, ranges, scientific notation,
@@ -59,6 +63,12 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
   Essential external references remain in `docs/EXPERIMENTS.md`.
 
 ### Fixed
+
+- Shared sentence boundaries recognize Arabic, Urdu and Indic terminators,
+  retaining mixed punctuation runs, closers, protected text and bounded chunks.
+- Arabic euro one/dual readings reuse the shared count agreement for standalone
+  integer major units and existing cent composition, with full-name paradigms
+  still explicitly bounded.
 
 - Clock seconds use shared quantity agreement in English, Spanish, Portuguese
   and German; Portuguese clock hours retain feminine agreement. Implicit Arabic

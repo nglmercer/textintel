@@ -28,10 +28,17 @@ is needed to estimate precision across the twenty-language TTS surface.
 The authored regression matches the annotated spans in **209/209 cases**,
 including all 205 expected spans, and passes **25/25 complete spoken golds**.
 Its other cases have no spoken gold and are not counted as correct utterances.
-`parse_exact` compares annotated
-span offsets, source text and kind; its gold schema does not yet assert complete
-numeric, currency or temporal values. Dedicated Rust tests check many such
-values, but this corpus metric is not independent semantic-value accuracy.
+`parse_exact` compares annotated span offsets, source text and kind. These
+legacy cases have no complete value annotations; their parse metric is not
+semantic-value accuracy. The separate `semantic-values.json` matrix now supplies
+full IR gold for **560 cases across twenty locales**, with **540/540 exact value
+spans**. All 560 cases match their complete semantic expectations, including
+explicit empty sets for ordinary prose. These are designed structural
+regressions with shared templates, not independent production or pronunciation
+validation; there is no spoken gold. The original NeMo and 209-case inputs remain
+unchanged, and their reports do not acquire semantic denominators.
+The new matrix completes 500/560 renderings; the other sixty deliberately retain
+invalid dates, code or JSON. A correct preserved IR is not a supported utterance.
 NeMo supplies no span annotations, so it cannot establish parser precision/recall.
 Its `fully_supported` count is 540/544 under the unchanged reference policy, a
 rendering diagnostic rather than an accuracy measure.
@@ -66,14 +73,15 @@ per file. The earlier cached report containing `/src/src/...` aliases was discar
 
 | Measurement | Covered / instrumented | Percent |
 |---|---:|---:|
-| Entire library and CLI, lines | 27,970 / 31,659 | 88.35% |
-| Entire library and CLI, functions | 2,743 / 3,126 | 87.75% |
-| Speech modules, lines | 14,611 / 15,564 | 93.88% |
+| Entire library and CLI, lines | 28,267 / 31,954 | 88.46% |
+| Entire library and CLI, functions | 2,768 / 3,151 | 87.85% |
+| Speech modules, lines | 14,892 / 15,844 | 93.99% |
 | Phonetic modules, lines | 994 / 1,073 | 92.64% |
 | eSpeak adapter, lines | 432 / 484 | 89.26% |
 | Typed speech parser, lines | 428 / 435 | 98.39% |
+| Semantic value and span evaluation, lines | 414 / 449 | 92.20% |
 | Exact number composition, lines | 1,010 / 1,052 | 96.01% |
-| Quantity grammar, lines | 1,252 / 1,346 | 93.02% |
+| Quantity grammar, lines | 1,270 / 1,366 | 92.97% |
 | Temporal grammar, lines | 1,809 / 1,951 | 92.72% |
 | Reviewed variant comparator, lines | 1,168 / 1,208 | 96.69% |
 | Shared scientific/duration/fraction/range shapes, lines | 515 / 521 | 98.85% |
@@ -90,7 +98,7 @@ establish linguistic or acoustic accuracy.
 
 ### Verification and remaining limits
 
-The complete all-feature/all-target suite passes **719 tests**, as does the
+The complete all-feature/all-target suite passes **740 tests**, as does the
 separate instrumented run. Clippy with
 warnings denied, generated documentation and Rust 1.90 all-target checks without
 default features, both with and without `phonetic-espeak`, pass. Shared-core
@@ -148,20 +156,22 @@ cargo +1.90 check --locked --no-default-features --features phonetic-espeak --al
 cargo doc --locked --no-deps --all-features
 RUSTC_WRAPPER= cargo llvm-cov --no-rustc-wrapper --locked \
   --all-features --workspace --json \
-  --output-path target/coverage/goal-regional-variants-direct.json \
+  --output-path target/coverage/goal-semantic-values-direct.json \
   --ignore-filename-regex '(/tests/|/benches/|/examples/|/registry/)'
-cargo run --locked --quiet --no-default-features --bin textintel -- \
+cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- \
   eval-speech data/speech/evaluation.json --json
-cargo run --locked --quiet --no-default-features --bin textintel -- \
+cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- \
+  eval-speech data/speech/semantic-values.json --json
+cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- \
   eval-speech data/speech/reference-nemo.json --json
-cargo run --locked --quiet --no-default-features --bin textintel -- \
+cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- \
   eval-speech data/speech/reference-nemo.json \
   --speech-policy data/speech/reference-policy.json --accept-variants --json
-cargo run --locked --quiet --no-default-features --bin textintel -- \
+cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- \
   eval-speech data/speech/reference-nemo.json \
   --speech-policy data/speech/reference-policy.json \
   --clock-policy normalize-redundant-period --json
-cargo run --locked --quiet --no-default-features --bin textintel -- \
+cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- \
   eval-speech data/speech/reference-nemo.json \
   --speech-policy data/speech/reference-policy.json \
   --invalid-date-policy read-components \

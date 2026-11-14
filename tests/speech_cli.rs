@@ -188,6 +188,7 @@ fn regression_corpus_passes_through_cli_without_losing_cases() {
         report["totals"]["spoken_cases"]
     );
     assert!(report["failures"].as_array().unwrap().is_empty());
+    assert!(report["totals"].get("semantic").is_none());
 }
 
 struct TemporaryCorpus(PathBuf);
@@ -212,6 +213,71 @@ impl TemporaryCorpus {
 impl Drop for TemporaryCorpus {
     fn drop(&mut self) {
         let _ = std::fs::remove_file(&self.0);
+    }
+}
+
+#[test]
+fn semantic_evaluation_reports_exact_values_and_preserves_unannotated_denominators() {
+    let corpus = TemporaryCorpus::new(&json!({
+        "version":"semantic-cli", "purpose":"Independent value annotations, separate from span/spoken metrics",
+        "cases":[
+            {"id":"value", "locale":"en", "text":"42", "date_order":"reject_ambiguous",
+             "decimal_separator":null, "category":"number", "expected_spans":null, "spoken":[],
+             "expected_values":[{"start":0,"end":2,"source":"42","value":{
+                 "type":"number","reading":"cardinal","value":{"negative":false,"integer":"42","fraction":null}
+             }}]},
+            {"id":"unannotated", "locale":"es", "text":"43", "date_order":"reject_ambiguous",
+             "decimal_separator":null,"category":"number","expected_spans":null,"spoken":[]}
+        ]
+    }));
+    let report = successful_json(&["eval-speech", corpus.0.to_str().unwrap(), "--json"]);
+    assert_eq!(report["totals"]["cases"], 2);
+    assert_eq!(report["totals"]["semantic"]["cases"], 1);
+    assert_eq!(report["totals"]["semantic"]["exact"], 1);
+    assert_eq!(report["totals"]["semantic"]["correct_spans"], 1);
+    assert!(report["by_locale"]["es"].get("semantic").is_none());
+    let text = run(&["eval-speech", corpus.0.to_str().unwrap()]);
+    assert!(text.status.success());
+    let output = String::from_utf8(text.stdout).unwrap();
+    assert!(output.contains("semantic_exact=1/1 (100.00%)"));
+    assert!(output.contains("value_spans=1/1 predicted=1 precision=100.00% recall=100.00%"));
+    assert!(output.contains("en: semantic 1/1 values 1/1 predicted 1"));
+    assert!(!output.contains("es: semantic"));
+}
+
+#[test]
+fn semantic_failure_cannot_pass_with_correct_spoken_text_or_reviewed_variants() {
+    for spoken in ["forty-two", "forty two"] {
+        let corpus = TemporaryCorpus::new(&json!({
+            "version":"wrong-semantic-cli","purpose":"Same recognized kind and utterance cannot hide a different value",
+            "cases":[{"id":"wrong-value","locale":"en","text":"42","date_order":"reject_ambiguous",
+                "decimal_separator":null,"category":"number","spoken":[spoken],
+                "expected_spans":[{"start":0,"end":2,"source":"42","kind":"number"}],
+                "expected_values":[{"start":0,"end":2,"source":"42","value":{
+                    "type":"number","reading":"cardinal","value":{"negative":false,"integer":"43","fraction":null}
+                }}]}]
+        }));
+        for accept in [false, true] {
+            let mut args = vec!["eval-speech", corpus.0.to_str().unwrap(), "--json"];
+            if accept {
+                args.push("--accept-variants");
+            }
+            let output = run(&args);
+            assert_eq!(output.status.code(), Some(1));
+            let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(report["totals"]["parse_exact"], 1);
+            assert_eq!(report["totals"]["semantic"]["exact"], 0);
+            assert_eq!(report["totals"]["semantic"]["cases"], 1);
+            assert_eq!(report["totals"]["spoken_accepted"], 1);
+            assert_eq!(
+                report["failures"][0]["expected_values"][0]["value"]["value"]["integer"],
+                "43"
+            );
+            assert_eq!(
+                report["failures"][0]["predicted_values"][0]["value"]["value"]["integer"],
+                "42"
+            );
+        }
     }
 }
 

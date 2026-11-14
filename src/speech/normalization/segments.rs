@@ -4,15 +4,24 @@
 //! (plus closing quotes/brackets) is followed by whitespace or the end of
 //! the text, and a single `.` is not a known abbreviation or an initial.
 //! Therefore decimals (`3.14`), IPs (`10.0.0.1:8080`), versions (`v1.2.3`)
-//! and URLs (`https://example.org/a?b=3.14`) never split. `。 ？ ！ ；` and
-//! newlines always end a sentence. Terminators inside backtick code or
-//! `<tags>` are ignored.
+//! and URLs (`https://example.org/a?b=3.14`) never split. `。 ？ ！ ；`,
+//! Arabic `؟`, Urdu `۔`, Indic `। ॥` and newlines also end a sentence
+//! without requiring following whitespace. Adjacent terminators and closing
+//! punctuation stay together; a run never crosses a newline or protected
+//! region. Terminators inside backtick code or `<tags>` are ignored.
+//!
+//! The added native signs have Sentence_Break=STerm in the pinned Unicode
+//! 17.0.0 data: <https://www.unicode.org/Public/17.0.0/ucd/auxiliary/SentenceBreakProperty.txt>.
+//! Grouping terminators/closers follows the principle of UAX #29 revision 47,
+//! SB8a/SB9: <https://www.unicode.org/reports/tr29/tr29-47.html#Sentence_Boundaries>.
+//! This is a bounded, tailored heuristic, not a complete UAX #29 implementation;
+//! the existing ASCII abbreviation and whitespace policies remain in place.
 
 use std::ops::Range;
 
 use unicode_normalization::char::is_combining_mark;
 
-use super::lexer::{in_regions, protected_regions};
+use super::lexer::{LexicalSource, in_regions};
 
 /// Words that, followed by a single `.`, do not end a sentence.
 const NON_TERMINAL_ABBREVIATIONS: &[&str] = &[
@@ -32,7 +41,8 @@ fn is_spaced_terminator(c: char) -> bool {
 }
 
 fn is_hard_terminator(c: char) -> bool {
-    matches!(c, '\n' | '。' | '？' | '！' | '；')
+    // Newlines have a separate branch and are never literal URL punctuation.
+    matches!(c, '。' | '？' | '！' | '；' | '؟' | '۔' | '।' | '॥')
 }
 
 /// Word (letters and inner dots) ending right before byte `dot`.
@@ -60,7 +70,25 @@ fn is_non_terminal(word: &str) -> bool {
 /// ends after its terminator and closers; following whitespace starts the
 /// next range.
 pub fn sentence_spans(text: &str) -> Vec<Range<usize>> {
-    let regions = protected_regions(text);
+    let source = LexicalSource::new(text);
+    let regions = source.regions();
+    // A non-ASCII terminator can also be literal URL-path data. Preserve
+    // explicit URL fields instead of introducing a cut inside those tokens.
+    // Keep legacy ASCII punctuation handling (including a URL's final dot).
+    // A native sign at a URL field's end remains ambiguous URL data.
+    let url_regions: Vec<_> = source
+        .fields()
+        .into_iter()
+        .filter(|field| {
+            let core = &text[field.core_start..field.core_end];
+            !field.protected
+                && (core.contains("://")
+                    || core
+                        .get(..4)
+                        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("www.")))
+        })
+        .map(|field| field.core_start..field.core_end)
+        .collect();
     let chars: Vec<(usize, char)> = text.char_indices().collect();
     let byte_after = |k: usize| chars.get(k + 1).map(|(i, _)| *i).unwrap_or(text.len());
     let mut spans = Vec::new();
@@ -68,11 +96,12 @@ pub fn sentence_spans(text: &str) -> Vec<Range<usize>> {
     let mut k = 0usize;
     while k < chars.len() {
         let (i, c) = chars[k];
-        if in_regions(&regions, i) {
+        if in_regions(regions, i) || (is_hard_terminator(c) && in_regions(&url_regions, i)) {
             k += 1;
             continue;
         }
-        if is_hard_terminator(c) {
+        // A newline is its own boundary, never part of a punctuation run.
+        if c == '\n' {
             let mut e = k;
             while e + 1 < chars.len() && is_closer(chars[e + 1].1) {
                 e += 1;
@@ -83,18 +112,29 @@ pub fn sentence_spans(text: &str) -> Vec<Range<usize>> {
             k = e + 1;
             continue;
         }
-        if is_spaced_terminator(c) {
+        if is_spaced_terminator(c) || is_hard_terminator(c) {
             let mut e = k;
-            while e + 1 < chars.len() && matches!(chars[e + 1].1, '.' | '?' | '!' | '…') {
-                e += 1;
-            }
-            let run_end = e;
-            while e + 1 < chars.len() && is_closer(chars[e + 1].1) {
+            let mut hard = is_hard_terminator(c);
+            let mut terminators = 1;
+            while let Some(&(next_byte, next)) = chars.get(e + 1) {
+                if next == '\n'
+                    || in_regions(regions, next_byte)
+                    || (is_hard_terminator(next) && in_regions(&url_regions, next_byte))
+                {
+                    break;
+                }
+                if is_spaced_terminator(next) || is_hard_terminator(next) {
+                    hard |= is_hard_terminator(next);
+                    terminators += 1;
+                } else if !is_closer(next) {
+                    break;
+                }
                 e += 1;
             }
             let followed_by_space = e + 1 >= chars.len() || chars[e + 1].1.is_whitespace();
-            let abbreviation = c == '.' && run_end == k && is_non_terminal(word_before(text, i));
-            if followed_by_space && !abbreviation {
+            let abbreviation =
+                c == '.' && terminators == 1 && is_non_terminal(word_before(text, i));
+            if (hard || followed_by_space) && !abbreviation {
                 let end = byte_after(e);
                 spans.push(start..end);
                 start = end;
@@ -226,6 +266,17 @@ mod tests {
             "3.14",
             "10.0.0.1:8080",
             "https://example.org/a?b=3.14",
+            "https://example.org/سؤال؟x",
+            "www.example.org/سؤال؟x",
+            "WWW.example.org/سؤال؟x",
+            "Www.example.org/سؤال؟x",
+            "https://example.org/甲。x",
+            "https://example.org/甲？x",
+            "https://example.org/甲！x",
+            "WWW.example.org/甲；x",
+            "https://example.org/اردو۔x",
+            "https://example.org/दंड।x",
+            "www.example.org/दंड॥x",
             "v1.2.3-beta.2",
             "Minecraft 1.21.11",
             "user@example.org",
@@ -266,6 +317,116 @@ mod tests {
             sentences("run `a. b` now. Done"),
             vec!["run `a. b` now.", "Done"]
         );
+    }
+
+    fn assert_partition(text: &str) {
+        let spans = sentence_spans(text);
+        let mut cursor = 0;
+        for span in &spans {
+            assert_eq!(span.start, cursor, "{text:?}: {spans:?}");
+            assert!(span.end > span.start);
+            assert!(text.is_char_boundary(span.start));
+            assert!(text.is_char_boundary(span.end));
+            cursor = span.end;
+        }
+        assert_eq!(cursor, text.len());
+        let reconstructed: String = spans.iter().map(|span| &text[span.clone()]).collect();
+        assert_eq!(reconstructed, text);
+    }
+
+    #[test]
+    fn native_sterm_signs_split_without_whitespace_and_preserve_offsets() {
+        // These are segmentation examples, not pronunciation/translation golds.
+        for (text, expected) in [
+            ("هل وصلت؟نعم وصلت.", vec!["هل وصلت؟", "نعم وصلت."]),
+            ("آپ آگئے۔جی آگئے۔", vec!["آپ آگئے۔", "جی آگئے۔"]),
+            ("यह ठीक है।अगला वाक्य॥", vec!["यह ठीक है।", "अगला वाक्य॥"]),
+            ("এটি ঠিক।পরের বাক্য॥", vec!["এটি ঠিক।", "পরের বাক্য॥"]),
+            ("ਪਹਿਲਾ।ਦੂਜਾ॥", vec!["ਪਹਿਲਾ।", "ਦੂਜਾ॥"]),
+            ("पहिले।दुसरे॥", vec!["पहिले।", "दुसरे॥"]),
+        ] {
+            assert_eq!(sentences(text), expected, "{text}");
+            assert_partition(text);
+        }
+    }
+
+    #[test]
+    fn repeated_mixed_terminators_and_closers_form_one_run() {
+        for (text, expected) in [
+            ("أ؟!ب۔", vec!["أ؟!", "ب۔"]),
+            ("अ।।ब॥", vec!["अ।।", "ब॥"]),
+            ("甲？！乙。", vec!["甲？！", "乙。"]),
+            ("甲!？乙。", vec!["甲!？", "乙。"]),
+            ("أ?؟ب۔", vec!["أ?؟", "ب۔"]),
+            ("أ؟»!ب۔", vec!["أ؟»!", "ب۔"]),
+            ("甲？！)」乙。", vec!["甲？！)」", "乙。"]),
+            ("Wait?! Next...", vec!["Wait?!", "Next..."]),
+        ] {
+            assert_eq!(sentences(text), expected, "{text}");
+            assert_partition(text);
+        }
+        // ASCII punctuation still needs whitespace or the end of the text.
+        assert_eq!(sentences("One?!Two"), vec!["One?!Two"]);
+    }
+
+    #[test]
+    fn native_runs_stop_before_newlines_and_protected_regions() {
+        let text = "أ؟!\nب۔";
+        let raw: Vec<_> = sentence_spans(text)
+            .into_iter()
+            .map(|span| &text[span])
+            .collect();
+        assert_eq!(raw, vec!["أ؟!", "\n", "ب۔"]);
+        for (text, expected) in [
+            ("أ؟`x؟!`ب۔", vec!["أ؟", "`x؟!`ب۔"]),
+            (
+                "<x title='؟!'>نعم۔التالي",
+                vec!["<x title='؟!'>نعم۔", "التالي"],
+            ),
+            (
+                "قبل ```أ؟!\nب॥``` بعد۔التالي",
+                vec!["قبل ```أ؟!\nب॥``` بعد۔", "التالي"],
+            ),
+        ] {
+            assert_eq!(sentences(text), expected, "{text}");
+            assert_partition(text);
+        }
+    }
+
+    #[test]
+    fn common_punctuation_is_script_independent_for_all_speech_locales() {
+        use crate::speech::SpeechLocale;
+
+        let samples = [
+            (SpeechLocale::En, "Hello"),
+            (SpeechLocale::Es, "Hola"),
+            (SpeechLocale::Fr, "Bonjour"),
+            (SpeechLocale::De, "Hallo"),
+            (SpeechLocale::Pt, "Olá"),
+            (SpeechLocale::Ru, "Привет"),
+            (SpeechLocale::Zh, "你好"),
+            (SpeechLocale::Ja, "こんにちは"),
+            (SpeechLocale::Ko, "안녕하세요"),
+            (SpeechLocale::Ar, "مرحبا"),
+            (SpeechLocale::Hi, "नमस्ते"),
+            (SpeechLocale::Bn, "নমস্কার"),
+            (SpeechLocale::Ur, "سلام"),
+            (SpeechLocale::Pa, "ਸਤਿ"),
+            (SpeechLocale::Mr, "नमस्कार"),
+            (SpeechLocale::Ta, "வணக்கம்"),
+            (SpeechLocale::Te, "నమస్కారం"),
+            (SpeechLocale::Id, "Halo"),
+            (SpeechLocale::Tr, "Merhaba"),
+            (SpeechLocale::Vi, "Xin chào"),
+        ];
+        for locale in SpeechLocale::ALL {
+            let word = samples.iter().find(|(key, _)| *key == locale).unwrap().1;
+            let first = format!("{word}?!");
+            let second = format!("{word}.");
+            let text = format!("{first} {second}");
+            assert_eq!(sentences(&text), vec![first, second], "{locale:?}");
+            assert_partition(&text);
+        }
     }
 
     #[test]

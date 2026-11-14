@@ -164,6 +164,19 @@ pub fn evaluate(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> 
             result.totals.spoken_cases,
             result.exact_spoken_ceiling
         );
+        if let Some(semantic) = &result.totals.semantic {
+            println!(
+                "semantic_exact={}/{} ({:.2}%) value_spans={}/{} predicted={} precision={:.2}% recall={:.2}%",
+                semantic.exact,
+                semantic.cases,
+                semantic.accuracy() * 100.0,
+                semantic.correct_spans,
+                semantic.expected_spans,
+                semantic.predicted_spans,
+                semantic.precision() * 100.0,
+                semantic.recall() * 100.0
+            );
+        }
         println!(
             "diagnostics={} supported_with_diagnostic={}",
             result.diagnostics.len(),
@@ -182,6 +195,16 @@ pub fn evaluate(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> 
                 metrics.spoken_cases,
                 metrics.fully_supported
             );
+            if let Some(semantic) = &metrics.semantic {
+                println!(
+                    "{locale}: semantic {}/{} values {}/{} predicted {}",
+                    semantic.exact,
+                    semantic.cases,
+                    semantic.correct_spans,
+                    semantic.expected_spans,
+                    semantic.predicted_spans
+                );
+            }
         }
         for failure in &result.failures {
             eprintln!("failed: {}", failure.id);

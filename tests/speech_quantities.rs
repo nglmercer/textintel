@@ -10,6 +10,39 @@ fn options(locale: SpeechLocale) -> SpeechOptions {
 }
 
 #[test]
+fn arabic_euro_one_and_dual_reuse_count_agreement_without_inventing_a_full_paradigm() {
+    for style in [ReadingStyle::Precise, ReadingStyle::Natural] {
+        let mut opts = options(SpeechLocale::Ar);
+        opts.reading_style = style;
+        for (source, expected) in [
+            ("EUR 1", "يورو واحد"),
+            ("EUR 1.00", "يورو واحد"),
+            ("EUR 2", "يوروان"),
+            ("EUR 2.00", "يوروان"),
+            ("EUR ٢.٠٠", "يوروان"),
+            ("EUR -2.00", "سالب يوروان"),
+            ("EUR 2.05", "يوروان وخمسة سنتات"),
+            ("EUR -2.50", "سالب يوروان وخمسون سنتا"),
+        ] {
+            let result = normalize_for_speech(source, &opts).unwrap();
+            assert!(result.fully_supported, "{source}: {result:?}");
+            assert_eq!(result.text, expected, "{style:?} {source}");
+        }
+        let parsed = parse_for_speech("EUR 2.00", &opts).unwrap();
+        assert!(matches!(
+            &parsed.spans[0].value,
+            SpeechValue::Currency { code, value }
+                if code == "EUR" && value.integer == "2"
+                    && value.fraction.as_deref() == Some("00") && !value.negative
+        ));
+        opts.currency_naming = CurrencyNaming::Full;
+        let unresolved = normalize_for_speech("EUR 2.00", &opts).unwrap();
+        assert!(!unresolved.fully_supported);
+        assert_eq!(unresolved.text, "EUR 2.00");
+    }
+}
+
+#[test]
 fn canonical_units_recognize_attached_native_fullwidth_and_case_variants() {
     for (source, key) in [
         ("12KG", "mass-kilogram"),

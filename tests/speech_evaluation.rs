@@ -496,3 +496,514 @@ fn invalid_date_component_evaluation_never_classifies_the_literal_as_a_valid_dat
         preserved.totals.parse_exact
     );
 }
+
+fn semantic_number(
+    integer: &str,
+    fraction: Option<&str>,
+    negative: bool,
+) -> textintel::speech::SpeechValue {
+    textintel::speech::SpeechValue::Number {
+        value: textintel::speech::NumberValue {
+            negative,
+            integer: integer.into(),
+            fraction: fraction.map(str::to_owned),
+        },
+        reading: textintel::speech::NumberReading::Cardinal,
+    }
+}
+fn semantic_span(
+    source: &str,
+    start: usize,
+    value: textintel::speech::SpeechValue,
+) -> textintel::speech::SpeechSpan {
+    textintel::speech::SpeechSpan {
+        start,
+        end: start + source.len(),
+        source: source.into(),
+        value,
+    }
+}
+fn semantic_case(
+    id: &str,
+    source: &str,
+    expected: Option<Vec<textintel::speech::SpeechSpan>>,
+) -> textintel::speech::evaluation::SpeechCase {
+    textintel::speech::evaluation::SpeechCase {
+        id: id.into(),
+        locale: textintel::speech::SpeechLocale::En,
+        text: source.into(),
+        date_order: textintel::speech::DateOrder::RejectAmbiguous,
+        decimal_separator: Some('.'),
+        category: "number".into(),
+        expected_spans: None,
+        expected_values: expected,
+        spoken: vec![],
+    }
+}
+fn semantic_corpus(cases: Vec<textintel::speech::evaluation::SpeechCase>) -> SpeechCorpus {
+    SpeechCorpus {
+        version: "independent-semantic-contract".into(),
+        purpose: "Compare independently constructed typed values, never parser-generated gold"
+            .into(),
+        cases,
+    }
+}
+
+#[test]
+fn semantic_values_detect_sign_magnitude_reading_and_fraction_zeros_with_identical_kind_offsets() {
+    use textintel::speech::evaluation::ExpectedSpeechSpan;
+    use textintel::speech::{NumberReading, SpeechValue};
+    let mut wrong_reading = semantic_number("12", Some("00"), false);
+    if let SpeechValue::Number { reading, .. } = &mut wrong_reading {
+        *reading = NumberReading::Digits;
+    }
+    for expected in [
+        semantic_number("12", Some("00"), true),
+        semantic_number("13", Some("00"), false),
+        semantic_number("12", Some("0"), false),
+        wrong_reading,
+    ] {
+        let mut case = semantic_case(
+            "wrong-value",
+            "12.00",
+            Some(vec![semantic_span("12.00", 0, expected)]),
+        );
+        case.expected_spans = Some(vec![ExpectedSpeechSpan {
+            start: 0,
+            end: 5,
+            source: "12.00".into(),
+            kind: "number".into(),
+        }]);
+        case.spoken = vec!["twelve point zero zero".into()];
+        let corpus = semantic_corpus(vec![case]);
+        corpus
+            .validate()
+            .expect("independent gold is not checked against parser output");
+        let report = evaluate_speech(&corpus).unwrap();
+        assert_eq!(report.totals.parse_exact, 1);
+        assert_eq!(report.totals.spoken_exact, 1);
+        let semantic = report.totals.semantic.as_ref().unwrap();
+        assert_eq!(
+            (
+                semantic.cases,
+                semantic.exact,
+                semantic.expected_spans,
+                semantic.predicted_spans,
+                semantic.correct_spans
+            ),
+            (1, 0, 1, 1, 0)
+        );
+        assert_eq!(
+            (semantic.accuracy(), semantic.precision(), semantic.recall()),
+            (0.0, 0.0, 0.0)
+        );
+        assert!(!report.passes(false));
+        assert!(!report.passes(true));
+        assert_eq!(report.failures.len(), 1);
+        assert_ne!(
+            report.failures[0].expected_values,
+            report.failures[0].predicted_values
+        );
+    }
+    let mut correct = semantic_case(
+        "correct",
+        "12.00",
+        Some(vec![semantic_span(
+            "12.00",
+            0,
+            semantic_number("12", Some("00"), false),
+        )]),
+    );
+    correct.spoken = vec!["twelve point zero zero".into()];
+    let report = evaluate_speech(&semantic_corpus(vec![correct])).unwrap();
+    assert!(report.passes(false) && report.passes(true));
+    let semantic = report.totals.semantic.unwrap();
+    assert_eq!((semantic.exact, semantic.correct_spans), (1, 1));
+    assert_eq!(
+        (semantic.accuracy(), semantic.precision(), semantic.recall()),
+        (1.0, 1.0, 1.0)
+    );
+}
+
+#[test]
+fn semantic_currency_and_meridiem_mismatches_are_not_hidden_by_span_kinds() {
+    use textintel::speech::evaluation::ExpectedSpeechSpan;
+    use textintel::speech::{NumberValue, SpeechValue};
+    for (source, kind, wrong_value) in [
+        (
+            "USD2",
+            "currency",
+            SpeechValue::Currency {
+                code: "EUR".into(),
+                value: NumberValue {
+                    negative: false,
+                    integer: "2".into(),
+                    fraction: None,
+                },
+            },
+        ),
+        (
+            "3:15 PM",
+            "time",
+            SpeechValue::Time {
+                hour: 3,
+                minute: 15,
+                second: None,
+            },
+        ),
+    ] {
+        let mut case = semantic_case(
+            "semantic-false-positive",
+            source,
+            Some(vec![semantic_span(source, 0, wrong_value)]),
+        );
+        case.expected_spans = Some(vec![ExpectedSpeechSpan {
+            start: 0,
+            end: source.len(),
+            source: source.into(),
+            kind: kind.into(),
+        }]);
+        let report = evaluate_speech(&semantic_corpus(vec![case])).unwrap();
+        assert_eq!(report.totals.parse_exact, 1);
+        assert_eq!(report.totals.semantic.as_ref().unwrap().exact, 0);
+        assert!(!report.passes(false) && !report.passes(true));
+        assert_eq!(
+            report.failures[0].expected.as_ref().unwrap(),
+            &report.failures[0].predicted
+        );
+    }
+}
+
+#[test]
+fn semantic_failure_cannot_pass_even_when_a_reviewed_spoken_variant_matches() {
+    for (gold_integer, expected_gate) in [("42", true), ("43", false)] {
+        let mut case = semantic_case(
+            "variant-with-values",
+            "42",
+            Some(vec![semantic_span(
+                "42",
+                0,
+                semantic_number(gold_integer, None, false),
+            )]),
+        );
+        case.spoken = vec!["forty two".into()];
+        let report = evaluate_speech(&semantic_corpus(vec![case])).unwrap();
+        assert_eq!(report.totals.spoken_exact, 0);
+        assert_eq!(report.totals.spoken_variant, 1);
+        assert_eq!(report.totals.spoken_accepted, 1);
+        assert!(!report.passes(false));
+        assert_eq!(report.passes(true), expected_gate);
+        assert_eq!(
+            report.totals.semantic.as_ref().unwrap().exact,
+            usize::from(expected_gate)
+        );
+    }
+}
+
+#[test]
+fn semantic_none_empty_and_parser_errors_have_distinct_denominators() {
+    let corpus = semantic_corpus(vec![
+        semantic_case("assert-plain", "hello", Some(vec![])),
+        semantic_case("unmeasured-number", "42", None),
+    ]);
+    let report = evaluate_speech(&corpus).unwrap();
+    assert_eq!(report.totals.cases, 2);
+    assert_eq!(report.totals.parse_cases, 0);
+    let semantic = report.totals.semantic.as_ref().unwrap();
+    assert_eq!(
+        (
+            semantic.cases,
+            semantic.exact,
+            semantic.expected_spans,
+            semantic.predicted_spans
+        ),
+        (1, 1, 0, 0)
+    );
+    assert_eq!(
+        (semantic.accuracy(), semantic.precision(), semantic.recall()),
+        (1.0, 0.0, 0.0)
+    );
+    assert_eq!(report.by_locale["en"].semantic.as_ref().unwrap().cases, 1);
+    assert!(report.passes(false));
+    let unexpected = evaluate_speech(&semantic_corpus(vec![semantic_case(
+        "assert-no-number",
+        "42",
+        Some(vec![]),
+    )]))
+    .unwrap();
+    assert!(!unexpected.passes(false) && !unexpected.passes(true));
+    assert_eq!(
+        unexpected.totals.semantic.as_ref().unwrap().predicted_spans,
+        1
+    );
+    assert!(
+        unexpected.failures[0]
+            .expected_values
+            .as_ref()
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        unexpected.failures[0]
+            .predicted_values
+            .as_ref()
+            .unwrap()
+            .len(),
+        1
+    );
+    let error_source = "a".repeat(8193);
+    let error = evaluate_speech(&semantic_corpus(vec![semantic_case(
+        "parser-error",
+        &error_source,
+        Some(vec![]),
+    )]))
+    .unwrap();
+    assert_eq!(
+        (
+            error.totals.semantic.as_ref().unwrap().cases,
+            error.totals.semantic.as_ref().unwrap().exact
+        ),
+        (1, 0)
+    );
+    assert!(error.failures[0].error.is_some());
+    assert_eq!(error.failures[0].predicted_values, Some(vec![]));
+    assert!(!error.passes(false) && !error.passes(true));
+}
+
+#[test]
+fn semantic_span_precision_and_recall_count_only_complete_equal_values() {
+    let corpus = semantic_corpus(vec![semantic_case(
+        "one-correct-of-two",
+        "12 34",
+        Some(vec![
+            semantic_span("12", 0, semantic_number("12", None, false)),
+            semantic_span("34", 3, semantic_number("35", None, false)),
+        ]),
+    )]);
+    let report = evaluate_speech(&corpus).unwrap();
+    let semantic = report.totals.semantic.as_ref().unwrap();
+    assert_eq!(
+        (
+            semantic.expected_spans,
+            semantic.predicted_spans,
+            semantic.correct_spans
+        ),
+        (2, 2, 1)
+    );
+    assert_eq!(
+        (semantic.accuracy(), semantic.precision(), semantic.recall()),
+        (0.0, 0.5, 0.5)
+    );
+    assert!(!report.passes(true));
+    let partial = evaluate_speech(&semantic_corpus(vec![semantic_case(
+        "only-one-gold",
+        "12 34",
+        Some(vec![semantic_span(
+            "12",
+            0,
+            semantic_number("12", None, false),
+        )]),
+    )]))
+    .unwrap();
+    let semantic = partial.totals.semantic.as_ref().unwrap();
+    assert_eq!(
+        (
+            semantic.expected_spans,
+            semantic.predicted_spans,
+            semantic.correct_spans
+        ),
+        (1, 2, 1)
+    );
+    assert_eq!((semantic.precision(), semantic.recall()), (0.5, 1.0));
+    assert!(!partial.passes(true));
+}
+
+#[test]
+fn semantic_gold_validation_rejects_bad_utf8_order_source_text_and_incoherent_kind_gold() {
+    use textintel::speech::SpeechValue;
+    use textintel::speech::evaluation::ExpectedSpeechSpan;
+    let good = semantic_span("12", 5, semantic_number("12", None, false));
+    let corpus = semantic_corpus(vec![semantic_case(
+        "unicode-source",
+        "📚 12",
+        Some(vec![good.clone()]),
+    )]);
+    assert!(corpus.validate().is_ok());
+    assert!(evaluate_speech(&corpus).unwrap().passes(false));
+    for bad in [
+        textintel::speech::SpeechSpan {
+            start: 1,
+            end: 4,
+            source: "📚".into(),
+            value: semantic_number("12", None, false),
+        },
+        textintel::speech::SpeechSpan {
+            start: 7,
+            end: 5,
+            source: "12".into(),
+            value: semantic_number("12", None, false),
+        },
+        textintel::speech::SpeechSpan {
+            start: 5,
+            end: 99,
+            source: "12".into(),
+            value: semantic_number("12", None, false),
+        },
+        textintel::speech::SpeechSpan {
+            start: 5,
+            end: 5,
+            source: "".into(),
+            value: semantic_number("12", None, false),
+        },
+        textintel::speech::SpeechSpan {
+            source: "13".into(),
+            ..good.clone()
+        },
+        textintel::speech::SpeechSpan {
+            value: SpeechValue::Text,
+            ..good.clone()
+        },
+    ] {
+        let mut invalid = corpus.clone();
+        invalid.cases[0].expected_values = Some(vec![bad]);
+        assert!(invalid.validate().is_err());
+    }
+    let mut overlap = corpus.clone();
+    overlap.cases[0].expected_values = Some(vec![good.clone(), good.clone()]);
+    assert!(overlap.validate().is_err());
+    let mut order = semantic_corpus(vec![semantic_case(
+        "bad-order",
+        "12 34",
+        Some(vec![
+            semantic_span("34", 3, semantic_number("34", None, false)),
+            semantic_span("12", 0, semantic_number("12", None, false)),
+        ]),
+    )]);
+    assert!(order.validate().is_err());
+    order.cases[0].expected_values.as_mut().unwrap().reverse();
+    assert!(order.validate().is_ok());
+    let mut coherent = corpus.clone();
+    coherent.cases[0].expected_spans = Some(vec![ExpectedSpeechSpan {
+        start: 5,
+        end: 7,
+        source: "12".into(),
+        kind: "number".into(),
+    }]);
+    assert!(coherent.validate().is_ok());
+    coherent.cases[0].expected_spans.as_mut().unwrap()[0].kind = "currency".into();
+    assert!(coherent.validate().is_err());
+    coherent.cases[0].expected_spans = Some(vec![]);
+    assert!(coherent.validate().is_err());
+    coherent.cases[0].expected_values = Some(vec![]);
+    assert!(coherent.validate().is_ok());
+}
+
+#[test]
+fn semantic_additions_are_optional_in_old_json_and_failure_metadata_cannot_fail_open() {
+    use serde_json::json;
+    use textintel::speech::evaluation::SpeechEvalReport;
+    let old_case = json!({"id":"old","locale":"en","text":"42","date_order":"reject_ambiguous","decimal_separator":null,"category":"number","expected_spans":null,"spoken":["wrong"]});
+    let case: textintel::speech::evaluation::SpeechCase =
+        serde_json::from_value(old_case.clone()).unwrap();
+    assert!(case.expected_values.is_none());
+    assert_eq!(serde_json::to_value(&case).unwrap(), old_case);
+    let report = evaluate_speech(&semantic_corpus(vec![case])).unwrap();
+    let value = serde_json::to_value(&report).unwrap();
+    assert!(value["totals"].get("semantic").is_none());
+    assert!(value["by_locale"]["en"].get("semantic").is_none());
+    assert!(value["by_category"]["number"].get("semantic").is_none());
+    assert!(value["failures"][0].get("expected_values").is_none());
+    assert!(value["failures"][0].get("predicted_values").is_none());
+    let restored: SpeechEvalReport = serde_json::from_value(value.clone()).unwrap();
+    assert_eq!(serde_json::to_value(restored).unwrap(), value);
+    let mut annotated = semantic_case("missing-prediction", "42", Some(vec![]));
+    annotated.spoken = vec!["forty-two".into()];
+    let mut report = evaluate_speech(&semantic_corpus(vec![annotated])).unwrap();
+    assert_eq!(report.totals.spoken_exact, 1);
+    assert!(report.failures[0].expected_values.is_some());
+    report.failures[0].predicted_values = None;
+    assert!(!report.passes(false) && !report.passes(true));
+    let mut incomplete = serde_json::to_value(&report).unwrap();
+    incomplete["failures"][0]
+        .as_object_mut()
+        .unwrap()
+        .remove("expected_values");
+    let mut restored: SpeechEvalReport = serde_json::from_value(incomplete).unwrap();
+    assert!(!restored.passes(false) && !restored.passes(true));
+    restored.failures.clear();
+    assert!(!restored.passes(false) && !restored.passes(true));
+    let semantic = restored.totals.semantic.as_mut().unwrap();
+    semantic.exact = semantic.cases + 1;
+    assert!(!restored.passes(false) && !restored.passes(true));
+}
+
+#[test]
+fn semantic_comparison_never_projects_distinct_ir_representations_into_equality() {
+    use textintel::speech::evaluation::ExpectedSpeechSpan;
+    use textintel::speech::{
+        SpeechValue,
+        temporal::{DatePresentation, TemporalValue},
+    };
+    for (source, kind, independent_alternate_ir) in [
+        (
+            "2024-02-29",
+            "date",
+            SpeechValue::Temporal {
+                value: TemporalValue::Date {
+                    year: Some("2024".into()),
+                    month: Some(2),
+                    day: Some(29),
+                    presentation: DatePresentation::Numeric,
+                    connector: None,
+                    year_label: false,
+                },
+            },
+        ),
+        (
+            "3:15 PM",
+            "time",
+            SpeechValue::Temporal {
+                value: TemporalValue::Clock {
+                    hour: 3,
+                    minute: Some(15),
+                    second: None,
+                    period: None,
+                    meridiem: Some("pm".into()),
+                    half: false,
+                },
+            },
+        ),
+    ] {
+        let mut case = semantic_case(
+            "different-ir",
+            source,
+            Some(vec![semantic_span(source, 0, independent_alternate_ir)]),
+        );
+        case.expected_spans = Some(vec![ExpectedSpeechSpan {
+            start: 0,
+            end: source.len(),
+            source: source.into(),
+            kind: kind.into(),
+        }]);
+        let report = evaluate_speech(&semantic_corpus(vec![case])).unwrap();
+        assert_eq!(report.totals.parse_exact, 1);
+        assert_eq!(report.totals.semantic.as_ref().unwrap().exact, 0);
+        assert!(!report.passes(false) && !report.passes(true));
+    }
+    let mut contradictory = semantic_case(
+        "two-annotations",
+        "12 34",
+        Some(vec![semantic_span(
+            "12",
+            0,
+            semantic_number("12", None, false),
+        )]),
+    );
+    contradictory.expected_spans = Some(vec![ExpectedSpeechSpan {
+        start: 3,
+        end: 5,
+        source: "34".into(),
+        kind: "number".into(),
+    }]);
+    assert!(semantic_corpus(vec![contradictory]).validate().is_err());
+}
