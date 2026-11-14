@@ -58,12 +58,13 @@ impl TextIntelligence {
         if limit == 0 {
             return Ok(Vec::new());
         }
+        let limit = limit.min(self.config.max_search_candidates);
         let query = self.analyze(text)?;
         let retrieved = self
             .store
             .read()
             .map_err(|_| TextIntelError::Storage("store lock poisoned".to_string()))?
-            .search_candidates_with_metadata(&query, self.config.max_search_candidates.max(limit))
+            .search_candidates_with_metadata(&query, self.config.max_search_candidates)
             .map_err(TextIntelError::Storage)?;
         let retrieval_channels = retrieved.channels;
         let records = retrieved.records;

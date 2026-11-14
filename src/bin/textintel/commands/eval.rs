@@ -115,12 +115,6 @@ pub(crate) fn run_eval(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::E
         let profile = profile_named(name).ok_or_else(|| format!("unknown profile '{name}'"))?;
         engine = engine.with_similarity_profile(profile);
     }
-    if let Some(path) = parsed.value("scorer") {
-        let source = std::fs::read_to_string(path)?;
-        let artifact = textintel::SimilarityModelArtifact::from_json(&source)
-            .map_err(|error| format!("invalid scorer artifact {path}: {error}"))?;
-        engine = engine.with_similarity_scorer(artifact.to_scorer());
-    }
     // Held-out spam corpus: explicit `--spam-corpus` wins, otherwise the
     // `spam/v2-eval.json` sibling of the dataset directory. Absent or
     // unreadable resolves to `None` (no spam metrics); production gates

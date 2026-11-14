@@ -256,7 +256,7 @@ pub fn score_candidate_with_evidence(
 
 /// [`score_candidate_with_evidence`] with an explicit weight vector from
 /// [`EngineConfig::rebus_weights`](crate::core::config::EngineConfig).
-/// Channel weights are renormalized, so tuned or trained vectors only need
+/// Channel weights are renormalized, so configured weights only need
 /// correct relative magnitudes.
 #[allow(clippy::too_many_arguments)]
 pub fn score_candidate_with_evidence_and_weights(

@@ -1,7 +1,6 @@
 //! Calibration: ROC-AUC, PR-AUC, F1, Brier, ECE are measured everywhere,
 //! and no probability is marked calibrated unless calibration ran.
 
-use textintel::detection::spam::SpamModelArtifact;
 use textintel::evaluation::{EvaluationCase, EvaluationDataset, evaluate};
 use textintel::{EngineConfig, TextIntelligence};
 
@@ -84,48 +83,5 @@ fn heuristic_spam_is_never_marked_calibrated() {
             "heuristic scores are uncalibrated by construction"
         );
         assert!((0.0..=1.0).contains(&result.probability));
-    }
-}
-
-#[test]
-fn artifact_calibrated_flag_round_trips_honestly() {
-    // Default artifacts are uncalibrated; only an explicit calibration step
-    // (see textintel-train) may set the flag.
-    let plain = SpamModelArtifact::new(
-        "test",
-        [("obfuscation_score".to_string(), 1.0)]
-            .into_iter()
-            .collect(),
-        0.0,
-    );
-    assert!(!plain.calibrated);
-    let calibrated = plain.with_calibrated(true);
-    assert!(calibrated.calibrated);
-    let engine = TextIntelligence::new(EngineConfig::default())
-        .with_spam_predictor(calibrated.clone().to_predictor());
-    assert!(engine.detect_spam("WINNER claim prize").unwrap().calibrated);
-    let engine = TextIntelligence::new(EngineConfig::default()).with_spam_predictor(
-        SpamModelArtifact::new("test", Default::default(), 0.0).to_predictor(),
-    );
-    assert!(!engine.detect_spam("WINNER claim prize").unwrap().calibrated);
-}
-
-#[test]
-fn shipped_spam_model_documents_its_calibration() {
-    let source = std::fs::read_to_string("models/spam-v2.json").unwrap();
-    let artifact = SpamModelArtifact::from_json(&source).unwrap();
-    // The flag is only truthful because textintel-train fits the bias on a
-    // held-out validation split; the heldout metrics below are the receipt.
-    assert!(artifact.calibrated);
-    for key in [
-        "heldout_eval_brier",
-        "heldout_eval_roc_auc",
-        "heldout_eval_f1",
-    ] {
-        assert!(
-            artifact.metrics.contains_key(key),
-            "missing heldout metric {key}: {:?}",
-            artifact.metrics.keys().collect::<Vec<_>>()
-        );
     }
 }

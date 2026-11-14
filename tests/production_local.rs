@@ -18,113 +18,14 @@ fn production_local_builds_and_reports_graceful_fallbacks() {
     let diagnostics = engine.diagnostics();
     assert_eq!(diagnostics.api_version, env!("CARGO_PKG_VERSION"));
     assert_eq!(diagnostics.fingerprint_schema, FINGERPRINT_SCHEMA_VERSION);
-    // espeak-ng is not installed in this environment: phonetic quality must
-    // be reported as degraded, never silently presented as production.
-    assert_eq!(diagnostics.g2p.provider, "rule_based_g2p");
-    assert_eq!(diagnostics.g2p.quality, CapabilityLevel::Basic);
-    assert!(
-        diagnostics
-            .degraded
-            .iter()
-            .any(|item| item.capability == "phonetic" && item.wanted == "espeak_ng_g2p"),
-        "missing phonetic degradation note: {:?}",
-        diagnostics.degraded
-    );
+    // The optional espeak feature may use an installed binary; otherwise
+    // the deterministic rule-based provider serves.
+    assert!(["rule_based_g2p", "espeak_ng_g2p"].contains(&diagnostics.g2p.provider.as_str()));
     // The preset ships a local semantic baseline, honestly marked Basic.
     assert_eq!(diagnostics.embedding.provider, "feature_hash_embedding");
     assert_eq!(diagnostics.embedding.quality, CapabilityLevel::Basic);
-    // Repository model artifacts load through the preset paths.
-    assert_eq!(
-        diagnostics
-            .similarity
-            .as_ref()
-            .map(|info| info.provider.as_str()),
-        Some("logistic_similarity_scorer")
-    );
-    assert_eq!(
-        diagnostics.similarity.as_ref().map(|info| info.quality),
-        Some(CapabilityLevel::Production)
-    );
-    assert_eq!(
-        diagnostics.spam.provider.as_str(),
-        "trained_spam",
-        "preset should load models/spam-v2.json, got {:?}",
-        diagnostics.spam
-    );
-}
-
-#[test]
-fn production_preset_prefers_similarity_v5() {
-    // similarity-v5 (dataset 0.8.0, semantic + phonetic + entity evidence)
-    // is the single production artifact; legacy revisions were removed.
-    let engine = TextIntelligence::production_local().expect("production_local must not fail");
-    let diagnostics = engine.diagnostics();
-    let similarity = diagnostics
-        .similarity
-        .as_ref()
-        .expect("production loads a similarity model");
-    let source =
-        std::fs::read_to_string("models/similarity-v5.json").expect("similarity-v5 must exist");
-    let artifact = textintel::SimilarityModelArtifact::from_json(&source).unwrap();
-    assert_eq!(similarity.provider, "logistic_similarity_scorer");
-    assert_eq!(similarity.version.as_deref(), artifact.revision.as_deref());
-    assert_eq!(artifact.dataset_version, "0.8.0");
-    assert_ne!(
-        artifact.weights.get("semantic").copied().unwrap_or(0.0),
-        0.0,
-        "v5 must carry useful semantic evidence"
-    );
-    assert_ne!(
-        artifact.weights.get("phonetic").copied().unwrap_or(0.0),
-        0.0,
-        "v5 must carry useful phonetic evidence"
-    );
-    assert!(
-        artifact
-            .weights
-            .get("entity_conflict")
-            .copied()
-            .unwrap_or(0.0)
-            < 0.0,
-        "v5 must penalize entity conflicts"
-    );
-    assert!(
-        artifact
-            .weights
-            .get("entity_agreement")
-            .copied()
-            .unwrap_or(0.0)
-            > 0.0,
-        "v5 must reward entity agreement"
-    );
-    assert_eq!(artifact.feature_schema_version, 9);
-    assert!(
-        !artifact.training_config.is_empty(),
-        "v5 must record its training configuration"
-    );
-    assert!(
-        !artifact.calibration_config.is_empty(),
-        "v5 must record its calibration configuration"
-    );
-    assert!(
-        artifact.embedding_model.is_some(),
-        "v5 must record its embedding provider metadata"
-    );
-    for metric in [
-        "test_accuracy",
-        "test_precision",
-        "test_recall",
-        "test_f1",
-        "test_roc_auc",
-        "test_pr_auc",
-        "test_brier",
-        "test_ece",
-    ] {
-        assert!(
-            artifact.metrics.contains_key(metric),
-            "v5 must record {metric}"
-        );
-    }
+    assert!(diagnostics.similarity.is_none());
+    assert_eq!(diagnostics.spam.provider, "heuristic_spam_v1");
 }
 
 #[test]
@@ -192,8 +93,8 @@ fn diagnostics_expose_the_full_running_configuration() {
             .map(|info| info.provider.as_str()),
         Some("rule_based_transliteration")
     );
-    assert!(diagnostics.similarity.is_some());
-    assert_eq!(diagnostics.spam.provider, "trained_spam");
+    assert!(diagnostics.similarity.is_none());
+    assert_eq!(diagnostics.spam.provider, "heuristic_spam_v1");
     // Store type, ANN status, cache status.
     assert_eq!(diagnostics.store_capabilities.store_type, "memory");
     assert_eq!(
@@ -227,48 +128,6 @@ fn builder_rejects_invalid_configuration_without_panic() {
             ..Default::default()
         })
         .is_err()
-    );
-}
-
-#[test]
-fn builder_model_paths_are_strict() {
-    // Explicit paths: missing files fail, corrupt files fail.
-    let missing = TextIntelligence::builder()
-        .trained_similarity_model("models/does-not-exist.json")
-        .build();
-    assert!(missing.is_err(), "missing required model must fail");
-
-    let corrupt = std::env::temp_dir().join("textintel-corrupt-similarity.json");
-    std::fs::write(&corrupt, r#"{"artifact_version": 999}"#).expect("fixture write");
-    let loaded = TextIntelligence::builder()
-        .trained_similarity_model(&corrupt)
-        .build();
-    assert!(
-        loaded.is_err(),
-        "corrupt model must fail, not silently skipped"
-    );
-    let _ = std::fs::remove_file(&corrupt);
-
-    // Valid explicit paths load trained backends.
-    let engine = TextIntelligence::builder()
-        .trained_similarity_model("models/similarity-v5.json")
-        .trained_spam_model("models/spam-v2.json")
-        .build()
-        .expect("valid models must load");
-    let diagnostics = engine.diagnostics();
-    assert!(
-        !diagnostics
-            .degraded
-            .iter()
-            .any(|item| item.capability == "similarity"),
-        "trained similarity must clear the degradation note"
-    );
-    assert!(
-        !diagnostics
-            .degraded
-            .iter()
-            .any(|item| item.capability == "spam"),
-        "trained spam must clear the degradation note"
     );
 }
 

@@ -24,16 +24,15 @@ fn production_preset_enables_all_four_caches() {
             "{name} cache must carry a revision"
         );
     }
-    // The default engine enables only the decision fingerprint cache.
     let plain = TextIntelligence::default();
-    assert_eq!(plain.config().cache.decision, 256);
-    for (name, cache) in &plain.diagnostics().caches {
-        assert_eq!(
-            cache.enabled,
-            name == "decision",
-            "only the decision cache is on by default (failed on {name})"
-        );
-    }
+    assert!(!plain.config().cache.any_enabled());
+    assert!(
+        plain
+            .diagnostics()
+            .caches
+            .values()
+            .all(|cache| !cache.enabled)
+    );
 }
 
 #[test]

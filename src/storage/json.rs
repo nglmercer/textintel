@@ -130,8 +130,9 @@ impl JsonFileStore {
         let temporary = self.path.with_extension("json.tmp");
         fs::write(&temporary, &bytes).map_err(|error| error.to_string())?;
         if let Err(error) = fs::rename(&temporary, &self.path) {
-            let _ = fs::remove_file(&self.path);
-            fs::rename(&temporary, &self.path).map_err(|_| error.to_string())?;
+            // Preserve the last good snapshot on any rename failure.
+            let _ = fs::remove_file(&temporary);
+            return Err(error.to_string());
         }
         Ok(())
     }
@@ -142,11 +143,7 @@ impl VectorStore for JsonFileStore {
         let previous = self.inner.get(&id).cloned();
         self.inner.upsert(id.clone(), fingerprint)?;
         if let Err(error) = self.flush() {
-            if let Some(previous) = previous {
-                self.inner.upsert(id, previous)?;
-            } else {
-                self.inner.remove(&id)?;
-            }
+            self.inner.restore_record(id, previous)?;
             return Err(error);
         }
         Ok(())
@@ -156,9 +153,7 @@ impl VectorStore for JsonFileStore {
         let previous = self.inner.get(id).cloned();
         let removed = self.inner.remove(id)?;
         if removed && let Err(error) = self.flush() {
-            if let Some(previous) = previous {
-                self.inner.upsert(id.to_string(), previous)?;
-            }
+            self.inner.restore_record(id.to_string(), previous)?;
             return Err(error);
         }
         Ok(removed)

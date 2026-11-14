@@ -171,17 +171,17 @@ impl HnswVectorIndex {
             .next_id
             .write()
             .map_err(|_| format!("{PROVIDER}: id lock poisoned"))?;
-        for (entry, stored) in ids.iter_mut().zip(vectors.iter_mut()) {
-            if entry.as_deref() == Some(id) {
-                *entry = None;
-                *stored = None;
-            }
-        }
         if *next >= self.max_elements {
             return Err(format!(
                 "{PROVIDER}: index is full ({max} elements)",
                 max = self.max_elements
             ));
+        }
+        for (entry, stored) in ids.iter_mut().zip(vectors.iter_mut()) {
+            if entry.as_deref() == Some(id) {
+                *entry = None;
+                *stored = None;
+            }
         }
         let point = *next;
         *next += 1;
@@ -335,7 +335,7 @@ impl HnswVectorIndex {
         if self.len() <= EXACT_SEARCH_MAX_LIVE {
             return self.search_exact(vector, k);
         }
-        let ef = (k * 4).clamp(50, 500);
+        let ef = k.saturating_mul(4).clamp(50, 500);
         let neighbours = self.index.search(vector, k, ef);
         let ids = self
             .ids

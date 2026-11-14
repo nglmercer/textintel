@@ -2,7 +2,7 @@
 
 use std::time::Instant;
 
-use crate::comparison::model::score_fingerprints_with_profile;
+use crate::comparison::profile::score_fingerprints_with_profile;
 use crate::comparison::scorer::score_fingerprints as weighted_score_fingerprints;
 use crate::core::error::TextIntelError;
 use crate::core::types::{
@@ -41,7 +41,10 @@ impl TextIntelligence {
             .iter()
             .flat_map(|(left, right)| [left.clone(), right.clone()])
             .collect::<Vec<_>>();
-        let fingerprints = self.analyze_batch(&texts)?;
+        let mut fingerprints = Vec::with_capacity(texts.len());
+        for chunk in texts.chunks(self.config.max_batch_size.max(1)) {
+            fingerprints.extend(self.analyze_batch(chunk)?);
+        }
         pairs
             .iter()
             .enumerate()

@@ -494,7 +494,7 @@ pub struct ComparisonResult {
     pub obfuscation: Option<f64>,
     /// Lexicon validity of the pair: the weaker side's `lexicon_coverage`.
     /// Confusable pairs (`their`/`there`) score near 1.0 while typo pairs
-    /// (`bonjour`/`binjour`) score near 0.0, letting the trained model
+    /// (`bonjour`/`binjour`) score near 0.0, allowing application scorers to
     /// separate "both valid, different words" from "one side misspelled".
     #[serde(default)]
     pub lexicon_validity: f64,
@@ -601,7 +601,7 @@ pub struct ComparisonResult {
     /// `similarity × confidence × compatibility`.
     #[serde(default)]
     pub transliteration_compatibility: f64,
-    /// Transformer-only semantic cosine: the semantic channel value when
+    /// Production-provider semantic cosine: the semantic channel value when
     /// both sides carry Production-quality embeddings, else `0.0`. Lets the
     /// model trust contextual multilingual evidence without trusting the
     /// feature-hash fallback equally.

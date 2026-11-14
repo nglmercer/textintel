@@ -232,11 +232,7 @@ impl VectorStore for RedbStore {
         let previous = self.inner.get(&id).cloned();
         self.inner.upsert(id.clone(), fingerprint.clone())?;
         if let Err(error) = self.write_record(&id, &fingerprint) {
-            if let Some(previous) = previous {
-                self.inner.upsert(id, previous)?;
-            } else {
-                self.inner.remove(&id)?;
-            }
+            self.inner.restore_record(id, previous)?;
             return Err(error);
         }
         Ok(())
@@ -246,9 +242,7 @@ impl VectorStore for RedbStore {
         let previous = self.inner.get(id).cloned();
         let removed = self.inner.remove(id)?;
         if removed && let Err(error) = self.delete_record(id) {
-            if let Some(previous) = previous {
-                self.inner.upsert(id.to_string(), previous)?;
-            }
+            self.inner.restore_record(id.to_string(), previous)?;
             return Err(error);
         }
         Ok(removed)

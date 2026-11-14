@@ -4,7 +4,4 @@ pub mod spam;
 
 pub use duplicates::{duplicate_result, duplicate_result_with_mode};
 pub use patterns::match_pattern;
-pub use spam::{
-    HeuristicSpamPredictor, SPAM_FEATURE_SCHEMA_VERSION, SPAM_FEATURES, SpamModelArtifact,
-    TrainedSpamPredictor, predict_spam, spam_feature_vector, spam_features,
-};
+pub use spam::{HeuristicSpamPredictor, predict_spam, spam_features};

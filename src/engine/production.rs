@@ -2,9 +2,9 @@
 //!
 //! [`TextIntelligence::default`](crate::engine::TextIntelligence::default)
 //! stays lightweight and deterministic. Everything production-grade lives
-//! here: [`EngineBuilder`] wires explicit providers and trained artifacts,
+//! here: [`EngineBuilder`] wires explicit providers,
 //! [`EngineBuilder::production_local`] assembles the local production stack
-//! (resource packs, trained models when present, espeak-ng G2P with a
+//! (resource packs, espeak-ng G2P with a
 //! rule-based fallback), and [`EngineDiagnostics`] reports exactly what is
 //! serving and what was degraded. No network access happens unless a remote
 //! provider is configured explicitly.
@@ -18,7 +18,7 @@ use crate::core::capabilities::ProviderCapabilities;
 use crate::core::config::EngineConfig;
 use crate::core::error::TextIntelError;
 use crate::core::providers::{
-    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider, GenerativeProvider,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
     LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
     SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider,
 };
@@ -74,16 +74,12 @@ pub struct EngineDiagnostics {
     pub spam: ProviderCapabilities,
     pub similarity: Option<ProviderCapabilities>,
     pub reranker: Option<ProviderCapabilities>,
-    #[serde(default)]
-    pub generative: Option<ProviderCapabilities>,
-    #[serde(default)]
-    pub decision: Option<ProviderCapabilities>,
     pub store: ProviderCapabilities,
     pub ann_enabled: bool,
     pub degraded: Vec<DegradedCapability>,
     pub resource_manifest: Vec<ResourcePackInfo>,
     /// Bounded revision-aware caches by subsystem (`embeddings`, `g2p`,
-    /// `language`, `rebus`, `decision`). Counts only — never cached texts.
+    /// `language`, `rebus`). Counts only — never cached texts.
     #[serde(default)]
     pub caches: std::collections::BTreeMap<String, crate::cache::CacheDiagnostics>,
     /// Explicit store capabilities: `memory`/`json`/`redb`, persistence, ANN
@@ -93,34 +89,6 @@ pub struct EngineDiagnostics {
     /// Retrieval candidate budgets (per-channel, ANN, union cut).
     #[serde(default)]
     pub candidate_budgets: CandidateBudgets,
-}
-
-/// Production similarity artifact within `dir`: the single modern revision
-/// (`similarity-v5`, schema 9 with contextual/entity features). There is no
-/// fallback chain: legacy revisions are removed, and an artifact whose
-/// feature schema does not match this build is rejected with an explicit
-/// error (never silently loaded). Diagnostics always report the loaded
-/// revision, so the active artifact is explicit.
-pub fn preferred_similarity_artifact_in(dir: &std::path::Path) -> PathBuf {
-    dir.join("similarity-v5.json")
-}
-
-/// [`preferred_similarity_artifact_in`] for the conventional `./models`
-/// directory.
-pub fn preferred_similarity_artifact() -> PathBuf {
-    preferred_similarity_artifact_in(std::path::Path::new("models"))
-}
-
-/// Production spam artifact within `dir`: the single modern revision
-/// (`spam-v2`, realistic corpus). The legacy synthetic `spam-v1` revision is
-/// removed; there is no fallback chain.
-pub fn preferred_spam_artifact_in(dir: &std::path::Path) -> PathBuf {
-    dir.join("spam-v2.json")
-}
-
-/// [`preferred_spam_artifact_in`] for the conventional `./models` directory.
-pub fn preferred_spam_artifact() -> PathBuf {
-    preferred_spam_artifact_in(std::path::Path::new("models"))
 }
 
 /// Ergonomic engine construction. All providers are optional; anything left
@@ -141,23 +109,9 @@ pub struct EngineBuilder {
     pub(crate) entity: Option<Arc<dyn EntityProvider>>,
     pub(crate) entity_disabled: bool,
     pub(crate) reranker: Option<Arc<dyn RerankerProvider>>,
-    pub(crate) generative: Option<Arc<dyn GenerativeProvider>>,
-    pub(crate) decision: Option<Arc<dyn crate::decision::DecisionProvider>>,
-    /// Explicit local transformer directory for [`Self::production_local`].
-    pub(crate) transformer_model_path: Option<PathBuf>,
-    /// Fallback notes recorded while assembling the preset (surfaced via
-    /// [`EngineDiagnostics::degraded`]).
-    pub(crate) preset_fallbacks: Vec<DegradedCapability>,
     pub(crate) spam: Option<Arc<dyn SpamPredictor>>,
     pub(crate) similarity_scorer: Option<Arc<dyn SimilarityScorer>>,
     pub(crate) similarity_profile: Option<crate::comparison::SimilarityProfile>,
-    pub(crate) similarity_model_path: Option<PathBuf>,
-    pub(crate) similarity_model_required: bool,
-    pub(crate) spam_model_path: Option<PathBuf>,
-    pub(crate) spam_model_required: bool,
-    pub(crate) reranker_model_path: Option<PathBuf>,
-    pub(crate) reranker_model_required: bool,
-    pub(crate) reranker_max_candidates: Option<usize>,
     pub(crate) json_store_path: Option<PathBuf>,
     pub(crate) json_store_ann: Option<(usize, usize)>,
 }
@@ -237,36 +191,8 @@ impl EngineBuilder {
         self
     }
 
-    /// Pin the local transformer directory used by [`Self::production_local`].
-    /// The directory must already exist (no download); when it cannot be
-    /// opened the preset falls back to the feature-hash baseline and records
-    /// the failure in diagnostics.
-    pub fn transformer_model(mut self, path: impl Into<PathBuf>) -> Self {
-        self.transformer_model_path = Some(path.into());
-        self
-    }
-
     pub fn reranker_provider<P: RerankerProvider + 'static>(mut self, provider: P) -> Self {
         self.reranker = Some(Arc::new(provider));
-        self
-    }
-
-    /// Attach an explicit generative provider (Liquid LFM2.5 over a local
-    /// endpoint). Never configured by [`Self::production_local`]: generation
-    /// always needs an explicit endpoint.
-    pub fn generative_provider<P: GenerativeProvider + 'static>(mut self, provider: P) -> Self {
-        self.generative = Some(Arc::new(provider));
-        self
-    }
-
-    /// Attach a typed decision provider. Never configured by
-    /// [`Self::production_local`]: decision models join the preset only
-    /// after the decision quality gates pass.
-    pub fn decision_provider<P: crate::decision::DecisionProvider + 'static>(
-        mut self,
-        provider: P,
-    ) -> Self {
-        self.decision = Some(Arc::new(provider));
         self
     }
 
@@ -282,42 +208,6 @@ impl EngineBuilder {
 
     pub fn similarity_profile(mut self, profile: crate::comparison::SimilarityProfile) -> Self {
         self.similarity_profile = Some(profile);
-        self
-    }
-
-    /// Load a trained similarity artifact at build time. Missing files fail
-    /// the build; present-but-invalid files always fail (never silently
-    /// ignored).
-    pub fn trained_similarity_model(mut self, path: impl Into<PathBuf>) -> Self {
-        self.similarity_model_path = Some(path.into());
-        self.similarity_model_required = true;
-        self
-    }
-
-    /// Load a trained spam artifact at build time (same failure semantics as
-    /// [`Self::trained_similarity_model`]).
-    pub fn trained_spam_model(mut self, path: impl Into<PathBuf>) -> Self {
-        self.spam_model_path = Some(path.into());
-        self.spam_model_required = true;
-        self
-    }
-
-    /// Load a versioned reranker artifact at build time (same failure
-    /// semantics as [`Self::trained_similarity_model`]). The deterministic
-    /// default weights and trained weights share this path; the candidate
-    /// bound stays a deployment choice (see [`Self::reranker_max_candidates`],
-    /// default 64).
-    pub fn trained_reranker_model(mut self, path: impl Into<PathBuf>) -> Self {
-        self.reranker_model_path = Some(path.into());
-        self.reranker_model_required = true;
-        self
-    }
-
-    /// Bound the reranked head when loading [`Self::trained_reranker_model`].
-    /// Reranking only ever runs on this bounded set; the tail keeps its
-    /// retrieval order and full-comparison scores.
-    pub fn reranker_max_candidates(mut self, max_candidates: usize) -> Self {
-        self.reranker_max_candidates = Some(max_candidates.max(1));
         self
     }
 
@@ -343,189 +233,27 @@ impl EngineBuilder {
         self
     }
 
-    /// Attempt the local production stack: embedded resource packs, trained
-    /// models from `./models` when present, espeak-ng G2P with a rule-based
-    /// fallback, transformer embeddings when a local model is configured
-    /// (explicit [`Self::transformer_model`], `TEXTINTEL_TRANSFORMER_MODEL`,
-    /// or `./models/transformer`), falling back to the feature-hash baseline,
-    /// and bounded revision-aware caches for embeddings, G2P, language
-    /// detection, and rebus decoding (see [`EngineDiagnostics::caches`]).
-    /// Anything unavailable is reported through [`EngineDiagnostics::degraded`];
-    /// nothing panics and nothing touches the network.
+    /// Enable deterministic local providers and bounded caches. Does not read
+    /// model files, environment model paths, or contact remote services.
     pub fn production_local(mut self) -> Self {
         self.config.semantic = true;
         self.config.phonetic = true;
-        // Bounded revision-aware caches for embeddings, G2P, language
-        // detection, and rebus decoding. Explicitly configured limits win;
-        // only disabled (0) entries take the production defaults.
         self.config.cache = std::mem::take(&mut self.config.cache).with_production_defaults();
         #[cfg(feature = "phonetic-espeak")]
+        if self.g2p.is_none()
+            && let Ok(provider) = crate::phonetic::EspeakNgG2PProvider::auto_detect()
         {
-            if self.g2p.is_none()
-                && let Ok(provider) = crate::phonetic::EspeakNgG2PProvider::auto_detect()
-            {
-                self.g2p = Some(Arc::new(provider));
-            }
+            self.g2p = Some(Arc::new(provider));
         }
         if self.embedding.is_none() {
-            // Only the transformer branch below can set this; without the
-            // feature the fallback always runs.
-            #[cfg_attr(not(feature = "semantic-transformer"), allow(unused_mut))]
-            let mut used_transformer = false;
-            let configured = self.transformer_model_path.clone().or_else(|| {
-                std::env::var("TEXTINTEL_TRANSFORMER_MODEL")
-                    .ok()
-                    .map(PathBuf::from)
-            });
-            // `models/transformer` is a conventional best-effort location; an
-            // explicit path or env var counts as "configured" and its failure
-            // is reported, while a missing conventional directory is not.
-            let (candidate, explicit) = match configured {
-                Some(path) => (Some(path), true),
-                None => {
-                    let conventional = PathBuf::from("models/transformer");
-                    if conventional.join("config.json").is_file() {
-                        (Some(conventional), false)
-                    } else {
-                        (None, false)
-                    }
-                }
-            };
-            #[cfg(feature = "semantic-transformer")]
-            {
-                if let Some(directory) = candidate {
-                    match crate::semantic::TransformerEmbeddingProvider::open(&directory) {
-                        Ok(provider) => {
-                            // Production preference: local multilingual
-                            // transformer first, feature-hash fallback on any
-                            // runtime failure (explicit in diagnostics).
-                            let fallback = crate::semantic::FeatureHashEmbeddingProvider::default();
-                            self.embedding = Some(Arc::new(
-                                crate::semantic::FallbackEmbeddingProvider::new(provider, fallback),
-                            ));
-                            used_transformer = true;
-                        }
-                        Err(error) if explicit => {
-                            self.preset_fallbacks.push(DegradedCapability {
-                                capability: "semantic".to_string(),
-                                configured: "feature_hash_embedding".to_string(),
-                                wanted: "transformer_embedding".to_string(),
-                                detail: format!(
-                                    "configured transformer model at {} failed to open ({error}); serving the feature-hash fallback",
-                                    directory.display()
-                                ),
-                            });
-                        }
-                        Err(_) => {}
-                    }
-                }
-            }
-            #[cfg(not(feature = "semantic-transformer"))]
-            {
-                if let Some(directory) = candidate.filter(|_| explicit) {
-                    self.preset_fallbacks.push(DegradedCapability {
-                        capability: "semantic".to_string(),
-                        configured: "feature_hash_embedding".to_string(),
-                        wanted: "transformer_embedding".to_string(),
-                        detail: format!(
-                            "transformer model configured at {} but this build lacks the semantic-transformer feature; serving the feature-hash fallback",
-                            directory.display()
-                        ),
-                    });
-                }
-            }
-            if !used_transformer
-                && let Ok(provider) = crate::semantic::FeatureHashEmbeddingProvider::new(256)
-            {
-                self.embedding = Some(Arc::new(provider));
-            }
-        }
-        if self.similarity_model_path.is_none() {
-            self.similarity_model_path = Some(preferred_similarity_artifact());
-        }
-        if self.spam_model_path.is_none() {
-            self.spam_model_path = Some(preferred_spam_artifact());
-        }
-        if self.reranker_model_path.is_none() && self.reranker.is_none() {
-            self.reranker_model_path = Some(PathBuf::from("models/reranker-v1.json"));
+            self.embedding = Some(Arc::new(
+                crate::semantic::FeatureHashEmbeddingProvider::default(),
+            ));
         }
         self
     }
-
+    /// Validate configuration and assemble the library engine.
     pub fn build(self) -> Result<crate::engine::TextIntelligence, TextIntelError> {
         crate::engine::TextIntelligence::assemble(self)
     }
-}
-
-/// Load a trained similarity artifact. A missing file is skipped only for
-/// preset best-effort paths (`required == false`); a present-but-invalid file
-/// always fails so corrupt models are never silently ignored.
-pub(crate) fn load_similarity_scorer(
-    path: &std::path::Path,
-    required: bool,
-) -> Result<Option<crate::comparison::LogisticSimilarityScorer>, TextIntelError> {
-    let source = match std::fs::read_to_string(path) {
-        Ok(source) => source,
-        Err(_) if !required => return Ok(None),
-        Err(error) => {
-            return Err(TextIntelError::InvalidConfiguration(format!(
-                "cannot read similarity model {}: {error}",
-                path.display()
-            )));
-        }
-    };
-    crate::comparison::SimilarityModelArtifact::from_json(&source)
-        .map(|artifact| artifact.to_scorer())
-        .map(Some)
-        .map_err(TextIntelError::InvalidConfiguration)
-}
-
-/// Load a trained spam artifact (same missing/invalid semantics as
-/// [`load_similarity_scorer`]).
-pub(crate) fn load_spam_predictor(
-    path: &std::path::Path,
-    required: bool,
-) -> Result<Option<crate::detection::TrainedSpamPredictor>, TextIntelError> {
-    let source = match std::fs::read_to_string(path) {
-        Ok(source) => source,
-        Err(_) if !required => return Ok(None),
-        Err(error) => {
-            return Err(TextIntelError::InvalidConfiguration(format!(
-                "cannot read spam model {}: {error}",
-                path.display()
-            )));
-        }
-    };
-    crate::detection::SpamModelArtifact::from_json(&source)
-        .map(|artifact| artifact.to_predictor())
-        .map(Some)
-        .map_err(TextIntelError::InvalidConfiguration)
-}
-
-/// Load a versioned reranker artifact (same missing/invalid semantics as
-/// [`load_similarity_scorer`]). Absence keeps the engine on plain retrieval
-/// order; the candidate bound defaults to 64.
-pub(crate) fn load_reranker(
-    path: &std::path::Path,
-    required: bool,
-    max_candidates: Option<usize>,
-) -> Result<Option<crate::comparison::ChannelScoreReranker>, TextIntelError> {
-    let source = match std::fs::read_to_string(path) {
-        Ok(source) => source,
-        Err(_) if !required => return Ok(None),
-        Err(error) => {
-            return Err(TextIntelError::InvalidConfiguration(format!(
-                "cannot read reranker model {}: {error}",
-                path.display()
-            )));
-        }
-    };
-    crate::comparison::RerankerModelArtifact::from_json(&source)
-        .map_err(TextIntelError::InvalidConfiguration)
-        .and_then(|artifact| {
-            artifact
-                .to_reranker(max_candidates.unwrap_or(64))
-                .map_err(TextIntelError::InvalidConfiguration)
-        })
-        .map(Some)
 }

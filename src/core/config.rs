@@ -75,7 +75,7 @@ impl SimilarityWeights {
 
 /// Weights for rebus candidate scoring. Formerly hardcoded in
 /// `rebus::scorer`; now configurable so deployments can tune the blend and
-/// trained weights can be loaded later without code changes. Channel weights
+/// applications can configure the blend without code changes. Channel weights
 /// are renormalized at scoring time, so only relative magnitudes matter.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
@@ -140,7 +140,7 @@ impl Default for RebusWeights {
 }
 
 impl RebusWeights {
-    /// Load weights from JSON (for tuned or trained vectors). Unknown fields
+    /// Load configured weights from JSON. Unknown fields
     /// are ignored by serde; validation still applies.
     pub fn from_json(source: &str) -> Result<Self, String> {
         let weights: Self = serde_json::from_str(source)
@@ -224,35 +224,18 @@ impl RebusWeights {
 /// wrapped provider would compute, keys always include the provider identity
 /// and model/resource revision, and an observed revision change invalidates
 /// instead of serving stale values.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct CacheLimits {
     pub embeddings: usize,
     pub g2p: usize,
     pub language: usize,
     pub rebus: usize,
-    /// Exact-text fingerprint cache for the decision path
-    /// (`prepare_decision_request` re-analyzes static criterion
-    /// descriptions otherwise). On by default (256 entries, ≈6MB worst
-    /// case); set `0` to disable.
-    pub decision: usize,
-}
-
-impl Default for CacheLimits {
-    fn default() -> Self {
-        Self {
-            embeddings: 0,
-            g2p: 0,
-            language: 0,
-            rebus: 0,
-            decision: 256,
-        }
-    }
 }
 
 impl CacheLimits {
     /// Production preset: generous text-keyed caches for the embedding, G2P,
-    /// and language providers plus smaller rebus/decision caches
+    /// and language providers plus smaller rebus caches
     /// (fingerprints and decoded candidate lists are the largest values).
     pub fn production() -> Self {
         Self {
@@ -260,7 +243,6 @@ impl CacheLimits {
             g2p: 1024,
             language: 1024,
             rebus: 256,
-            decision: 256,
         }
     }
 
@@ -280,18 +262,11 @@ impl CacheLimits {
         if self.rebus == 0 {
             self.rebus = production.rebus;
         }
-        if self.decision == 0 {
-            self.decision = production.decision;
-        }
         self
     }
 
     pub fn any_enabled(&self) -> bool {
-        self.embeddings > 0
-            || self.g2p > 0
-            || self.language > 0
-            || self.rebus > 0
-            || self.decision > 0
+        self.embeddings > 0 || self.g2p > 0 || self.language > 0 || self.rebus > 0
     }
 }
 
@@ -329,8 +304,7 @@ pub struct EngineConfig {
     pub embedding_batch_size: usize,
     /// Embedding input bound in characters: texts longer than this are
     /// truncated on a char boundary before embedding (deterministic
-    /// preprocessing; the transformer additionally caps word pieces at its
-    /// `max_position_embeddings`).
+    /// preprocessing; application providers may impose additional limits).
     pub embedding_max_chars: usize,
     /// Entity evidence bound: at most this many mentions per fingerprint.
     pub max_entities: usize,
@@ -342,7 +316,7 @@ pub struct EngineConfig {
     pub semantic: bool,
     pub phonetic: bool,
     /// Rebus/leet/symbol decoding during analysis. Disable only for
-    /// pipelines that never read decoded evidence (fast decision serving
+    /// pipelines that never read decoded evidence (feature-only analysis
     /// over clean text): fingerprints then carry empty
     /// `rebus_candidates`/`spoken_candidates` and `lexicon_coverage` runs
     /// over the raw tokens.
@@ -354,9 +328,8 @@ pub struct EngineConfig {
     /// "use detected languages". Hints never change detection itself, only
     /// which readings the decoder and G2P prefer.
     pub language_hints: Vec<String>,
-    /// Bounded revision-aware caches. Only the decision fingerprint
-    /// cache is enabled by default; the production preset enables the
-    /// rest (see [`CacheLimits::production`]).
+    /// Bounded revision-aware caches, disabled by default. The local preset
+    /// enables them (see [`CacheLimits::production`]).
     pub cache: CacheLimits,
 }
 

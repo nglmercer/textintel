@@ -26,7 +26,7 @@ pub mod help;
 pub mod parse;
 pub mod spec;
 
-pub use catalog::{eval_llm_spec, textintel_spec, train_decision_spec, train_spec};
+pub use catalog::textintel_spec;
 pub use help::{render_command, render_overview};
 pub use parse::{CliError, ParsedArgs, handle_meta, parse_args};
 pub use spec::{ArgKind, ArgSpec, CliSpec, CommandSpec, PositionalSpec};

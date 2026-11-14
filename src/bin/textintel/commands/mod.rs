@@ -6,9 +6,7 @@
 
 pub mod common;
 pub mod compare;
-pub mod decision;
 pub mod eval;
-pub mod generate;
 pub mod resources;
 pub mod store;
 pub mod text;

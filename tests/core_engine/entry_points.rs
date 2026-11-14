@@ -370,3 +370,22 @@ fn decode_rejects_overlong_input() {
         TextIntelError::InputTooLong { .. }
     ));
 }
+
+#[test]
+fn compare_batch_limit_counts_pairs_rather_than_individual_texts() {
+    let engine = textintel::TextIntelligence::new(textintel::EngineConfig {
+        max_batch_size: 2,
+        rebus: false,
+        ..Default::default()
+    });
+    let pairs = vec![
+        ("hello".to_string(), "hello".to_string()),
+        ("world".to_string(), "words".to_string()),
+    ];
+    let batch = engine.compare_batch(&pairs).unwrap();
+    assert_eq!(batch.len(), 2);
+    for ((left, right), result) in pairs.iter().zip(batch) {
+        assert_eq!(result, engine.compare(left, right).unwrap());
+    }
+    assert!(engine.compare_batch(&vec![pairs[0].clone(); 3]).is_err());
+}

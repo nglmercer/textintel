@@ -1,4 +1,4 @@
-//! Local production preset: resource packs, trained models when present,
+//! Local preset: resource packs, deterministic vector utilities,
 //! espeak-ng G2P with a rule-based fallback, and graceful degradation notes.
 //!
 //! ```sh

@@ -65,6 +65,27 @@ pub const DEFAULT_ANN_CANDIDATES: usize = 100;
 const CHAR_INDEX_PREFIX: usize = 256;
 
 impl MemoryStore {
+    /// Restore a failed persistent write without allocating another ANN slot.
+    /// Rebuild compacts the graph after restoring the exact source of truth.
+    pub(crate) fn restore_record(
+        &mut self,
+        id: String,
+        previous: Option<MessageFingerprint>,
+    ) -> Result<(), String> {
+        if let Some(current) = self.records.remove(&id) {
+            self.deindex_record(&id, &current);
+        }
+        if let Some(previous) = previous {
+            self.index_record(&id, &previous);
+            self.records.insert(id, previous);
+        }
+        #[cfg(feature = "ann-hnsw")]
+        if self.ann.is_some() {
+            self.rebuild_ann()?;
+        }
+        Ok(())
+    }
+
     pub fn get(&self, id: &str) -> Option<&MessageFingerprint> {
         self.records.get(id)
     }
@@ -208,6 +229,7 @@ impl MemoryStore {
         // Fingerprints without embeddings (e.g. null backend) simply do not
         // participate in ANN retrieval.
         let Some(vector) = fingerprint.semantic_embeddings.get("default") else {
+            ann.remove(id);
             return Ok(());
         };
         // Revision validation: vectors from a different embedding model than
@@ -218,6 +240,7 @@ impl MemoryStore {
             (ann.model(), embedding_model_of(fingerprint))
             && index_model != record_model
         {
+            ann.remove(id);
             return Ok(());
         }
         ann.insert(id, vector)
@@ -605,12 +628,14 @@ impl MemoryStore {
 
 impl VectorStore for MemoryStore {
     fn upsert(&mut self, id: String, fingerprint: MessageFingerprint) -> Result<(), String> {
+        // ANN validation/capacity errors must leave the exact record and all
+        // retrieval indexes untouched.
+        #[cfg(feature = "ann-hnsw")]
+        self.index_ann(&id, &fingerprint)?;
         if let Some(previous) = self.records.remove(&id) {
             self.deindex_record(&id, &previous);
         }
         self.index_record(&id, &fingerprint);
-        #[cfg(feature = "ann-hnsw")]
-        self.index_ann(&id, &fingerprint)?;
         self.records.insert(id, fingerprint);
         Ok(())
     }

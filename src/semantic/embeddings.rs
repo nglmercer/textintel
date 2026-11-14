@@ -79,7 +79,7 @@ impl EmbeddingProviderTrait for StaticEmbeddingProvider {
 
 /// Deterministic local vectorizer used when a full neural model is not
 /// available. It is useful for privacy-preserving deployments and as a stable
-/// retrieval baseline; applications can replace it with a trained model.
+/// retrieval baseline; applications can supply their own vector provider.
 #[derive(Debug, Clone)]
 pub struct FeatureHashEmbeddingProvider {
     dimensions: usize,
@@ -166,7 +166,7 @@ fn stable_hash(bytes: &[u8]) -> u64 {
     hash
 }
 
-/// Explicit degradation chain: `primary` (a contextual transformer) serves
+/// Explicit degradation chain: `primary` (an application provider) serves
 /// until it errors or returns a vector that fails its own declared metadata
 /// (dimension mismatch, non-finite values), at which point every call serves
 /// `fallback` (the feature-hash baseline) instead. The switch latches for

@@ -56,14 +56,8 @@ impl TextIntelligence {
         if let Some(reranker) = &self.reranker_provider {
             capabilities.insert("reranker".to_string(), reranker.capabilities());
         }
-        if let Some(generative) = &self.generative_provider {
-            capabilities.insert("generative".to_string(), generative.capabilities());
-        }
         if let Some(scorer) = &self.similarity_scorer {
             capabilities.insert("similarity".to_string(), scorer.capabilities());
-        }
-        if let Some(decision) = &self.decision_provider {
-            capabilities.insert("decision".to_string(), decision.capabilities());
         }
         capabilities
     }
@@ -119,8 +113,6 @@ impl TextIntelligence {
             spam: get("spam"),
             similarity: capabilities.get("similarity").cloned(),
             reranker: capabilities.get("reranker").cloned(),
-            generative: capabilities.get("generative").cloned(),
-            decision: capabilities.get("decision").cloned(),
             store: get("store"),
             ann_enabled: store_capabilities.ann_enabled,
             degraded: self.degraded_capabilities(&capabilities),
@@ -158,7 +150,6 @@ impl TextIntelligence {
                     .unwrap_or_else(CacheDiagnostics::disabled),
             ),
             ("rebus".to_string(), self.rebus_cache_diagnostics()),
-            ("decision".to_string(), self.decision_cache_diagnostics()),
         ])
     }
 
@@ -186,13 +177,13 @@ impl TextIntelligence {
             Some(CapabilityLevel::Basic) => note(
                 "semantic",
                 &capabilities["embedding"].provider,
-                "multilingual transformer embeddings",
-                "serving a Basic fallback; configure a transformer provider for production quality",
+                "application-supplied embeddings",
+                "serving a Basic fallback; supply an EmbeddingProvider when contextual vectors are needed",
             ),
             _ => note(
                 "semantic",
                 "none",
-                "multilingual transformer embeddings",
+                "application-supplied embeddings",
                 "no embedding backend configured; semantic channel is skipped and weights renormalize",
             ),
         }
@@ -211,31 +202,11 @@ impl TextIntelligence {
                 "no G2P backend configured",
             ),
         }
-        if !capabilities.contains_key("similarity") {
-            note(
-                "similarity",
-                "weighted deterministic scorer",
-                "trained similarity model",
-                "load models/similarity-v5.json through trained_similarity_model() for calibrated scoring",
-            );
-        }
-        if capabilities
-            .get("spam")
-            .map(|info| info.provider.starts_with("heuristic"))
-            .unwrap_or(true)
-        {
-            note(
-                "spam",
-                "heuristic",
-                "trained spam model",
-                "load models/spam-v2.json through trained_spam_model() for the trained predictor",
-            );
-        }
         if !capabilities.contains_key("reranker") {
             note(
                 "reranker",
                 "disabled",
-                "channel-score reranker",
+                "application reranker",
                 "full-comparison order is final; configure a RerankerProvider to rescore top candidates",
             );
         }
@@ -252,10 +223,9 @@ impl TextIntelligence {
                 "retrieval",
                 "index scan",
                 "HNSW ANN (ann-hnsw feature)",
-                "large stores compare exhaustively; enable the ANN index for sublinear retrieval",
+                "using exact candidate indexes; enable ANN to add vector-neighbor retrieval",
             );
         }
-        degraded.extend(self.preset_fallbacks.clone());
         degraded
     }
 }

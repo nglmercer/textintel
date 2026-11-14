@@ -98,7 +98,14 @@ pub(crate) fn scan_currency(
     let mut word_start: Option<usize> = None;
     let mut words: Vec<(usize, usize)> = Vec::new();
     for (offset, ch) in text.char_indices() {
-        if ch.is_ascii_alphanumeric() {
+        let numeric_separator = matches!(ch, '.' | ',')
+            && offset > 0
+            && text.as_bytes()[offset - 1].is_ascii_digit()
+            && text
+                .as_bytes()
+                .get(offset + 1)
+                .is_some_and(u8::is_ascii_digit);
+        if ch.is_ascii_alphanumeric() || numeric_separator {
             if word_start.is_none() {
                 word_start = Some(offset);
             }

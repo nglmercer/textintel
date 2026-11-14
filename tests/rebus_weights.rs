@@ -147,7 +147,7 @@ fn weights_load_from_json_and_validate() {
     // Round-trip through the serializer.
     let roundtrip = RebusWeights::from_json(&weights.to_json().unwrap()).unwrap();
     assert_eq!(roundtrip, weights);
-    // Invalid vectors fail loudly (trained weights must pass validation).
+    // Invalid vectors fail loudly (configured weights must pass validation).
     for bad in [
         serde_json::json!({"lexical": -1.0}),
         serde_json::json!({"transformation_penalty_cap": 1.5}),

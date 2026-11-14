@@ -40,11 +40,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "eval" => commands::eval::run_eval(&parsed)?,
         "index" => commands::store::index(&parsed)?,
         "search" => commands::store::search(&parsed)?,
-        "generate" => commands::generate::generate(&parsed)?,
-        "decide" => commands::decision::run_decide(&parsed)?,
-        "classify" => commands::decision::run_classify(&parsed)?,
-        "decision-model-info" => commands::decision::run_decision_model_info(&parsed)?,
-        "eval-decision" => commands::decision::run_eval_decision(&parsed)?,
         _ => unreachable!("the parser only resolves spec commands"),
     };
     if code != 0 {

@@ -16,14 +16,14 @@ use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex, RwLock};
 
 use crate::cache::RevisionCache;
-use crate::comparison::model::SimilarityProfile;
+use crate::comparison::profile::SimilarityProfile;
 use crate::core::config::EngineConfig;
 use crate::core::providers::{
-    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider, GenerativeProvider,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
     LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
     SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
 };
-use crate::core::types::{DecodedCandidate, MessageFingerprint};
+use crate::core::types::DecodedCandidate;
 use crate::resources::ResourceLoader;
 
 use self::patterns::RegisteredPattern;
@@ -43,12 +43,9 @@ pub struct TextIntelligence {
     transliteration_provider: Option<Arc<dyn TransliterationProvider>>,
     entity_provider: Option<Arc<dyn EntityProvider>>,
     reranker_provider: Option<Arc<dyn RerankerProvider>>,
-    generative_provider: Option<Arc<dyn GenerativeProvider>>,
-    decision_provider: Option<Arc<dyn crate::decision::DecisionProvider>>,
     spam_predictor: Arc<dyn SpamPredictor>,
     similarity_scorer: Option<Arc<dyn SimilarityScorer>>,
     similarity_profile: Option<SimilarityProfile>,
-    preset_fallbacks: Vec<crate::engine::production::DegradedCapability>,
     store: RwLock<Box<dyn VectorStore>>,
     patterns: RwLock<BTreeMap<String, RegisteredPattern>>,
     /// Bounded revision-aware rebus cache (`None` when
@@ -56,12 +53,6 @@ pub struct TextIntelligence {
     /// limit, scoring weights, and the semantic-rescoring marker; the
     /// revision tracks the loaded resource packs.
     rebus_cache: Option<Mutex<RevisionCache<String, Vec<DecodedCandidate>>>>,
-    /// Bounded exact-text fingerprint cache for the decision path (`None`
-    /// when `config.cache.decision == 0`). Static criterion descriptions
-    /// are otherwise re-analyzed per request; the revision tracks the
-    /// fingerprint schema and the loaded resource packs, and every
-    /// analysis-affecting provider swap invalidates explicitly.
-    decision_fp_cache: Option<Mutex<RevisionCache<String, MessageFingerprint>>>,
 }
 
 impl Default for TextIntelligence {
@@ -70,8 +61,4 @@ impl Default for TextIntelligence {
     }
 }
 
-pub use production::{
-    CandidateBudgets, DegradedCapability, EngineBuilder, EngineDiagnostics,
-    preferred_similarity_artifact, preferred_similarity_artifact_in, preferred_spam_artifact,
-    preferred_spam_artifact_in,
-};
+pub use production::{CandidateBudgets, DegradedCapability, EngineBuilder, EngineDiagnostics};

@@ -1,224 +1,114 @@
-# textintel API reference
+# Library API
 
-This is the narrative companion to the rustdoc (`cargo doc --open -p
-textintel`). Every signature below mirrors `src/`; when in doubt the source
-and rustdoc win.
+The public Rust API is re-exported from `textintel`. The generated API reference
+(`cargo doc --no-deps --all-features`) describes individual types and methods.
 
-Library version, JSON contract version, and fingerprint schema version are
-available at runtime:
+## Construction and analysis
 
 ```rust
-assert_eq!(textintel::API_VERSION, "0.2.0");
-assert_eq!(textintel::FINGERPRINT_SCHEMA_VERSION, 2);
+use textintel::{EngineConfig, TextIntelligence};
+
+let engine = TextIntelligence::try_new(EngineConfig::default())?;
+let fingerprint = engine.analyze("Fra🏠do")?;
+let batch = engine.analyze_batch(&["hola".into(), "hello".into()])?;
+assert_eq!(batch.len(), 2);
+# Ok::<(), textintel::TextIntelError>(())
 ```
 
-## Engine
+`new` panics for invalid programmer-supplied configuration; `try_new` and
+`builder().build()` return errors. `MessageFingerprint` keeps raw text,
+normalized views, tokens, language candidates, symbols, phonetic evidence,
+rebus candidates, entity mentions, obfuscation signals, and optional vectors.
+`analyze_with_timing` reports per-stage timings without embedding user text in
+the timing structure.
 
-`textintel::TextIntelligence` is the entry point. Three ways to build one:
+## Comparison and decoding
 
-| Constructor | Behavior |
+- `compare`, `compare_batch`, and `compare_fingerprints` combine available
+  evidence channels. Missing channels are omitted and weights renormalized.
+- `duplicate` and `duplicate_with_mode` apply an explicit threshold to a
+  duplicate mode. Modes include combined, near-exact, lexical, semantic,
+  phonetic, decoded, and visual comparison.
+- `decode` and `decode_with_languages` return bounded, ranked rebus candidates
+  with scores and transformation evidence. Ambiguous readings are preserved.
+- `SimilarityProfile` selects deterministic channel weights; an application
+  can also implement `SimilarityScorer`.
+
+Scores depend on the configured providers and resources. They are not a
+universal probability of equivalent meaning.
+
+## Patterns, spam signals, and search
+
+`add_pattern` registers examples. `add_pattern_with_options` also accepts
+negative examples, a threshold, language filters, tags, and selected channels.
+Use `match_patterns` and `remove_pattern` to query/manage the registry.
+`save_patterns_to` and `load_patterns_from` persist definitions and re-analyze
+examples on load.
+
+`detect_spam` returns heuristic features, labels, reasons, and an uncalibrated
+score. It does not infer intent from a trained classifier.
+
+`add_document`, `remove_document`, and `document_count` manage the configured
+store. `find_similar` returns ranked results with retrieval metadata;
+`find_duplicates` applies a duplicate threshold. Requested results remain
+bounded by `max_search_candidates`.
+
+`MemoryStore` is the default. `JsonFileStore` supports versioned persistence;
+`RedbStore` is available with `persist-redb`. `ann-hnsw` adds HNSW retrieval for
+supplied vectors. ANN graphs rebuild from stored fingerprints rather than
+being persisted as implementation-specific graph files. Stored fingerprints
+pass through explicit schema migration before use.
+
+## Provider interfaces
+
+Applications can implement and inject these interfaces:
+
+| Interface | Purpose |
 |---|---|
-| `TextIntelligence::default()` | Model-free, deterministic, offline. |
-| `TextIntelligence::new(config)` / `try_new(config)` | Custom `EngineConfig` limits; `try_new` validates. |
-| `TextIntelligence::production_local()` | Local preset: resource packs, trained models when present, bounded caches; never touches the network. Check `diagnostics().degraded` for fallbacks. |
-| `TextIntelligence::builder()` | `EngineBuilder` for explicit providers, stores, and model paths; add `.production_local()` for the preset plus overrides. |
+| `EmbeddingProvider` | Supply vectors for explicit text inputs |
+| `G2PProvider` | Supply phonetic readings |
+| `LanguageDetectionProvider` | Supply language candidates |
+| `LemmatizerProvider` | Supply language-aware lemmas |
+| `LexiconProvider` | Supply word, frequency, and stop-word lookups |
+| `SymbolKnowledgeProvider` | Supply symbol readings and concepts |
+| `AbbreviationProvider` | Supply language-scoped expansions |
+| `TransliterationProvider` | Supply converted script views |
+| `EntityProvider` | Supply entity mentions |
+| `SimilarityScorer` | Supply application-specific comparison scores |
+| `SpamPredictor` | Supply application-specific spam judgments |
+| `RerankerProvider` | Reorder retrieved candidates |
+| `VectorStore` | Supply searchable fingerprint storage |
 
-### Analysis
+The library includes null/static vector providers and a deterministic
+`FeatureHashEmbeddingProvider`. Vector metadata identifies compatible spaces
+and dimensions; it does not load or execute a model. Provider implementations
+must preserve input order and report their actual capabilities. Vector counts,
+dimensions, and non-finite values are validated before fingerprints use them.
 
-```rust
-use textintel::TextIntelligence;
+`production_local()` enables local deterministic providers and bounded caches.
+It never loads model files or consults model-path environment variables.
+Optional espeak uses an installed local binary with bounded output and timeout.
 
-let engine = TextIntelligence::default();
-let fingerprint = engine.analyze("Fra🏠do")?;          // full evidence channels
-let batch = engine.analyze_batch(&["a".to_string()])?; // bounded by max_batch_size
-let (timed, timings) = engine.analyze_with_timing("Fra🏠do")?; // StageTimings: durations only
-# Ok::<(), textintel::TextIntelError>(())
-```
+## Resources, configuration, and errors
 
-`MessageFingerprint` keeps the `raw` message plus independent views
-(normalized forms, segments, language candidates, n-grams, visual,
-symbolic, rebus, phonetic, semantic, transliteration, and obfuscation
-features). Helpers: `top_language()`, `decoded_texts()`.
+Load custom packs with `ResourceLoader::from_resource_root` and attach them
+with `with_resources` or `EngineBuilder::resources`. See the
+[resource format](../resources/README.md) for schema and provenance rules.
 
-### Comparison and duplicates
+`EngineConfig`, `CacheLimits`, `SimilarityWeights`, `RebusWeights`, and
+`ResourceLimits` bound work and resource usage. Failures use `TextIntelError`;
+application-provider failures carry `ProviderError`. Inspect
+`provider_capabilities`, `diagnostics`, and `resource_manifest` for the actual
+configuration, revisions, cache counts, and storage capabilities.
 
-```rust
-use textintel::{DuplicateMode, TextIntelligence};
+## CLI and evaluation
 
-let engine = TextIntelligence::default();
-let comparison = engine.compare("c0mpr4 ah0r4", "compra ahora")?;
-let pairs = engine.compare_batch(&[("a".to_string(), "b".to_string())])?;
-let direct = engine.compare_fingerprints(&engine.analyze("a")?, &engine.analyze("b")?);
-let duplicate = engine.duplicate("a", "a", 0.85)?;
-let decoded_only = engine.duplicate_with_mode("a", "a", 0.85, DuplicateMode::Decoded)?;
-# Ok::<(), textintel::TextIntelError>(())
-```
+`textintel --help` lists the supported library commands. Commands accept
+`--json` for structured output; `schema-version` reports API/fingerprint
+versions. Run `<command> --help` for command-specific options. Model-path,
+training, generation, and decision-model commands have been removed.
 
-`ComparisonResult` carries per-channel `Option` scores plus `score` and
-`explanations`; missing channels are skipped and remaining weights
-renormalized, never scored as zero. `DuplicateMode` (`Combined` default,
-`NearExact`, `Lexical`, `Semantic`, `Phonetic`, `Decoded`, `Visual`)
-selects the evidence slice.
-
-### Rebus decoding
-
-```rust
-use textintel::TextIntelligence;
-
-let engine = TextIntelligence::default();
-let candidates = engine.decode("salU2")?;
-let scoped = engine.decode_with_languages("salU2", Some(&["es".to_string()]), Some(5))?;
-# Ok::<(), textintel::TextIntelError>(())
-```
-
-`DecodedCandidate { text, score, transformations, language, .. }` records
-each derivation step; `Transformation::explain()` renders it for the
-`explain` CLI command.
-
-### Patterns and spam
-
-```rust
-use textintel::TextIntelligence;
-
-let engine = TextIntelligence::default();
-engine.add_pattern("promo", vec!["win a free prize".to_string()])?;
-let matches = engine.match_patterns("win a free prize today")?;
-let spam = engine.detect_spam("win a free prize today, claim now")?;
-assert!(engine.remove_pattern("promo")?);
-# Ok::<(), textintel::TextIntelError>(())
-```
-
-Patterns persist across restarts with versioned files:
-
-```rust
-use textintel::TextIntelligence;
-
-let engine = TextIntelligence::default();
-engine.add_pattern("promo", vec!["win a free prize".to_string()])?;
-let path = std::env::temp_dir().join("textintel-api-patterns.json");
-engine.save_patterns_to(&path)?;
-let count = TextIntelligence::default().load_patterns_from(&path)?;
-assert_eq!(count, 1);
-std::fs::remove_file(&path).ok();
-# Ok::<(), textintel::TextIntelError>(())
-```
-
-### Retrieval
-
-```rust
-use textintel::TextIntelligence;
-
-let engine = TextIntelligence::default();
-engine.add_document("doc-1", "compra ahora, oferta limitada")?;
-assert_eq!(engine.document_count()?, 1);
-let hits: Vec<_> = engine.find_similar("oferta de compra", 5)?;
-let duplicates = engine.find_duplicates("compra ahora", 0.85)?;
-assert!(engine.remove_document("doc-1")?);
-# Ok::<(), textintel::TextIntelError>(())
-```
-
-`with_store` accepts any `VectorStore`; `with_json_store(path)` opens the
-versioned file store (schema v2, migrates v1 records on load). Optional
-features add `RedbStore` (`persist-redb`) and HNSW ANN
-(`HnswVectorIndex`, `ann-hnsw`).
-
-### Introspection
-
-- `engine.config()` — active `EngineConfig`.
-- `engine.diagnostics()` — providers, model revisions, resource manifest,
-  store/ANN/cache status, and the `degraded` fallback list.
-- `engine.provider_capabilities()` — per-provider `ProviderCapabilities`
-  with `Basic` / `Production` / `Unavailable` quality tiers.
-- `engine.health_check()` — fails fast on invalid configuration.
-- `engine.resource_manifest()` — loaded pack provenance.
-
-## Providers
-
-Expensive or remote behavior is explicit: implement a provider trait and
-inject it. Engine methods take `self` (`with_*`); the builder mirrors them:
-
-| Concern | Trait | Built-in backends |
-|---|---|---|
-| Embeddings | `EmbeddingProvider` | `Null` (default), `FeatureHash` (local baseline), `Static`, `Cached`, `Transformer` (modern default; e5-small / Arctic-XS / MXBAI-XSmall), `Http` (`semantic-http`) |
-| Generation | `GenerativeProvider` | `LiquidInstructProvider` (local LFM2.5 server, explicit endpoint) |
-| G2P | `G2PProvider` | `Null` (default), `RuleBased`, `Cached`, `EspeakNg` (`phonetic-espeak`) |
-| Language | `LanguageDetectionProvider` | n-gram detector over resource packs, `Cached`, profile |
-| Lexicon / lemmatizer | `LexiconProvider` / `LemmatizerProvider` | `DefaultLexiconProvider` from resource packs |
-| Symbols / abbreviations | `SymbolKnowledgeProvider` / `AbbreviationProvider` | `DefaultSymbolKnowledge`, resource packs |
-| Transliteration | `TransliterationProvider` | `RuleBasedTransliterationProvider` |
-| Reranker | `RerankerProvider` | `ChannelScoreReranker` from `RerankerModelArtifact` |
-| Spam | `SpamPredictor` | `HeuristicSpamPredictor`, `TrainedSpamPredictor` |
-| Similarity | `SimilarityScorer` | `LogisticSimilarityScorer` from `SimilarityModelArtifact` |
-| Stores | `VectorStore` | `MemoryStore`, `JsonFileStore`, `RedbStore` (`persist-redb`) |
-
-Provider failures surface as `TextIntelError::Provider`; unconfigured
-backends report `Unavailable` instead of pretending to work.
-
-## Configuration and errors
-
-Key `EngineConfig` knobs (all validated, no panics): `max_input_length`
-(8192), `max_segments`, `beam_width`, `max_candidates`,
-`max_symbol_readings`, `max_recursion`, `max_documents`, `max_batch_size`,
-`max_search_candidates`, `max_decoded_branches`, `semantic` / `phonetic`
-channel flags, `similarity_weights`, `rebus_weights`, `language_hints`,
-and `cache: CacheLimits`.
-
-`TextIntelError` variants: `InputTooLong`, `TooManySegments`,
-`InvalidConfiguration`, `Provider`, `Storage`, `Serialization`.
-`ResourceError` covers pack loading (`ResourceLoader::from_resource_root`,
-`ResourceLimits`).
-
-## Features
-
-Default build is the full modern local stack, still offline.
-`--no-default-features` selects the minimal dependency-light build.
-Feature names: `lang-profile`, `semantic-local`,
-`semantic-transformer`, `semantic-http`, `phonetic-ipa`,
-`phonetic-espeak`, `ann-hnsw`, `persist`, `persist-redb`, `semantic`,
-`phonetic`, `ml`, `production-local-lite`, `production-local`, `all`.
-`semantic-http` is the only remote adapter and is never enabled
-implicitly; generation needs an explicit local endpoint too. Minimum
-supported Rust version is 1.90 (see `rust-version` in `Cargo.toml` and
-the MSRV CI job).
-
-## CLI contract
-
-The `textintel` binary mirrors the library: `analyze`, `explain`,
-`decode`, `compare`, `duplicate`, `spam`, `batch`, `resources`,
-`diagnostics`, `provider-info`, `schema-version`, `eval` (`evaluate`
-alias), `index`, `search`, `generate`. Global flags: `--json`,
-`--production`, `--resource-root <dir>`, `--model-path <dir>`,
-`--language <code>`; `generate` adds `--liquid-endpoint <url>`,
-`--liquid-model <id>`, `--max-tokens <n>`, `--temperature <f>`,
-`--system <text>`.
-Every `--json` payload follows `API_VERSION` (see `schema-version`) and
-evolves additively within a major version. `--version` prints the crate
-version.
-
-## Trained artifacts
-
-- `models/similarity-v5.json` — logistic similarity scorer, feature
-  schema 9, trained on evaluation dataset 0.8.0 (`train` split, bias
-  calibrated on `validation`, metrics reported on held-out `test`).
-  Retrain: `cargo run --bin textintel-train -- similarity data/evaluation
-  --output models/similarity-v5.json`.
-- `models/spam-v2.json` — calibrated logistic spam predictor. Retrain:
-  `cargo run --bin textintel-train -- spam --output <artifact.json>`.
-- Curated checkpoints live outside the repo (see `models/README.md`):
-  `intfloat/multilingual-e5-small` (multilingual embedding default),
-  `Snowflake/snowflake-arctic-embed-xs` and
-  `mixedbread-ai/mxbai-embed-xsmall-v1` (English CPU embeddings),
-  `LiquidAI/LFM2.5-230M` / `LFM2.5-350M` (local generation via GGUF).
-- Loading is strict: a present-but-invalid artifact fails loudly; only a
-  missing preset path falls back (with a `degraded` note).
-
-## Evaluation
-
-`data/evaluation/` (version 0.7.0: 1045 train / 375 validation / 482 test
-cases) plus `data/quality-gates.json` (default engine) and
-`data/quality-gates-production.json` (production preset). Run:
-
-```text
-cargo run --bin textintel -- eval data/evaluation/ --split test --gates data/quality-gates.json
-cargo run --bin textintel -- eval data/evaluation/ --split test --production --gates data/quality-gates-production.json
-```
+The `evaluation` module loads labeled datasets, scores comparisons, language
+identification, decoding, and retrieval, and checks optional quality targets.
+See [evaluation limits](PERFORMANCE.md#evaluation-limits) before interpreting
+those targets as guarantees.

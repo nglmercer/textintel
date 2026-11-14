@@ -132,9 +132,7 @@ impl TransliterationProvider for RuleBasedTransliterationProvider {
         ProviderCapabilities::new("rule_based_transliteration")
             .with_languages(["ru", "ar", "zh", "ja", "hi", "und"])
             .with_quality(CapabilityLevel::Basic)
-            .with_fallback(
-                "per-character rule tables; prefer a trained transliterator for production",
-            )
+            .with_fallback("per-character rule tables; language coverage is limited")
     }
 }
 

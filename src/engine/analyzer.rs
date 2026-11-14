@@ -178,34 +178,6 @@ impl TextIntelligence {
             .unwrap_or_else(CacheDiagnostics::disabled)
     }
 
-    /// Analyze with the exact-text decision cache when enabled. Hits
-    /// return cloned fingerprints (analysis is deterministic); misses
-    /// analyze and store. A poisoned lock degrades to uncached analysis
-    /// rather than failing the request.
-    pub fn analyze_cached(&self, text: &str) -> Result<MessageFingerprint, TextIntelError> {
-        if let Some(cache) = self.decision_fp_cache.as_ref()
-            && let Ok(mut guard) = cache.lock()
-            && let Some(hit) = guard.get(text)
-        {
-            return Ok(hit);
-        }
-        let fingerprint = self.analyze(text)?;
-        if let Some(cache) = self.decision_fp_cache.as_ref()
-            && let Ok(mut guard) = cache.lock()
-        {
-            guard.put(text.to_string(), fingerprint.clone());
-        }
-        Ok(fingerprint)
-    }
-
-    /// Observable decision-cache state (counts only, never cached texts).
-    pub(super) fn decision_cache_diagnostics(&self) -> CacheDiagnostics {
-        self.decision_fp_cache
-            .as_ref()
-            .and_then(|cache| cache.lock().ok().map(|guard| guard.diagnostics()))
-            .unwrap_or_else(CacheDiagnostics::disabled)
-    }
-
     fn check_length(&self, text: &str) -> Result<usize, TextIntelError> {
         let length = text.chars().count();
         if length > self.config.max_input_length {
@@ -413,7 +385,7 @@ impl TextIntelligence {
         let started = Instant::now();
         // Fingerprint rebus decoding never uses semantic rescoring (the
         // `sem:off` key marker); `decode_with_languages` may, and keys
-        // separately. Fast decision serving over clean text opts out via
+        // separately. Feature-only analysis over clean text opts out via
         // `config.rebus = false` (see `EngineConfig::rebus`): no decode
         // runs, and coverage below falls back to the raw tokens.
         let rebus = if !self.config.rebus {
@@ -702,8 +674,8 @@ impl TextIntelligence {
                     .insert("semantic_revision".to_string(), revision);
             }
         }
-        // Quality tier behind the vectors (`production` for transformer
-        // backends, `basic` for the feature-hash fallback). The scorer uses
+        // Quality tier behind the vectors (`production` for application-supplied
+        // providers, `basic` for feature hashing). The scorer uses
         // it to gate `contextual_semantic` on trustworthy evidence.
         let quality = match self.embedding_provider.capabilities().quality {
             crate::core::capabilities::CapabilityLevel::Production => "production",
@@ -727,6 +699,16 @@ impl TextIntelligence {
                 .embedding_provider
                 .embed_batch(chunk)
                 .map_err(TextIntelError::from)?;
+            if vectors.len() != chunk.len() {
+                return Err(TextIntelError::Provider(ProviderError::new(
+                    "embedding",
+                    format!(
+                        "returned {} vectors for {} chunk inputs",
+                        vectors.len(),
+                        chunk.len()
+                    ),
+                )));
+            }
             output.append(&mut vectors);
         }
         Ok(output)

@@ -73,3 +73,20 @@ fn union_returns_each_id_once() -> Result<(), TextIntelError> {
     assert_eq!(ids.len(), 3);
     Ok(())
 }
+
+#[test]
+fn caller_limit_cannot_expand_configured_search_budget() {
+    let engine = textintel::TextIntelligence::new(textintel::EngineConfig {
+        max_search_candidates: 2,
+        rebus: false,
+        ..Default::default()
+    });
+    for i in 0..4 {
+        engine
+            .add_document(format!("doc-{i}"), "same message")
+            .unwrap();
+    }
+    let results = engine.find_similar("same message", usize::MAX).unwrap();
+    assert_eq!(results.len(), 2);
+    assert!(results.iter().all(|r| r.candidate_count <= 2));
+}

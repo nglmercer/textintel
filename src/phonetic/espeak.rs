@@ -258,22 +258,35 @@ impl EspeakNgG2PProvider {
                     ),
                 )
             })?;
-        let deadline = std::time::Instant::now() + self.timeout;
+        // Drain both pipes while the child runs. Waiting for exit before
+        // reading can deadlock as soon as either OS pipe buffer fills.
+        let stdout = child.stdout.take().map(capture_pipe);
+        let stderr = child.stderr.take().map(capture_pipe);
+        let deadline = std::time::Instant::now()
+            .checked_add(self.timeout)
+            .unwrap_or_else(std::time::Instant::now);
         loop {
             match child.try_wait().map_err(|error| {
                 ProviderError::new(PROVIDER, format!("cannot poll espeak-ng: {error}"))
             })? {
                 Some(status) => {
-                    let mut stdout = Vec::new();
-                    let mut stderr = Vec::new();
-                    if let Some(mut pipe) = child.stdout.take() {
-                        use std::io::Read;
-                        let _ = pipe.read_to_end(&mut stdout);
-                    }
-                    if let Some(mut pipe) = child.stderr.take() {
-                        use std::io::Read;
-                        let _ = pipe.read_to_end(&mut stderr);
-                    }
+                    let receive = |receiver: Option<
+                        std::sync::mpsc::Receiver<Result<Vec<u8>, String>>,
+                    >| {
+                        match receiver {
+                            None => Ok(Vec::new()),
+                            Some(receiver) => receiver
+                                .recv_timeout(
+                                    deadline.saturating_duration_since(std::time::Instant::now()),
+                                )
+                                .map_err(|_| {
+                                    ProviderError::new(PROVIDER, "espeak-ng output read timed out")
+                                })?
+                                .map_err(|message| ProviderError::new(PROVIDER, message)),
+                        }
+                    };
+                    let stdout = receive(stdout)?;
+                    let stderr = receive(stderr)?;
                     if !status.success() {
                         let clipped: String =
                             String::from_utf8_lossy(&stderr).chars().take(300).collect();
@@ -306,6 +319,30 @@ impl EspeakNgG2PProvider {
             }
         }
     }
+}
+
+/// Capture bounded output on a worker so a full child pipe cannot block exit.
+fn capture_pipe<R: std::io::Read + Send + 'static>(
+    pipe: R,
+) -> std::sync::mpsc::Receiver<Result<Vec<u8>, String>> {
+    use std::io::Read;
+    let (sender, receiver) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        let mut bytes = Vec::new();
+        let result = pipe
+            .take(1_048_577)
+            .read_to_end(&mut bytes)
+            .map_err(|e| format!("cannot read espeak-ng output: {e}"))
+            .and_then(|_| {
+                if bytes.len() > 1_048_576 {
+                    Err("espeak-ng output exceeds 1 MiB".into())
+                } else {
+                    Ok(bytes)
+                }
+            });
+        let _ = sender.send(result);
+    });
+    receiver
 }
 
 /// Parse `espeak-ng --voices` table output. The header line and malformed
@@ -585,5 +622,24 @@ mod tests {
             std::env::remove_var("ESPEAK_MOCK_LOG");
         }
         let _ = std::fs::remove_dir_all(&directory);
+    }
+    #[cfg(unix)]
+    #[test]
+    fn drains_output_larger_than_pipe_capacity_without_timeout() {
+        use std::os::unix::fs::PermissionsExt;
+        let path =
+            std::env::temp_dir().join(format!("textintel-espeak-large-{}.sh", std::process::id()));
+        std::fs::write(
+            &path,
+            "#!/bin/sh\nhead -c 131072 /dev/zero\nhead -c 131072 /dev/zero >&2\n",
+        )
+        .unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let provider = EspeakNgG2PProvider::new()
+            .with_binary(&path)
+            .with_timeout(std::time::Duration::from_secs(5));
+        let output = provider.run_command(&[]).unwrap();
+        assert_eq!(output.len(), 131072);
+        std::fs::remove_file(path).unwrap();
     }
 }

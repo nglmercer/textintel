@@ -10,3 +10,6 @@ models/minilm-l6-decision/
 models/transformer/
 data/agnews/
 tools/llama-bin/
+
+# Generated Python bytecode.
+__pycache__/

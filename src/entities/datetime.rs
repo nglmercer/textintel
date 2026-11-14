@@ -5,7 +5,23 @@ use crate::core::types::EntityMention;
 use super::normalize::{claim, is_claimed, push_mention};
 
 fn valid_date(year: u32, month: u32, day: u32) -> bool {
-    (1..=12).contains(&month) && (1..=31).contains(&day) && (1000..=2999).contains(&year)
+    if !(1000..=2999).contains(&year) {
+        return false;
+    }
+    let leap = year.is_multiple_of(4) && (!year.is_multiple_of(100) || year.is_multiple_of(400));
+    let days = match month {
+        2 => {
+            if leap {
+                29
+            } else {
+                28
+            }
+        }
+        4 | 6 | 9 | 11 => 30,
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        _ => return false,
+    };
+    (1..=days).contains(&day)
 }
 
 fn valid_time(hour: u32, minute: u32, second: Option<u32>) -> bool {

@@ -15,9 +15,12 @@ pub(crate) fn scan_urls(
             continue;
         }
         let rest = &text[offset..];
-        let lower = rest.to_ascii_lowercase();
-        let has_scheme = lower.starts_with("http://") || lower.starts_with("https://");
-        let has_www = lower.starts_with("www.") && rest.len() > 4;
+        let prefix_matches = |prefix: &str| {
+            rest.get(..prefix.len())
+                .is_some_and(|s| s.eq_ignore_ascii_case(prefix))
+        };
+        let has_scheme = prefix_matches("http://") || prefix_matches("https://");
+        let has_www = prefix_matches("www.") && rest.len() > 4;
         if !has_scheme && !has_www {
             continue;
         }

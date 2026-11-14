@@ -1,90 +1,60 @@
-# Performance and training validation
+# Bounds, caching, and evaluation
 
-The optimization pass keeps the shipped similarity and spam artifacts. It
-reduces repeated computation and allocation without changing comparison
-features or their schema. New similarity training calibrates the bias against
-the observed validation class distribution; artifact metadata records this
-choice and revisions include `cal-uniform`.
+The library uses deterministic text algorithms. There are no built-in model
+loaders, inference runtimes, training loops, or automatic downloads.
 
-## Measurements
+## Runtime bounds
 
-Measurements used Rust 1.90.0, the repository's release profile (LTO, one
-codegen unit), and the local CPU backends. Before and after executables were
-run sequentially on CPU 0. Training times below average two runs.
+`EngineConfig` bounds text length, segmentation, rebus candidate expansion,
+batch size, provider batches, and search candidates. A comparison batch counts
+pairs; its text analysis is chunked to respect the analysis batch bound.
+A caller's requested result count cannot enlarge the configured search budget.
+Each embedding-provider chunk must return exactly one vector per input.
 
-| Workload | Before | After | Result |
-|---|---:|---:|---|
-| Similarity training, 20,000 steps, L2 0.0001, dataset 0.9.0 | 7.19 s | 4.87 s | 32% less time |
-| Spam training, corpus 2.0.0 | 5.26 s | 5.14 s | Small difference; no significant gain claimed |
-| Unicode Levenshtein with long shared affixes | 195.6 µs | 2.78 µs | About 70× faster for this workload |
+Character edit-distance metrics use rolling rows rather than full matrices.
+Levenshtein removes common prefixes and suffixes before its dynamic program.
+Unrelated long texts still require quadratic work; input limits matter.
+URL prefix checks examine a constant-size prefix rather than copying the
+entire remaining text at every position.
 
-The edit-distance microbenchmark ran 10,000 calls on strings with prefix
-`"abcé中".repeat(24)`, suffix `"def🏠".repeat(24)`, and differing middle
-`old` / `new`. Both implementations return distance 3. This improvement does
-not describe arbitrary text comparisons: unrelated texts still require the
-quadratic dynamic program.
+`CacheLimits` controls revision-aware caches for vectors, phonetics, language
+results, and rebus candidates. Caches are disabled by default; the local preset
+enables bounded caches. Provider/resource changes invalidate affected entries.
+Diagnostics expose counts and revision metadata, not cached text.
 
-Criterion runs of `analyze_rebus`, `compare_obfuscated`, and `decode_symbol`
-varied considerably between runs. They do not support a reliable general CLI
-speedup claim. One-shot and reusable gradient steps also have similar times
-on the small bundled dataset; reduced feature extraction and bias calibration
-account for the useful training improvement.
+## Storage
 
-## Changes
+JSON persistence writes a temporary snapshot and renames it into place. A
+failed rename preserves the previous snapshot. HNSW is a retrieval accelerator;
+full fingerprint comparison determines final ranking. The graph is rebuilt
+from persisted fingerprints on open. Failed ANN insertions preserve existing
+records; failed persistent writes restore records and rebuild the graph so
+capacity is usable on retry.
 
-- Reuse sanitized sample weights and gradient buffers across training steps.
-- Precompute linear logits for bias calibration, avoiding discarded weight
-  updates, repeated dot products, and unused loss calculations.
-- Reuse train/validation feature rows for model metrics; featurize test only
-  after training and calibration.
-- Fold decoded keys and transliteration views once per comparison and share
-  them across decoded-overlap and exact-decoding channels.
-- Remove common affixes from Levenshtein's recurrence, keep the shorter
-  dimension in rolling rows, and short-circuit equal n-grams and LCS inputs.
-- Resolve the existing `nonminimal_bool` Clippy error.
-
-## Model selection
-
-Training used only the train split. Bias and temperature calibration used
-validation; the test split did not select parameters or thresholds. Candidate
-L2 values were 0.00001, 0.0001, 0.001, and 0.01, each at 20,000 steps.
-Balanced calibration failed to improve on the frozen artifact. With uniform
-calibration, the candidate with maximum validation F1 was L2 0.001.
-
-| Metric | Shipped v5 | Selected candidate |
-|---|---:|---:|
-| Validation F1 | 0.8491 | 0.8705 |
-| Validation Brier | 0.1281 | 0.1259 |
-| Validation calibration error | 0.0832 | 0.0353 |
-| Validation ROC-AUC | 0.9079 | 0.8954 |
-| Validation PR-AUC | 0.9528 | 0.9485 |
-| Held-out test F1 | 0.9144 | 0.8690 |
-
-The candidate trades precision and ranking quality for recall, and does not
-improve held-out quality. It was rejected; no shipped weights, decision
-thresholds, quality gates, or datasets were changed. Improving validation
-calibration alone does not establish that a replacement model is better.
-
-## Verification and reproduction
-
-The all-feature/all-target suite and targeted trainer, Unicode, and CLI checks
-passed. The reusable optimizer matches the original reductions exactly, and
-cached feature metrics match the public scorer within 1e-12. Uniform bias
-calibration recovers a 75% positive prior on a constant-feature validation
-batch. Spam retraining produced identical before/after artifacts.
-
-Run from the checkout with the configured Rust toolchain:
+## Verification
 
 ```sh
-cargo fmt --check
 cargo test --locked --all-features --all-targets
-cargo clippy --locked --all-targets --all-features -- -D warnings
-cargo bench --locked --bench core -- --sample-size 40 --warm-up-time 1 --measurement-time 4
-cargo run --locked --release --bin textintel-train -- similarity data/evaluation --iterations 20000 --l2 0.0001 --output /tmp/similarity-candidate.json
+cargo bench --locked --no-run --all-features
+cargo bench --locked --bench core
+cargo bench --locked --features ann-hnsw --bench ann
+cargo run --locked --bin textintel -- eval data/evaluation --split test --json
 ```
 
-Keep candidate artifacts outside `models` until quality has been evaluated.
-The existing default and production quality gates still fail with the shipped
-model; this pass does not claim that those thresholds have been met. External
-transformer weights, live LLM servers, GPU execution, and comparisons against
-another product were not evaluated.
+Run benchmarks on an otherwise idle machine and record the Rust version,
+features, input lengths, corpus, and provider configuration. Debug-build
+latencies and timings collected during concurrent builds are not reliable
+performance comparisons.
+
+## Evaluation limits
+
+`data/evaluation` contains labeled train, validation, and test splits used by
+the evaluation API; no training code is included. `data/quality-gates.json`
+contains ambitious task-quality targets retained for visibility. The existing
+heuristic baseline does not meet every target, particularly semantic and
+cross-language similarity and some retrieval recall targets. Removing model
+experiments does not establish that those quality gaps have been solved.
+
+Use validation data to choose task thresholds and reserve the test split for
+reporting. Heuristic spam scores report `calibrated=false`. Model comparisons
+and the old production-model gates are no longer part of the library workflow.

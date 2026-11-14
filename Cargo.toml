@@ -17,51 +17,24 @@ path = "src/lib.rs"
 name = "textintel"
 path = "src/bin/textintel/main.rs"
 
-[[bin]]
-name = "textintel-train"
-path = "tools/train_similarity/main.rs"
-
-[[bin]]
-name = "textintel-train-decision"
-path = "tools/train_decision_v2/main.rs"
-
-[[bin]]
-name = "textintel-eval-llm"
-path = "tools/eval_llm/main.rs"
-required-features = ["decision-http"]
-
 [[example]]
 name = "espeak"
 required-features = ["phonetic-espeak"]
 
-[[example]]
-name = "transformer_embeddings"
-required-features = ["semantic-transformer"]
-
 [features]
-default = ["lang-profile", "semantic-local", "semantic-transformer", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb"]
+default = ["lang-profile", "semantic-local", "phonetic-ipa"]
 lang-profile = []
 semantic = ["semantic-local"]
 semantic-local = []
-semantic-transformer = ["dep:candle-core"]
 phonetic-espeak = []
 ann-hnsw = ["dep:hnsw_rs"]
 persist-redb = ["dep:redb"]
-semantic-http = ["dep:ureq"]
 phonetic = ["phonetic-ipa"]
 phonetic-ipa = []
 persist = []
-# Typed local decisions (TextIntel S1). The base API (types, providers,
-# adapters, scoring, calibration, artifacts, fusion, datasets, eval) is
-# dependency-free and always compiled; these features gate the backends.
-decision = []
-decision-transformer = ["decision", "semantic-transformer"]
-decision-http = ["decision", "dep:ureq"]
-decision-modernbert = ["decision-transformer"]
-ml = ["lang-profile", "semantic-local", "phonetic-ipa"]
 production-local-lite = ["lang-profile", "semantic-local", "phonetic-ipa"]
-production-local = ["lang-profile", "semantic-local", "semantic-transformer", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb"]
-all = ["lang-profile", "semantic-local", "semantic-transformer", "semantic-http", "phonetic-ipa", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb", "ml", "production-local-lite", "production-local", "decision", "decision-transformer", "decision-http", "decision-modernbert"]
+production-local = ["production-local-lite", "phonetic-espeak", "ann-hnsw", "persist", "persist-redb"]
+all = ["production-local"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
@@ -71,8 +44,6 @@ unicode-normalization = "0.1"
 unicode-segmentation = "1.12"
 unicode-properties = { version = "0.1.4", features = ["emoji", "general-category"] }
 unicode-script = "0.5"
-ureq = { version = "3", optional = true, default-features = false, features = ["json", "rustls", "rustls-webpki-roots"] }
-candle-core = { version = "0.11", optional = true, default-features = false }
 hnsw_rs = { version = "0.3", optional = true }
 redb = { version = "4", optional = true }
 
@@ -87,10 +58,6 @@ harness = false
 
 [[bench]]
 name = "ann"
-harness = false
-
-[[bench]]
-name = "decision"
 harness = false
 
 [profile.release]

@@ -130,7 +130,7 @@ impl EntityProvider for RuleBasedEntityProvider {
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities::new("rule_based_entities")
             .with_quality(CapabilityLevel::Basic)
-            .with_fallback("heuristic spans; prefer a trained NER provider for production")
+            .with_fallback("heuristic spans; applications can supply an EntityProvider")
     }
 }
 

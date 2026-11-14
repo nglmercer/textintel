@@ -141,3 +141,57 @@ fn stores_without_embeddings_skip_ann_quietly() {
     let results = engine.find_similar("hello world", 2).unwrap();
     assert_eq!(results[0].id, "a");
 }
+
+#[test]
+fn failed_ann_updates_preserve_existing_record_and_indexes() {
+    use textintel::core::providers::VectorStore;
+    let engine = TextIntelligence::new(EngineConfig {
+        rebus: false,
+        ..Default::default()
+    });
+    let mut store = MemoryStore::with_ann(2, 1).unwrap();
+    let mut original = engine.analyze("original message").unwrap();
+    original
+        .semantic_embeddings
+        .insert("default".into(), vec![1.0, 0.0]);
+    store.upsert("one".into(), original.clone()).unwrap();
+    let mut replacement = engine.analyze("replacement message").unwrap();
+    replacement
+        .semantic_embeddings
+        .insert("default".into(), vec![0.0, 1.0]);
+    assert!(store.upsert("one".into(), replacement).is_err());
+    assert_eq!(store.get("one"), Some(&original));
+    assert_eq!(
+        store.ann_index().unwrap().search(&[1.0, 0.0], 1).unwrap()[0].0,
+        "one"
+    );
+    assert_eq!(store.len(), 1);
+    assert_eq!(store.search_candidates(&original, 1)[0].0, "one");
+}
+
+#[test]
+fn persistent_write_failure_restores_ann_capacity_for_retry() {
+    use textintel::core::providers::VectorStore;
+    let directory =
+        std::env::temp_dir().join(format!("textintel-ann-rollback-{}", std::process::id()));
+    std::fs::create_dir_all(&directory).unwrap();
+    let parent = directory.join("blocked");
+    let path = parent.join("store.json");
+    let mut store = textintel::JsonFileStore::open_with_ann(&path, 2, 1).unwrap();
+    std::fs::write(&parent, "block directory creation").unwrap();
+    let engine = TextIntelligence::new(EngineConfig {
+        rebus: false,
+        ..Default::default()
+    });
+    let mut fingerprint = engine.analyze("message").unwrap();
+    fingerprint
+        .semantic_embeddings
+        .insert("default".into(), vec![1.0, 0.0]);
+    assert!(store.upsert("one".into(), fingerprint.clone()).is_err());
+    assert_eq!(store.len(), 0);
+    std::fs::remove_file(&parent).unwrap();
+    store.upsert("one".into(), fingerprint).unwrap();
+    assert_eq!(store.len(), 1);
+    assert!(path.is_file());
+    std::fs::remove_dir_all(directory).unwrap();
+}

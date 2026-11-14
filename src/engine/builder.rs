@@ -8,14 +8,13 @@ use std::sync::{Arc, Mutex, RwLock};
 use crate::cache::{
     CachedG2PProvider, CachedLanguageDetectionProvider, RevisionCache, resource_revision,
 };
-use crate::comparison::model::SimilarityProfile;
+use crate::comparison::profile::SimilarityProfile;
 use crate::core::config::EngineConfig;
 use crate::core::error::TextIntelError;
 use crate::core::providers::{
-    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider, GeneratedText,
-    GenerationOptions, GenerativeProvider, LanguageDetectionProvider, LemmatizerProvider,
-    LexiconProvider, RerankerProvider, SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider,
-    TransliterationProvider, VectorStore,
+    AbbreviationProvider, EmbeddingProvider, EntityProvider, G2PProvider,
+    LanguageDetectionProvider, LemmatizerProvider, LexiconProvider, RerankerProvider,
+    SimilarityScorer, SpamPredictor, SymbolKnowledgeProvider, TransliterationProvider, VectorStore,
 };
 use crate::detection::spam::HeuristicSpamPredictor;
 use crate::engine::TextIntelligence;
@@ -65,16 +64,12 @@ impl TextIntelligence {
                 crate::entities::RuleBasedEntityProvider::default().with_lexicon(resources.clone()),
             )),
             reranker_provider: None,
-            generative_provider: None,
-            decision_provider: None,
             spam_predictor: Arc::new(HeuristicSpamPredictor),
             similarity_scorer: None,
             similarity_profile: None,
-            preset_fallbacks: Vec::new(),
             store: RwLock::new(Box::new(MemoryStore::default())),
             patterns: RwLock::new(BTreeMap::new()),
             rebus_cache: None,
-            decision_fp_cache: None,
         };
         engine.install_caches();
         engine
@@ -121,26 +116,6 @@ impl TextIntelligence {
         } else {
             self.rebus_cache = None;
         }
-        if limits.decision > 0 {
-            let revision = format!(
-                "decision-fp:{}:{}",
-                crate::core::types::FINGERPRINT_SCHEMA_VERSION,
-                resource_revision(self.resources.manifest())
-            );
-            match &self.decision_fp_cache {
-                Some(cache) => {
-                    if let Ok(mut guard) = cache.lock() {
-                        guard.set_revision(&revision);
-                    }
-                }
-                None => {
-                    self.decision_fp_cache =
-                        Some(Mutex::new(RevisionCache::new(revision, limits.decision)));
-                }
-            }
-        } else {
-            self.decision_fp_cache = None;
-        }
     }
 
     /// Drop all cached rebus decodings (used after provider swaps that change
@@ -153,24 +128,12 @@ impl TextIntelligence {
         }
     }
 
-    /// Drop all cached decision fingerprints (used after every
-    /// analysis-affecting provider swap; resource swaps invalidate via
-    /// the cache revision instead).
-    fn invalidate_decision_cache(&mut self) {
-        if let Some(cache) = &self.decision_fp_cache
-            && let Ok(mut guard) = cache.lock()
-        {
-            guard.invalidate();
-        }
-    }
-
     /// Ergonomic construction: `TextIntelligence::builder().build()?`.
     pub fn builder() -> EngineBuilder {
         EngineBuilder::new()
     }
 
-    /// Local production preset: resource packs, trained models from
-    /// `./models` when present, espeak-ng G2P with a rule-based fallback,
+    /// Local production preset: resource packs, espeak-ng G2P with a rule-based fallback,
     /// and a local embedding baseline. Unavailable pieces degrade gracefully
     /// and are reported by [`Self::diagnostics`]; nothing touches the network.
     pub fn production_local() -> Result<Self, TextIntelError> {
@@ -220,12 +183,6 @@ impl TextIntelligence {
         if let Some(provider) = builder.reranker {
             engine.reranker_provider = Some(provider);
         }
-        if let Some(provider) = builder.generative {
-            engine.generative_provider = Some(provider);
-        }
-        if let Some(provider) = builder.decision {
-            engine.decision_provider = Some(provider);
-        }
         if let Some(predictor) = builder.spam {
             engine.spam_predictor = predictor;
         }
@@ -234,30 +191,6 @@ impl TextIntelligence {
         }
         if let Some(profile) = builder.similarity_profile {
             engine.similarity_profile = Some(profile);
-        }
-        engine.preset_fallbacks = builder.preset_fallbacks;
-        if let Some(path) = builder.similarity_model_path
-            && let Some(scorer) = crate::engine::production::load_similarity_scorer(
-                &path,
-                builder.similarity_model_required,
-            )?
-        {
-            engine.similarity_scorer = Some(Arc::new(scorer));
-        }
-        if let Some(path) = builder.spam_model_path
-            && let Some(predictor) =
-                crate::engine::production::load_spam_predictor(&path, builder.spam_model_required)?
-        {
-            engine.spam_predictor = Arc::new(predictor);
-        }
-        if let Some(path) = builder.reranker_model_path
-            && let Some(reranker) = crate::engine::production::load_reranker(
-                &path,
-                builder.reranker_model_required,
-                builder.reranker_max_candidates,
-            )?
-        {
-            engine.reranker_provider = Some(Arc::new(reranker));
         }
         if let Some(path) = builder.json_store_path {
             #[cfg(feature = "ann-hnsw")]
@@ -293,7 +226,6 @@ impl TextIntelligence {
         self.embedding_provider = Arc::new(provider);
         self.install_caches();
         self.invalidate_rebus_cache();
-        self.invalidate_decision_cache();
         self
     }
 
@@ -301,7 +233,6 @@ impl TextIntelligence {
         self.g2p_provider = Arc::new(provider);
         self.install_caches();
         self.invalidate_rebus_cache();
-        self.invalidate_decision_cache();
         self
     }
 
@@ -311,14 +242,12 @@ impl TextIntelligence {
     ) -> Self {
         self.language_provider = Arc::new(provider);
         self.install_caches();
-        self.invalidate_decision_cache();
         self
     }
 
     pub fn with_lexicon_provider<P: LexiconProvider + 'static>(mut self, provider: P) -> Self {
         self.lexicon_provider = Arc::new(provider);
         self.invalidate_rebus_cache();
-        self.invalidate_decision_cache();
         self
     }
 
@@ -356,7 +285,6 @@ impl TextIntelligence {
     ) -> Self {
         self.abbreviation_provider = Some(Arc::new(provider));
         self.invalidate_rebus_cache();
-        self.invalidate_decision_cache();
         self
     }
 
@@ -365,7 +293,6 @@ impl TextIntelligence {
         provider: P,
     ) -> Self {
         self.lemmatizer_provider = Some(Arc::new(provider));
-        self.invalidate_decision_cache();
         self
     }
 
@@ -375,7 +302,6 @@ impl TextIntelligence {
     ) -> Self {
         self.symbol_provider = Arc::new(provider);
         self.invalidate_rebus_cache();
-        self.invalidate_decision_cache();
         self
     }
 
@@ -384,20 +310,17 @@ impl TextIntelligence {
         provider: P,
     ) -> Self {
         self.transliteration_provider = Some(Arc::new(provider));
-        self.invalidate_decision_cache();
         self
     }
 
     /// Disable transliteration views (fingerprint keeps all other channels).
     pub fn without_transliteration(mut self) -> Self {
         self.transliteration_provider = None;
-        self.invalidate_decision_cache();
         self
     }
 
     pub fn with_entity_provider<P: EntityProvider + 'static>(mut self, provider: P) -> Self {
         self.entity_provider = Some(Arc::new(provider));
-        self.invalidate_decision_cache();
         self
     }
 
@@ -405,150 +328,12 @@ impl TextIntelligence {
     /// entity features read 0.0, never a penalty).
     pub fn without_entities(mut self) -> Self {
         self.entity_provider = None;
-        self.invalidate_decision_cache();
         self
     }
 
     pub fn with_reranker_provider<P: RerankerProvider + 'static>(mut self, provider: P) -> Self {
         self.reranker_provider = Some(Arc::new(provider));
         self
-    }
-
-    pub fn with_generative_provider<P: GenerativeProvider + 'static>(
-        mut self,
-        provider: P,
-    ) -> Self {
-        self.generative_provider = Some(Arc::new(provider));
-        self
-    }
-
-    /// Generate a completion with the configured generative provider
-    /// (Liquid LFM2.5 over an explicit local endpoint). Errors when no
-    /// generative provider is configured; analysis never calls this
-    /// implicitly.
-    pub fn generate(
-        &self,
-        prompt: &str,
-        options: &GenerationOptions,
-    ) -> Result<GeneratedText, TextIntelError> {
-        let provider = self.generative_provider.as_ref().ok_or_else(|| {
-            TextIntelError::InvalidConfiguration(
-                "no generative provider configured; attach one with \
-                 with_generative_provider() pointing at a local server (see \
-                 LiquidInstructProvider::local_default)"
-                    .to_string(),
-            )
-        })?;
-        provider
-            .generate(prompt, options)
-            .map_err(TextIntelError::from)
-    }
-
-    pub fn with_decision_provider<P: crate::decision::DecisionProvider + 'static>(
-        mut self,
-        provider: P,
-    ) -> Self {
-        self.decision_provider = Some(Arc::new(provider));
-        self
-    }
-
-    /// Answer a typed decision request with the configured provider.
-    /// Prepares text evidence (analyzing `state` and, for choice
-    /// questions, every criterion description) before dispatch, then
-    /// validates the provider's answer against the request so malformed
-    /// distributions fail here instead of reaching the caller. Errors
-    /// when no decision provider is configured.
-    pub fn decide(
-        &self,
-        request: &crate::decision::DecisionRequest,
-    ) -> Result<crate::decision::DecisionResponse, TextIntelError> {
-        let provider = self.decision_provider.as_ref().ok_or_else(|| {
-            TextIntelError::InvalidConfiguration(
-                "no decision provider configured; attach one with \
-                 with_decision_provider() or EngineBuilder::decision_provider()"
-                    .to_string(),
-            )
-        })?;
-        let mut prepared = request.clone();
-        self.prepare_decision_request_with_provider(provider.as_ref(), &mut prepared)?;
-        let response = provider.decide(&prepared)?;
-        response
-            .validate_against(&prepared)
-            .map_err(TextIntelError::InvalidConfiguration)?;
-        Ok(response)
-    }
-
-    /// Attach analyzed evidence to a decision request in place: the
-    /// `state` fingerprint plus, for choice questions, one fingerprint
-    /// per criterion description. Already-attached evidence is kept, so
-    /// callers may pre-analyze with custom options. Analysis runs through
-    /// the exact-text decision cache when `config.cache.decision` enables
-    /// it, so static criteria analyze once per engine. Analysis bounds
-    /// (`max_input_length`, …) apply, so oversized evidence is rejected.
-    pub fn prepare_decision_request(
-        &self,
-        request: &mut crate::decision::DecisionRequest,
-    ) -> Result<(), TextIntelError> {
-        request
-            .validate()
-            .map_err(TextIntelError::InvalidConfiguration)?;
-        if request.fingerprint.is_none() {
-            request.fingerprint = Some(self.analyze_cached(&request.state)?);
-        }
-        if let crate::decision::DecisionQuestion::Choice { criteria, .. } = &request.question {
-            for (id, description) in criteria {
-                if !request.candidate_fingerprints.contains_key(id) {
-                    let fingerprint = self.analyze_cached(description)?;
-                    request
-                        .candidate_fingerprints
-                        .insert(id.clone(), fingerprint);
-                }
-            }
-        }
-        Ok(())
-    }
-
-    /// Prepare only the evidence consumed by this provider. Embedding-only
-    /// models skip fingerprint analysis while retaining validation and bounds.
-    pub fn prepare_decision_request_with_provider(
-        &self,
-        provider: &dyn crate::decision::DecisionProvider,
-        request: &mut crate::decision::DecisionRequest,
-    ) -> Result<(), TextIntelError> {
-        if provider.needs_fingerprints() && provider.needs_candidate_fingerprints() {
-            return self.prepare_decision_request(request);
-        }
-        request
-            .validate()
-            .map_err(TextIntelError::InvalidConfiguration)?;
-        let mut texts = vec![request.state.as_str()];
-        if let crate::decision::DecisionQuestion::Choice { criteria, .. } = &request.question {
-            texts.extend(criteria.values().map(String::as_str));
-        }
-        for text in texts {
-            let length = text.chars().count();
-            if length > self.config.max_input_length {
-                return Err(TextIntelError::InputTooLong {
-                    length,
-                    maximum: self.config.max_input_length,
-                });
-            }
-        }
-        if provider.needs_fingerprints() && request.fingerprint.is_none() {
-            request.fingerprint = Some(self.analyze_cached(&request.state)?);
-        }
-        if provider.needs_candidate_fingerprints()
-            && let crate::decision::DecisionQuestion::Choice { criteria, .. } = &request.question
-        {
-            for (id, description) in criteria {
-                if !request.candidate_fingerprints.contains_key(id) {
-                    request
-                        .candidate_fingerprints
-                        .insert(id.clone(), self.analyze_cached(description)?);
-                }
-            }
-        }
-        Ok(())
     }
 
     pub fn with_spam_predictor<P: SpamPredictor + 'static>(mut self, predictor: P) -> Self {

@@ -1,7 +1,9 @@
 # Spam corpus v2
 
-Realistic SMS spam/ham for training (`v2-train.json`, 240 items) and
-held-out evaluation (`v2-eval.json`, 160 items) of `models/spam-v2.json`.
+SMS spam/ham development examples (`v2-train.json`, 240 items) and
+held-out evaluation examples (`v2-eval.json`, 160 items). The historical
+training filename is retained for split compatibility; the library includes
+no training program or trained classifier.
 
 ## Source
 
@@ -68,10 +70,12 @@ Labels are `spam` or `ham` (maps to benign). Item ids are stable.
 
 ## Usage
 
-Train: `textintel-train spam --corpus data/spam/v2-train.json
---output models/spam-v2.json`
+```sh
+cargo run --locked --bin textintel -- eval data/evaluation --split test \
+  --spam-corpus data/spam/v2-eval.json --json
+```
 
-Evaluate (automatic in production eval): the evaluator scores
-`data/spam/v2-eval.json` (sibling of the dataset directory) with the
-production spam scorer and reports ROC-AUC / F1 / Brier / ECE, which the
-production quality gates enforce.
+The evaluator reports spam ROC-AUC, F1, Brier score, and ECE using the
+configured `SpamPredictor`. The built-in heuristic reports uncalibrated
+scores. Applications can also load either corpus with `SpamCorpus::from_file`.
+Keep the held-out split separate when choosing application thresholds.

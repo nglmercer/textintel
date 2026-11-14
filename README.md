@@ -1,298 +1,132 @@
 # textintel
 
-`textintel` is a local-first Rust library for multilingual text intelligence.
-It keeps independent evidence channels in a `MessageFingerprint` instead of
-forcing a single interpretation of a message.
+A Rust library for multilingual text analysis, comparison, rebus decoding,
+pattern matching, and local search. Analysis keeps independent evidence in a
+`MessageFingerprint`, including the original text and the transformations used.
+The default engine is deterministic, offline, and requires no model files.
 
-The Rust crate is the sole implementation and exposes a typed API.
-See [`docs/API.md`](docs/API.md) for the API reference,
-[`resources/README.md`](resources/README.md) for the resource-pack format,
-and [`CHANGELOG.md`](CHANGELOG.md) for release notes.
-See [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) for measured optimization and model-selection results.
-
-## Installation
-
-Requires Rust 1.90 or later (see `rust-version` in `Cargo.toml`).
-The default build is offline and ships the full modern local stack
-(transformer embeddings, espeak-ng phonetics when installed, HNSW
-retrieval, redb persistence); no model download and no network access.
-A minimal build stays available via `--no-default-features`.
-
-As a library:
-
-```toml
-[dependencies]
-textintel = "0.2"
-```
-
-From a checkout, build and run the CLI:
-
-```text
-cargo build --locked
-cargo run --locked --bin textintel -- analyze "Fra🏠do" --json
-```
-
-Extra backends are Cargo features (see below); for example:
-
-```text
-cargo build --locked --features semantic-http
-```
-
-## Quick start
+Requires Rust 1.90 or later.
 
 ```rust
 use textintel::TextIntelligence;
 
 let engine = TextIntelligence::default();
 let fingerprint = engine.analyze("Fra🏠do")?;
-let comparison = engine.compare("Fra🏠do", "fracasado")?;
+let comparison = engine.compare("c0mpr4 ah0r4", "compra ahora")?;
 let candidates = engine.decode("salU2")?;
 
 assert_eq!(fingerprint.raw, "Fra🏠do");
-assert!(candidates.iter().any(|candidate| candidate.text.eq_ignore_ascii_case("saludos")));
+assert!(candidates.iter().any(|c| c.text.eq_ignore_ascii_case("saludos")));
 # Ok::<(), textintel::TextIntelError>(())
 ```
 
-The default engine requires no model download and provides:
+## Library capabilities
 
-- Unicode normalization, invisible/bidi/combining-character checks, scripts,
-  confusable skeletons, and homoglyph similarity.
-- Unicode-aware segmentation, language candidates, token/word n-grams,
-  lightweight lemmatization, stop-word extraction, Jaccard, TF-IDF, MinHash,
-  and SimHash.
-- Character metrics: Levenshtein, Damerau-Levenshtein, Jaro, Jaro-Winkler,
-  n-gram overlap, LCS, and configurable combined similarity.
-- Multi-reading symbols, numbers, currency, and math tokens, bounded
-  beam-search rebus decoding, uncertainty-preserving spoken candidates, and
-  obfuscation features.
-- Deterministic local character n-gram language detection with top-k
-  probabilities, script hints, and segment-level code-switch evidence.
-- A deterministic rule-based G2P fallback, phoneme edit/feature distance, and
-  optional local, HTTP, embedding, and reranker providers.
-- Pattern registration, calibrated feature-based spam signals, selectable
-  duplicate modes, an indexed in-memory store, versioned JSON persistence, and
-  a `VectorStore` boundary for larger backends.
-- Versioned pattern persistence: registered patterns snapshot to a schemaed
-  file and reload with re-analyzed examples (`save_patterns_to` /
-  `load_patterns_from`). Stored fingerprints migrate across schema versions
-  through an explicit version-checked path instead of failing or guessing.
-- Trained artifacts: an interpretable logistic similarity scorer
-  (`models/similarity-v5.json`, feature schema 9, dataset 0.8.0; retrain
-  with `cargo run --bin textintel-train -- similarity data/evaluation
-  --output <artifact.json>`) and a calibrated spam predictor
-  (`models/spam-v2.json`).
-- A curated modern model catalog (`textintel::semantic::catalog`):
-  multilingual-e5-small embeddings by default, Arctic-XS / MXBAI-XSmall for
-  English CPU deployments, and Liquid LFM2.5-230M/350M for local
-  instruction-following generation. See `models/README.md` for manual
-  download commands (the crate never downloads).
+- Unicode normalization, script detection, invisible/bidi checks, confusable
+  skeletons, and visual similarity.
+- Unicode-aware tokenization, lexical and character metrics, n-grams,
+  deterministic language detection, transliteration, and rule-based phonetics.
+- Multi-reading symbols, emoji and number evidence, bounded rebus decoding,
+  and transformation spans.
+- Rule-based entities, configurable pattern matching, explainable spam
+  signals, and duplicate detection.
+- Indexed in-memory search, versioned JSON persistence, optional redb and
+  HNSW storage, and revision-aware caches.
+- Provider interfaces for application-supplied embeddings, language tools,
+  scoring, reranking, and storage.
 
-Production backends (all in the default build, no automatic network access):
+Heuristic scores are evidence, not calibrated predictions. Resource packs are
+starter dictionaries for 16 languages; they are not complete dictionaries.
+Embedding vectors are optional. The included feature-hash vectorizer is a
+simple deterministic baseline, not a contextual encoder.
 
-- `semantic-transformer`: modern BERT-wiring sentence embeddings on the
-  CPU from explicit local files (`config.json`, `tokenizer.json`
-  (Unigram, e5-style) or `vocab.txt` (WordPiece), `model.safetensors`),
-  with pooling selection, model-card text prefixes, batching, dimension
-  validation, normalization, and truncation reporting. No new dependencies
-  beyond Candle.
-- Liquid generation (core, no feature gate): `LiquidInstructProvider`
-  talks to an explicit local OpenAI-compatible server (llama-server with
-  an LFM2.5 GGUF, Ollama, vLLM) over std-only HTTP; see the `generate`
-  CLI command and `examples/liquid_generate.rs`.
-- `phonetic-espeak`: production G2P backed by a local `espeak-ng` binary,
-  with the rule-based provider as deterministic fallback. Supports voice
-  detection (`installed_voices`), per-call timeouts, syllables, recovered
-  primary stress, articulatory features, and discounted confidence for
-  unmapped languages.
-- `ann-hnsw`: approximate nearest-neighbor retrieval over embedding indexes
-  plus `benches/ann.rs` recall/latency benchmarks.
-- `persist-redb`: embedded persistent storage with the same migration
-  guarantees as the JSON store.
-- `semantic-http`: explicit remote embedding adapter (only when configured).
+Concrete model inference, generation, decision models, training tools, and
+trained artifacts have been removed from the library. Previous experiments
+remain useful as [references](docs/EXPERIMENTS.md), not supported backends.
+Applications can implement the provider interfaces in separate integrations.
 
-## Modes: default, production-local, remote
+## Configuration
 
-```text
-Default:
-fast, deterministic, local, model-free.
-
-Production local:
-embedded resource packs + trained models + espeak-ng G2P when installed
-+ local embedding baseline. Graceful fallback with degradation notes.
-
-Remote:
-explicit HTTP providers only, never automatic.
-```
+Use `try_new` for configuration read from files or user input:
 
 ```rust
-use textintel::TextIntelligence;
+use textintel::{EngineConfig, TextIntelligence};
 
-// Lightweight and deterministic (unchanged default).
-let engine = TextIntelligence::default();
+let engine = TextIntelligence::try_new(EngineConfig {
+    max_input_length: 4096,
+    max_batch_size: 32,
+    max_search_candidates: 100,
+    ..Default::default()
+})?;
+# Ok::<(), textintel::TextIntelError>(())
+```
 
-// Local production preset: never touches the network, never panics when an
-// optional dependency (espeak-ng, model files) is missing. Check
-// `engine.diagnostics().degraded` to see what fell back.
-let engine = TextIntelligence::production_local()?;
+`TextIntelligence::production_local()` enables bounded caches, rule-based
+phonetics, and deterministic feature-hash vectors. With the `phonetic-espeak`
+feature it uses an installed `espeak-ng` binary when available. It does not
+inspect model directories or model environment variables. Inspect
+`engine.diagnostics()` for the actual providers and storage capabilities.
 
-// Ergonomic builder with the same preset plus explicit configuration.
+Providers and resource packs are explicit:
+
+```rust
+use textintel::{FeatureHashEmbeddingProvider, ResourceLoader, TextIntelligence};
+
 let engine = TextIntelligence::builder()
     .production_local()
-    .trained_similarity_model("models/similarity-v5.json")
-    .trained_spam_model("models/spam-v2.json")
+    .resources(ResourceLoader::from_resource_root("resources")?)
+    .semantic_provider(FeatureHashEmbeddingProvider::default())
     .build()?;
-# Ok::<(), textintel::TextIntelError>(())
+# Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-Providers report quality tiers through `engine.provider_capabilities()`:
-`RuleBasedG2PProvider` and feature-hash embeddings are `Basic`,
-`EspeakNgG2PProvider` and transformer/HTTP embeddings are `Production`,
-and unconfigured backends report `Unavailable` instead of pretending to
-work. `engine.diagnostics()` adds API/schema versions, the loaded resource
-manifest (source, license, revision per pack), and the degraded list.
+## Features and CLI
 
-## Providers and configuration
+The default build uses the lightweight local stack. Optional backends:
 
-Expensive or remote functionality is explicit. Implement one of the provider
-traits and inject it with a builder method:
+| Feature | Purpose |
+|---|---|
+| `phonetic-espeak` | Local `espeak-ng` phonetics with a subprocess timeout |
+| `ann-hnsw` | HNSW retrieval over application-supplied vectors |
+| `persist-redb` | Embedded persistent storage |
+| `production-local` / `all` | Include the optional local backends above |
 
-```rust
-use textintel::{FeatureHashEmbeddingProvider, RuleBasedG2PProvider, TextIntelligence};
+`--no-default-features` remains available. JSON persistence, provider
+interfaces, feature hashing, and deterministic text utilities are core APIs.
+The compatibility flags `lang-profile`, `semantic-local`, `phonetic-ipa`,
+`semantic`, `phonetic`, `persist`, and `production-local-lite` remain available.
 
-let engine = TextIntelligence::new(textintel::EngineConfig {
-    semantic: true,
-    phonetic: true,
-    ..Default::default()
-})
-.with_embedding_provider(FeatureHashEmbeddingProvider::default())
-.with_g2p_provider(RuleBasedG2PProvider);
+```sh
+cargo build --locked
+cargo run --locked --bin textintel -- analyze 'Fra🏠do' --json
+cargo run --locked --bin textintel -- compare 'c0mpr4 ah0r4' 'compra ahora' --json
+cargo run --locked --bin textintel -- decode 'salU2' --languages es,en
+cargo run --locked --bin textintel -- diagnostics
+cargo run --locked --bin textintel -- --help
 ```
 
-Provider failures are returned as `TextIntelError::Provider`; input length,
-segments, beam width, symbol readings, decoded candidates, branches,
-recursion, batch size, search candidates, reranker candidates, cache entries,
-and model token length are bounded by `EngineConfig`, `CacheLimits`, and the
-provider constructors. Non-finite model parameters are rejected at load;
-user text is never fetched as a URL and never executed as a shell command.
+The CLI also supports heuristic spam signals, duplicate checks, JSONL batch
+analysis, resource inspection, dataset evaluation, and JSON-store indexing
+and search. Run `<command> --help` for its accepted flags.
 
-Feature names are available for packaging integrations:
-`lang-profile`, `semantic-local`, `semantic-http`, `phonetic-ipa`,
-`phonetic-espeak`, `ann-hnsw`, `persist`, `persist-redb`, `semantic`,
-`phonetic`, `ml`, `production-local-lite`, `production-local`,
-`semantic-transformer`, and `all`. The default build is the full modern
-local stack (the old `production-local` contents); `semantic-http` is the
-explicit remote-provider adapter, `semantic-local` provides the
-deterministic feature-hash embedding baseline, and
-`--no-default-features` selects the minimal dependency-light build.
-`production-local-lite` is the same preset without the heavy native
-dependencies.
+## Documentation and verification
 
-Provider capability and model metadata are exposed so callers can record the
-backend, revision, dimensions, language coverage, and local/remote status used
-for each result. `SimilarityProfile` and `SimilarityScorer` allow calibrated
-task-specific scoring without changing the independent evidence channels.
+- [API and extension points](docs/API.md)
+- [Resource-pack format](resources/README.md)
+- [Bounds, caching, and benchmarks](docs/PERFORMANCE.md)
+- [Changelog](CHANGELOG.md)
 
-## Language and symbol resources
-
-The default repository resources contain versioned seed packs for 16 languages:
-Arabic, Chinese, Dutch, English, French, German, Hindi, Indonesian, Italian,
-Japanese, Korean, Polish, Portuguese, Russian, Spanish, and Turkish. These are
-starter resources, not complete dictionaries. The loader indexes every JSON
-pack found recursively, so larger licensed dictionaries can be added without
-hardcoding words in Rust:
-
-```rust
-let resources = textintel::ResourceLoader::from_resource_root("resources")?;
-let engine = textintel::TextIntelligence::default().with_resources(resources);
-```
-
-The initial English pack includes the requested examples `this is a example`
-and `a good example`. See [`resources/README.md`](resources/README.md) for the
-pack schema, compact `words` / `stop_words` forms, source-aware lookup records,
-revision/hash fields, and loader limits. Index keys are deterministic: numeric
-runs sort first using natural numeric order, followed by Unicode letters and
-then other characters. This is only an ordering rule; matching still preserves
-the exact language and Unicode form needed for reliable tracking.
-
-Symbols are modularized into neutral Unicode metadata and per-language reading
-packs. Adding another language JSON pack automatically extends symbol coverage
-without changing Rust code. Provenance is retained for each merged record, and
-resource byte, entry, symbol, and reading limits are enforced before indexing.
-
-## CLI
-
-```text
-cargo run --bin textintel -- analyze "Fra🏠do" --json
-cargo run --bin textintel -- explain "salU2"
-cargo run --bin textintel -- decode "salU2" --languages es,en
-cargo run --bin textintel -- compare "c0mpr4 ah0r4" "compra ahora" --json
-cargo run --bin textintel -- duplicate "compra ahora" "c0mpr4 ah0r4" --threshold 0.85
-cargo run --bin textintel -- spam "ganaste un premio https://example.test"
-cargo run --bin textintel -- batch messages.jsonl
-cargo run --bin textintel -- resources resources
-cargo run --bin textintel -- resources validate resources/languages/en.json
-cargo run --bin textintel -- diagnostics
-cargo run --bin textintel -- provider-info
-cargo run --bin textintel -- schema-version
-cargo run --bin textintel -- eval data/evaluation/ --split test
-cargo run --bin textintel -- index store.json id-1 "a message"
-cargo run --bin textintel -- search store.json "similar message" 5
-```
-
-Global flags: `--json` (versioned JSON output), `--production` (local
-production preset), `--resource-root <dir>`, `--model-path <dir>`, and
-`--language <code>`. Every `--json` payload follows `API_VERSION` (see
-`schema-version`) and evolves additively within a major version.
-
-## Examples
-
-```text
-cargo run --example basic
-cargo run --example production_local
-cargo run --example persistent_store
-cargo run --features semantic-transformer --example transformer_embeddings
-cargo run --features phonetic-espeak --example espeak
-cargo run --example patterns_spam
-```
-
-## Verification
-
-Before every commit run:
-
-```text
+```sh
 cargo fmt --check
 cargo test --locked --no-default-features --all-targets
 cargo test --locked --all-features --all-targets
-cargo clippy --all-targets --all-features -- -D warnings
-cargo doc --no-deps --all-features
+cargo clippy --locked --all-targets --all-features -- -D warnings
+cargo doc --locked --no-deps --all-features
 cargo bench --locked --no-run --all-features
-cargo run --locked --all-features --bin textintel -- eval data/evaluation/ --split test --gates data/quality-gates.json
 ```
 
-Then the production preset separately:
+Evaluation data and optional quality targets live under `data/`. Some targets
+currently exceed the heuristic baseline; they must not be interpreted as
+verified library accuracy. See [evaluation limits](docs/PERFORMANCE.md).
 
-```text
-cargo run --locked --all-features --bin textintel -- eval data/evaluation/ --split test --production --gates data/quality-gates-production.json
-```
-
-The integration suite covers the plan's MVP examples plus provider injection,
-batch APIs, persistence, multilingual segmentation, IPA features, patterns,
-spam, duplicate detection, and indexed search behavior. A versioned seed
-evaluation set (currently `0.7.0`, 1902 cases over train/validation/test:
-1045/375/482) with ranking and calibration metrics is available at
-`data/evaluation/`; `data/quality-gates.json` pins the default-engine
-bars and `data/quality-gates-production.json` the stronger production bars,
-both calibrated on the held-out test split.
-
-CI runs fmt, tests on Ubuntu/Windows/macOS, quality gates, coverage, clippy,
-MSRV, and a nightly fuzz job. The repository includes fuzz targets for
-Unicode, tokenization, and rebus parsing under `fuzz/` with a curated seed
-corpus in `fuzz/corpus/`; run them locally with
-`cd fuzz && cargo +nightly fuzz run <target> corpus/<target> -- -max_total_time=60`
-(requires a nightly toolchain plus `cargo install cargo-fuzz`).
-
-## License
-
-MIT — see [`LICENSE-MIT`](LICENSE-MIT).
-
-Decision training experiments and the optional local routing model are documented in [DECISION_OPTIMIZATION.md](docs/DECISION_OPTIMIZATION.md).
+MIT — see [LICENSE-MIT](LICENSE-MIT).

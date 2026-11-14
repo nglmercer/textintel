@@ -3,18 +3,9 @@
 //! spec-derived argv. If a command exists in the spec but not on the
 //! command line (or vice versa), these tests fail.
 
-use textintel::cli::{
-    CliSpec, eval_llm_spec, parse_args, render_command, render_overview, textintel_spec,
-    train_decision_spec, train_spec,
-};
-
+use textintel::cli::{CliSpec, parse_args, render_command, render_overview, textintel_spec};
 fn all_specs() -> Vec<&'static CliSpec> {
-    vec![
-        textintel_spec(),
-        train_spec(),
-        train_decision_spec(),
-        eval_llm_spec(),
-    ]
+    vec![textintel_spec()]
 }
 
 fn argv(words: &[&str]) -> Vec<String> {
@@ -135,5 +126,11 @@ fn unknown_inputs_error_with_spec_options() {
     // Missing required positional and value.
     assert!(parse_args(spec, &argv(&["analyze"])).is_err());
     assert!(parse_args(spec, &argv(&["classify", "x"])).is_err());
-    assert!(parse_args(spec, &argv(&["classify", "x", "--task", "t"])).is_ok());
+    assert!(
+        parse_args(
+            spec,
+            &argv(&["analyze", "x", "--resource-root", "resources"])
+        )
+        .is_ok()
+    );
 }

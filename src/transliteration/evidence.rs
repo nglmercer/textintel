@@ -127,7 +127,7 @@ pub fn transliteration_similarity(
 /// - language: `1.0` when the top languages agree, `0.7` otherwise (true
 ///   transliteration often crosses languages, so the cut is mild);
 /// - semantic: `0.5 + 0.5 × cosine` when both sides carry
-///   Production-quality (transformer) embeddings, `1.0` otherwise. The
+///   Application-supplied Production embeddings, `1.0` otherwise. The
 ///   feature-hash fallback reports near-zero cosine for every cross-script
 ///   pair — including genuine transliterations — so discounting on it
 ///   would punish true pairs for the fallback's blindness rather than for

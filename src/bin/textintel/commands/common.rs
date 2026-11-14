@@ -28,16 +28,11 @@ pub fn language_hints(parsed: &ParsedArgs) -> Option<Vec<String>> {
 
 /// Shared engine construction: default or `--production` preset, then
 /// `--language` hints (decode/G2P preference), `--resource-root` (custom
-/// packs), and `--model-path` (directory holding `similarity-v5.json` /
-/// `spam-v2.json` / `reranker-v1.json`; present-but-invalid artifacts fail
-/// loudly).
+/// packs).
 pub fn build_engine(parsed: &ParsedArgs) -> Result<TextIntelligence, Box<dyn std::error::Error>> {
     let mut config = EngineConfig::default();
     if let Some(hints) = language_hints(parsed) {
         config.language_hints = hints;
-    }
-    if parsed.flag("no-rebus") {
-        config.rebus = false;
     }
     let mut engine = if parsed.flag("production") {
         TextIntelligence::builder()
@@ -46,44 +41,12 @@ pub fn build_engine(parsed: &ParsedArgs) -> Result<TextIntelligence, Box<dyn std
             .build()
             .map_err(|error| error.to_string())?
     } else {
-        TextIntelligence::new(config)
+        TextIntelligence::try_new(config)?
     };
     if let Some(root) = parsed.value("resource-root") {
         engine = engine.with_resources(
             ResourceLoader::from_resource_root(root).map_err(|error| error.to_string())?,
         );
-    }
-    if let Some(dir) = parsed.value("model-path") {
-        let similarity =
-            textintel::engine::preferred_similarity_artifact_in(std::path::Path::new(dir));
-        if similarity.is_file() {
-            let source = std::fs::read_to_string(&similarity)?;
-            let artifact =
-                textintel::SimilarityModelArtifact::from_json(&source).map_err(|error| {
-                    format!("invalid scorer artifact {}: {error}", similarity.display())
-                })?;
-            engine = engine.with_similarity_scorer(artifact.to_scorer());
-        }
-        let spam = textintel::engine::preferred_spam_artifact_in(std::path::Path::new(dir));
-        if spam.is_file() {
-            let source = std::fs::read_to_string(&spam)?;
-            let artifact = textintel::SpamModelArtifact::from_json(&source)
-                .map_err(|error| format!("invalid spam artifact {}: {error}", spam.display()))?;
-            engine = engine.with_spam_predictor(artifact.to_predictor());
-        }
-        let reranker = std::path::Path::new(dir).join("reranker-v1.json");
-        if reranker.is_file() {
-            let source = std::fs::read_to_string(&reranker)?;
-            let artifact =
-                textintel::RerankerModelArtifact::from_json(&source).map_err(|error| {
-                    format!("invalid reranker artifact {}: {error}", reranker.display())
-                })?;
-            engine = engine.with_reranker_provider(
-                artifact
-                    .to_reranker(64)
-                    .map_err(|error| format!("invalid reranker weights: {error}"))?,
-            );
-        }
     }
     Ok(engine)
 }

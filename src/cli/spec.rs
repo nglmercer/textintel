@@ -15,9 +15,9 @@ pub enum ArgKind {
 /// One `--long` option, addressable by `id`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ArgSpec {
-    /// Stable id used by handlers (`parsed.value("model-path")`).
+    /// Stable id used by handlers (`parsed.value("resource-root")`).
     pub id: &'static str,
-    /// Long flag without dashes (`"model-path"` → `--model-path`).
+    /// Long flag without dashes (`"resource-root"` → `--resource-root`).
     pub long: &'static str,
     pub kind: ArgKind,
     pub help: &'static str,

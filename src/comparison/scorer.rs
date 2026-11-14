@@ -369,7 +369,11 @@ pub fn score_fingerprints(
     let normalized_identity = normalized_identity_from(&fold_a, &fold_b);
     let substring_containment = substring_containment_from(&fold_a, &fold_b);
     let cross_script_pair = cross_script_pair(a, b);
-    let language_agreement = crate::comparison::model::language_agreement(a, b);
+    let language_agreement = if a.top_language() == b.top_language() {
+        1.0
+    } else {
+        0.0
+    };
     let cross_script_agreement = cross_script_pair * language_agreement;
     let exact_decode = finite_or_zero(exact_decode_confidence(
         &decoded_a,
