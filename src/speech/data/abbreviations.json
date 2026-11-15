@@ -1,0 +1,618 @@
+[
+  {
+    "id": "en-001",
+    "locale": "en",
+    "written": "Dr.",
+    "spoken": "doctor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/en.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "en-002",
+    "locale": "en",
+    "written": "Mr.",
+    "spoken": "mister",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/en.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "en-003",
+    "locale": "en",
+    "written": "etc.",
+    "spoken": "etcetera",
+    "context": "not_sentence_end",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/en.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "es-001",
+    "locale": "es",
+    "written": "Dr.",
+    "spoken": "doctor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/es.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "es-002",
+    "locale": "es",
+    "written": "Dra.",
+    "spoken": "doctora",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/es.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "es-003",
+    "locale": "es",
+    "written": "Sr.",
+    "spoken": "señor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/es.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "es-004",
+    "locale": "es",
+    "written": "Sra.",
+    "spoken": "señora",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/es.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "es-005",
+    "locale": "es",
+    "written": "Srta.",
+    "spoken": "señorita",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/es.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "es-006",
+    "locale": "es",
+    "written": "Av.",
+    "spoken": "avenida",
+    "context": "capitalized_word_or_number",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/es.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "es-007",
+    "locale": "es",
+    "written": "etc.",
+    "spoken": "etcétera",
+    "context": "not_sentence_end",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/es.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "fr-001",
+    "locale": "fr",
+    "written": "Dr.",
+    "spoken": "docteur",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/fr.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "de-001",
+    "locale": "de",
+    "written": "Dr.",
+    "spoken": "Doktor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/de.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "de-002",
+    "locale": "de",
+    "written": "Nr.",
+    "spoken": "Nummer",
+    "context": "capitalized_word_or_number",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/de.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "pt-001",
+    "locale": "pt",
+    "written": "Dr.",
+    "spoken": "doutor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/pt.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "pt-002",
+    "locale": "pt",
+    "written": "Dra.",
+    "spoken": "doutora",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/pt.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "pt-003",
+    "locale": "pt",
+    "written": "Sr.",
+    "spoken": "senhor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/pt.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "pt-004",
+    "locale": "pt",
+    "written": "Sra.",
+    "spoken": "senhora",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/pt.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "pt-005",
+    "locale": "pt",
+    "written": "Av.",
+    "spoken": "avenida",
+    "context": "capitalized_word_or_number",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/pt.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "it-001",
+    "locale": "it",
+    "written": "Dott.",
+    "spoken": "dottor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/it.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "it-002",
+    "locale": "it",
+    "written": "Sig.",
+    "spoken": "signor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://github.com/nglmercer/textintel/blob/afa57c9/src/speech/normalization/rules/it.rs",
+        "note": "Versioned source-code compatibility table, preserved exactly; not a new linguistic validation."
+      }
+    ],
+    "legacy": true
+  },
+  {
+    "id": "hi-001",
+    "locale": "hi",
+    "written": "डॉ.",
+    "spoken": "डॉक्टर",
+    "context": "next_letter",
+    "sources": [
+      {
+        "url": "https://osepa.odisha.gov.in/upload/ebooks/CLASS-VIII/Saral-Hindi-Byakaran-Class-8.pdf",
+        "note": "OSEPA Hindi grammar p.64 explicitly defines डॉ.; Kota thesis abbreviation table p.xiv explicitly defines प्रो. Title before a named person; name context is a conservative library guard."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "hi-002",
+    "locale": "hi",
+    "written": "प्रो.",
+    "spoken": "प्रोफेसर",
+    "context": "next_letter",
+    "sources": [
+      {
+        "url": "https://uok.ac.in/digital_thesis/328_Raghuveer%20Singh%20%28Hindi%29.pdf",
+        "note": "OSEPA Hindi grammar p.64 explicitly defines डॉ.; Kota thesis abbreviation table p.xiv explicitly defines प्रो. Title before a named person; name context is a conservative library guard."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "bn-001",
+    "locale": "bn",
+    "written": "ড.",
+    "spoken": "ডক্টর",
+    "context": "next_letter",
+    "sources": [
+      {
+        "url": "https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-mopa/2024/12/daeb8e175d4d43bd8aa1fc3b55498d9e.pdf",
+        "note": "Bangladesh MOPA Administrative Terminology 2025, printed p.75, Doctor entry. Visually verified: distinct native abbreviation/full-form pairs; OCR can drop the vowel in ডা. Do not infer a title from a name."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "bn-002",
+    "locale": "bn",
+    "written": "ডা.",
+    "spoken": "ডাক্তার",
+    "context": "next_letter",
+    "sources": [
+      {
+        "url": "https://objectstorage.ap-dcc-gazipur-1.oraclecloud15.com/n/axvjbnqprylg/b/V2Ministry/o/office-mopa/2024/12/daeb8e175d4d43bd8aa1fc3b55498d9e.pdf",
+        "note": "Bangladesh MOPA Administrative Terminology 2025, printed p.75, Doctor entry. Visually verified: distinct native abbreviation/full-form pairs; OCR can drop the vowel in ডা. Do not infer a title from a name."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "pa-001",
+    "locale": "pa",
+    "written": "ਡਾ:",
+    "spoken": "ਡਾਕਟਰ",
+    "context": "next_letter",
+    "sources": [
+      {
+        "url": "https://ebooks.lpude.in/arts/ba/year_1/DPBI101_PUNJABI-I.pdf",
+        "note": "LPU Punjabi-I, printed p.8, punctuation section 6 explicitly pairs full forms and abbreviations using colon. Dot variants are not inferred."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "pa-002",
+    "locale": "pa",
+    "written": "ਪ੍ਰਿੰ:",
+    "spoken": "ਪ੍ਰਿੰਸੀਪਲ",
+    "context": "next_letter",
+    "sources": [
+      {
+        "url": "https://ebooks.lpude.in/arts/ba/year_1/DPBI101_PUNJABI-I.pdf",
+        "note": "LPU Punjabi-I, printed p.8, punctuation section 6 explicitly pairs full forms and abbreviations using colon. Dot variants are not inferred."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "mr-001",
+    "locale": "mr",
+    "written": "मा.",
+    "spoken": "माननीय",
+    "context": "next_letter",
+    "sources": [
+      {
+        "url": "https://rmvs.marathi.gov.in/wp-content/uploads/2022/02/MayMarathi-Short-Shashkiy.pdf",
+        "note": "RMVS government Marathi manual, exercise 29 p.150 and answer key define these expansions. Expand only the written treatment; never infer status from a name."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "mr-002",
+    "locale": "mr",
+    "written": "सौ.",
+    "spoken": "सौभाग्यवती",
+    "context": "next_letter",
+    "sources": [
+      {
+        "url": "https://rmvs.marathi.gov.in/wp-content/uploads/2022/02/MayMarathi-Short-Shashkiy.pdf",
+        "note": "RMVS government Marathi manual, exercise 29 p.150 and answer key define these expansions. Expand only the written treatment; never infer status from a name."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ta-001",
+    "locale": "ta",
+    "written": "அத்.",
+    "spoken": "அத்தியாயம்",
+    "context": "next_number",
+    "sources": [
+      {
+        "url": "https://www.tamilvu.org/library/lexicon/html/othabb.htm",
+        "note": "Tamil Lexicon abbreviation table hosted by Tamil Virtual Academy explicitly pairs these forms. Chapter-number/example continuation guards are conservative library policies; அதி. is a different abbreviation."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ta-002",
+    "locale": "ta",
+    "written": "உதா.",
+    "spoken": "உதாரணம்",
+    "context": "not_sentence_end",
+    "sources": [
+      {
+        "url": "https://www.tamilvu.org/library/lexicon/html/othabb.htm",
+        "note": "Tamil Lexicon abbreviation table hosted by Tamil Virtual Academy explicitly pairs these forms. Chapter-number/example continuation guards are conservative library policies; அதி. is a different abbreviation."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ur-001",
+    "locale": "ur",
+    "written": "ص",
+    "spoken": "صفحہ نمبر",
+    "context": "bibliographic",
+    "sources": [
+      {
+        "url": "https://norr.numl.edu.pk/repository/filedownload/1619",
+        "note": "NUML thesis, printed p.xi, رموز و اشارات table: ص is used صفحہ نمبر کے لیے. Bibliographic opt-in reads the explicitly stated page-number label, not a universal expansion or a bare letter name. Requires following number."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "id-001",
+    "locale": "id",
+    "written": "dr.",
+    "spoken": "dokter",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://ejaan.kemendikdasmen.go.id/eyd/penulisan-kata/singkatan-dan-akronim/",
+        "note": "EYD V F.1 explicitly distinguishes these title abbreviations by case. Case is semantic and is never folded."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "id-002",
+    "locale": "id",
+    "written": "Dr.",
+    "spoken": "doktor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://ejaan.kemendikdasmen.go.id/eyd/penulisan-kata/singkatan-dan-akronim/",
+        "note": "EYD V F.1 explicitly distinguishes these title abbreviations by case. Case is semantic and is never folded."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "tr-001",
+    "locale": "tr",
+    "written": "Prof.",
+    "spoken": "Profesör",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://tdk.gov.tr/icerik/yazim-kurallari/kisaltmalar/",
+        "note": "TDK abbreviation rules section 3 lists title expansions. Suffixed/inflected forms are outside this catalog."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "tr-002",
+    "locale": "tr",
+    "written": "Dr.",
+    "spoken": "Doktor",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://tdk.gov.tr/icerik/yazim-kurallari/kisaltmalar/",
+        "note": "TDK abbreviation rules section 3 lists title expansions. Suffixed/inflected forms are outside this catalog."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ja-001",
+    "locale": "ja",
+    "written": "(株)",
+    "spoken": "株式会社",
+    "context": "company_name",
+    "sources": [
+      {
+        "url": "https://www.caa.go.jp/policies/policy/representation/household_goods/faq/faq_07.html",
+        "note": "Consumer Affairs Agency Q1 explicitly permits these company-name abbreviations. Requires adjacent or space-separated company-name letters; no punctuation normalization."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ja-002",
+    "locale": "ja",
+    "written": "(有)",
+    "spoken": "有限会社",
+    "context": "company_name",
+    "sources": [
+      {
+        "url": "https://www.caa.go.jp/policies/policy/representation/household_goods/faq/faq_07.html",
+        "note": "Consumer Affairs Agency Q1 explicitly permits these company-name abbreviations. Requires adjacent or space-separated company-name letters; no punctuation normalization."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ko-001",
+    "locale": "ko",
+    "written": "(주)",
+    "spoken": "주식회사",
+    "context": "company_name",
+    "sources": [
+      {
+        "url": "https://www.korean.go.kr/front/mcfaq/mcfaqView.do?mcfaq_seq=5919&mn_id=217",
+        "note": "National Institute of Korean Language consultation 2019-12-06 explicitly states the expansion/reading. Particle inflection is not synthesized here; adjacent company-name letters identify the context."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ar-001",
+    "locale": "ar",
+    "written": "د.ت.",
+    "spoken": "دون تاريخ النشر",
+    "context": "bibliographic",
+    "sources": [
+      {
+        "url": "https://unissa.edu.bn/storage/2025/06/FINAL-UNISSA-Thesis-Manual-Arabic_2019-18.7.19.pdf",
+        "note": "UNISSA Arabic thesis manual, appendix 10 printed p.37 abbreviation table. Bibliographic opt-in only; the defined publication metadata may stand alone or end a citation."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ar-002",
+    "locale": "ar",
+    "written": "د.م.",
+    "spoken": "دون مكان النشر",
+    "context": "bibliographic",
+    "sources": [
+      {
+        "url": "https://unissa.edu.bn/storage/2025/06/FINAL-UNISSA-Thesis-Manual-Arabic_2019-18.7.19.pdf",
+        "note": "UNISSA Arabic thesis manual, appendix 10 printed p.37 abbreviation table. Bibliographic opt-in only; the defined publication metadata may stand alone or end a citation."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ru-001",
+    "locale": "ru",
+    "written": "г-н",
+    "spoken": "господин",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://demidov.admin-smolensk.ru/files/358/03-01-2025_1_instrukciya-.pdf",
+        "note": "Official administrative instruction appendix 13 p.57, treatment abbreviation table. Only the exact nominative token before a capitalized name; inflected suffixes are excluded."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "ru-002",
+    "locale": "ru",
+    "written": "г-жа",
+    "spoken": "госпожа",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://demidov.admin-smolensk.ru/files/358/03-01-2025_1_instrukciya-.pdf",
+        "note": "Official administrative instruction appendix 13 p.57, treatment abbreviation table. Only the exact nominative token before a capitalized name; inflected suffixes are excluded."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "vi-001",
+    "locale": "vi",
+    "written": "PGS",
+    "spoken": "Phó Giáo sư",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://ns.qnu.edu.vn/Resources/Docs/SubDomain/ns/BAO%20CAO%20TDG%20NGANH/BCTDG%20QLTNMT_7.3.2025.pdf",
+        "note": "Quy Nhon University self-assessment abbreviation table p.8 explicitly lists academic titles. Dotted spellings and stacked title grammar are not inferred."
+      }
+    ],
+    "legacy": false
+  },
+  {
+    "id": "vi-002",
+    "locale": "vi",
+    "written": "TS",
+    "spoken": "Tiến sĩ",
+    "context": "capitalized_word",
+    "sources": [
+      {
+        "url": "https://ns.qnu.edu.vn/Resources/Docs/SubDomain/ns/BAO%20CAO%20TDG%20NGANH/BCTDG%20QLTNMT_7.3.2025.pdf",
+        "note": "Quy Nhon University self-assessment abbreviation table p.8 explicitly lists academic titles. Dotted spellings and stacked title grammar are not inferred."
+      }
+    ],
+    "legacy": false
+  }
+]

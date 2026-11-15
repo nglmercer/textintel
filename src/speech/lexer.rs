@@ -185,7 +185,7 @@ fn overlaps(regions: &[Range<usize>], start: usize, end: usize) -> bool {
 }
 
 /// Split `text` into whitespace-delimited fields.
-fn scan_fields(text: &str, regions: &[Range<usize>]) -> Vec<Field> {
+pub(crate) fn scan_fields(text: &str, regions: &[Range<usize>]) -> Vec<Field> {
     let mut fields = Vec::new();
     let mut start: Option<usize> = None;
     for (i, c) in text.char_indices() {

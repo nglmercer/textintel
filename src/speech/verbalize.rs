@@ -56,6 +56,7 @@ pub fn verbalize_document_with_options(
     let mut text = String::new();
     let mut readings = Vec::with_capacity(document.spans.len());
     let mut fully_supported = true;
+    let mut abbreviation_matcher = None;
     for span in &document.spans {
         if span.start != cursor
             || span.end <= span.start
@@ -66,6 +67,23 @@ pub fn verbalize_document_with_options(
         cursor = span.end;
         let (spoken, reason) = match &span.value {
             SpeechValue::Text => (Some(span.source.clone()), None),
+            SpeechValue::Abbreviation { id } => {
+                let matcher = abbreviation_matcher.get_or_insert_with(|| {
+                    super::abbreviations::Matcher::new(
+                        &document.text,
+                        &super::lexer::protected_regions(&document.text),
+                        document.locale,
+                        options.abbreviation_policy,
+                    )
+                });
+                (
+                    abbreviation(id, span.start, span.end, &span.source, matcher),
+                    Some(
+                        "abbreviation entry, locale, source, context or reading policy does not agree"
+                            .into(),
+                    ),
+                )
+            }
             SpeechValue::Number { value, reading } => (verbalize_with_options(value, options, *reading), Some("number form or range is not supported for this locale".to_string())),
             SpeechValue::Date { year, month, day } => (super::temporal::render_date(*year,*month,*day,document.locale,options), Some("date value or date grammar is not supported for this locale".to_string())),
             SpeechValue::Time { hour, minute, second } => (super::temporal::render_time(*hour,*minute,*second,document.locale,options), Some("time value or time grammar is not supported for this locale".to_string())),
@@ -113,6 +131,18 @@ pub fn verbalize_document_with_options(
         readings,
         fully_supported,
     })
+}
+
+fn abbreviation(
+    id: &str,
+    start: usize,
+    end: usize,
+    source: &str,
+    matcher: &super::abbreviations::Matcher<'_>,
+) -> Option<String> {
+    let matched = matcher.match_at(start)?;
+    (matched.end == end && matched.entry.id == id && matched.entry.written == source)
+        .then(|| matched.entry.spoken.clone())
 }
 
 pub(super) fn value(integer: u32) -> NumberValue {

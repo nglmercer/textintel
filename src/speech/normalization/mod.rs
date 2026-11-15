@@ -38,15 +38,16 @@ mod shared;
 mod tests;
 
 pub use options::{
-    NormalizationMode, NormalizeLimits, NormalizeOptions, ReadingStyle, default_locale_for,
-    is_supported_locale, locales_for,
+    AbbreviationPolicy, NormalizationMode, NormalizeLimits, NormalizeOptions, ReadingStyle,
+    default_locale_for, is_supported_locale, locales_for,
 };
 
 /// Version of the rule set. Participates in [`SpeechText::identity`].
 ///
-/// `tn-v3` shares lexical/calendar/number primitives and extends the API to
-/// every typed speech language. Cache identities change when semantics change.
-pub const RULESET_VERSION: &str = "tn-v3";
+/// `tn-v4` shares the formal abbreviation catalogue with the typed pipeline,
+/// preserving legacy contexts while extending languages without legacy rules.
+/// Cache identities change when semantics change.
+pub const RULESET_VERSION: &str = "tn-v4";
 
 /// Stable feature keys used in coverage maps.
 pub const FEATURE_KEYS: [&str; 11] = [
@@ -167,6 +168,9 @@ pub struct NormalizedText {
     pub language: String,
     pub locale: String,
     pub ruleset_version: &'static str,
+    /// Selected abbreviation scope; omitted from JSON for the contextual default.
+    #[serde(default, skip_serializing_if = "AbbreviationPolicy::is_contextual")]
+    pub abbreviation_policy: AbbreviationPolicy,
 }
 
 /// Errors from option resolution and normalization. Messages never contain
@@ -205,16 +209,20 @@ pub fn normalize(text: &str, opts: &NormalizeOptions) -> Result<NormalizedText, 
     )?;
     let language_rules = rules::for_language(&opts.language);
     let mut coverage = if shared::uses_shared(&opts.language) {
-        shared::coverage()
+        shared::coverage(&opts.language, opts.abbreviation_policy)
     } else {
         rules::coverage_map(language_rules)
     };
     if opts.language.parse::<crate::speech::SpeechLocale>().is_ok() {
-        for (key, level) in shared::coverage() {
+        for (key, level) in shared::coverage(&opts.language, opts.abbreviation_policy) {
             if coverage[&key] == CoverageLevel::None && level != CoverageLevel::None {
                 coverage.insert(key, level);
             }
         }
+    }
+
+    if opts.abbreviation_policy == AbbreviationPolicy::Preserve {
+        coverage.insert("abbreviations".into(), CoverageLevel::None);
     }
 
     let (changes, warnings) = match opts.mode {
@@ -265,6 +273,7 @@ pub fn normalize(text: &str, opts: &NormalizeOptions) -> Result<NormalizedText, 
         language: opts.language.clone(),
         locale: opts.locale.clone(),
         ruleset_version: RULESET_VERSION,
+        abbreviation_policy: opts.abbreviation_policy,
     })
 }
 
@@ -286,12 +295,13 @@ impl SpeechText {
         let changed = normalized.spoken != text;
         Ok(Self {
             identity: format!(
-                "{}|{}|{}|{}|{}",
+                "{}|{}|{}|{}|{}|abbr={}",
                 RULESET_VERSION,
                 opts.mode.as_str(),
                 opts.language,
                 opts.locale,
-                opts.reading_style.as_str()
+                opts.reading_style.as_str(),
+                opts.abbreviation_policy.as_str()
             ),
             spoken: normalized.spoken,
             changed,
@@ -308,7 +318,7 @@ impl SpeechText {
         self.spoken
     }
 
-    /// Stable identity, e.g. `"tn-v3|auto|es|es-PE|precise"`. Contains no user text.
+    /// Stable identity, e.g. `"tn-v4|auto|es|es-PE|precise|abbr=contextual"`. Contains no user text.
     pub fn identity(&self) -> &str {
         &self.identity
     }
@@ -333,13 +343,13 @@ pub struct LanguageCoverage {
 
 /// One entry per supported language, for `/api/info` and the UI.
 pub fn language_coverage() -> Vec<LanguageCoverage> {
-    let shared_scope = shared::coverage();
     crate::speech::locales::LANGUAGES
         .iter()
         .map(|entry| {
             let (language, locales, default_locale) =
                 (entry.code, entry.locales, entry.default_locale);
             let language_rules = rules::for_language(language);
+            let shared_scope = shared::coverage(language, AbbreviationPolicy::Contextual);
             let features: BTreeMap<&'static str, CoverageLevel> = rules::Feature::ALL
                 .iter()
                 .map(|feature| {

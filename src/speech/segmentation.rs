@@ -3,7 +3,7 @@
 //! Normalize the complete input before segmenting. Whitespace at chunk
 //! boundaries is canonicalized; other characters retain their order.
 //! A grapheme larger than the limit is split to enforce the hard bound.
-use crate::speech::normalization::segments;
+use crate::speech::{SpeechOptions, normalization::segments};
 /// Default hard maximum in Unicode scalar values.
 pub const DEFAULT_MAX_CHUNK_CHARS: usize = 200;
 pub fn split_sentences(text: &str) -> Vec<String> {
@@ -28,6 +28,28 @@ pub fn split_sentences(text: &str) -> Vec<String> {
 /// punctuation stay with the preceding sentence. This shared heuristic is
 /// tailored for speech and does not claim complete Unicode UAX #29 conformance.
 pub fn split_sentences_with_limit(text: &str, max_chars: usize) -> Vec<String> {
+    split_with_boundaries(text, max_chars, segments::sentence_spans)
+}
+
+/// Split prepared text with locale-aware abbreviation boundaries and a hard
+/// character limit. This does not expand or otherwise normalize abbreviations;
+/// it only uses their reviewed contexts to choose sentence boundaries.
+/// [`crate::speech::AbbreviationPolicy::Preserve`] retains legacy boundaries.
+pub fn split_sentences_with_options(
+    text: &str,
+    options: &SpeechOptions,
+    max_chars: usize,
+) -> Vec<String> {
+    split_with_boundaries(text, max_chars, |source| {
+        segments::sentence_spans_with_options(source, options)
+    })
+}
+
+fn split_with_boundaries(
+    text: &str,
+    max_chars: usize,
+    boundaries: impl FnOnce(&str) -> Vec<std::ops::Range<usize>>,
+) -> Vec<String> {
     let max_chars = max_chars.max(1);
     let text = text.trim();
     if text.is_empty() {
@@ -38,7 +60,7 @@ pub fn split_sentences_with_limit(text: &str, max_chars: usize) -> Vec<String> {
     }
 
     // 1. Split at protected sentence boundaries.
-    let sentences: Vec<&str> = segments::sentence_spans(text)
+    let sentences: Vec<&str> = boundaries(text)
         .into_iter()
         .map(|span| text[span].trim())
         .filter(|sentence| !sentence.is_empty())
@@ -127,6 +149,7 @@ fn hard_truncate(text: &str, max_chars: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::speech::{AbbreviationPolicy, SpeechLocale};
 
     fn assert_bounded(chunks: &[String], max_chars: usize) {
         assert!(!chunks.is_empty());
@@ -269,6 +292,59 @@ mod tests {
     }
 
     #[test]
+    fn locale_aware_boundaries_change_chunk_preferences_without_expansion() {
+        let mut options = SpeechOptions::new(SpeechLocale::De);
+        let text = "Nr. ５ bereit. Weiter.";
+        assert_eq!(
+            split_sentences_with_options(text, &options, 10),
+            vec!["Nr. ５", "bereit.", "Weiter."]
+        );
+        assert_eq!(
+            split_sentences_with_limit(text, 10),
+            vec!["Nr.", "５ bereit.", "Weiter."]
+        );
+        options.abbreviation_policy = AbbreviationPolicy::Preserve;
+        assert_eq!(
+            split_sentences_with_options(text, &options, 10),
+            split_sentences_with_limit(text, 10)
+        );
+    }
+
+    #[test]
+    fn option_chunking_preserves_dense_order_and_hard_limits() {
+        for locale in SpeechLocale::ALL {
+            let mut options = SpeechOptions::new(locale);
+            for abbreviation_policy in [
+                AbbreviationPolicy::Contextual,
+                AbbreviationPolicy::Bibliographic,
+                AbbreviationPolicy::Preserve,
+            ] {
+                options.abbreviation_policy = abbreviation_policy;
+                for text in [
+                    "🙂 Dr. Smith. Nr. ５ bereit. डॉ. शर्मा।(株)トヨタ。".repeat(4),
+                    "د.ت. ٢٠٢٠. ص ۱۲۔التالي! ".repeat(4),
+                    "WWW.example.org/甲？x `Dr. Name.\nNr. 5` <x title='د.ت.'>fin. ".repeat(4),
+                ] {
+                    for limit in [0, 1, 7, 24, 80] {
+                        let chunks = split_sentences_with_options(&text, &options, limit);
+                        assert_bounded(&chunks, limit.max(1));
+                        assert_covers(&chunks, &text);
+                        if abbreviation_policy == AbbreviationPolicy::Preserve {
+                            assert_eq!(chunks, split_sentences_with_limit(&text, limit));
+                        }
+                    }
+                }
+            }
+        }
+        let options = SpeechOptions::new(SpeechLocale::En);
+        assert!(split_sentences_with_options(" \n\t ", &options, 7).is_empty());
+        assert_eq!(
+            split_sentences_with_options(" Dr. Smith. ", &options, 30),
+            vec!["Dr. Smith."]
+        );
+    }
+
+    #[test]
     fn sentence_boundaries_still_split() {
         let text = "Primera frase. ¿Segunda? ¡Tercera! Cuarta; quinta\nsexta 。七";
         let chunks = split_sentences_with_limit(text, 16);
@@ -391,7 +467,25 @@ impl Default for SegmentPolicy {
 ///   [`split_sentences_with_limit`]);
 /// - `index`/`total` always reflect the original order.
 pub fn segment_text(text: &str, policy: &SegmentPolicy) -> Vec<Fragment> {
-    let chunks = split_sentences_with_limit(text, policy.max_chars);
+    fragments_from_chunks(split_sentences_with_limit(text, policy.max_chars))
+}
+
+/// Split prepared text into ordered fragments using the selected locale and
+/// abbreviation policy. The source text and written abbreviations are kept;
+/// only sentence boundary selection differs from [`segment_text`].
+pub fn segment_text_with_options(
+    text: &str,
+    options: &SpeechOptions,
+    policy: &SegmentPolicy,
+) -> Vec<Fragment> {
+    fragments_from_chunks(split_sentences_with_options(
+        text,
+        options,
+        policy.max_chars,
+    ))
+}
+
+fn fragments_from_chunks(chunks: Vec<String>) -> Vec<Fragment> {
     let total = chunks.len();
     chunks
         .into_iter()
@@ -403,6 +497,7 @@ pub fn segment_text(text: &str, policy: &SegmentPolicy) -> Vec<Fragment> {
 #[cfg(test)]
 mod fragment_tests {
     use super::*;
+    use crate::speech::{AbbreviationPolicy, SpeechLocale};
 
     fn policy(max_chars: usize) -> SegmentPolicy {
         SegmentPolicy::bounded(max_chars)
@@ -427,6 +522,31 @@ mod fragment_tests {
             }
         );
         assert_eq!(fragments[0].char_count(), "Hola mundo.".chars().count());
+    }
+
+    #[test]
+    fn option_fragments_forward_locale_boundaries_and_keep_indices() {
+        let mut options = SpeechOptions::new(SpeechLocale::De);
+        let text = "Nr. ５ bereit. Weiter.";
+        let fragments = segment_text_with_options(text, &options, &policy(10));
+        assert_eq!(
+            fragments
+                .iter()
+                .map(|part| part.text.as_str())
+                .collect::<Vec<_>>(),
+            vec!["Nr. ５", "bereit.", "Weiter."]
+        );
+        for (index, fragment) in fragments.iter().enumerate() {
+            assert_eq!(fragment.index, index);
+            assert_eq!(fragment.total, 3);
+            assert!(fragment.char_count() <= 10);
+        }
+        options.abbreviation_policy = AbbreviationPolicy::Preserve;
+        assert_eq!(
+            segment_text_with_options(text, &options, &policy(10)),
+            segment_text(text, &policy(10))
+        );
+        assert!(segment_text_with_options(" \n\t ", &options, &policy(10)).is_empty());
     }
 
     #[test]

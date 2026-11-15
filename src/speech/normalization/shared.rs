@@ -4,14 +4,17 @@ use super::{
     ChangeKind, Confidence, CoverageLevel, NormalizationWarning, NormalizeError, NormalizeOptions,
     TextChange, WarningCode,
 };
-use crate::speech::{SpeechLocale, SpeechOptions, SpeechValue};
+use crate::speech::{AbbreviationPolicy, SpeechLocale, SpeechOptions, SpeechValue};
 use std::collections::BTreeMap;
 
 /// Languages covered by the shared parser that have no legacy rule adapter.
 pub(super) fn uses_shared(language: &str) -> bool {
     crate::speech::locales::for_language(language).is_some_and(|entry| !entry.has_versioned_adapter)
 }
-pub(super) fn coverage() -> BTreeMap<String, CoverageLevel> {
+pub(super) fn coverage(
+    language: &str,
+    policy: AbbreviationPolicy,
+) -> BTreeMap<String, CoverageLevel> {
     super::FEATURE_KEYS
         .iter()
         .map(|key| {
@@ -20,6 +23,13 @@ pub(super) fn coverage() -> BTreeMap<String, CoverageLevel> {
                 match *key {
                     "cardinal_numbers" | "decimals" | "percentages" | "currency" | "dates"
                     | "times" | "units" | "ordinals" | "ranges" | "fractions" => {
+                        CoverageLevel::Partial
+                    }
+                    "abbreviations"
+                        if language.parse::<SpeechLocale>().is_ok_and(|locale| {
+                            crate::speech::abbreviations::enabled_coverage(locale, policy) > 0
+                        }) =>
+                    {
                         CoverageLevel::Partial
                     }
                     _ => CoverageLevel::None,
@@ -40,6 +50,7 @@ pub(super) fn classify(
     options.max_input_chars = opts.limits.max_input_chars.max(1);
     options.max_spans = opts.limits.max_input_chars.saturating_add(1).max(1);
     options.reading_style = opts.reading_style;
+    options.abbreviation_policy = opts.abbreviation_policy;
     if let Some(profile) = crate::speech::locales::for_locale(&opts.locale) {
         options.decimal_separator = Some(profile.decimal_separator);
         if opts.locale_explicit {
@@ -62,6 +73,7 @@ pub(super) fn classify(
                     ChangeKind::Number
                 }
             }
+            SpeechValue::Abbreviation { .. } => ChangeKind::Abbreviation,
             SpeechValue::Date { .. } => ChangeKind::Date,
             SpeechValue::Time { .. } => ChangeKind::Time,
             SpeechValue::Currency { .. } => ChangeKind::Currency,
@@ -94,7 +106,11 @@ pub(super) fn classify(
                     start: span.start,
                     end: span.end,
                     replacement: reading.spoken.clone(),
-                    confidence: Confidence::High,
+                    confidence: if kind == ChangeKind::Abbreviation {
+                        Confidence::Medium
+                    } else {
+                        Confidence::High
+                    },
                 });
             }
         } else {

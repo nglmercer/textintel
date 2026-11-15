@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "measured_on": "2026-11-14",
+  "measured_on": "2026-11-15",
   "status": "verified development snapshot; 100% reference agreement remains unresolved",
   "base_commit": "5917360cee6348d55a51fefe9393cc0dd5cc960b",
   "worktree": "measured before commit; source_tree pins the verified inputs",
   "source_tree": {
-    "sha256": "a3f03a107c0e5bc6fd7690416ad5a784ea72a74fb4e8852342a05fdd4b5ca338",
-    "files": 298,
+    "sha256": "04434d4738397c4d5afe80946d01e7690a8eca4bf467c8e4a7f9b2611f2718b4",
+    "files": 303,
     "definition": "SHA256 over sorted relative POSIX path + NUL + file bytes + NUL for all files under src/tests/resources/data/language, plus Cargo.toml/Cargo.lock/build.rs and the four speech corpus/policy JSON inputs (including semantic-values.json). Documentation and generated snapshots excluded.",
-    "parent_commit": "1f6c146dd76f995ded1a0023d99dfdbc8324ada0"
+    "parent_commit": "afa57c907315e3a65ec44cb6213518ea8678d2e0"
   },
   "tools": {
     "rustc": "1.99.0 (b940084d7 2026-09-28)",
@@ -32,56 +32,56 @@
     "semantic_values": "cargo run --target-dir target/evaluation-target --locked --quiet --no-default-features --bin textintel -- eval-speech data/speech/semantic-values.json --json"
   },
   "code_coverage": {
-    "scope": "142 owned instrumented Rust source files; inline unit tests included; tests/benches/examples/registry paths excluded; one absolute path per file; compiler wrapper bypassed",
+    "scope": "144 owned instrumented Rust source files; inline unit tests included; tests/benches/examples/registry paths excluded; one absolute path per file; compiler wrapper bypassed",
     "overall": {
       "lines": {
-        "count": 31954,
-        "covered": 28267,
-        "percent": 88.46153846153847
+        "count": 32796,
+        "covered": 29107,
+        "percent": 88.7516770337846
       },
       "functions": {
-        "count": 3151,
-        "covered": 2768,
-        "percent": 87.8451285306252
+        "count": 3232,
+        "covered": 2849,
+        "percent": 88.14975247524752
       },
       "regions": {
-        "count": 50625,
-        "covered": 44954,
-        "percent": 88.79802469135802
+        "count": 51992,
+        "covered": 46327,
+        "percent": 89.10409293737499
       }
     },
     "speech": {
       "lines": {
-        "count": 15844,
-        "covered": 14892,
-        "percent": 93.99141630901288
+        "count": 16673,
+        "covered": 15720,
+        "percent": 94.28417201463444
       },
       "functions": {
-        "count": 1356,
-        "covered": 1310,
-        "percent": 96.60766961651917
+        "count": 1435,
+        "covered": 1389,
+        "percent": 96.79442508710801
       },
       "regions": {
-        "count": 25649,
-        "covered": 23872,
-        "percent": 93.07185465320285
+        "count": 26995,
+        "covered": 25226,
+        "percent": 93.44693461752176
       }
     },
     "versioned_normalization": {
       "lines": {
-        "count": 5787,
-        "covered": 5445,
-        "percent": 94.09020217729393
+        "count": 5883,
+        "covered": 5543,
+        "percent": 94.22063573006969
       },
       "functions": {
-        "count": 576,
-        "covered": 565,
-        "percent": 98.09027777777777
+        "count": 579,
+        "covered": 568,
+        "percent": 98.10017271157167
       },
       "regions": {
-        "count": 9643,
-        "covered": 9134,
-        "percent": 94.72155968059732
+        "count": 9819,
+        "covered": 9326,
+        "percent": 94.97912211019452
       }
     },
     "selected_file_lines": {
@@ -176,14 +176,14 @@
         "percent": 91.07142857142857
       },
       "src/speech/evaluation.rs": {
-        "count": 449,
-        "covered": 414,
-        "percent": 92.20489977728285
+        "count": 454,
+        "covered": 419,
+        "percent": 92.29074889867842
       },
       "src/speech/expressions.rs": {
         "count": 703,
-        "covered": 624,
-        "percent": 88.7624466571835
+        "covered": 625,
+        "percent": 88.90469416785206
       },
       "src/speech/grammar.rs": {
         "count": 128,
@@ -206,19 +206,19 @@
         "percent": 100.0
       },
       "src/speech/normalization/classify.rs": {
-        "count": 909,
-        "covered": 881,
-        "percent": 96.91969196919692
+        "count": 886,
+        "covered": 858,
+        "percent": 96.83972911963883
       },
       "src/speech/normalization/mod.rs": {
-        "count": 122,
-        "covered": 113,
-        "percent": 92.62295081967213
+        "count": 127,
+        "covered": 120,
+        "percent": 94.48818897637796
       },
       "src/speech/normalization/options.rs": {
-        "count": 136,
-        "covered": 134,
-        "percent": 98.52941176470588
+        "count": 137,
+        "covered": 135,
+        "percent": 98.54014598540147
       },
       "src/speech/normalization/render.rs": {
         "count": 93,
@@ -226,29 +226,29 @@
         "percent": 100.0
       },
       "src/speech/normalization/rules/de.rs": {
-        "count": 318,
-        "covered": 289,
-        "percent": 90.88050314465409
+        "count": 312,
+        "covered": 283,
+        "percent": 90.7051282051282
       },
       "src/speech/normalization/rules/en.rs": {
-        "count": 448,
-        "covered": 394,
-        "percent": 87.94642857142857
+        "count": 441,
+        "covered": 387,
+        "percent": 87.75510204081633
       },
       "src/speech/normalization/rules/es.rs": {
-        "count": 570,
-        "covered": 536,
-        "percent": 94.03508771929825
+        "count": 559,
+        "covered": 525,
+        "percent": 93.91771019677996
       },
       "src/speech/normalization/rules/fr.rs": {
-        "count": 382,
-        "covered": 365,
-        "percent": 95.54973821989529
+        "count": 377,
+        "covered": 360,
+        "percent": 95.49071618037135
       },
       "src/speech/normalization/rules/it.rs": {
-        "count": 428,
-        "covered": 412,
-        "percent": 96.26168224299066
+        "count": 422,
+        "covered": 406,
+        "percent": 96.2085308056872
       },
       "src/speech/normalization/rules/ja.rs": {
         "count": 254,
@@ -261,14 +261,14 @@
         "percent": 91.05058365758755
       },
       "src/speech/normalization/rules/mod.rs": {
-        "count": 219,
-        "covered": 163,
-        "percent": 74.42922374429224
+        "count": 216,
+        "covered": 160,
+        "percent": 74.07407407407408
       },
       "src/speech/normalization/rules/pt.rs": {
-        "count": 530,
-        "covered": 506,
-        "percent": 95.47169811320755
+        "count": 521,
+        "covered": 497,
+        "percent": 95.39347408829174
       },
       "src/speech/normalization/rules/ru.rs": {
         "count": 316,
@@ -281,14 +281,14 @@
         "percent": 94.63087248322148
       },
       "src/speech/normalization/segments.rs": {
-        "count": 353,
-        "covered": 351,
-        "percent": 99.43342776203966
+        "count": 500,
+        "covered": 498,
+        "percent": 99.6
       },
       "src/speech/normalization/shared.rs": {
-        "count": 154,
-        "covered": 146,
-        "percent": 94.8051948051948
+        "count": 167,
+        "covered": 159,
+        "percent": 95.20958083832335
       },
       "src/speech/numbers.rs": {
         "count": 1052,
@@ -296,14 +296,14 @@
         "percent": 96.00760456273764
       },
       "src/speech/parser.rs": {
-        "count": 435,
-        "covered": 428,
-        "percent": 98.39080459770115
+        "count": 451,
+        "covered": 444,
+        "percent": 98.4478935698448
       },
       "src/speech/quantities.rs": {
         "count": 1366,
-        "covered": 1270,
-        "percent": 92.97218155197658
+        "covered": 1268,
+        "percent": 92.82576866764275
       },
       "src/speech/resource_profiles.rs": {
         "count": 187,
@@ -311,9 +311,9 @@
         "percent": 85.02673796791444
       },
       "src/speech/segmentation.rs": {
-        "count": 332,
-        "covered": 326,
-        "percent": 98.19277108433735
+        "count": 423,
+        "covered": 417,
+        "percent": 98.58156028368795
       },
       "src/speech/shapes.rs": {
         "count": 521,
@@ -326,9 +326,9 @@
         "percent": 92.72168118913378
       },
       "src/speech/types.rs": {
-        "count": 164,
-        "covered": 145,
-        "percent": 88.41463414634147
+        "count": 181,
+        "covered": 162,
+        "percent": 89.50276243093923
       },
       "src/speech/variants.rs": {
         "count": 1208,
@@ -336,14 +336,19 @@
         "percent": 96.6887417218543
       },
       "src/speech/verbalize.rs": {
-        "count": 683,
-        "covered": 611,
-        "percent": 89.45827232796486
+        "count": 712,
+        "covered": 640,
+        "percent": 89.88764044943821
+      },
+      "src/speech/abbreviations.rs": {
+        "count": 531,
+        "covered": 529,
+        "percent": 99.62335216572505
       }
     },
     "branches_measured": false,
     "mcdc_measured": false,
-    "raw_report_sha256": "fcc91cdcdd5e2ee25534bef81774bcc25f7da62c4f295dd6d656a50b346abcc0",
+    "raw_report_sha256": "26e8ea2a9383f3add151bb68801a09a3d8653da29018615e6f92848673bde64f",
     "phonetic": {
       "lines": {
         "count": 1073,
@@ -364,13 +369,13 @@
   },
   "checks": {
     "all_feature_all_target_tests": {
-      "passed": 740,
+      "passed": 773,
       "failed": 0,
       "ignored": 0,
       "exit_code": 0
     },
     "instrumented_tests": {
-      "passed": 740,
+      "passed": 773,
       "failed": 0,
       "ignored": 0,
       "exit_code": 0
@@ -7155,7 +7160,7 @@
       "mrr": 0.8473219043975704,
       "ndcg_at_10": 0.858619718491046
     },
-    "raw_report_sha256": "5f3a901bc29ed0a17778e36c1b68a33edaba0a0625e9ee62768c6e164771f21c"
+    "raw_report_sha256": "6e68e0f0d862d40aa94b328bc003ba64a5a989c47906e61d4a24e8a8688b27b4"
   },
   "library_quality_gate_failures": [
     "gate failure: similarity.roc_auc=0.812 below minimum 0.900",
@@ -7446,7 +7451,7 @@
   },
   "clock_meridiem_regression_audit": {
     "scope": "Semantic distinctness regression for 3:15 AM versus 3:15 PM in the twenty supported languages; not native linguistic, pronunciation or acoustic accuracy.",
-    "measured_at_utc": "2026-11-14T14:56:49.577038+00:00",
+    "measured_at_utc": "2026-11-15T17:25:39.642084+00:00",
     "options": {
       "interpret_as": "time",
       "reading_style": "natural",
@@ -7454,7 +7459,7 @@
     },
     "am_source": "3:15am",
     "pm_source": "3:15pm",
-    "source_tree_sha256": "a3f03a107c0e5bc6fd7690416ad5a784ea72a74fb4e8852342a05fdd4b5ca338",
+    "source_tree_sha256": "04434d4738397c4d5afe80946d01e7690a8eca4bf467c8e4a7f9b2611f2718b4",
     "before": {
       "scope": "Pre-fix CLI observation; binary/source fingerprint was not captured.",
       "locales": 20,
@@ -7749,7 +7754,7 @@
           "collapsed": false
         }
       ],
-      "binary_sha256": "94fa88b93b02e3c8eedc73f8d456f88833ac9f653684ef99784ccd4c8c6c64ba",
+      "binary_sha256": "f953b5141624d4e9f55b44d7a750f316f2828a6e42cf7a3649920061860be553",
       "binary_unchanged_during_probe": true,
       "raw_report_sha256": "5acc335d177183daa0cc8dc8f18dc9b51ed321260f7a6bda666449ad6bf0accc"
     },
@@ -7768,9 +7773,9 @@
   },
   "subsecond_clock_regression_audit": {
     "scope": "CLI integration regression for exact fractional fields and distinct spoken precision; not native linguistic or pronunciation accuracy.",
-    "measured_at_utc": "2026-11-14T14:56:53.315144+00:00",
-    "source_tree_sha256": "a3f03a107c0e5bc6fd7690416ad5a784ea72a74fb4e8852342a05fdd4b5ca338",
-    "binary_sha256": "94fa88b93b02e3c8eedc73f8d456f88833ac9f653684ef99784ccd4c8c6c64ba",
+    "measured_at_utc": "2026-11-15T17:25:41.370543+00:00",
+    "source_tree_sha256": "04434d4738397c4d5afe80946d01e7690a8eca4bf467c8e4a7f9b2611f2718b4",
+    "binary_sha256": "f953b5141624d4e9f55b44d7a750f316f2828a6e42cf7a3649920061860be553",
     "binary_unchanged_during_probe": true,
     "options": {
       "reading_style": "natural",

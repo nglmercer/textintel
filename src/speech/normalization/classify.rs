@@ -12,12 +12,12 @@
 
 use super::lexer::{Field, LexicalSource, is_protected_identifier};
 use super::rules::{
-    AbbrevContext, Amount, Conventions, Currency, LanguageRules, Meridiem, OrdinalMarker,
-    UNIT_FORMS, Unit, unit_from_str, valid_date,
+    Amount, Conventions, Currency, LanguageRules, Meridiem, OrdinalMarker, UNIT_FORMS, Unit,
+    unit_from_str, valid_date,
 };
 use super::{
-    ChangeKind, Confidence, NormalizationWarning, NormalizeOptions, ReadingStyle, TextChange,
-    WarningCode,
+    AbbreviationPolicy, ChangeKind, Confidence, NormalizationWarning, NormalizeOptions,
+    ReadingStyle, TextChange, WarningCode,
 };
 use chrono::{Datelike, Timelike};
 
@@ -362,6 +362,8 @@ struct Classifier<'a> {
     rules: &'a dyn LanguageRules,
     conv: Conventions,
     locale: &'a str,
+    language: &'a str,
+    abbreviation_policy: AbbreviationPolicy,
     locale_explicit: bool,
     style: ReadingStyle,
     fields: Vec<Field>,
@@ -383,6 +385,8 @@ pub(crate) fn classify(
         rules,
         conv,
         locale: &opts.locale,
+        language: &opts.language,
+        abbreviation_policy: opts.abbreviation_policy,
         locale_explicit: opts.locale_explicit,
         style: opts.reading_style,
         fields: source.fields(),
@@ -436,20 +440,12 @@ impl<'a> Classifier<'a> {
     /// sentence: followed by `, ; : )`, or by a lowercase word or digit on
     /// the same line.
     fn period_continues(&self, index: usize, dot: usize) -> bool {
-        let field = self.fields[index];
-        let after = &self.text[dot + 1..field.end];
-        if let Some(c) = after.chars().next() {
-            return matches!(c, ',' | ';' | ':' | ')');
-        }
-        let Some(next) = self.fields.get(index + 1) else {
-            return false;
-        };
-        let gap = &self.text[field.end..next.start];
-        !gap.contains('\n')
-            && self.text[next.start..]
-                .chars()
-                .next()
-                .is_some_and(|c| c.is_lowercase() || c.is_ascii_digit())
+        crate::speech::abbreviations::compatibility::period_continues(
+            self.text,
+            &self.fields,
+            index,
+            dot,
+        )
     }
 
     fn change(&mut self, kind: ChangeKind, start: usize, end: usize, replacement: String) {
@@ -509,37 +505,19 @@ impl<'a> Classifier<'a> {
     }
 
     fn abbreviation(&mut self, index: usize) -> Option<usize> {
-        let field = self.fields[index];
-        let core = self.core(index);
-        if !self.trail(index).starts_with('.') {
+        if self.abbreviation_policy == AbbreviationPolicy::Preserve {
             return None;
         }
-        let (expansion, context) = self.rules.abbreviation(core)?;
-        let dot = field.core_end;
-        let after_dot_empty = dot + 1 == field.end;
-        let next_first = self.fields.get(index + 1).and_then(|next| {
-            let gap = &self.text[field.end..next.start];
-            (!gap.contains('\n') && next.bare_start())
-                .then(|| self.text[next.start..].chars().next())
-                .flatten()
-        });
-        let ok = match context {
-            AbbrevContext::CapitalizedWord => {
-                after_dot_empty && next_first.is_some_and(char::is_uppercase)
-            }
-            AbbrevContext::CapitalizedWordOrNumber => {
-                after_dot_empty
-                    && next_first.is_some_and(|c| c.is_uppercase() || c.is_ascii_digit())
-            }
-            AbbrevContext::NotSentenceEnd => self.period_continues(index, dot),
-        };
-        if !ok {
-            return None;
-        }
+        let (end, expansion) = crate::speech::abbreviations::compatibility::legacy_match(
+            self.text,
+            &self.fields,
+            index,
+            self.language,
+        )?;
         self.change(
             ChangeKind::Abbreviation,
-            field.core_start,
-            dot + 1,
+            self.fields[index].core_start,
+            end,
             expansion.to_string(),
         );
         Some(index + 1)

@@ -22,10 +22,7 @@
 //! - Dot dates (`26.10.2026`, `26.10.`): the classifier has no hook for
 //!   them; they are preserved.
 
-use super::{
-    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
-    Unit,
-};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker, Unit};
 use crate::speech::normalization::CoverageLevel;
 use crate::speech::{numbers, types::SpeechLocale};
 
@@ -315,14 +312,6 @@ impl LanguageRules for German {
         // German ordinals are written `3.`; the markers the classifier
         // recognizes (`º`, `ª`, `st`) are not German.
         None
-    }
-
-    fn abbreviation(&self, word: &str) -> Option<(&'static str, AbbrevContext)> {
-        Some(match word {
-            "Dr" => ("Doktor", AbbrevContext::CapitalizedWord),
-            "Nr" => ("Nummer", AbbrevContext::CapitalizedWordOrNumber),
-            _ => return None,
-        })
     }
 }
 

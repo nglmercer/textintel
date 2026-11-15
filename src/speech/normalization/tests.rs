@@ -324,7 +324,7 @@ fn spec_preview_example() {
         "S/ 150,50"
     );
     assert!(result.warnings.is_empty());
-    assert_eq!(result.ruleset_version, "tn-v3");
+    assert_eq!(result.ruleset_version, "tn-v4");
 }
 
 #[test]
@@ -646,12 +646,15 @@ fn speech_text_identity() {
     let o = opts("es", Some("es-PE"));
     let prepared = SpeechText::prepare("Son 5.", &o).unwrap();
     assert_eq!(prepared.as_str(), "Son cinco.");
-    assert_eq!(prepared.identity(), "tn-v3|auto|es|es-PE|precise");
+    assert_eq!(
+        prepared.identity(),
+        "tn-v4|auto|es|es-PE|precise|abbr=contextual"
+    );
     assert!(prepared.changed());
     let mut off = o.clone();
     off.mode = NormalizationMode::Off;
     let raw = SpeechText::prepare("Son 5.", &off).unwrap();
-    assert_eq!(raw.identity(), "tn-v3|off|es|es-PE|precise");
+    assert_eq!(raw.identity(), "tn-v4|off|es|es-PE|precise|abbr=contextual");
     assert!(!raw.changed());
     assert_eq!(raw.into_string(), "Son 5.");
 }
@@ -1265,9 +1268,12 @@ fn identity_includes_the_reading_style() {
     ] {
         let o = styled_opts("es", Some("es-PE"), style);
         let prepared = SpeechText::prepare("Son 5.", &o).unwrap();
-        assert_eq!(prepared.identity(), format!("tn-v3|auto|es|es-PE|{name}"));
+        assert_eq!(
+            prepared.identity(),
+            format!("tn-v4|auto|es|es-PE|{name}|abbr=contextual")
+        );
     }
-    assert_eq!(RULESET_VERSION, "tn-v3");
+    assert_eq!(RULESET_VERSION, "tn-v4");
     assert_eq!(ReadingStyle::parse("literal"), Some(ReadingStyle::Precise));
     assert_eq!(ReadingStyle::parse("digit"), Some(ReadingStyle::Digits));
     assert_eq!(
@@ -1275,4 +1281,328 @@ fn identity_includes_the_reading_style() {
         Some(ReadingStyle::Natural)
     );
     assert_eq!(ReadingStyle::parse("loud"), None);
+}
+
+#[test]
+fn common_abbreviation_catalogue_preserves_all_twenty_legacy_expansions_and_contexts() {
+    // Independent compatibility contract: these were the complete legacy
+    // entries before the catalogue migration. 0=titled name, 1=name/number,
+    // 2=sentence continuation. Do not infer this gold from catalogue entries.
+    let entries = [
+        ("en", "Dr", "doctor", 0),
+        ("en", "Mr", "mister", 0),
+        ("en", "etc", "etcetera", 2),
+        ("es", "Dr", "doctor", 0),
+        ("es", "Dra", "doctora", 0),
+        ("es", "Sr", "señor", 0),
+        ("es", "Sra", "señora", 0),
+        ("es", "Srta", "señorita", 0),
+        ("es", "Av", "avenida", 1),
+        ("es", "etc", "etcétera", 2),
+        ("fr", "Dr", "docteur", 0),
+        ("de", "Dr", "Doktor", 0),
+        ("de", "Nr", "Nummer", 1),
+        ("pt", "Dr", "doutor", 0),
+        ("pt", "Dra", "doutora", 0),
+        ("pt", "Sr", "senhor", 0),
+        ("pt", "Sra", "senhora", 0),
+        ("pt", "Av", "avenida", 1),
+        ("it", "Dott", "dottor", 0),
+        ("it", "Sig", "signor", 0),
+    ];
+    // Written prefix, suffix, name/number match, continuation match. Legacy
+    // policy recognizes Unicode case but only ASCII digits, blocks LF, and
+    // intentionally does not treat CR alone as a line boundary.
+    let contexts = [
+        ("", ". García", true, false),
+        ("", ". Émile", true, false),
+        ("", ". garcía", false, true),
+        ("", ". 東京", false, false),
+        ("", ". 28", false, true),
+        ("", ". ٢٨", false, false),
+        ("", ".\nGarcía", false, false),
+        ("", ".\r\nGarcía", false, false),
+        ("", ".\rGarcía", true, false),
+        ("", ".\tGarcía", true, false),
+        ("", ".\u{a0}García", true, false),
+        ("", ".\u{202f}García", true, false),
+        ("", ". \"García\"", false, false),
+        ("\"", ". García\"", true, false),
+        ("", "., todos", false, true),
+        ("", ".; todos", false, true),
+        ("", ".: todos", false, true),
+        ("(", ".) todos", false, true),
+        ("", ".\ntodos", false, false),
+        ("", ".", false, false),
+        ("", ".. todos", false, false),
+        ("`", ". García`", false, false),
+        ("<b ", ". García>", false, false),
+        ("https://", ".example/García", false, false),
+        ("x", ". García", false, false),
+        ("", " García", false, false),
+        ("", ". `García`", false, false),
+    ];
+    for (language, word, expansion, context) in entries {
+        for style in [
+            ReadingStyle::Precise,
+            ReadingStyle::Natural,
+            ReadingStyle::Digits,
+        ] {
+            let mut options = opts(language, None);
+            options.reading_style = style;
+            for (prefix, suffix, name, continuation) in contexts {
+                let source = format!("{prefix}{word}{suffix}");
+                let matched = if context == 2 {
+                    continuation
+                } else {
+                    name || (context == 1 && suffix == ". 28")
+                };
+                let result = normalize(&source, &options).unwrap();
+                let changes: Vec<_> = result
+                    .changes
+                    .iter()
+                    .filter(|change| change.kind == ChangeKind::Abbreviation)
+                    .collect();
+                assert_eq!(
+                    changes.len(),
+                    usize::from(matched),
+                    "{language} {style:?} {source:?}"
+                );
+                if matched {
+                    let change = changes[0];
+                    assert_eq!(change.start, prefix.len(), "{source:?}");
+                    assert_eq!(change.end, prefix.len() + word.len() + 1, "{source:?}");
+                    assert_eq!(change.replacement, expansion, "{source:?}");
+                    assert_eq!(change.confidence, Confidence::Medium);
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn abbreviation_catalogue_never_broadens_the_existing_versioned_feature() {
+    // New contextual entries belong to typed speech. Legacy languages already
+    // report Partial and must keep their original acceptance boundary.
+    for (language, source) in [
+        ("en", "Prof. Smith"),
+        ("es", "Ud. García"),
+        ("fr", "Mme. Dupont"),
+        ("de", "Prof. Müller"),
+        ("pt", "Prof. Silva"),
+        ("it", "Prof. Rossi"),
+    ] {
+        let result = normalize(source, &opts(language, None)).unwrap();
+        assert_eq!(result.spoken, source);
+        assert!(
+            !result
+                .changes
+                .iter()
+                .any(|change| change.kind == ChangeKind::Abbreviation)
+        );
+        assert_eq!(result.coverage["abbreviations"], CoverageLevel::Partial);
+    }
+}
+
+#[test]
+fn shared_abbreviation_coverage_tracks_the_selected_policy() {
+    for locale in crate::speech::SpeechLocale::ALL {
+        for policy in [
+            AbbreviationPolicy::Contextual,
+            AbbreviationPolicy::Preserve,
+            AbbreviationPolicy::Bibliographic,
+        ] {
+            let expected = if crate::speech::abbreviations::enabled_coverage(locale, policy) > 0 {
+                CoverageLevel::Partial
+            } else {
+                CoverageLevel::None
+            };
+            assert_eq!(
+                super::shared::coverage(locale.code(), policy)["abbreviations"],
+                expected
+            );
+        }
+    }
+    for language in ["zz", "it"] {
+        assert_eq!(
+            super::shared::coverage(language, AbbreviationPolicy::Contextual)["abbreviations"],
+            CoverageLevel::None
+        );
+    }
+    for language in ["ar", "ur", "zh", "te"] {
+        assert_eq!(
+            language_coverage()
+                .iter()
+                .find(|entry| entry.language == language)
+                .unwrap()
+                .features["abbreviations"],
+            CoverageLevel::None
+        );
+    }
+}
+
+#[test]
+fn newly_supported_versioned_abbreviations_use_the_shared_contextual_pipeline() {
+    // EYD V distinguishes the academic doctorate from the medical title by
+    // case. Russian г-н is a treatment, not a numeric or currency spelling.
+    for (language, source, expected) in [
+        ("id", "Dr. Budi", "doktor Budi"),
+        ("id", "dr. Budi", "dokter Budi"),
+        ("ru", "г-н Иванов", "господин Иванов"),
+    ] {
+        let result = normalize(source, &opts(language, None)).unwrap();
+        assert_eq!(result.spoken, expected);
+        assert_eq!(result.changes.len(), 1);
+        assert_eq!(result.changes[0].kind, ChangeKind::Abbreviation);
+        assert_eq!(result.changes[0].confidence, Confidence::Medium);
+        assert_eq!(result.ruleset_version, "tn-v4");
+        assert_eq!(result.coverage["abbreviations"], CoverageLevel::Partial);
+        assert!(result.warnings.is_empty());
+    }
+    for source in [
+        "dr. budi",
+        "dr.\nBudi",
+        "`dr. Budi`",
+        "<x title='dr. Budi'>",
+    ] {
+        assert_eq!(spoken(source, "id", None), source);
+    }
+}
+
+#[test]
+fn abbreviation_preserve_disables_legacy_and_shared_expansion_without_disabling_numbers() {
+    for (language, source) in [
+        ("en", "Dr. Smith"),
+        ("es", "Dra. García"),
+        ("fr", "Dr. Dupont"),
+        ("de", "Dr. Müller"),
+        ("pt", "Dra. Silva"),
+        ("it", "Dott. Rossi"),
+        ("id", "dr. Budi"),
+        ("ru", "г-н Иванов"),
+    ] {
+        let mut options = opts(language, None);
+        options.abbreviation_policy = AbbreviationPolicy::Preserve;
+        let result = normalize(source, &options).unwrap();
+        assert_eq!(result.spoken, source, "{language}");
+        assert!(result.changes.is_empty());
+        assert_eq!(result.coverage["abbreviations"], CoverageLevel::None);
+        assert_eq!(result.abbreviation_policy, AbbreviationPolicy::Preserve);
+    }
+    for locale in crate::speech::SpeechLocale::ALL {
+        let mut options = opts(locale.code(), None);
+        options.abbreviation_policy = AbbreviationPolicy::Preserve;
+        assert_eq!(
+            normalize("plain", &options).unwrap().coverage["abbreviations"],
+            CoverageLevel::None
+        );
+    }
+    let mut options = opts("en", None);
+    options.abbreviation_policy = AbbreviationPolicy::Preserve;
+    let result = normalize("Dr. Smith has 2", &options).unwrap();
+    assert_eq!(result.spoken, "Dr. Smith has two");
+    assert_eq!(result.changes.len(), 1);
+    assert_eq!(result.changes[0].kind, ChangeKind::Number);
+}
+
+#[test]
+fn bibliography_is_explicitly_available_in_the_versioned_frontend() {
+    for (language, source, expected) in [
+        ("ar", "د.ت.", "دون تاريخ النشر"),
+        ("ar", "(د.م.)", "(دون مكان النشر)"),
+        ("ur", "ص ۲", "صفحہ نمبر دو"),
+    ] {
+        let mut options = opts(language, None);
+        assert_eq!(options.abbreviation_policy, AbbreviationPolicy::Contextual);
+        let ordinary = normalize(source, &options).unwrap();
+        assert!(
+            !ordinary
+                .changes
+                .iter()
+                .any(|change| change.kind == ChangeKind::Abbreviation)
+        );
+        assert_eq!(ordinary.coverage["abbreviations"], CoverageLevel::None);
+        options.abbreviation_policy = AbbreviationPolicy::Bibliographic;
+        let result = normalize(source, &options).unwrap();
+        assert_eq!(result.spoken, expected, "{language} {source}");
+        assert_eq!(result.coverage["abbreviations"], CoverageLevel::Partial);
+        assert!(
+            result
+                .changes
+                .iter()
+                .any(|change| change.kind == ChangeKind::Abbreviation)
+        );
+        assert_eq!(
+            result.abbreviation_policy,
+            AbbreviationPolicy::Bibliographic
+        );
+        assert_eq!(
+            serde_json::to_value(&result).unwrap()["abbreviation_policy"],
+            "bibliographic"
+        );
+        options.mode = NormalizationMode::Off;
+        assert_eq!(normalize(source, &options).unwrap().spoken, source);
+    }
+    let mut options = opts("ur", None);
+    options.abbreviation_policy = AbbreviationPolicy::Bibliographic;
+    assert_eq!(normalize("ص الف", &options).unwrap().spoken, "ص الف");
+}
+
+#[test]
+fn cache_identity_separates_abbreviation_policy_even_for_identical_spoken_text() {
+    let mut identities = std::collections::BTreeSet::new();
+    for style in [
+        ReadingStyle::Precise,
+        ReadingStyle::Natural,
+        ReadingStyle::Digits,
+    ] {
+        for policy in [
+            AbbreviationPolicy::Contextual,
+            AbbreviationPolicy::Preserve,
+            AbbreviationPolicy::Bibliographic,
+        ] {
+            let mut options = styled_opts("es", Some("es-PE"), style);
+            options.abbreviation_policy = policy;
+            let prepared = SpeechText::prepare("texto", &options).unwrap();
+            assert_eq!(prepared.as_str(), "texto");
+            assert_eq!(
+                prepared.identity(),
+                format!(
+                    "tn-v4|auto|es|es-PE|{}|abbr={}",
+                    style.as_str(),
+                    policy.as_str()
+                )
+            );
+            assert!(identities.insert(prepared.identity().to_string()));
+        }
+    }
+    assert_eq!(identities.len(), 9);
+}
+
+#[test]
+fn versioned_abbreviation_report_defaults_preserve_old_json() {
+    let old = r#"{"spoken":"text","changes":[],"warnings":[],"coverage":{},"mode":"auto","language":"en","locale":"en-US","ruleset_version":"tn-v4"}"#;
+    let report: NormalizedText = serde_json::from_str(old).unwrap();
+    assert_eq!(report.abbreviation_policy, AbbreviationPolicy::Contextual);
+    assert_eq!(
+        serde_json::to_value(report).unwrap(),
+        serde_json::from_str::<serde_json::Value>(old).unwrap()
+    );
+    for (source, policy) in [
+        (
+            r#"{"spoken":"text","changes":[],"warnings":[],"coverage":{},"mode":"auto","language":"en","locale":"en-US","ruleset_version":"tn-v4","abbreviation_policy":"preserve"}"#,
+            AbbreviationPolicy::Preserve,
+        ),
+        (
+            r#"{"spoken":"text","changes":[],"warnings":[],"coverage":{},"mode":"auto","language":"en","locale":"en-US","ruleset_version":"tn-v4","abbreviation_policy":"bibliographic"}"#,
+            AbbreviationPolicy::Bibliographic,
+        ),
+    ] {
+        let report: NormalizedText = serde_json::from_str(source).unwrap();
+        assert_eq!(report.abbreviation_policy, policy);
+        assert_eq!(
+            serde_json::to_value(report).unwrap(),
+            serde_json::from_str::<serde_json::Value>(source).unwrap()
+        );
+    }
 }

@@ -14,10 +14,7 @@
 //! A bare integer ending in `uno` before an unknown noun (`1 casa`,
 //! `21 case`) is preserved as ambiguous (un/uno/una).
 
-use super::{
-    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
-    Unit,
-};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker, Unit};
 use crate::speech::normalization::CoverageLevel;
 
 /// Italian rule set.
@@ -471,14 +468,6 @@ impl LanguageRules for Italian {
         out.push(' ');
         out.push_str(if amount.is_one() { singular } else { plural });
         Some(out)
-    }
-
-    fn abbreviation(&self, word: &str) -> Option<(&'static str, AbbrevContext)> {
-        Some(match word {
-            "Dott" => ("dottor", AbbrevContext::CapitalizedWord),
-            "Sig" => ("signor", AbbrevContext::CapitalizedWord),
-            _ => return None,
-        })
     }
 }
 

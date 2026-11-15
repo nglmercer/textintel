@@ -247,6 +247,36 @@ impl InvalidDatePolicy {
         }
     }
 }
+/// Context-bounded abbreviation expansion. Bibliographic conventions require
+/// an explicit opt-in; ordinary text never inherits chat/slang substitutions.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AbbreviationPolicy {
+    Preserve,
+    #[default]
+    Contextual,
+    Bibliographic,
+}
+impl AbbreviationPolicy {
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "preserve" => Some(Self::Preserve),
+            "contextual" => Some(Self::Contextual),
+            "bibliographic" => Some(Self::Bibliographic),
+            _ => None,
+        }
+    }
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Preserve => "preserve",
+            Self::Contextual => "contextual",
+            Self::Bibliographic => "bibliographic",
+        }
+    }
+    pub(crate) fn is_contextual(&self) -> bool {
+        *self == Self::Contextual
+    }
+}
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SpeechOptions {
     pub locale: SpeechLocale,
@@ -265,6 +295,8 @@ pub struct SpeechOptions {
     pub clock_policy: ClockPolicy,
     #[serde(default)]
     pub invalid_date_policy: InvalidDatePolicy,
+    #[serde(default, skip_serializing_if = "AbbreviationPolicy::is_contextual")]
+    pub abbreviation_policy: AbbreviationPolicy,
     /// Explicit ISO currency for ambiguous symbols; absent means preserve ambiguity.
     #[serde(default)]
     pub default_currency: Option<String>,
@@ -339,6 +371,7 @@ impl SpeechOptions {
             currency_naming: CurrencyNaming::Style,
             clock_policy: ClockPolicy::Strict,
             invalid_date_policy: InvalidDatePolicy::Preserve,
+            abbreviation_policy: AbbreviationPolicy::Contextual,
             default_currency: None,
             currency_symbols: Default::default(),
             unit_aliases: Default::default(),
@@ -363,6 +396,10 @@ pub enum NumberReading {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum SpeechValue {
     Text,
+    /// A bounded catalog entry, never an arbitrary user-provided replacement.
+    Abbreviation {
+        id: String,
+    },
     Number {
         value: NumberValue,
         reading: NumberReading,

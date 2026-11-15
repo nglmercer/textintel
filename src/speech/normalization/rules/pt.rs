@@ -22,10 +22,7 @@
 //! part has exactly three digits (`234,50`) is preserved: it may be the
 //! tail of a space-grouped number.
 
-use super::{
-    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
-    Unit,
-};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker, Unit};
 use crate::speech::normalization::CoverageLevel;
 use crate::speech::{numbers, types::SpeechLocale};
 
@@ -443,17 +440,6 @@ impl LanguageRules for Portuguese {
             out.push_str(if to == 1 { singular } else { plural });
         }
         Some(out)
-    }
-
-    fn abbreviation(&self, word: &str) -> Option<(&'static str, AbbrevContext)> {
-        Some(match word {
-            "Dr" => ("doutor", AbbrevContext::CapitalizedWord),
-            "Dra" => ("doutora", AbbrevContext::CapitalizedWord),
-            "Sr" => ("senhor", AbbrevContext::CapitalizedWord),
-            "Sra" => ("senhora", AbbrevContext::CapitalizedWord),
-            "Av" => ("avenida", AbbrevContext::CapitalizedWordOrNumber),
-            _ => return None,
-        })
     }
 }
 

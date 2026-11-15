@@ -1,6 +1,6 @@
 # Coverage and speech validation
 
-## Current working tree — 2026-11-14
+## Current working tree — 2026-11-15
 
 The original NeMo gold remains unchanged. The evaluator keeps literal matches,
 additional bounded variants, and their sum in separate fields. All 544 cases
@@ -27,6 +27,9 @@ is needed to estimate precision across the twenty-language TTS surface.
 
 The authored regression matches the annotated spans in **209/209 cases**,
 including all 205 expected spans, and passes **25/25 complete spoken golds**.
+The current policy reports 173/209 fully supported authored readings; this is a
+rendering diagnostic and does not add spoken gold. The catalog adds 24 sourced
+forms. Its 44-entry inventory still has two typed locales with no entries.
 Its other cases have no spoken gold and are not counted as correct utterances.
 `parse_exact` compares annotated span offsets, source text and kind. These
 legacy cases have no complete value annotations; their parse metric is not
@@ -68,25 +71,26 @@ the separate variant metric.
 
 ### Instrumented source coverage
 
-The fresh report contains 142 owned source files, with one absolute source path
+The fresh report contains 144 owned source files, with one absolute source path
 per file. The earlier cached report containing `/src/src/...` aliases was discarded.
 
 | Measurement | Covered / instrumented | Percent |
 |---|---:|---:|
-| Entire library and CLI, lines | 28,267 / 31,954 | 88.46% |
-| Entire library and CLI, functions | 2,768 / 3,151 | 87.85% |
-| Speech modules, lines | 14,892 / 15,844 | 93.99% |
+| Entire library and CLI, lines | 29,107 / 32,796 | 88.75% |
+| Entire library and CLI, functions | 2,849 / 3,232 | 88.15% |
+| Speech modules, lines | 15,720 / 16,673 | 94.28% |
 | Phonetic modules, lines | 994 / 1,073 | 92.64% |
 | eSpeak adapter, lines | 432 / 484 | 89.26% |
-| Typed speech parser, lines | 428 / 435 | 98.39% |
-| Semantic value and span evaluation, lines | 414 / 449 | 92.20% |
+| Typed speech parser, lines | 444 / 451 | 98.45% |
+| Semantic value and span evaluation, lines | 419 / 454 | 92.29% |
 | Exact number composition, lines | 1,010 / 1,052 | 96.01% |
-| Quantity grammar, lines | 1,270 / 1,366 | 92.97% |
+| Quantity grammar, lines | 1,268 / 1,366 | 92.83% |
 | Temporal grammar, lines | 1,809 / 1,951 | 92.72% |
 | Reviewed variant comparator, lines | 1,168 / 1,208 | 96.69% |
 | Shared scientific/duration/fraction/range shapes, lines | 515 / 521 | 98.85% |
 | Regional conventions registry, lines | 35 / 35 | 100.00% |
 | Shared speech lexer, lines | 374 / 375 | 99.73% |
+| Speech abbreviation matcher, lines | 529 / 531 | 99.62% |
 
 The earlier baseline at `5917360` measured 21,013/24,437 lines (85.99%) and
 2,215/2,585 functions (85.69%). Executable source grows as grammar is added;
@@ -98,7 +102,7 @@ establish linguistic or acoustic accuracy.
 
 ### Verification and remaining limits
 
-The complete all-feature/all-target suite passes **740 tests**, as does the
+The complete all-feature/all-target suite passes **773 tests**, as does the
 separate instrumented run. Clippy with
 warnings denied, generated documentation and Rust 1.90 all-target checks without
 default features, both with and without `phonetic-espeak`, pass. Shared-core

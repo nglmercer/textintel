@@ -63,6 +63,7 @@ impl SpeechCorpus {
                     || !matches!(
                         span.kind.as_str(),
                         "number"
+                            | "abbreviation"
                             | "labelled_number"
                             | "scientific"
                             | "fraction"
@@ -178,6 +179,8 @@ pub struct SpeechEvaluationPolicy {
     pub currency_naming: Option<CurrencyNaming>,
     pub clock_policy: Option<ClockPolicy>,
     pub invalid_date_policy: Option<InvalidDatePolicy>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub abbreviation_policy: Option<AbbreviationPolicy>,
     /// Use the caller-supplied corpus category as a semantic say-as hint.
     pub category_hints: bool,
     pub locales: BTreeMap<String, SpeechLocaleEvaluationPolicy>,
@@ -319,6 +322,7 @@ pub struct SpeechEvalReport {
 pub fn speech_kind(value: &SpeechValue) -> &'static str {
     match value {
         SpeechValue::Text => "text",
+        SpeechValue::Abbreviation { .. } => "abbreviation",
         SpeechValue::InflectedNumber { .. } => "number",
         SpeechValue::MeasuredExpression { .. } => "measure",
         SpeechValue::LabelledNumber { .. } => "labelled_number",
@@ -352,6 +356,9 @@ fn options_for_case(case: &SpeechCase, policy: &SpeechEvaluationPolicy) -> Speec
     }
     if let Some(invalid_date_policy) = policy.invalid_date_policy {
         options.invalid_date_policy = invalid_date_policy;
+    }
+    if let Some(abbreviation_policy) = policy.abbreviation_policy {
+        options.abbreviation_policy = abbreviation_policy;
     }
     if policy.category_hints {
         options.interpret_as = match case.category.as_str() {

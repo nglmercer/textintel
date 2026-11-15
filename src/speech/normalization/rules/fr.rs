@@ -19,10 +19,7 @@
 //! French grammar requires. A bare integer ending in "un" before an unknown
 //! noun (`1 maison`, `21 voitures`) is preserved as ambiguous (un/une).
 
-use super::{
-    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
-    Unit,
-};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker, Unit};
 use crate::speech::normalization::CoverageLevel;
 use crate::speech::{numbers, types::SpeechLocale};
 
@@ -349,13 +346,6 @@ impl LanguageRules for French {
         // French markers (`1er`, `2e`) are not recognized by the classifier,
         // and `2nd` may be English. Preserved.
         None
-    }
-
-    fn abbreviation(&self, word: &str) -> Option<(&'static str, AbbrevContext)> {
-        match word {
-            "Dr" => Some(("docteur", AbbrevContext::CapitalizedWord)),
-            _ => None,
-        }
     }
 }
 

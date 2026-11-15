@@ -21,13 +21,12 @@ use std::ops::Range;
 
 use unicode_normalization::char::is_combining_mark;
 
-use super::lexer::{LexicalSource, in_regions};
+use crate::speech::{
+    AbbreviationPolicy, SpeechOptions,
+    abbreviations::{Matcher, legacy_is_non_terminal},
+};
 
-/// Words that, followed by a single `.`, do not end a sentence.
-const NON_TERMINAL_ABBREVIATIONS: &[&str] = &[
-    "Dr", "Dra", "Sr", "Sra", "Srta", "Sres", "Av", "Avda", "Prof", "Ud", "Uds", "Mr", "Mrs", "Ms",
-    "St", "vs", "e.g", "i.e", "approx", "aprox", "núm", "pág",
-];
+use super::lexer::{LexicalSource, in_regions};
 
 fn is_closer(c: char) -> bool {
     matches!(
@@ -58,8 +57,8 @@ fn word_before(text: &str, dot: usize) -> &str {
     &head[start..]
 }
 
-fn is_non_terminal(word: &str) -> bool {
-    if NON_TERMINAL_ABBREVIATIONS.contains(&word) {
+fn is_non_terminal(word: &str, legacy: bool) -> bool {
+    if legacy && legacy_is_non_terminal(word) {
         return true;
     }
     let mut chars = word.chars();
@@ -70,8 +69,35 @@ fn is_non_terminal(word: &str) -> bool {
 /// ends after its terminator and closers; following whitespace starts the
 /// next range.
 pub fn sentence_spans(text: &str) -> Vec<Range<usize>> {
+    sentence_spans_impl(text, None)
+}
+
+/// Original UTF-8 byte ranges using locale-aware abbreviation contexts.
+///
+/// Contextual/bibliographic policies protect periods only inside reviewed,
+/// context-matched abbreviations, plus uppercase initials. Preserve retains
+/// the legacy global abbreviation boundaries of [`sentence_spans`]. No text
+/// is expanded, and code/tags, URL punctuation and newline rules are shared
+/// with the legacy path.
+pub fn sentence_spans_with_options(text: &str, options: &SpeechOptions) -> Vec<Range<usize>> {
+    sentence_spans_impl(
+        text,
+        (options.abbreviation_policy != AbbreviationPolicy::Preserve).then_some(options),
+    )
+}
+
+fn sentence_spans_impl(text: &str, options: Option<&SpeechOptions>) -> Vec<Range<usize>> {
     let source = LexicalSource::new(text);
     let regions = source.regions();
+    let abbreviation_regions: Vec<_> = options
+        .map(|options| {
+            Matcher::new(text, regions, options.locale, options.abbreviation_policy)
+                .matches()
+                .into_iter()
+                .map(|matched| matched.start..matched.end)
+                .collect()
+        })
+        .unwrap_or_default();
     // A non-ASCII terminator can also be literal URL-path data. Preserve
     // explicit URL fields instead of introducing a cut inside those tokens.
     // Keep legacy ASCII punctuation handling (including a URL's final dot).
@@ -96,7 +122,10 @@ pub fn sentence_spans(text: &str) -> Vec<Range<usize>> {
     let mut k = 0usize;
     while k < chars.len() {
         let (i, c) = chars[k];
-        if in_regions(regions, i) || (is_hard_terminator(c) && in_regions(&url_regions, i)) {
+        if in_regions(regions, i)
+            || (c == '.' && in_regions(&abbreviation_regions, i))
+            || (is_hard_terminator(c) && in_regions(&url_regions, i))
+        {
             k += 1;
             continue;
         }
@@ -119,6 +148,7 @@ pub fn sentence_spans(text: &str) -> Vec<Range<usize>> {
             while let Some(&(next_byte, next)) = chars.get(e + 1) {
                 if next == '\n'
                     || in_regions(regions, next_byte)
+                    || (next == '.' && in_regions(&abbreviation_regions, next_byte))
                     || (is_hard_terminator(next) && in_regions(&url_regions, next_byte))
                 {
                     break;
@@ -132,8 +162,9 @@ pub fn sentence_spans(text: &str) -> Vec<Range<usize>> {
                 e += 1;
             }
             let followed_by_space = e + 1 >= chars.len() || chars[e + 1].1.is_whitespace();
-            let abbreviation =
-                c == '.' && terminators == 1 && is_non_terminal(word_before(text, i));
+            let abbreviation = c == '.'
+                && terminators == 1
+                && is_non_terminal(word_before(text, i), options.is_none());
             if (hard || followed_by_space) && !abbreviation {
                 let end = byte_after(e);
                 spans.push(start..end);
@@ -238,12 +269,21 @@ pub fn hard_split(text: &str, max_chars: usize) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::speech::SpeechLocale;
 
     fn sentences(text: &str) -> Vec<&str> {
         sentence_spans(text)
             .into_iter()
             .map(|r| text[r].trim())
             .filter(|s| !s.is_empty())
+            .collect()
+    }
+
+    fn contextual_sentences<'a>(text: &'a str, options: &SpeechOptions) -> Vec<&'a str> {
+        sentence_spans_with_options(text, options)
+            .into_iter()
+            .map(|range| text[range].trim())
+            .filter(|sentence| !sentence.is_empty())
             .collect()
     }
 
@@ -301,6 +341,65 @@ mod tests {
     }
 
     #[test]
+    fn contextual_titles_and_number_labels_protect_their_periods() {
+        let english = SpeechOptions::new(SpeechLocale::En);
+        let german = SpeechOptions::new(SpeechLocale::De);
+        assert_eq!(
+            contextual_sentences("Dr. Smith arrived. Mr. Jones left.", &english),
+            vec!["Dr. Smith arrived.", "Mr. Jones left."]
+        );
+        for digit in ["5", "５", "५", "٥"] {
+            let text = format!("Nr. {digit} ist da. Weiter.");
+            let first = format!("Nr. {digit} ist da.");
+            assert_eq!(
+                contextual_sentences(&text, &german),
+                vec![first, "Weiter.".to_owned()],
+                "{text}"
+            );
+        }
+        assert_eq!(
+            contextual_sentences("Dr. smith arrived. End.", &english),
+            vec!["Dr.", "smith arrived.", "End."]
+        );
+        assert_eq!(
+            contextual_sentences("Nr. AB5 ist da. Weiter.", &german),
+            vec!["Nr.", "AB5 ist da.", "Weiter."]
+        );
+        assert_eq!(
+            contextual_sentences("nr. 5 ist da. Weiter.", &german),
+            vec!["nr.", "5 ist da.", "Weiter."]
+        );
+    }
+
+    #[test]
+    fn preserve_retains_legacy_boundaries_and_initials_remain_shared() {
+        for locale in SpeechLocale::ALL {
+            let mut options = SpeechOptions::new(locale);
+            options.abbreviation_policy = AbbreviationPolicy::Preserve;
+            for text in [
+                "Dr. smith arrived. End.",
+                "Nr. ５ ist da. Weiter.",
+                "Prof. X. Name. Next.",
+                "Ver e.g. esto. Fin.",
+                "أ؟!\nب۔",
+                "www.example.org/甲？x aquí. Fin.",
+                "run `Dr. Name.\nNr. 5` now. Done.",
+            ] {
+                assert_eq!(
+                    sentence_spans_with_options(text, &options),
+                    sentence_spans(text),
+                    "{locale:?}: {text}"
+                );
+            }
+        }
+        let options = SpeechOptions::new(SpeechLocale::En);
+        assert_eq!(
+            contextual_sentences("J. K. Rowling spoke. Next.", &options),
+            vec!["J. K. Rowling spoke.", "Next."]
+        );
+    }
+
+    #[test]
     fn other_terminators() {
         assert_eq!(
             sentences("¿Qué? ¡Sí! Bien; ok"),
@@ -320,7 +419,10 @@ mod tests {
     }
 
     fn assert_partition(text: &str) {
-        let spans = sentence_spans(text);
+        assert_ranges_partition(text, sentence_spans(text));
+    }
+
+    fn assert_ranges_partition(text: &str, spans: Vec<Range<usize>>) {
         let mut cursor = 0;
         for span in &spans {
             assert_eq!(span.start, cursor, "{text:?}: {spans:?}");
@@ -332,6 +434,91 @@ mod tests {
         assert_eq!(cursor, text.len());
         let reconstructed: String = spans.iter().map(|span| &text[span.clone()]).collect();
         assert_eq!(reconstructed, text);
+    }
+
+    #[test]
+    fn contextual_ranges_keep_utf8_protections_and_newline_boundaries() {
+        let options = SpeechOptions::new(SpeechLocale::De);
+        for text in [
+            "🙂 Nr. ５ ist da. Weiter.",
+            "Nr.\n５ ist da. Weiter.",
+            "`Nr. ５ ist da.\nDr. Name` folgt. Weiter.",
+            "<x title='Nr. ５'>Nr. ５ ist da. Weiter.",
+            "WWW.example.org/甲？x Nr. ５ ist da. Weiter.",
+            "https://example.org/Nr./५ Nr. ５ ist da. Weiter.",
+        ] {
+            assert_ranges_partition(text, sentence_spans_with_options(text, &options));
+        }
+        assert_eq!(
+            contextual_sentences("Nr.\n５ ist da. Weiter.", &options),
+            vec!["Nr.", "５ ist da.", "Weiter."]
+        );
+        assert_eq!(
+            contextual_sentences("🙂 Nr. ５ ist da. Weiter.", &options),
+            vec!["🙂 Nr. ５ ist da.", "Weiter."]
+        );
+        assert_eq!(
+            contextual_sentences("`Nr. ５ ist da.` folgt. Weiter.", &options),
+            vec!["`Nr. ５ ist da.` folgt.", "Weiter."]
+        );
+    }
+
+    #[test]
+    fn native_titles_and_company_aliases_keep_original_text_boundaries() {
+        let hindi = SpeechOptions::new(SpeechLocale::Hi);
+        let japanese = SpeechOptions::new(SpeechLocale::Ja);
+        assert_eq!(
+            contextual_sentences("डॉ. शर्मा आए।अगला वाक्य।", &hindi),
+            vec!["डॉ. शर्मा आए।", "अगला वाक्य।"]
+        );
+        assert_eq!(
+            contextual_sentences("प्रो. शर्मा आए।अगला वाक्य।", &hindi),
+            vec!["प्रो. शर्मा आए।", "अगला वाक्य।"]
+        );
+        assert_eq!(
+            contextual_sentences("डॉ. ५ आए।अगला वाक्य।", &hindi),
+            vec!["डॉ.", "५ आए।", "अगला वाक्य।"]
+        );
+        for (text, expected) in [
+            ("(株)トヨタ。次です。", vec!["(株)トヨタ。", "次です。"]),
+            ("(有)会社。次です。", vec!["(有)会社。", "次です。"]),
+        ] {
+            assert_eq!(contextual_sentences(text, &japanese), expected);
+            assert_ranges_partition(text, sentence_spans_with_options(text, &japanese));
+        }
+        assert_ranges_partition(
+            "🙂 डॉ. शर्मा आए।अगला वाक्य।",
+            sentence_spans_with_options("🙂 डॉ. शर्मा आए।अगला वाक्य।", &hindi),
+        );
+    }
+
+    #[test]
+    fn bibliographic_opt_in_protects_internal_and_final_dots_only() {
+        let mut arabic = SpeechOptions::new(SpeechLocale::Ar);
+        let text = "د.ت. ٢٠٢٠. التالي.";
+        assert_eq!(
+            contextual_sentences(text, &arabic),
+            vec!["د.ت.", "٢٠٢٠.", "التالي."]
+        );
+        arabic.abbreviation_policy = AbbreviationPolicy::Bibliographic;
+        assert_eq!(
+            contextual_sentences(text, &arabic),
+            vec!["د.ت. ٢٠٢٠.", "التالي."]
+        );
+        assert_eq!(
+            contextual_sentences("د.م. القاهرة. التالي.", &arabic),
+            vec!["د.م. القاهرة.", "التالي."]
+        );
+        assert_ranges_partition(text, sentence_spans_with_options(text, &arabic));
+        let mut urdu = SpeechOptions::new(SpeechLocale::Ur);
+        urdu.abbreviation_policy = AbbreviationPolicy::Bibliographic;
+        // This alias has no period. Its opt-in must not suppress the native
+        // terminator after the referenced number, or consume the next sentence.
+        assert_eq!(
+            contextual_sentences("ص ۱۲۔اگلا۔", &urdu),
+            vec!["ص ۱۲۔", "اگلا۔"]
+        );
+        assert_ranges_partition("ص ۱۲۔اگلا۔", sentence_spans_with_options("ص ۱۲۔اگلا۔", &urdu));
     }
 
     #[test]
@@ -395,8 +582,6 @@ mod tests {
 
     #[test]
     fn common_punctuation_is_script_independent_for_all_speech_locales() {
-        use crate::speech::SpeechLocale;
-
         let samples = [
             (SpeechLocale::En, "Hello"),
             (SpeechLocale::Es, "Hola"),
@@ -426,6 +611,13 @@ mod tests {
             let text = format!("{first} {second}");
             assert_eq!(sentences(&text), vec![first, second], "{locale:?}");
             assert_partition(&text);
+            let options = SpeechOptions::new(locale);
+            assert_eq!(
+                contextual_sentences(&text, &options),
+                sentences(&text),
+                "{locale:?}"
+            );
+            assert_ranges_partition(&text, sentence_spans_with_options(&text, &options));
         }
     }
 

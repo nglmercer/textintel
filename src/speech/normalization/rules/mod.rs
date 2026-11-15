@@ -285,18 +285,6 @@ pub(crate) enum Meridiem {
     Pm,
 }
 
-/// Context an abbreviation requires before it is expanded.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum AbbrevContext {
-    /// Followed by a capitalized word (titles: `Dr. García`).
-    CapitalizedWord,
-    /// Followed by a capitalized word or a number (`Av. Arequipa`, `Av. 28`).
-    CapitalizedWordOrNumber,
-    /// Not at a sentence end (`etc.` followed by a lowercase word, a digit
-    /// or `, ; : )`).
-    NotSentenceEnd,
-}
-
 /// Language rules. Every renderer returns `None` when the form is not
 /// supported, which preserves the original text.
 pub(crate) trait LanguageRules: Sync {
@@ -430,11 +418,6 @@ pub(crate) trait LanguageRules: Sync {
 
     /// Integer range `a–b`, optionally followed by a unit.
     fn range(&self, _from: u64, _to: u64, _unit: Option<Unit>, _locale: &str) -> Option<String> {
-        None
-    }
-
-    /// Abbreviation expansion for a word written before a period (`"Dr"`).
-    fn abbreviation(&self, _word: &str) -> Option<(&'static str, AbbrevContext)> {
         None
     }
 }

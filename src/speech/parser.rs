@@ -63,6 +63,12 @@ fn parse_with_regions(
         }
     };
     let mut region_index = 0;
+    let abbreviations = super::abbreviations::Matcher::new(
+        text,
+        regions,
+        options.locale,
+        options.abbreviation_policy,
+    );
     let mut spans = Vec::new();
     let mut cursor = 0;
     let mut plain_start = 0;
@@ -83,7 +89,19 @@ fn parse_with_regions(
                     }),
                 )
             });
-        if let Some((end, value)) = protected.or_else(|| parse_at(text, cursor, options)) {
+        if let Some((end, value)) = protected.or_else(|| {
+            if options.interpret_as == super::types::SpeechInterpretation::Auto
+                && let Some(found) = abbreviations.match_at(cursor)
+            {
+                return Some((
+                    found.end,
+                    SpeechValue::Abbreviation {
+                        id: found.entry.id.clone(),
+                    },
+                ));
+            }
+            parse_at(text, cursor, options)
+        }) {
             if plain_start < cursor {
                 push_span(
                     &mut spans,

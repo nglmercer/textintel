@@ -2,6 +2,7 @@
 //!
 //! This path never runs case folding, leetspeak/rebus decoding, repetition
 //! collapsing or model inference. Source offsets always refer to original text.
+pub mod abbreviations;
 pub mod parser;
 pub mod types;
 pub use parser::parse_for_speech;

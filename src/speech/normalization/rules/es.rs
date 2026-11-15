@@ -12,10 +12,7 @@
 //! A bare integer before an unknown noun whose reading depends on gender
 //! (`21 casas`, `200 personas`) is preserved as ambiguous.
 
-use super::{
-    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
-    Unit,
-};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker, Unit};
 use crate::speech::normalization::{CoverageLevel, ReadingStyle};
 use crate::speech::{
     numbers,
@@ -600,19 +597,6 @@ impl LanguageRules for Spanish {
                     quantity(&to_amount, singular, plural)
                 )
             }
-        })
-    }
-
-    fn abbreviation(&self, word: &str) -> Option<(&'static str, AbbrevContext)> {
-        Some(match word {
-            "Dr" => ("doctor", AbbrevContext::CapitalizedWord),
-            "Dra" => ("doctora", AbbrevContext::CapitalizedWord),
-            "Sr" => ("señor", AbbrevContext::CapitalizedWord),
-            "Sra" => ("señora", AbbrevContext::CapitalizedWord),
-            "Srta" => ("señorita", AbbrevContext::CapitalizedWord),
-            "Av" => ("avenida", AbbrevContext::CapitalizedWordOrNumber),
-            "etc" => ("etcétera", AbbrevContext::NotSentenceEnd),
-            _ => return None,
         })
     }
 }

@@ -100,7 +100,7 @@ and the backend's Japanese/Arabic input limits separately from native accuracy.
 
 The recommended normalization API is `speech::normalization::normalize` with
 `NormalizeOptions::resolve` or `resolve_with_style`. It provides
-versioned `tn-v3` rules, including `precise`, `natural`, and `digits`
+versioned `tn-v4` rules, including `precise`, `natural`, and `digits`
 styles, explicit locales, resource budgets, protected spans, and warnings.
 `NormalizedText` contains `spoken`, ordered original byte-offset `changes`,
 `warnings`, and language-specific `coverage`. `SpeechText::prepare` retains

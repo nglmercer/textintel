@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use super::NormalizeError;
 
-pub use crate::speech::types::ReadingStyle;
+pub use crate::speech::types::{AbbreviationPolicy, ReadingStyle};
 
 /// Normalization mode requested by the caller or configuration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -85,6 +85,9 @@ pub struct NormalizeOptions {
     pub report_ambiguities: bool,
     /// How numbers and clock times are read.
     pub reading_style: ReadingStyle,
+    /// Contextual expands reviewed formal spellings; Preserve disables all
+    /// abbreviation expansion, and Bibliographic also enables reference forms.
+    pub abbreviation_policy: AbbreviationPolicy,
 }
 
 impl NormalizeOptions {
@@ -152,6 +155,7 @@ impl NormalizeOptions {
             limits,
             report_ambiguities,
             reading_style,
+            abbreviation_policy: AbbreviationPolicy::default(),
         })
     }
 }

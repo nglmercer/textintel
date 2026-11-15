@@ -2,8 +2,8 @@
 use super::common::print_json;
 use textintel::cli::ParsedArgs;
 use textintel::speech::{
-    ClockPolicy, CurrencyNaming, DateOrder, InvalidDatePolicy, NumberNotation, ReadingStyle,
-    SpeechInterpretation, SpeechLocale, SpeechOptions,
+    AbbreviationPolicy, ClockPolicy, CurrencyNaming, DateOrder, InvalidDatePolicy, NumberNotation,
+    ReadingStyle, SpeechInterpretation, SpeechLocale, SpeechOptions,
 };
 
 fn options(parsed: &ParsedArgs) -> Result<SpeechOptions, Box<dyn std::error::Error>> {
@@ -41,6 +41,9 @@ fn options(parsed: &ParsedArgs) -> Result<SpeechOptions, Box<dyn std::error::Err
     if let Some(invalid_date_policy) = parsed.value("invalid-date-policy") {
         options.invalid_date_policy = invalid_date_policy_option(invalid_date_policy)?;
     }
+    if let Some(value) = parsed.value("abbreviation-policy") {
+        options.abbreviation_policy = abbreviation_policy_option(value)?;
+    }
     if let Some(kind) = parsed.value("interpret-as") {
         options.interpret_as = match kind {
             "auto" => SpeechInterpretation::Auto,
@@ -77,6 +80,12 @@ fn invalid_date_policy_option(
 ) -> Result<InvalidDatePolicy, Box<dyn std::error::Error>> {
     InvalidDatePolicy::parse(value)
         .ok_or_else(|| "unknown invalid date policy; use preserve|read-components".into())
+}
+fn abbreviation_policy_option(
+    value: &str,
+) -> Result<AbbreviationPolicy, Box<dyn std::error::Error>> {
+    AbbreviationPolicy::parse(value)
+        .ok_or_else(|| "unknown abbreviation policy; use preserve|contextual|bibliographic".into())
 }
 pub fn parse(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> {
     let result =
@@ -142,6 +151,9 @@ pub fn evaluate(parsed: &ParsedArgs) -> Result<i32, Box<dyn std::error::Error>> 
     }
     if let Some(invalid_date_policy) = parsed.value("invalid-date-policy") {
         policy.invalid_date_policy = Some(invalid_date_policy_option(invalid_date_policy)?);
+    }
+    if let Some(value) = parsed.value("abbreviation-policy") {
+        policy.abbreviation_policy = Some(abbreviation_policy_option(value)?);
     }
     let result = textintel::speech::evaluation::evaluate_speech_with_policy(&corpus, &policy)?;
     if parsed.flag("json") {

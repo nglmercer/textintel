@@ -55,6 +55,7 @@ must inspect both fields before treating the result as validated calendar data.
 | `clock_policy` | `strict` (default), or opt-in `normalize_redundant_period` for coherent redundant AM/PM notation |
 | `decimal_separator` | Explicit separator, or conservative inference when absent |
 | `reading_style` | `precise`, `natural`, or `digits` |
+| `abbreviation_policy` | `contextual` (default), `preserve`, or explicit `bibliographic` forms |
 | `number_notation` | Pronunciation-oriented or orthographic number forms, including Japanese kana/kanji |
 | `interpret_as` | Caller-supplied context: auto, number, date, time, currency, measure, or duration |
 | `currency_symbols` | Explicit per-symbol ISO assignments; absent mappings preserve uncertainty |
@@ -69,6 +70,23 @@ consumer intent, analogous to a TTS `say-as` instruction. They are not inferred
 from evaluation IDs or expected speech. A measure hint accepts dimensionless
 percentages. A number hint can explicitly treat padded digits as a count;
 automatic mode retains identifier distinctions.
+
+`AbbreviationPolicy::Contextual` expands exact catalog spellings only when the
+locale-specific context matches. `Preserve` disables expansion;
+`Bibliographic` opts into publication-reference forms such as Arabic
+`د.ت.`/`د.م.` and Urdu `ص` followed by a number. Every expansion is a typed
+`SpeechValue::Abbreviation` tied to a catalog ID, source spelling, locale, and
+policy; rendering rejects forged or mismatched values. The catalog contains 44
+spellings across 19 locale codes, including 20 preserved legacy forms and 24
+new institutionally sourced forms. Italian entries serve the versioned adapter;
+Chinese and Telugu have no entries. These counts describe available data, not
+language completeness or measured accuracy. Chat substitutions remain separate.
+
+Use `segmentation::split_sentences_with_options` or
+`segmentation::segment_text_with_options` when an abbreviation's period should
+remain inside its context before chunking. The older `sentence_spans` and
+`split_sentences_with_limit` functions retain their historical boundaries for
+compatibility. Neither API rewrites the source during segmentation.
 
 `ClockPolicy::Strict` requires explicit AM/PM hours in 1–12.
 `ClockPolicy::NormalizeRedundantPeriod` optionally normalizes nonstandard source
@@ -218,7 +236,8 @@ text, changes, warnings, language-specific feature scope, and preparation identi
 `NormalizeOptions::resolve[_with_style]` resolves its mode, language/locale,
 reading style, and input/output/expansion budgets. `Off` preserves input.
 `SpeechText::prepare` retains the spoken text and stable identity. The current
-ruleset is `tn-v3`; cache identities change with normalization semantics.
+ruleset is `tn-v4`; cache identities change with normalization semantics,
+including the abbreviation policy.
 
 `speech::locales::for_locale` is the shared regional lookup used by resolution,
 legacy convention adapters and the typed normalization bridge. It distinguishes
@@ -268,7 +287,9 @@ punctuation remain together, with code/tag protections and UTF-8 partitions
 retained. These four additions are STerm in [Unicode 17.0.0](https://www.unicode.org/Public/17.0.0/ucd/auxiliary/SentenceBreakProperty.txt).
 ASCII abbreviation/whitespace behavior remains a tailored heuristic; this is not
 full Unicode sentence-boundary conformance or a complete speech-abbreviation
-inventory. The chunker may combine several short sentences within one bound.
+inventory. The option-aware splitter consults the partial catalog, while the
+legacy splitter keeps its historical list. The chunker may combine several
+short sentences within one bound.
 
 ## Evaluation: original gold and reviewed variants
 
@@ -279,6 +300,7 @@ textintel normalize-speech 'US$7' --locale en --reading-style natural --currency
 textintel normalize-speech '13:10pm' --locale zh --reading-style natural --clock-policy normalize-redundant-period --json
 textintel normalize-speech '30/02/1990' --locale es --reading-style natural --invalid-date-policy read-components --json
 textintel normalize-speech '३१-०६' --locale hi --reading-style natural --invalid-date-policy read-components --interpret-as date --json
+textintel normalize-speech 'Dr. Smith arrived.' --locale en --abbreviation-policy contextual --json
 textintel eval-speech data/speech/evaluation.json --json
 textintel eval-speech data/speech/reference-nemo.json --json
 textintel eval-speech data/speech/reference-nemo.json \
@@ -288,6 +310,8 @@ textintel eval-speech data/speech/reference-nemo.json \
 ```
 
 `--currency-naming style|full` selects `CurrencyNaming`; `style` is the default.
+`--abbreviation-policy preserve|contextual|bibliographic` selects the formal
+catalog policy; `contextual` is the default.
 The Hindi example explicitly declares date intent because the yearless
 `३१-०६` pair can denote a range under Natural `Auto`. With date context and
 component reading it produces “इकतीस जून”, retains the original thirteen UTF-8

@@ -47,7 +47,27 @@ Applications can implement the provider interfaces in separate integrations.
 
 ## Text preparation for TTS
 
-Use the versioned normalizer for speech preparation, then split the spoken text into bounded fragments:
+The typed speech API retains source spans and semantic values, and the option-aware segmenter uses the same locale and abbreviation policy before synthesis:
+
+```rust
+use textintel::speech::{
+    normalize_for_speech,
+    segmentation,
+    SpeechLocale,
+    SpeechOptions,
+};
+
+let options = SpeechOptions::new(SpeechLocale::En);
+let source = "Dr. Smith arrived.";
+let reading = normalize_for_speech(source, &options)?;
+assert_eq!(reading.text, "doctor Smith arrived.");
+assert!(reading.fully_supported);
+let fragments = segmentation::split_sentences_with_options(source, &options, 200);
+assert_eq!(fragments, vec![source.to_string()]);
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+Use the versioned normalizer for applications that need its stable formatting rules, then split the spoken text into bounded fragments:
 
 ```rust
 use textintel::speech::{normalization as tn, segmentation};
@@ -69,11 +89,14 @@ assert_eq!(fragments[0].text, result.spoken);
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
-`speech::normalization` provides `tn-v3` rules and preparation identity,
+`speech::normalization` provides `tn-v4` rules and preparation identity,
 with language-specific coverage and ambiguity warnings. Both speech APIs cover
 the twenty base languages through shared numeric, calendar, lexical and Unicode
 primitives. The typed API and CLI expose additional explicit interpretation
-policies and diagnostics. Inspect unresolved readings before synthesis.
+policies and diagnostics. Formal abbreviations use exact catalog spellings and
+conservative contexts; newly added entries have attached institutional sources,
+and bibliographic forms require opt-in. The inventory is partial and is not a
+pronunciation dictionary. Inspect unresolved readings before synthesis.
 See [speech APIs and evaluation](docs/SPEECH.md) and
 [measured coverage and remaining gaps](docs/COVERAGE.md).
 

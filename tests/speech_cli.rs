@@ -350,6 +350,76 @@ fn reviewed_variant_gate_retains_literal_failures_in_json() {
 }
 
 #[test]
+fn abbreviation_policy_is_explicit_in_cli_parsing_rendering_and_validation() {
+    let parsed = successful_json(&["parse-speech", "Dr. Smith", "--locale", "en", "--json"]);
+    assert_eq!(parsed["spans"][0]["source"], "Dr.");
+    assert_eq!(parsed["spans"][0]["value"]["type"], "abbreviation");
+    let contextual =
+        successful_json(&["normalize-speech", "Dr. Smith", "--locale", "en", "--json"]);
+    assert_eq!(contextual["text"], "doctor Smith");
+    let preserved = successful_json(&[
+        "normalize-speech",
+        "Dr. Smith",
+        "--locale",
+        "en",
+        "--abbreviation-policy",
+        "preserve",
+        "--json",
+    ]);
+    assert_eq!(preserved["text"], "Dr. Smith");
+    let bibliographic = successful_json(&[
+        "normalize-speech",
+        "كتاب (د.ت.)",
+        "--locale",
+        "ar",
+        "--abbreviation-policy",
+        "bibliographic",
+        "--json",
+    ]);
+    assert_eq!(bibliographic["text"], "كتاب (دون تاريخ النشر)");
+    let invalid = run(&[
+        "parse-speech",
+        "Dr. Smith",
+        "--locale",
+        "en",
+        "--abbreviation-policy",
+        "guess",
+    ]);
+    assert!(!invalid.status.success());
+    assert!(invalid.stdout.is_empty());
+    assert!(String::from_utf8_lossy(&invalid.stderr).contains("abbreviation policy"));
+}
+
+#[test]
+fn abbreviation_evaluation_policy_uses_full_typed_gold_and_preserves_other_denominators() {
+    let entry = textintel::speech::abbreviations::entries()
+        .iter()
+        .find(|e| e.locale == "ar" && e.written == "د.ت.")
+        .unwrap();
+    let corpus = TemporaryCorpus::new(&json!({
+        "version":"bibliographic-cli", "purpose":"Explicit domain before expanding an Arabic reference",
+        "cases":[{"id":"ar-reference","locale":"ar","text":"د.ت.","date_order":"reject_ambiguous",
+            "decimal_separator":null,"category":"abbreviation","expected_spans":null,
+            "expected_values":[{"start":0,"end":entry.written.len(),"source":"د.ت.","value":{"type":"abbreviation","id":entry.id}}],
+            "spoken":["دون تاريخ النشر"]}]
+    }));
+    let no_domain = run(&["eval-speech", corpus.0.to_str().unwrap(), "--json"]);
+    assert_eq!(no_domain.status.code(), Some(1));
+    let rejected: Value = serde_json::from_slice(&no_domain.stdout).unwrap();
+    assert_eq!(rejected["totals"]["semantic"]["exact"], 0);
+    let accepted = successful_json(&[
+        "eval-speech",
+        corpus.0.to_str().unwrap(),
+        "--abbreviation-policy",
+        "bibliographic",
+        "--json",
+    ]);
+    assert_eq!(accepted["totals"]["semantic"]["exact"], 1);
+    assert_eq!(accepted["totals"]["spoken_exact"], 1);
+    assert_eq!(accepted["policy"]["abbreviation_policy"], "bibliographic");
+}
+
+#[test]
 fn speech_reading_controls_are_explicit_and_validate_values() {
     let written = successful_json(&[
         "normalize-speech",

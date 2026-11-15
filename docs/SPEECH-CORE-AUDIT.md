@@ -248,17 +248,22 @@ existing accent-folding policy retains script-specific marks.
    are not yet one shared document representation.
 
 5. **Abbreviation data and sentence boundaries remain incomplete.**
-   The sentence splitter has a fixed non-terminal abbreviation list and legacy
-   language rules have additional expansion tables. Reuse resource provenance,
-   limits and lookup interfaces with a speech-specific reading/context type.
-   Existing chat packs contain mappings such as German `bb → bis bald`; they
-   should not silently become default TTS substitutions. Fifteen of the minimum
-   languages lack any chat abbreviation pack, and that says nothing about
-   speech abbreviation coverage.
-   Native sentence terminators `؟ ۔ । ॥` are now recognized by the shared
-   core, including runs and closers. Existing abbreviation limitations remain:
-   for example, typed speech preserves `Dr.` rather than using the legacy title
-   expansion, and the global sentence list still lacks contextual German `Nr.`.
+   Formal speech now uses the separate, sourced
+   [`speech/data/abbreviations.json`](../src/speech/data/abbreviations.json)
+   catalog with exact spellings, locale and context checks. It has 44 entries
+   across 19 locale codes: 20 preserve legacy rules and 24 add forms supported
+   by primary institutional sources. Chinese and Telugu have no entries, and Italian is outside the typed
+   twenty-language registry. This count is an inventory, not an accuracy or
+   completeness score. Bibliographic forms require an explicit policy; medical
+   and academic titles require a documented following-name context. See the
+   catalog's [source and scope notes](../src/speech/data/abbreviations.PROVENANCE.md).
+   The typed API and option-aware sentence splitter use those same contextual
+   matches. Legacy `sentence_spans` retains its historical fixed boundary list
+   for compatibility. Existing chat packs contain mappings such as German
+   `bb → bis bald`; they do not become default TTS substitutions. Native
+   sentence terminators `؟ ۔ । ॥` are recognized by the shared core, including
+   runs and closers. Independent, locale-balanced spoken gold is still needed
+   to measure precision and naturalness for the added catalog.
 
 6. **Full phonetics/transliteration remains an independent language task.**
    The confidence fix prevents unsupported Latin text from inheriting 0.65
@@ -283,9 +288,11 @@ existing accent-folding policy retains script-specific marks.
    need external annotated examples, and most locales currently have only one
    authored complete spoken gold. Natural expression types and localized
    grammar need their own explicit-profile semantic and spoken gold.
-2. Add reviewed speech abbreviations through shared resources and context-aware
-   sentence boundaries. Keep chat substitutions opt-in; test ambiguous titles,
-   treatments and document references in prose as well as isolated tokens.
+2. Expand the partial speech abbreviation inventory only with sourced, exact
+   locale spellings and independently reviewed spoken gold. Keep chat
+   substitutions separate; test ambiguous titles, treatments and document
+   references in prose, with exact-string results distinct from reviewed
+   acceptable variants.
 3. Add complete timestamp IR by composing the existing calendar, clock, exact
    fraction and lexer primitives. Preserve offset spelling and its semantics,
    reject incomplete candidates atomically and keep code/data protections. This
@@ -313,7 +320,7 @@ drive prefixes have a separate shared field guard; this is not a complete
 filesystem grammar. Separator regressions check that Arabic marks cannot change
 numeric magnitude under conflicting consumer options.
 The current all-feature/all-target and direct instrumented runs each passed
-740 tests, including regional metadata, full currency naming, fraction/range
+773 tests, including regional metadata, full currency naming, fraction/range
 consolidation, clock policies, the shared lexical protection map and eSpeak
 voice/control regression fixtures. The pinned live eSpeak audit is recorded
 separately from those test counts and does not establish native accuracy.

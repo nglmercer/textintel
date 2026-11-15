@@ -11,10 +11,7 @@
 //! thirty-first of December, twenty twenty-six". A bare `$` is US dollars
 //! only under en-US.
 
-use super::{
-    AbbrevContext, Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker,
-    Unit,
-};
+use super::{Amount, Conventions, Currency, Feature, LanguageRules, Meridiem, OrdinalMarker, Unit};
 use crate::speech::normalization::{CoverageLevel, ReadingStyle};
 use crate::speech::{numbers, types::SpeechLocale};
 
@@ -463,15 +460,6 @@ impl LanguageRules for English {
             out.push_str(if to == 1 { singular } else { plural });
         }
         Some(out)
-    }
-
-    fn abbreviation(&self, word: &str) -> Option<(&'static str, AbbrevContext)> {
-        Some(match word {
-            "Dr" => ("doctor", AbbrevContext::CapitalizedWord),
-            "Mr" => ("mister", AbbrevContext::CapitalizedWord),
-            "etc" => ("etcetera", AbbrevContext::NotSentenceEnd),
-            _ => return None,
-        })
     }
 }
 
