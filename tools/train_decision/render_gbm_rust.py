@@ -7,6 +7,10 @@ BASE_EXPR = {
     "lexicon_validity": "result.lexicon_validity",
     "single_word_pair": "result.single_word_pair",
     "swapped_word_similarity": "result.swapped_word_similarity",
+    "swap_synonym": "result.swap_synonym",
+    "swap_antonym": "result.swap_antonym",
+    "multi_swap_synonym_coverage": "result.multi_swap_synonym_coverage",
+    "multi_swap_antonym": "result.multi_swap_antonym",
     "swapped_phonetic": "result.swapped_phonetic",
     "confusable_swap": "result.confusable_swap",
     "valid_swap_similarity": "result.valid_swap_similarity",
@@ -94,7 +98,7 @@ def main():
 //! edit the ensemble by hand.
 //!
 //! The layer only reprices evidence already present on
-//! [`ComparisonResult`](crate::core::types::ComparisonResult): every input
+//! [`ComparisonResult`]: every input
 //! feature remains visible in `evidence`/`explanations`, so scored output
 //! stays auditable end to end. Inference is a deterministic branch walk over
 //! the baked trees: no allocation, no floating-point platform dependence

@@ -170,8 +170,9 @@ fn low_confidence_mappings_cannot_false_positive() {
 #[test]
 fn hard_negatives_pin_the_threshold_gap() {
     let engine = TextIntelligence::default();
-    // Same-script lookalikes outscore cross-script matches on the 0.5 total
-    // (documented gap: script-bound channels dominate the default weights).
+    // True cross-script transliterations must outscore same-script
+    // lookalikes: the cross-script phonetic suppression fix removed the
+    // former inversion where script-bound channels dominated the total.
     // The decoded channel still separates correctly.
     let lookalike = engine.compare("salam", "salami").unwrap();
     let cross_script = engine.compare("salam", "سلام").unwrap();
@@ -181,8 +182,8 @@ fn hard_negatives_pin_the_threshold_gap() {
     );
     assert_eq!(cross_script.decoded_similarity, Some(0.55));
     assert!(
-        lookalike.score > cross_script.score,
-        "documents the known inversion: lookalike={} cross-script={}",
+        cross_script.score > lookalike.score,
+        "true transliterations must outscore same-script lookalikes: lookalike={} cross-script={}",
         lookalike.score,
         cross_script.score
     );

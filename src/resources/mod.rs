@@ -10,6 +10,7 @@ mod loader;
 mod order;
 mod pack;
 mod providers;
+pub mod synonyms;
 
 pub use error::ResourceError;
 pub use index::{LanguageIndex, LexiconLookup, LexiconRecord, LookupStatus};

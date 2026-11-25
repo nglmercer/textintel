@@ -66,3 +66,29 @@ reason — see `docs/COVERAGE.md` for the measured analysis:
   (`needed`/`required`); separating them requires lexical-semantic resources
   (synonym/antonym knowledge) that surface and feature-hash channels do not
   contain.
+
+## Canonical pipeline (v5, shipped)
+
+`train_v5.py` reproduces the shipped model: features must include the
+synonym/antonym/swap evidence (`features_v5.jsonl`, 47 columns). The baked
+operating point is alpha 0.6 (0.6 GBM + 0.4 logistic). Measured on the
+held-out test split through the real harness: accuracy 0.898, F1 0.914,
+ROC-AUC 0.966; search recall@5 0.970; semantic and spam category gates pass.
+
+## Negative result: swap augmentation (v6/v6b)
+
+Generating `synonym_swap` positive and `antonym_swap`/`unrelated_swap`
+negative rows from train-split sentences and adding them to the fit regressed
+the held-out metrics broadly (spam ROC 0.889 -> 0.814, semantic F1 0.828 ->
+0.692 in v6b). Root cause: augmentation cannot teach distinctions the feature
+vector cannot represent — where the lexicon misses a swap, positive and
+unrelated cases are indistinguishable, so the added mass only shifts priors.
+Do not resurrect this recipe; improve lexicon coverage or feature extraction
+instead.
+
+## Extraction caveat
+
+`examples/eval_features.rs` records `result.score` as `weighted_score` for
+reference, but neither shipped model consumes that column — training scripts
+explicitly drop it. This avoids self-feedback when extracting features with
+a decision-layer bake already in place.

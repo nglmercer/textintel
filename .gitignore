@@ -16,4 +16,6 @@ __pycache__/
 tools/train_decision/features*.jsonl
 tools/train_decision/ranking_features.jsonl
 tools/train_decision/ranking_pairs.jsonl
+tools/train_decision/ranking_features_v*.jsonl
+tools/train_decision/spam_features.jsonl
 tools/train_decision/__pycache__/

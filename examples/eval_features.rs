@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let transliteration_similarity = result.transliteration_similarity.unwrap_or(0.0);
         let transliteration_confidence = result.transliteration_confidence.unwrap_or(0.0);
         let mut features = serde_json::Map::new();
-        let pairs: [(&str, f64); 35] = [
+        let pairs: [(&str, f64); 39] = [
             ("weighted_score", result.score),
             ("semantic", result.semantic.unwrap_or(0.0)),
             ("semantic_present", result.semantic.is_some() as u8 as f64),
@@ -97,6 +97,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ("lexicon_validity", result.lexicon_validity),
             ("single_word_pair", result.single_word_pair),
             ("swapped_word_similarity", result.swapped_word_similarity),
+            ("swap_synonym", result.swap_synonym),
+            ("swap_antonym", result.swap_antonym),
+            (
+                "multi_swap_synonym_coverage",
+                result.multi_swap_synonym_coverage,
+            ),
+            ("multi_swap_antonym", result.multi_swap_antonym),
             ("swapped_phonetic", result.swapped_phonetic),
             ("confusable_swap", result.confusable_swap),
             ("valid_swap_similarity", result.valid_swap_similarity),

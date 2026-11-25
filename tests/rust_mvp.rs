@@ -72,8 +72,8 @@ fn mvp_examples_preserve_raw_and_decode_rebus_candidates() {
 
     let case_result = e.compare("COMPRA AHORA", "compra ahora").unwrap();
     assert!(case_result.character.unwrap() > 0.7);
-    assert!(case_result.semantic.is_none());
-    assert!(case_result.phonetic.is_none());
+    assert!(case_result.semantic.unwrap_or(0.0) > 0.9);
+    assert!(case_result.phonetic.unwrap_or(0.0) > 0.9);
 
     let leet = e.compare("c0mpr4 ah0r4", "compra ahora").unwrap();
     assert!(leet.decoded_similarity.unwrap() > 0.5);

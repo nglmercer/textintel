@@ -607,6 +607,35 @@ pub struct ComparisonResult {
     /// feature-hash fallback equally.
     #[serde(default)]
     pub contextual_semantic: f64,
+    /// 1.0 when the swap probe fires (both sides carry the same number of
+    /// word tokens differing in exactly one position) and the swapped words
+    /// are in the same baked synonym group
+    /// ([`crate::resources::synonyms`]), else 0.0. Synonym substitutions
+    /// (`needed`/`required`) are paraphrase evidence, while surface-similar
+    /// malapropisms (`money`/`honey`) stay at 0.0 — the lexical-semantic
+    /// split character statistics cannot see.
+    #[serde(default)]
+    pub swap_synonym: f64,
+    /// 1.0 when the swap probe fires and the swapped words form a baked
+    /// antonym pair ([`crate::resources::synonyms::are_antonyms`]), else
+    /// 0.0. Meaning-flipping substitutions (`won`/`lost`,
+    /// `expires`/`renewed`) are negative evidence, separating them from
+    /// synonym substitutions with identical surface statistics.
+    #[serde(default)]
+    pub swap_antonym: f64,
+    /// Fraction of differing word positions (in equal-length token
+    /// sequences with two or more differences) whose swapped pair is
+    /// synonym-related, else 0.0. Multi-position paraphrases (`hot deal
+    /// just for you`/`exclusive deal only for you`) carry synonym evidence
+    /// in every differing slot, while meaning changes do not.
+    #[serde(default)]
+    pub multi_swap_synonym_coverage: f64,
+    /// 1.0 when any differing position in an equal-length token sequence
+    /// with two or more differences holds an antonym pair (`expires
+    /// today`/`renewed yesterday`), else 0.0. Multi-position meaning flips
+    /// escape the single-swap probe; this is their negative evidence.
+    #[serde(default)]
+    pub multi_swap_antonym: f64,
     /// Semantic cosine when the top languages differ, else `0.0`.
     /// Cross-language matches route here; same-language pairs read `0.0`.
     #[serde(default)]

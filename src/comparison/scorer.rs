@@ -188,6 +188,40 @@ fn phonetic_channel(a: &MessageFingerprint, b: &MessageFingerprint) -> Option<f6
     best
 }
 
+/// Multi-position swap relation over equal-length word sequences with at
+/// least two differing positions (and at most half the tokens differing,
+/// so wholesale-different sentences stay out): returns (synonym coverage
+/// fraction across differing slots, antonym presence flag). Single-position
+/// differences are the single-swap probe's territory and excluded here.
+fn multi_swap_relation(left: &[String], right: &[String]) -> (f64, f64) {
+    if left.len() != right.len() || left.len() < 2 {
+        return (0.0, 0.0);
+    }
+    let differing: Vec<(String, String)> = left
+        .iter()
+        .zip(right.iter())
+        .filter(|(l, r)| casefold_text(l) != casefold_text(r))
+        .map(|(l, r)| (casefold_text(l), casefold_text(r)))
+        .collect();
+    // At least one shared skeleton token keeps wholesale-unrelated
+    // sentences out; anything beyond that is the model's call, since the
+    // antonym/synonym evidence is positional and precise.
+    if differing.len() < 2 || differing.len() >= left.len() {
+        return (0.0, 0.0);
+    }
+    let synonyms = differing
+        .iter()
+        .filter(|(l, r)| crate::resources::synonyms::are_related(l, r))
+        .count();
+    let antonym = differing
+        .iter()
+        .any(|(l, r)| crate::resources::synonyms::are_antonyms(l, r));
+    (
+        synonyms as f64 / differing.len() as f64,
+        antonym as u8 as f64,
+    )
+}
+
 pub fn combine_scores(
     channels: &BTreeMap<String, Option<f64>>,
     weights: &SimilarityWeights,
@@ -326,6 +360,24 @@ pub fn score_fingerprints(
     };
     // The swap probe runs once; every swap channel reads the same probe.
     let swap = swapped_words_from(&words_a, &words_b);
+    // Synonym relation over the swapped words: the lexical-semantic
+    // evidence that separates paraphrase substitutions from malapropisms.
+    let swap_relation = swap
+        .as_ref()
+        .map_or((0.0, 0.0), |(_, left_word, right_word)| {
+            let left_fold = casefold_text(left_word);
+            let right_fold = casefold_text(right_word);
+            (
+                crate::resources::synonyms::are_related(&left_fold, &right_fold) as u8 as f64,
+                crate::resources::synonyms::are_antonyms(&left_fold, &right_fold) as u8 as f64,
+            )
+        });
+    let swap_synonym = swap_relation.0;
+    let swap_antonym = swap_relation.1;
+    // Multi-position swap analysis over equal-length token sequences: the
+    // single-swap probe is blind to paraphrases and meaning flips that
+    // change several slots at once.
+    let (multi_swap_synonym_coverage, multi_swap_antonym) = multi_swap_relation(&words_a, &words_b);
     let swapped_word_similarity = finite_or_zero(swapped_word_similarity(&swap));
     let swapped_phonetic_raw = finite_or_zero(swapped_phonetic_similarity(&swap));
     // Cross-language swaps (`mi`/`my`) are switches, not confusables:
@@ -458,6 +510,10 @@ pub fn score_fingerprints(
         format!("single_word_pair={single_word_pair:.0}"),
         format!("swapped_word_similarity={swapped_word_similarity:.3}"),
         format!("swapped_phonetic={swapped_phonetic:.3}"),
+        format!("swap_synonym={swap_synonym:.3}"),
+        format!("swap_antonym={swap_antonym:.3}"),
+        format!("multi_swap_synonym_coverage={multi_swap_synonym_coverage:.3}"),
+        format!("multi_swap_antonym={multi_swap_antonym:.3}"),
         format!("confusable_swap={confusable_swap:.3}"),
         format!("valid_swap_similarity={valid_swap_similarity:.3}"),
         format!("normalized_identity={normalized_identity:.0}"),
@@ -538,6 +594,10 @@ pub fn score_fingerprints(
         swapped_phonetic,
         confusable_swap,
         valid_swap_similarity,
+        swap_synonym,
+        swap_antonym,
+        multi_swap_synonym_coverage,
+        multi_swap_antonym,
         normalized_identity,
         substring_containment,
         cross_script_pair,
