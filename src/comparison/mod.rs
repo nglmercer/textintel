@@ -1,3 +1,4 @@
+pub mod decision;
 pub mod profile;
 pub mod scorer;
 

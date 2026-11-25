@@ -358,8 +358,17 @@ impl Default for EngineConfig {
             // Semantic scoring stays opt-in: it only takes effect with an
             // injected embedding provider (e.g. the local feature-hash
             // baseline or a model). The default provider is a null backend.
-            semantic: false,
-            phonetic: false,
+            // Feature-hashed local embeddings are deterministic and
+            // dependency-free, so the semantic evidence channel is part of
+            // the default engine alongside the phonetic channel; deployments
+            // embedding with their own model replace the provider, not the
+            // flag.
+            semantic: true,
+            // The rule-based G2P fallback is deterministic and
+            // dependency-free, so the phonetic evidence channel is part of
+            // the default engine; deployments that measure the cost can
+            // still opt out.
+            phonetic: true,
             rebus: true,
             rebus_weights: RebusWeights::default(),
             language_hints: Vec::new(),

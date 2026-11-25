@@ -264,7 +264,17 @@ pub fn score_fingerprints(
         finite_or_absent(Some(symbolic_similarity(a, b)))
     };
     let semantic = finite_or_absent(semantic_similarity(a, b));
-    let phonetic = finite_or_absent(phonetic_channel(a, b));
+    // Phonetic evidence is unreliable across disjoint scripts: each side is
+    // phonemized in its own script's G2P voice, so even perfect
+    // transliterations (`Moskva`/`Москва`, same pronunciation) score low —
+    // absence is more truthful than misleading negative evidence. The
+    // transliteration channels carry cross-script phonological identity.
+    let cross_script = cross_script_pair(a, b);
+    let phonetic = if cross_script >= 1.0 {
+        None
+    } else {
+        finite_or_absent(phonetic_channel(a, b))
+    };
     let channels = [
         ("semantic".to_string(), semantic),
         ("lexical".to_string(), Some(lexical)),
@@ -368,7 +378,7 @@ pub fn score_fingerprints(
     let fold_b = alphanumeric_fold(&b.raw);
     let normalized_identity = normalized_identity_from(&fold_a, &fold_b);
     let substring_containment = substring_containment_from(&fold_a, &fold_b);
-    let cross_script_pair = cross_script_pair(a, b);
+    let cross_script_pair = cross_script;
     let language_agreement = if a.top_language() == b.top_language() {
         1.0
     } else {

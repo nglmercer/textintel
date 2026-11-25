@@ -22,7 +22,14 @@ impl TextIntelligence {
         } else if let Some(profile) = &self.similarity_profile {
             score_fingerprints_with_profile(left, right, profile)
         } else {
-            weighted_score_fingerprints(left, right, &self.config.similarity_weights)
+            let mut result = weighted_score_fingerprints(left, right, &self.config.similarity_weights);
+            // The trained decision layer is the default readout of the
+            // explainable evidence vector; explicit custom weights keep the
+            // plain weighted-mean interpretation they configure.
+            if self.config.similarity_weights == crate::core::config::SimilarityWeights::default() {
+                crate::comparison::decision::apply_decision_layer(&mut result);
+            }
+            result
         }
     }
 

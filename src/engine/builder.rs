@@ -22,7 +22,7 @@ use crate::engine::production::EngineBuilder;
 use crate::language::NgramLanguageDetector;
 use crate::phonetic::g2p::RuleBasedG2PProvider;
 use crate::resources::ResourceLoader;
-use crate::semantic::embeddings::{CachedEmbeddingProvider, NullEmbeddingProvider};
+use crate::semantic::embeddings::{CachedEmbeddingProvider, FeatureHashEmbeddingProvider};
 use crate::storage::{JsonFileStore, MemoryStore};
 use crate::transliteration::RuleBasedTransliterationProvider;
 
@@ -49,10 +49,11 @@ impl TextIntelligence {
         let mut engine = Self {
             config,
             resources: resources.clone(),
-            // `NullEmbeddingProvider` keeps the default engine dependency-free;
-            // inject `FeatureHashEmbeddingProvider` (or a model) for local
-            // semantic evidence. See `with_embedding_provider`.
-            embedding_provider: Arc::new(NullEmbeddingProvider),
+            // `FeatureHashEmbeddingProvider` is deterministic and
+            // dependency-free, so the default engine carries a local semantic
+            // baseline; applications embedding with a model replace it
+            // through `with_embedding_provider`.
+            embedding_provider: Arc::new(FeatureHashEmbeddingProvider::default()),
             g2p_provider: Arc::new(RuleBasedG2PProvider),
             language_provider: Arc::new(language_detector),
             lexicon_provider: resources.clone(),

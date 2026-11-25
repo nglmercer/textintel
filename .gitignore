@@ -13,3 +13,7 @@ tools/llama-bin/
 
 # Generated Python bytecode.
 __pycache__/
+tools/train_decision/features*.jsonl
+tools/train_decision/ranking_features.jsonl
+tools/train_decision/ranking_pairs.jsonl
+tools/train_decision/__pycache__/
