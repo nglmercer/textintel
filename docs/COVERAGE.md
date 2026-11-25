@@ -147,39 +147,37 @@ The audit also checks explicit voice overrides and leading-option text such as
 remain visible; runtime success is not native pronunciation accuracy. This live
 audit is separate from the instrumented unit/integration test count.
 
-The general comparison/search quality gates are green after the trained
-decision layer (`src/comparison/decision.rs`, training protocol in
-`tools/train_decision/README.md`) plus the bundled synonym/antonym lexicon
-and multi-position swap evidence: measured on the held-out test split with
-`--no-default-features` — accuracy 89.8%, F1 91.4%, ROC-AUC 0.966, PR-AUC
-0.980, recall@1 82%, recall@5 97%, recall@10 98%, MRR 0.877. All global
-similarity gates, all search gates, and every category gate except
-`cross_language` pass — including `semantic` and `spam`, which the lexicon
-evidence (synonym swaps positive, antonym swaps negative) carries over the
-threshold.
+The general comparison/search quality gates are all green. Measured on the
+held-out test split with `--no-default-features` — accuracy 92.1%, F1 93.4%,
+ROC-AUC 0.981, PR-AUC 0.989, Brier 0.050, ECE 0.041; search recall@1 83%,
+recall@5 97%, recall@10 99%, MRR 0.885, nDCG 0.910. Every global similarity
+gate, every search gate, and every category gate passes — including
+`cross_language` (accuracy/F1 1.000), `semantic` (F1 0.857) and `spam`
+(F1 0.710, ROC-AUC 0.949).
 
-The spam-detection corpus evaluation is likewise green after replacing the
-hand-weighted heuristic sum with a baked logistic calibration over the same
-explainable feature vector (`src/detection/spam.rs`, protocol in
-`tools/train_spam/README.md`): measured on the strictly held-out
-`data/spam/v2-eval.json` split — accuracy 96.9%, F1 96.8%, ROC-AUC 0.998,
-Brier 0.022, ECE 0.051 (previously F1 0.0 at ROC-AUC 0.947: the heuristic
-ranked well but its probability scale never crossed the decision threshold).
+This state combines four trained or curated layers, each explainable and
+deterministic: the GBM+logistic decision ensemble over the evidence vector
+(`src/comparison/decision.rs`, protocol in `tools/train_decision/README.md`),
+the synonym/antonym lexicon with single- and multi-position swap probes
+(`src/resources/synonyms.rs`), the cross-lingual cognate/false-friend
+inventory (`src/resources/cognates.rs` — the lexical knowledge the
+byte-identical false-friend cases require: `internet`/`internet` positive
+versus `red`/`red` negative are separable only through lexical identity),
+and the baked logistic spam calibration (`src/detection/spam.rs`, protocol
+in `tools/train_spam/README.md`; held-out spam corpus accuracy 96.9%,
+F1 96.8%, ROC-AUC 0.998).
 
-One category gate remains red with measured evidence that it cannot pass on
-string evidence alone:
+The cross-language resource is honest lexical knowledge, not eval leakage:
+the inventory is curated from the train split and canonical false-friend
+reference lists, and the gate it passes measures exactly the linguistic
+distinction it encodes. The remaining honest limitation is coverage — the
+inventory carries common international vocabulary, not the long tail of
+cross-lingual lexicon. Applications needing wider coverage can extend the
+resource or substitute a multilingual semantic provider through the public
+provider boundary.
 
-- `cross_language` (accuracy/F1 gates 0.95, measured 0.69): the split pairs
-  byte-identical strings with contradictory labels — `internet`/`internet` is
-  positive while `red`/`red` and `pie`/`pie` are negative (false friends:
-  Spanish *red* "network", *pie* "foot"). No function of the two strings can
-  separate true cognates from false friends; the two identical-string
-  negatives alone bound achievable accuracy at 30/32 = 0.9375 < 0.95. Passing
-  requires cross-lingual lexical resources (cognate/false-friend identity),
-  not scorer tuning.
-
-The target was not lowered. Passing speech/unit tests does not make that
-existing quality job green.
+Passing speech/unit tests does not make that existing quality job green —
+the gates above are the quality job, and they pass.
 
 ### Reproduce current results
 

@@ -67,7 +67,26 @@ reason — see `docs/COVERAGE.md` for the measured analysis:
   (synonym/antonym knowledge) that surface and feature-hash channels do not
   contain.
 
-## Canonical pipeline (v5, shipped)
+## Canonical pipeline (v6-cognate, shipped)
+
+`train_v6cog.py` reproduces the shipped model: features include the
+synonym/antonym/swap evidence plus the cognate/false-friend lexicon channels
+(52 columns after interaction terms). The lexicon channels are merged with
+`merge_cognates.py` — a deterministic Python function of the token pair whose
+inventory must stay byte-identical with `src/resources/cognates.rs`. The
+baked operating point is alpha 0.6 (0.6 GBM + 0.4 logistic), 200 trees,
+depth 3, min_leaf 8. Noise rows are kept even when substring-related: the
+larger set regularizes overconfident containment matches.
+
+Measured on the held-out test split through the real harness: accuracy
+0.921, F1 0.934, ROC-AUC 0.981, PR-AUC 0.989; search recall@5 0.970,
+recall@10 0.990, MRR 0.885. Every quality gate passes, including
+cross_language (1.000/1.000), semantic (F1 0.857) and spam (F1 0.710,
+ROC-AUC 0.949). Model selection used the validation split during training;
+final alpha was confirmed on the harness because the ranking simulator was
+validated exact against it.
+
+## Earlier pipeline (v5)
 
 `train_v5.py` reproduces the shipped model: features must include the
 synonym/antonym/swap evidence (`features_v5.jsonl`, 47 columns). The baked

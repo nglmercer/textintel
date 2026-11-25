@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let transliteration_similarity = result.transliteration_similarity.unwrap_or(0.0);
         let transliteration_confidence = result.transliteration_confidence.unwrap_or(0.0);
         let mut features = serde_json::Map::new();
-        let pairs: [(&str, f64); 39] = [
+        let pairs: [(&str, f64); 41] = [
             ("weighted_score", result.score),
             ("semantic", result.semantic.unwrap_or(0.0)),
             ("semantic_present", result.semantic.is_some() as u8 as f64),
