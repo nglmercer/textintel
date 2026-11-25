@@ -12,7 +12,9 @@ fn number(value: f64) -> serde_json::Value {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let path = std::env::args().nth(1).unwrap_or_else(|| "data/evaluation".into());
+    let path = std::env::args()
+        .nth(1)
+        .unwrap_or_else(|| "data/evaluation".into());
     let split_filter = std::env::args().nth(2);
     let pairs_file = std::env::args().nth(3);
     let dataset = EvaluationDataset::load_path(&path)?;
@@ -25,7 +27,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     let mut engine = TextIntelligence::new(config);
     if std::env::var("EVAL_SEMHASH").is_ok() {
-        engine = engine.with_embedding_provider(textintel::semantic::embeddings::FeatureHashEmbeddingProvider::default());
+        engine = engine.with_embedding_provider(
+            textintel::semantic::embeddings::FeatureHashEmbeddingProvider::default(),
+        );
     }
     let mut synthetic: Vec<(String, String, bool, String, String)> = Vec::new();
     if let Some(file) = &pairs_file {
@@ -76,14 +80,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ("phonetic_present", result.phonetic.is_some() as u8 as f64),
             ("symbolic", result.symbolic.unwrap_or(0.0)),
             ("symbolic_present", result.symbolic.is_some() as u8 as f64),
-            ("decoded_similarity", result.decoded_similarity.unwrap_or(0.0)),
+            (
+                "decoded_similarity",
+                result.decoded_similarity.unwrap_or(0.0),
+            ),
             ("transliteration_similarity", transliteration_similarity),
             ("transliteration_confidence", transliteration_confidence),
             (
                 "transliteration_weighted",
                 transliteration_similarity * transliteration_confidence,
             ),
-            ("obfuscation_similarity", result.obfuscation_similarity.unwrap_or(0.0)),
+            (
+                "obfuscation_similarity",
+                result.obfuscation_similarity.unwrap_or(0.0),
+            ),
             ("lexicon_validity", result.lexicon_validity),
             ("single_word_pair", result.single_word_pair),
             ("swapped_word_similarity", result.swapped_word_similarity),
@@ -98,7 +108,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ("single_word_exact", result.single_word_exact),
             ("entity_agreement", result.entity_agreement),
             ("entity_conflict", result.entity_conflict),
-            ("transliteration_compatibility", result.transliteration_compatibility),
+            (
+                "transliteration_compatibility",
+                result.transliteration_compatibility,
+            ),
             ("contextual_semantic", result.contextual_semantic),
             ("cross_language_semantic", result.cross_language_semantic),
             (
@@ -118,12 +131,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             features.insert(name.to_string(), number(value));
         }
         let mut row = serde_json::Map::new();
-        row.insert("id".to_string(), serde_json::Value::from(format!("{case_a}|{case_b}")));
+        row.insert(
+            "id".to_string(),
+            serde_json::Value::from(format!("{case_a}|{case_b}")),
+        );
         row.insert(
             "category".to_string(),
             serde_json::Value::from(case_category.as_str()),
         );
-        row.insert("split".to_string(), serde_json::Value::from(case_split.as_str()));
+        row.insert(
+            "split".to_string(),
+            serde_json::Value::from(case_split.as_str()),
+        );
         row.insert("label".to_string(), serde_json::Value::from(*case_label));
         row.insert("a".to_string(), serde_json::Value::from(case_a.as_str()));
         row.insert("b".to_string(), serde_json::Value::from(case_b.as_str()));
