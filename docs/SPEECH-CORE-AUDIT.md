@@ -177,10 +177,10 @@ existing accent-folding policy retains script-specific marks.
    rendering budget even for source values that fit `u64`, preventing calls
    outside the numeric renderer's range. Typed legacy locales now consume one
    typed parse for timestamps, scientific notation, attached durations,
-   fractions, ranges, ordinals, two-component clocks and numeric calendar dates, with explicit
+   fractions, ranges, ordinals, two-component clocks, numeric calendar dates and plain numbers, with explicit
    compatibility renderers retaining established versioned wording, gender
    context and meridiem punctuation boundaries; Italian remains versioned-only
-   because it has no typed locale implementation. Dispatch, `Amount` conversion
+   because it has no typed locale implementation. Currency dispatch, joined quantity `Amount` conversion
    and established formatting still merit review; these are compatibility adapters,
    not a second scientific, duration, fraction/range, grouping or Gregorian
    source grammar.
@@ -197,7 +197,7 @@ existing accent-folding policy retains script-specific marks.
    and compatibility adapters project timestamps, clocks and shared expression
    values from those semantic spans rather than running parallel source
    recognizers. General semantic dispatch still differs by language, especially
-   for numbers and currencies. Both front ends should
+   for currencies. Both front ends should
    ultimately consume the same parsed document once, retaining established
    versioned wording as explicit rendering adapters.
 

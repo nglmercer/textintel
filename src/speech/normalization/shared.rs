@@ -639,6 +639,99 @@ fn legacy_range(
     })
 }
 
+fn all_ascii_digits(source: &str) -> bool {
+    !source.is_empty() && source.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+/// Project a typed plain-number span into the versioned numeric policy. The
+/// typed document proves that the source is one semantic numeric candidate;
+/// the shared versioned parser then retains locale separator ambiguity,
+/// leading-zero, quantity-context, gender/counter, digit-style and digit-budget
+/// policies exactly.
+fn legacy_plain_number(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
+    if !matches!(
+        span.value,
+        SpeechValue::Number { .. } | SpeechValue::Ambiguous { .. }
+    ) {
+        return None;
+    }
+    let conv = rules.conventions(&opts.locale)?;
+    let warning = |code| {
+        Some((
+            None,
+            Some(NormalizationWarning {
+                code,
+                start: span.start,
+                end: span.end,
+            }),
+        ))
+    };
+    let change = |kind, replacement| {
+        Some((
+            Some(TextChange {
+                kind,
+                start: span.start,
+                end: span.end,
+                replacement,
+                confidence: Confidence::High,
+            }),
+            None,
+        ))
+    };
+    let raw = span.source.as_str();
+    let next_word = next_word_after_span(source, span);
+    let quantity_context = next_word.is_some_and(|word| rules.quantity_context(word));
+    let context = if quantity_context {
+        super::classify::NumberContext::Quantity
+    } else {
+        super::classify::NumberContext::Plain
+    };
+    let parsed = super::classify::parse_number_in(raw, &conv, context);
+    let (negative, body) = super::classify::strip_sign(raw);
+    let pure_digits =
+        !negative && all_ascii_digits(body) && !crate::speech::lexer::is_protected_identifier(raw);
+    if opts.reading_style == super::ReadingStyle::Digits
+        && pure_digits
+        && let Some(replacement) = rules.digits(body, &opts.locale)
+    {
+        return change(ChangeKind::Number, replacement);
+    }
+    use super::classify::NumParse;
+    let amount = match parsed {
+        NumParse::Value(amount) => amount,
+        NumParse::Ambiguous => return warning(WarningCode::AmbiguousNumber),
+        NumParse::TooLarge => return warning(WarningCode::NumberTooLarge),
+        NumParse::NotNumber => return None,
+    };
+    if amount.frac.is_none()
+        && next_word.is_some_and(|word| rules.number_gender_ambiguous(amount.int, word))
+    {
+        return warning(WarningCode::AmbiguousNumber);
+    }
+    if opts.reading_style == super::ReadingStyle::Digits && amount.frac.is_none() {
+        let digits: String = body
+            .bytes()
+            .filter(u8::is_ascii_digit)
+            .map(char::from)
+            .collect();
+        if let Some(replacement) = rules.digits(&digits, &opts.locale) {
+            return change(ChangeKind::Number, replacement);
+        }
+    }
+    let kind = if amount.frac.is_some() {
+        ChangeKind::Decimal
+    } else {
+        ChangeKind::Number
+    };
+    let replacement = rules.number(&amount, &opts.locale)?;
+    change(kind, replacement)
+}
+
 fn legacy_clock_warning(source: &str) -> Option<WarningCode> {
     // Typed spans own the whole separated meridiem (`13:30 PM`), while the
     // versioned clock grammar examined only the numeric clock body here.
@@ -853,18 +946,29 @@ fn legacy_date(
         ));
     }
     let conv = rules.conventions(&opts.locale)?;
-    let Err(code) = super::classify::shared_date_fields(&span.source, &conv, opts.locale_explicit)
-    else {
-        return None;
-    };
-    Some((
-        None,
-        Some(NormalizationWarning {
-            code,
-            start: span.start,
-            end: span.end,
-        }),
-    ))
+    match super::classify::shared_date_fields(&span.source, &conv, opts.locale_explicit) {
+        Ok((year, month, day)) => {
+            let replacement = rules.date(year, month, day, &opts.locale)?;
+            Some((
+                Some(TextChange {
+                    kind: ChangeKind::Date,
+                    start: span.start,
+                    end: span.end,
+                    replacement,
+                    confidence: Confidence::High,
+                }),
+                None,
+            ))
+        }
+        Err(code) => Some((
+            None,
+            Some(NormalizationWarning {
+                code,
+                start: span.start,
+                end: span.end,
+            }),
+        )),
+    }
 }
 
 fn timestamp_shaped(source: &str) -> bool {
@@ -886,6 +990,9 @@ fn legacy_row(
     opts: &NormalizeOptions,
 ) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
     let _ = reading;
+    if let Some(row) = legacy_plain_number(source, span, rules, opts) {
+        return Some(row);
+    }
     if let Some(change) = legacy_ordinal(source, span, rules, &opts.locale) {
         return Some((Some(change), None));
     }
@@ -986,7 +1093,10 @@ pub(super) fn augment(
         {
             continue;
         }
-        if change.kind == ChangeKind::Number && opts.reading_style != super::ReadingStyle::Digits {
+        if !is_compatibility
+            && change.kind == ChangeKind::Number
+            && opts.reading_style != super::ReadingStyle::Digits
+        {
             let raw = &text[change.start..change.end];
             if raw.len() > 1 && raw.starts_with('0') && raw.bytes().all(|b| b.is_ascii_digit()) {
                 continue;

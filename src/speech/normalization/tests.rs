@@ -479,6 +479,33 @@ fn english_ambiguity() {
 }
 
 #[test]
+fn pure_unsigned_integer_compatibility_preserves_legacy_context_policy() {
+    assert_eq!(spoken("21", "en", Some("en-US")), "twenty-one");
+    assert_eq!(spoken("007", "en", Some("en-US")), "007");
+    assert_eq!(
+        warning_codes("007", "en", Some("en-US")),
+        vec![WarningCode::AmbiguousNumber]
+    );
+    assert_eq!(spoken("007 errores", "es", Some("es-PE")), "siete errores");
+    assert_eq!(spoken("021 casas", "es", Some("es-PE")), "021 casas");
+    assert_eq!(
+        warning_codes("021 casas", "es", Some("es-PE")),
+        vec![WarningCode::AmbiguousNumber]
+    );
+    assert_eq!(spoken("25 casas", "es", Some("es-PE")), "veinticinco casas");
+    assert_eq!(spoken("3 apples", "ja", Some("ja-JP")), "三 apples");
+    assert_eq!(spoken("3 人", "ja", Some("ja-JP")), "3 人");
+    assert_eq!(
+        warning_codes("3 人", "ja", Some("ja-JP")),
+        vec![WarningCode::AmbiguousNumber]
+    );
+    assert_eq!(
+        warning_codes("1234567890123456", "en", Some("en-US")),
+        vec![WarningCode::NumberTooLarge]
+    );
+}
+
+#[test]
 fn protected_tokens_are_untouched() {
     for text in [
         "Minecraft 1.21.11",

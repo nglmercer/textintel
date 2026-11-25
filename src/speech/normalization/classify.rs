@@ -55,7 +55,7 @@ pub(crate) enum NumberContext {
     Quantity,
 }
 
-fn strip_sign(raw: &str) -> (bool, &str) {
+pub(crate) fn strip_sign(raw: &str) -> (bool, &str) {
     if let Some(rest) = raw.strip_prefix('-') {
         (true, rest)
     } else if let Some(rest) = raw.strip_prefix('\u{2212}') {
@@ -1033,7 +1033,7 @@ impl<'a> Classifier<'a> {
         } else {
             NumberContext::Plain
         };
-        let parsed = parse_number_in(core, &self.conv, context);
+        let parse = || parse_number_in(core, &self.conv, context);
         let (negative, body) = strip_sign(core);
         let pure_digits = !negative && all_digits(body) && !is_protected_identifier(core);
 
@@ -1053,7 +1053,7 @@ impl<'a> Classifier<'a> {
                     .unwrap_or(next + 1);
             }
             if let Some(unit) = unit_from_str(next_core) {
-                match parsed {
+                match parse() {
                     NumParse::Value(amount) => {
                         if let Some(spoken) = self.rules.unit(&amount, unit, self.locale) {
                             self.change(ChangeKind::Unit, start, next_end, spoken);
@@ -1071,6 +1071,13 @@ impl<'a> Classifier<'a> {
             }
         }
 
+        // Typed locales consume plain numbers through the shared semantic
+        // document. Joined percent/unit/currency forms above remain versioned
+        // adapters in this tranche.
+        if self.language != "it" {
+            return index + 1;
+        }
+
         // `digits` reads the written sequence, including leading zeros. It
         // bypasses cardinal parsing (and gender agreement) only for a pure
         // unsigned digit run, so identifiers and versions keep their
@@ -1083,7 +1090,7 @@ impl<'a> Classifier<'a> {
             return index + 1;
         }
 
-        let amount = match parsed {
+        let amount = match parse() {
             NumParse::Value(amount) => amount,
             NumParse::Ambiguous => {
                 self.warn(WarningCode::AmbiguousNumber, start, end);
