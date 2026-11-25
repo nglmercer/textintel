@@ -171,8 +171,8 @@ Russian USD amounts with an explicit source token `США`. The opt-in
 `CurrencyNaming::Full` also retains the localized country qualifier for an
 unqualified ISO `USD` amount, using the shared CLDR names. It is not enabled in
 this reference policy and does not change these scores. Full lexical names are
-available across the twenty-language path; unknown Arabic count/qualifier
-paradigms remain unsupported rather than receiving an invented inflection.
+available across the twenty-language path; the shared Arabic currency paradigms
+are reviewed and inflected rather than copied as invariant CLDR labels.
 
 ### D1: Invalid Gregorian dates — three deliberate refusals
 
@@ -329,10 +329,10 @@ explicit `US$7`, depending on the language and reading style. The new opt-in
 the shared twenty-language path and retains currency identity in minor-only
 amounts. Independent contrast tests cover full names and currency distinctions;
 the default wording and this reference policy stay unchanged. Full naming is
-not a certification of all source qualifiers, currencies or registers. Unknown
-Arabic noun/qualifier paradigms remain unsupported, and broader native-reviewed
-currency contrasts are still needed. CLDR display-name data alone does not
-establish every inflected speech construction.
+not a certification of every source qualifier or register. The shared Arabic
+noun/qualifier paradigms are now reviewed, but broader native-reviewed currency
+contrasts are still needed. CLDR display-name data alone does not establish
+every inflected speech construction.
 
 The formal measured-expression templates also need native linguistic review.
 In particular, Arabic `ثلاثة أمتار قسمة اثنان` preserves the exact rational

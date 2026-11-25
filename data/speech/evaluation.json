@@ -3672,6 +3672,82 @@
       "spoken": [
         "в мае две тысячи двадцать четвёртого года"
       ]
+    },
+    {
+      "id": "ar-currency-feminine-compound-one",
+      "locale": "ar",
+      "text": "INR101",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 6,
+          "source": "INR101",
+          "kind": "currency"
+        }
+      ],
+      "spoken": [
+        "مائة وواحدة روبية"
+      ]
+    },
+    {
+      "id": "ar-currency-feminine-compound-two",
+      "locale": "ar",
+      "text": "INR102",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 6,
+          "source": "INR102",
+          "kind": "currency"
+        }
+      ],
+      "spoken": [
+        "مائة واثنتان روبية"
+      ]
+    },
+    {
+      "id": "ar-currency-feminine-decimal",
+      "locale": "ar",
+      "text": "INR0.05",
+      "decimal_separator": ".",
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 7,
+          "source": "INR0.05",
+          "kind": "currency"
+        }
+      ],
+      "spoken": [
+        "صفر فاصلة صفر خمسة روبية"
+      ]
+    },
+    {
+      "id": "ar-currency-shared-short-noun",
+      "locale": "ar",
+      "text": "CAD1",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "currency",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 4,
+          "source": "CAD1",
+          "kind": "currency"
+        }
+      ],
+      "spoken": [
+        "دولار واحد"
+      ]
     }
   ]
 }

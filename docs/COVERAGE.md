@@ -288,8 +288,11 @@ implemented and regression-covered across all twenty typed locales (`May 2024`,
 `May of 2024`, `mayo de 2024`, `май 2024 года`, `в мае 2024 года`, CJK
 year-month forms, and width-disambiguated numeric forms such as `05/2024` under
 explicit date intent), including native-script decimal digit years. Verified
-remaining gaps include currency agreement in general (6 / 109 exact — the
-weakest category). Bare `$` also requires an
+currency agreement is now implemented across the shared currency matrix.
+Under the explicit NeMo reference policy the category has 94 / 109 exact
+matches, 5 reviewed variants, 99 / 109 accepted readings, and 109 / 109 fully
+supported readings; the exact/variant split reflects reviewed register and
+reference defects rather than missing implementation. Bare `$` still requires an
 explicit currency convention rather than a guess.
 
 Recommended implementation order:
@@ -298,9 +301,11 @@ Recommended implementation order:
    clock expressions, month-year partial date forms, and CJK weekday-on-date
    validation~~ — implemented and verified on the current tree. Keep invalid
    calendars and ambiguous dates protected.
-2. Currency and measure dictionaries with noun gender/case, minor units,
-   inflected forms, case variants, native unit symbols, and script-specific
-   attachment. Interpret symbols through explicit source-locale options.
+2. ~~Currency dictionaries with noun gender/case, minor units and inflected
+   forms~~ — implemented and regression-covered for the shared currency matrix.
+   Remaining measure work includes broader native unit symbols and
+   script-specific attachment. Interpret symbols through explicit
+   source-locale options.
 3. Independently reviewed spoken gold for RFC 3339 timestamps, ordinals,
    fractions, ranges, scientific notation and durations. The typed parser now
    has timestamp IR and rendering, but its cross-locale timestamp wording still

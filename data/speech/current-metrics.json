@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "measured_on": "2026-11-15",
+  "measured_on": "2026-11-25",
   "status": "verified development snapshot; 100% reference agreement remains unresolved",
-  "base_commit": "5917360cee6348d55a51fefe9393cc0dd5cc960b",
+  "base_commit": "5dc08b7dde86bc871c3ba1aaf88c9a918f2ec534",
   "worktree": "measured before commit; source_tree pins the verified inputs",
   "source_tree": {
-    "sha256": "04377572af3752e9f78d6f0074a8e6c28222bba5e41f9b161a68ab12ee74a977",
-    "files": 304,
+    "sha256": "cd0ecc3c581fb621e7c695008b46dbed981b7a4ef67936b7f32e3d773ee73cf5",
+    "files": 307,
     "definition": "SHA256 over sorted relative POSIX path + NUL + file bytes + NUL for all files under src/tests/resources/data/language, plus Cargo.toml/Cargo.lock/build.rs and the four speech corpus/policy JSON inputs (including semantic-values.json). Documentation and generated snapshots excluded.",
-    "parent_commit": "d94fa99f9a4774f0d47e3bbc80ca9d42cf958c88"
+    "parent_commit": "5dc08b7dde86bc871c3ba1aaf88c9a918f2ec534"
   },
   "tools": {
     "rustc": "1.99.0 (b940084d7 2026-09-28)",
@@ -423,6 +423,677 @@
         "category_hints": false,
         "locales": {}
       },
+      "reference_conflicts": [
+        {
+          "locale": "ru",
+          "text": "13:05",
+          "case_ids": [
+            "nemo-ru-time-0001",
+            "nemo-ru-time-0002"
+          ],
+          "unavoidable_exact_failures": 1
+        }
+      ],
+      "exact_spoken_ceiling": 543,
+      "variant_matches": [
+        {
+          "id": "nemo-ar-cardinal-0009",
+          "reference": "مئة وسبعة",
+          "rules": [
+            "arabic_hundred_spelling"
+          ]
+        },
+        {
+          "id": "nemo-ar-money-0008",
+          "reference": "تسعة يورو",
+          "rules": [
+            "arabic_regional_currency_unit_singular"
+          ]
+        },
+        {
+          "id": "nemo-ar-money-0010",
+          "reference": "خمسة دينار كويتي",
+          "rules": [
+            "arabic_regional_currency_unit_singular"
+          ]
+        },
+        {
+          "id": "nemo-de-date-0001",
+          "reference": "vier und zwanzigster juli zwei tausend dreizehn",
+          "rules": [
+            "german_numeric_case",
+            "german_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-date-0002",
+          "reference": "vierzehnter januar",
+          "rules": [
+            "german_numeric_case"
+          ]
+        },
+        {
+          "id": "nemo-de-date-0003",
+          "reference": "erster januar",
+          "rules": [
+            "german_numeric_case"
+          ]
+        },
+        {
+          "id": "nemo-de-date-0004",
+          "reference": "dreißigster juni",
+          "rules": [
+            "german_numeric_case"
+          ]
+        },
+        {
+          "id": "nemo-de-date-0009",
+          "reference": "zweiter märz zwei tausend drei",
+          "rules": [
+            "german_numeric_case",
+            "german_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-date-0010",
+          "reference": "zweiter märz zwei tausend drei",
+          "rules": [
+            "german_numeric_case",
+            "german_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0001",
+          "reference": "zwei hundert meter",
+          "rules": [
+            "german_numeric_case",
+            "german_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0002",
+          "reference": "sechs und fünfzig komma drei pro quadrat kilometer",
+          "rules": [
+            "german_numeric_case",
+            "german_compound_spacing",
+            "german_unit_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0003",
+          "reference": "zwei hundert kilometer pro stunde",
+          "rules": [
+            "german_numeric_case",
+            "german_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0004",
+          "reference": "zwei und vierzig tausend zwei hundert neun und fünfzig pro quadrat meter",
+          "rules": [
+            "german_numeric_case",
+            "german_compound_spacing",
+            "german_unit_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0005",
+          "reference": "zwei und vierzig tausend zwei hundert neun und fünfzig pro quadrat meter",
+          "rules": [
+            "german_numeric_case",
+            "german_compound_spacing",
+            "german_unit_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0006",
+          "reference": "minus sechs und sechzig kilogramm",
+          "rules": [
+            "german_numeric_case",
+            "german_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0007",
+          "reference": "zwei kilowattstunden",
+          "rules": [
+            "german_numeric_case"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0008",
+          "reference": "eins komma null null null null zwei acht kubik zentimeter",
+          "rules": [
+            "german_numeric_case",
+            "german_unit_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0009",
+          "reference": "eins komma eins zentimeter",
+          "rules": [
+            "german_numeric_case"
+          ]
+        },
+        {
+          "id": "nemo-de-measure-0010",
+          "reference": "drei stunden",
+          "rules": [
+            "german_numeric_case"
+          ]
+        },
+        {
+          "id": "nemo-de-money-0006",
+          "reference": "eins million euro",
+          "rules": [
+            "german_numeric_case"
+          ]
+        },
+        {
+          "id": "nemo-de-money-0007",
+          "reference": "ein cent",
+          "rules": [
+            "alternative_currency_minor_unit_policy"
+          ]
+        },
+        {
+          "id": "nemo-de-money-0008",
+          "reference": "zwei cent",
+          "rules": [
+            "alternative_currency_minor_unit_policy"
+          ]
+        },
+        {
+          "id": "nemo-de-money-0009",
+          "reference": "zwanzig cent",
+          "rules": [
+            "alternative_currency_minor_unit_policy"
+          ]
+        },
+        {
+          "id": "nemo-de-time-0001",
+          "reference": "acht uhr",
+          "rules": [
+            "alternative_german_clock_zero_minute_policy"
+          ]
+        },
+        {
+          "id": "nemo-de-time-0002",
+          "reference": "acht uhr",
+          "rules": [
+            "alternative_german_clock_zero_minute_policy"
+          ]
+        },
+        {
+          "id": "nemo-de-time-0003",
+          "reference": "null uhr",
+          "rules": [
+            "alternative_german_clock_zero_minute_policy"
+          ]
+        },
+        {
+          "id": "nemo-de-time-0005",
+          "reference": "acht uhr",
+          "rules": [
+            "alternative_german_clock_zero_minute_policy"
+          ]
+        },
+        {
+          "id": "nemo-de-time-0006",
+          "reference": "zwanzig uhr",
+          "rules": [
+            "alternative_german_clock_zero_minute_policy"
+          ]
+        },
+        {
+          "id": "nemo-de-time-0007",
+          "reference": "vier und zwanzig uhr",
+          "rules": [
+            "alternative_german_clock_zero_minute_policy",
+            "german_compound_spacing"
+          ]
+        },
+        {
+          "id": "nemo-de-time-0008",
+          "reference": "vierzehn uhr",
+          "rules": [
+            "alternative_german_clock_zero_minute_policy"
+          ]
+        },
+        {
+          "id": "nemo-de-time-0009",
+          "reference": "zwölf uhr",
+          "rules": [
+            "alternative_german_clock_zero_minute_policy"
+          ]
+        },
+        {
+          "id": "nemo-en-cardinal-0005",
+          "reference": "one hundred and twenty three",
+          "rules": [
+            "numeric_hyphen_en_fr",
+            "english_hundred_and"
+          ]
+        },
+        {
+          "id": "nemo-en-cardinal-0010",
+          "reference": "one hundred twenty three thousand",
+          "rules": [
+            "numeric_hyphen_en_fr"
+          ]
+        },
+        {
+          "id": "nemo-en-measure-0009",
+          "reference": "a one hundred and twenty three point two millimeters long",
+          "rules": [
+            "numeric_hyphen_en_fr",
+            "english_hundred_and"
+          ]
+        },
+        {
+          "id": "nemo-fr-cardinal-0005",
+          "reference": "soixante et onze",
+          "rules": [
+            "numeric_hyphen_en_fr"
+          ]
+        },
+        {
+          "id": "nemo-hi-measure-0003",
+          "reference": "बीस वर्ग किलोमीटर ",
+          "rules": [
+            "outer_whitespace"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0001",
+          "reference": "一",
+          "rules": [
+            "alternative_japanese_number_notation"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0002",
+          "reference": "二",
+          "rules": [
+            "alternative_japanese_number_notation"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0003",
+          "reference": "十",
+          "rules": [
+            "alternative_japanese_number_notation"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0004",
+          "reference": "百",
+          "rules": [
+            "alternative_japanese_number_notation"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0005",
+          "reference": "千",
+          "rules": [
+            "alternative_japanese_number_notation"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0006",
+          "reference": "五千",
+          "rules": [
+            "alternative_japanese_number_notation"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0007",
+          "reference": "一万",
+          "rules": [
+            "alternative_japanese_number_notation"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0008",
+          "reference": "十二万",
+          "rules": [
+            "alternative_japanese_number_notation"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0009",
+          "reference": "百二十三万",
+          "rules": [
+            "alternative_japanese_number_notation"
+          ]
+        },
+        {
+          "id": "nemo-ja-cardinal-0010",
+          "reference": "一千二百三十四万五千",
+          "rules": [
+            "alternative_japanese_number_notation",
+            "japanese_initial_one_thousand"
+          ]
+        },
+        {
+          "id": "nemo-ko-cardinal-0005",
+          "reference": "만삼천",
+          "rules": [
+            "korean_number_group_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-cardinal-0007",
+          "reference": "십이만삼천",
+          "rules": [
+            "korean_number_group_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-cardinal-0008",
+          "reference": "일억이천삼백만십이",
+          "rules": [
+            "korean_number_group_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-date-0001",
+          "reference": "이천이십사년 ",
+          "rules": [
+            "outer_whitespace"
+          ]
+        },
+        {
+          "id": "nemo-ko-date-0002",
+          "reference": "삼월 ",
+          "rules": [
+            "outer_whitespace"
+          ]
+        },
+        {
+          "id": "nemo-ko-date-0010",
+          "reference": "기원전 백이십팔년 ",
+          "rules": [
+            "outer_whitespace"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0001",
+          "reference": "일 킬로그램",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0002",
+          "reference": "십이 킬로그램",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0003",
+          "reference": "영 킬로그램",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0004",
+          "reference": "백 그램",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0005",
+          "reference": "오백 그램",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0006",
+          "reference": "일 미터",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0007",
+          "reference": "십이 킬로미터",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0008",
+          "reference": "오 센티미터",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0009",
+          "reference": "십오 밀리미터",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-ko-measure-0010",
+          "reference": "천 킬로미터",
+          "rules": [
+            "korean_quantity_unit_spacing"
+          ]
+        },
+        {
+          "id": "nemo-pt-money-0005",
+          "reference": "doze reais e cinco centavos",
+          "rules": [
+            "alternative_currency_minor_unit_policy"
+          ]
+        },
+        {
+          "id": "nemo-pt-money-0006",
+          "reference": "um real e um centavo",
+          "rules": [
+            "alternative_currency_minor_unit_policy"
+          ]
+        },
+        {
+          "id": "nemo-pt-money-0007",
+          "reference": "cento e noventa e nove reais e noventa e nove centavos",
+          "rules": [
+            "alternative_currency_minor_unit_policy"
+          ]
+        },
+        {
+          "id": "nemo-pt-money-0008",
+          "reference": "vinte centavos",
+          "rules": [
+            "alternative_currency_minor_unit_policy"
+          ]
+        },
+        {
+          "id": "nemo-pt-money-0009",
+          "reference": "vinte e cinco centavos",
+          "rules": [
+            "alternative_currency_minor_unit_policy"
+          ]
+        },
+        {
+          "id": "nemo-pt-money-0010",
+          "reference": "cinquenta centavos",
+          "rules": [
+            "alternative_currency_minor_unit_policy"
+          ]
+        },
+        {
+          "id": "nemo-ru-money-0001",
+          "reference": "один доллар",
+          "rules": [
+            "russian_usd_qualification"
+          ]
+        },
+        {
+          "id": "nemo-ru-time-0001",
+          "reference": "тринадцать часов пять минут",
+          "rules": [
+            "russian_clock_conjunction"
+          ]
+        },
+        {
+          "id": "nemo-ru-time-0004",
+          "reference": "один час ноль минут",
+          "rules": [
+            "russian_clock_zero_minutes"
+          ]
+        },
+        {
+          "id": "nemo-ru-time-0005",
+          "reference": "два часа",
+          "rules": [
+            "russian_clock_zero_minutes"
+          ]
+        },
+        {
+          "id": "nemo-ru-time-0006",
+          "reference": "без пятнадцати минут шесть",
+          "rules": [
+            "russian_clock_relative"
+          ]
+        },
+        {
+          "id": "nemo-ru-time-0007",
+          "reference": "без одной минуты десять",
+          "rules": [
+            "russian_clock_relative"
+          ]
+        },
+        {
+          "id": "nemo-ru-time-0008",
+          "reference": "двенадцать часов",
+          "rules": [
+            "russian_clock_zero_minutes"
+          ]
+        },
+        {
+          "id": "nemo-ru-time-0009",
+          "reference": "семь минут девятого",
+          "rules": [
+            "russian_clock_relative"
+          ]
+        },
+        {
+          "id": "nemo-vi-measure-0001",
+          "reference": "hai trăm linh bốn mét",
+          "rules": [
+            "vietnamese_zero_tens_linker"
+          ]
+        },
+        {
+          "id": "nemo-vi-measure-0002",
+          "reference": "mười hai ki lô gam",
+          "rules": [
+            "vietnamese_unit_component_spacing"
+          ]
+        },
+        {
+          "id": "nemo-vi-measure-0003",
+          "reference": "một ki lô gam",
+          "rules": [
+            "vietnamese_unit_component_spacing"
+          ]
+        },
+        {
+          "id": "nemo-vi-measure-0005",
+          "reference": "năm trăm mi li gam",
+          "rules": [
+            "vietnamese_unit_component_spacing"
+          ]
+        },
+        {
+          "id": "nemo-vi-measure-0006",
+          "reference": "một trăm bảy mươi lăm xăng ti mét",
+          "rules": [
+            "vietnamese_typed_unit_alias"
+          ]
+        },
+        {
+          "id": "nemo-vi-measure-0008",
+          "reference": "một trăm mi li mét",
+          "rules": [
+            "vietnamese_unit_component_spacing"
+          ]
+        },
+        {
+          "id": "nemo-vi-measure-0009",
+          "reference": "năm ki lô mét",
+          "rules": [
+            "vietnamese_unit_component_spacing"
+          ]
+        },
+        {
+          "id": "nemo-zh-money-0004",
+          "reference": "五欧元",
+          "rules": [
+            "chinese_currency_name_spacing"
+          ]
+        },
+        {
+          "id": "nemo-zh-money-0005",
+          "reference": "一百英镑",
+          "rules": [
+            "chinese_currency_name_spacing"
+          ]
+        },
+        {
+          "id": "nemo-zh-money-0006",
+          "reference": "一百韩元",
+          "rules": [
+            "chinese_currency_name_spacing"
+          ]
+        },
+        {
+          "id": "nemo-zh-money-0007",
+          "reference": "一百美元",
+          "rules": [
+            "chinese_currency_name_spacing"
+          ]
+        },
+        {
+          "id": "nemo-zh-money-0008",
+          "reference": "五百美元",
+          "rules": [
+            "chinese_currency_name_spacing"
+          ]
+        }
+      ],
+      "variants_by_rule": {
+        "alternative_currency_minor_unit_policy": 9,
+        "alternative_german_clock_zero_minute_policy": 8,
+        "alternative_japanese_number_notation": 10,
+        "arabic_hundred_spelling": 1,
+        "arabic_regional_currency_unit_singular": 2,
+        "chinese_currency_name_spacing": 5,
+        "english_hundred_and": 2,
+        "german_compound_spacing": 10,
+        "german_numeric_case": 17,
+        "german_unit_compound_spacing": 4,
+        "japanese_initial_one_thousand": 1,
+        "korean_number_group_spacing": 3,
+        "korean_quantity_unit_spacing": 10,
+        "numeric_hyphen_en_fr": 4,
+        "outer_whitespace": 4,
+        "russian_clock_conjunction": 1,
+        "russian_clock_relative": 3,
+        "russian_clock_zero_minutes": 3,
+        "russian_usd_qualification": 1,
+        "vietnamese_typed_unit_alias": 1,
+        "vietnamese_unit_component_spacing": 5,
+        "vietnamese_zero_tens_linker": 1
+      },
       "corpus_version": "nemo-reference-0.1.0",
       "purpose": "External fixture challenge sample for exact spoken-output agreement. Selected independently of TextIntel success; not a production benchmark, not training data, and not proof of native-language coverage. Type gold is intentionally absent.",
       "totals": {
@@ -430,8 +1101,8 @@
         "parse_cases": 0,
         "parse_exact": 0,
         "spoken_cases": 544,
-        "spoken_exact": 216,
-        "spoken_variant": 87,
+        "spoken_exact": 215,
+        "spoken_variant": 88,
         "spoken_accepted": 303,
         "fully_supported": 454,
         "expected_spans": 0,
@@ -444,8 +1115,8 @@
           "parse_cases": 0,
           "parse_exact": 0,
           "spoken_cases": 30,
-          "spoken_exact": 2,
-          "spoken_variant": 2,
+          "spoken_exact": 1,
+          "spoken_variant": 3,
           "spoken_accepted": 4,
           "fully_supported": 19,
           "expected_spans": 0,
@@ -602,8 +1273,8 @@
           "parse_cases": 0,
           "parse_exact": 0,
           "spoken_cases": 109,
-          "spoken_exact": 6,
-          "spoken_variant": 17,
+          "spoken_exact": 5,
+          "spoken_variant": 18,
           "spoken_accepted": 23,
           "fully_supported": 72,
           "expected_spans": 0,
@@ -663,16 +1334,6281 @@
           "correct_spans": 0
         }
       },
-      "exact_spoken_ceiling": 543,
-      "reference_conflicts": [
+      "failures": [
         {
-          "locale": "ru",
-          "text": "13:05",
-          "case_ids": [
-            "nemo-ru-time-0001",
-            "nemo-ru-time-0002"
+          "id": "nemo-ar-cardinal-0001",
+          "locale": "ar",
+          "category": "number",
+          "expected_spoken": [
+            "ثلاثة اَلاف وستة"
           ],
-          "unavoidable_exact_failures": 1
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "3006",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ثلاثة آلاف وستة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-cardinal-0003",
+          "locale": "ar",
+          "category": "number",
+          "expected_spoken": [
+            "تسعة اَلاف وثمان مئة وسبعة وثلاثون"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "9837",
+              "kind": "number"
+            }
+          ],
+          "spoken": "تسعة آلاف وثمانمائة وسبعة وثلاثون",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-cardinal-0004",
+          "locale": "ar",
+          "category": "number",
+          "expected_spoken": [
+            "ثلاثة اَلاف وتسع مئة وسبعة عشر"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "3917",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ثلاثة آلاف وتسعمائة وسبعة عشر",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-cardinal-0005",
+          "locale": "ar",
+          "category": "number",
+          "expected_spoken": [
+            "خمسة اَلاف وخمس مئة وعشرون"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "5520",
+              "kind": "number"
+            }
+          ],
+          "spoken": "خمسة آلاف وخمسمائة وعشرون",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-cardinal-0006",
+          "locale": "ar",
+          "category": "number",
+          "expected_spoken": [
+            "ثمانية اَلاف وسبع مئة وواحد وعشرون"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "8721",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ثمانية آلاف وسبعمائة وواحد وعشرون",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-cardinal-0007",
+          "locale": "ar",
+          "category": "number",
+          "expected_spoken": [
+            "ثمانية اَلاف وتسع مئة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "8900",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ثمانية آلاف وتسعمائة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-cardinal-0008",
+          "locale": "ar",
+          "category": "number",
+          "expected_spoken": [
+            "ثمان مئة وتسعة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "809",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ثمانمائة وتسعة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-cardinal-0009",
+          "locale": "ar",
+          "category": "number",
+          "expected_spoken": [
+            "مئة وسبعة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "107",
+              "kind": "number"
+            }
+          ],
+          "spoken": "مائة وسبعة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-cardinal-0010",
+          "locale": "ar",
+          "category": "number",
+          "expected_spoken": [
+            "ثمان مئة وسبعة وثلاثون"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "837",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ثمانمائة وسبعة وثلاثون",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0001",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "سبعة في المائة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "%7",
+              "kind": "percent"
+            }
+          ],
+          "spoken": "سبعة بالمائة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0002",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "تسعة فهرنهايت"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "f9",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "f9",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0003",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "اثنا عشر في المائة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "12%",
+              "kind": "percent"
+            }
+          ],
+          "spoken": "اثنا عشر بالمائة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0004",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "تسعة في المائة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "09%",
+              "kind": "percent"
+            }
+          ],
+          "spoken": "تسعة بالمائة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0005",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "عشرون في المائة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "20%",
+              "kind": "percent"
+            }
+          ],
+          "spoken": "عشرون بالمائة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0006",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "ستة وثمانية وثمانون من مئة في المائة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "%6.88",
+              "kind": "percent"
+            }
+          ],
+          "spoken": "ستة فاصلة ثمانية ثمانية بالمائة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0007",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "سبعة وتسعة وتسعون من مئة في المائة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "%7,99",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "%7,99",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0008",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "أربعة وتسعة اَلاف وثمان مئة وستة وسبعون من عشرة آلاف في المائة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "%4.9876",
+              "kind": "percent"
+            }
+          ],
+          "spoken": "أربعة فاصلة تسعة ثمانية سبعة ستة بالمائة",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0009",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "ستة وثمانية اَلاف وتسع مئة وأربعة وأربعون من عشرة آلاف في المائة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "%6,8944",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "%6,8944",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-measure-0010",
+          "locale": "ar",
+          "category": "measure",
+          "expected_spoken": [
+            "ستة اَلاف وسبع مئة وثمانية وتسعون وتسعة من عشرة في المائة"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "%6798,9",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "%6798,9",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0001",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "سبعة دولار"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "$7",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$7",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0002",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "سبعة دولار وخمسون سنت"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$7.50",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$7.50",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0003",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "سبعة دولار وخمسة سنتات"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$7.05",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$7.05",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0004",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "سبعة دولار وتسعة وتسعون سنت"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$7.99",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$7.99",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0005",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "سبعة دولار وعشرة سنتات"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$7.10",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$7.10",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0006",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "تسعة وتسعون سنت"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$0.99",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$0.99",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0007",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "تسعة وتسعون سنت"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "€0.99",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "تسعة وتسعون سنتا",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0008",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "تسعة يورو"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "€9",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "تسعة يوروهات",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0009",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "تسعة دولار وتسعة سنتات"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$9.09",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$9.09",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0010",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "خمسة دينار كويتي"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "5د.ك",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "خمسة دنانير كويتية",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0001",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "vier und zwanzigster juli zwei tausend dreizehn"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "24. juli 2013",
+              "kind": "date"
+            }
+          ],
+          "spoken": "vierundzwanzigster Juli zweitausenddreizehn",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0002",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "vierzehnter januar"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "14. januar",
+              "kind": "date"
+            }
+          ],
+          "spoken": "vierzehnter Januar",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0003",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "erster januar"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "1. januar",
+              "kind": "date"
+            }
+          ],
+          "spoken": "erster Januar",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0004",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "dreißigster juni"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "30. juni",
+              "kind": "date"
+            }
+          ],
+          "spoken": "dreißigster Juni",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0005",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "zweiter märz zwei tausend drei"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "02.03.2003",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "02.03.2003",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0006",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "zweiter märz zwei tausend drei"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "2.3.2003",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "2.3.2003",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0007",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "zweiter märz"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "2.3",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "2.3",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0008",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "zweiter märz"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "02.03",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "02.03",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0009",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "zweiter märz zwei tausend drei"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "2. März 2003",
+              "kind": "date"
+            }
+          ],
+          "spoken": "zweiter März zweitausenddrei",
+          "error": null
+        },
+        {
+          "id": "nemo-de-date-0010",
+          "locale": "de",
+          "category": "date",
+          "expected_spoken": [
+            "zweiter märz zwei tausend drei"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "2. Mär. 2003",
+              "kind": "date"
+            }
+          ],
+          "spoken": "zweiter März zweitausenddrei",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0001",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "zwei hundert meter"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "200 m",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "zweihundert Meter",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0002",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "sechs und fünfzig komma drei pro quadrat kilometer"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "56,3 /km²",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "sechsundfünfzig Komma drei pro Quadratkilometer",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0003",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "zwei hundert kilometer pro stunde"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "200 km/h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "zweihundert Kilometer pro Stunde",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0004",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "zwei und vierzig tausend zwei hundert neun und fünfzig pro quadrat meter"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "42259 /m²",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "zweiundvierzigtausendzweihundertneunundfünfzig pro Quadratmeter",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0005",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "zwei und vierzig tausend zwei hundert neun und fünfzig pro quadrat meter"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "42259/m²",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "zweiundvierzigtausendzweihundertneunundfünfzig pro Quadratmeter",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0006",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "minus sechs und sechzig kilogramm"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "-66 kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "minus sechsundsechzig Kilogramm",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0007",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "zwei kilowattstunden"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "2 kwh",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "zwei Kilowattstunden",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0008",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "eins komma null null null null zwei acht kubik zentimeter"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "1,000028 cm³",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "eins Komma null null null null zwei acht Kubikzentimeter",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0009",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "eins komma eins zentimeter"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "1,1 cm",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "eins Komma eins Zentimeter",
+          "error": null
+        },
+        {
+          "id": "nemo-de-measure-0010",
+          "locale": "de",
+          "category": "measure",
+          "expected_spoken": [
+            "drei stunden"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "3 h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "drei Stunden",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0001",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "zwei dollar"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "$2",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$2",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0002",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "zwei dollar"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "$2,000",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$2,000",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0003",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "zwei dollar"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "$2,0",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$2,0",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0004",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "zwei dollar"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$2,00",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$2,00",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0005",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "zwei komma null null null eins dollar"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "$2,0001",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$2,0001",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0006",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "eins million euro"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 12,
+              "source": "€1 million",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "eins million Euro",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0007",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "ein cent"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "€0,01",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "null Komma null eins Euro",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0008",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "zwei cent"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "€0,02",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "null Komma null zwei Euro",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0009",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "zwanzig cent"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "€0,20",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "null Komma zwei null Euro",
+          "error": null
+        },
+        {
+          "id": "nemo-de-money-0010",
+          "locale": "de",
+          "category": "currency",
+          "expected_spoken": [
+            "zwei dollar zwanzig cent"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$2,20",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$2,20",
+          "error": null
+        },
+        {
+          "id": "nemo-de-time-0001",
+          "locale": "de",
+          "category": "time",
+          "expected_spoken": [
+            "acht uhr"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "08:00 Uhr",
+              "kind": "time"
+            }
+          ],
+          "spoken": "acht uhr null minuten",
+          "error": null
+        },
+        {
+          "id": "nemo-de-time-0002",
+          "locale": "de",
+          "category": "time",
+          "expected_spoken": [
+            "acht uhr"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "08:00 Uhr",
+              "kind": "time"
+            }
+          ],
+          "spoken": "acht uhr null minuten",
+          "error": null
+        },
+        {
+          "id": "nemo-de-time-0003",
+          "locale": "de",
+          "category": "time",
+          "expected_spoken": [
+            "null uhr"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "00:00 Uhr",
+              "kind": "time"
+            }
+          ],
+          "spoken": "null uhr null minuten",
+          "error": null
+        },
+        {
+          "id": "nemo-de-time-0005",
+          "locale": "de",
+          "category": "time",
+          "expected_spoken": [
+            "acht uhr"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "08:00 Uhr",
+              "kind": "time"
+            }
+          ],
+          "spoken": "acht uhr null minuten",
+          "error": null
+        },
+        {
+          "id": "nemo-de-time-0006",
+          "locale": "de",
+          "category": "time",
+          "expected_spoken": [
+            "zwanzig uhr"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "20:00 Uhr",
+              "kind": "time"
+            }
+          ],
+          "spoken": "zwanzig uhr null minuten",
+          "error": null
+        },
+        {
+          "id": "nemo-de-time-0007",
+          "locale": "de",
+          "category": "time",
+          "expected_spoken": [
+            "vier und zwanzig uhr"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "24:00 Uhr",
+              "kind": "time"
+            }
+          ],
+          "spoken": "vierundzwanzig uhr null minuten",
+          "error": null
+        },
+        {
+          "id": "nemo-de-time-0008",
+          "locale": "de",
+          "category": "time",
+          "expected_spoken": [
+            "vierzehn uhr"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "14:00 Uhr",
+              "kind": "time"
+            }
+          ],
+          "spoken": "vierzehn uhr null minuten",
+          "error": null
+        },
+        {
+          "id": "nemo-de-time-0009",
+          "locale": "de",
+          "category": "time",
+          "expected_spoken": [
+            "zwölf uhr"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "12:00 Uhr",
+              "kind": "time"
+            }
+          ],
+          "spoken": "zwölf uhr null minuten",
+          "error": null
+        },
+        {
+          "id": "nemo-en-cardinal-0005",
+          "locale": "en",
+          "category": "number",
+          "expected_spoken": [
+            "one hundred and twenty three"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "123",
+              "kind": "number"
+            }
+          ],
+          "spoken": "one hundred twenty-three",
+          "error": null
+        },
+        {
+          "id": "nemo-en-cardinal-0007",
+          "locale": "en",
+          "category": "number",
+          "expected_spoken": [
+            "one three zero zero zero"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "13000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "thirteen thousand",
+          "error": null
+        },
+        {
+          "id": "nemo-en-cardinal-0010",
+          "locale": "en",
+          "category": "number",
+          "expected_spoken": [
+            "one hundred twenty three thousand"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "123,000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "one hundred twenty-three thousand",
+          "error": null
+        },
+        {
+          "id": "nemo-en-date-0003",
+          "locale": "en",
+          "category": "date",
+          "expected_spoken": [
+            "nineteen eighties"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "1980s",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "one thousand nine hundred eighty seconds",
+          "error": null
+        },
+        {
+          "id": "nemo-en-date-0004",
+          "locale": "en",
+          "category": "date",
+          "expected_spoken": [
+            "nineteen eighties"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "1980 s",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "one thousand nine hundred eighty seconds",
+          "error": null
+        },
+        {
+          "id": "nemo-en-measure-0007",
+          "locale": "en",
+          "category": "measure",
+          "expected_spoken": [
+            "three CC per S"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "3 cc/s",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "three cubic centimeters per second",
+          "error": null
+        },
+        {
+          "id": "nemo-en-measure-0009",
+          "locale": "en",
+          "category": "measure",
+          "expected_spoken": [
+            "a one hundred and twenty three point two millimeters long"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 2,
+              "end": 19,
+              "source": "123.2-millimeters",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "a one hundred twenty-three point two millimeters long",
+          "error": null
+        },
+        {
+          "id": "nemo-en-measure-0010",
+          "locale": "en",
+          "category": "measure",
+          "expected_spoken": [
+            "covid- nineteen point five"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "covid-19.5",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "covid-19.5",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0001",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "two dollars"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "$2",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$2",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0002",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "two dollars"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$2.00",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$2.00",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0003",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "four hundred sixty billion won"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 14,
+              "source": "₩460 billion",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "four hundred sixty billion South Korean won",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0004",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "thirty billion yen"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 12,
+              "source": "¥30 billion",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "¥30 billion",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0005",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "thirty billion yen"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "¥30 b",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "¥30 b",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0006",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "thirty billion yen"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "¥30b",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "¥30b",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0007",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "thirty billion yen"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "¥30B",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "¥30B",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0008",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "forty five billion dollars"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 11,
+              "source": "$45 billion",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$45 billion",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0009",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "zero point two million dollars"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 12,
+              "source": "$0.2 million",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$0.2 million",
+          "error": null
+        },
+        {
+          "id": "nemo-en-money-0010",
+          "locale": "en",
+          "category": "currency",
+          "expected_spoken": [
+            "two point five million dollars"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 12,
+              "source": "$2.5 million",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$2.5 million",
+          "error": null
+        },
+        {
+          "id": "nemo-en-time-0001",
+          "locale": "en",
+          "category": "time",
+          "expected_spoken": [
+            "one o'clock"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "01:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "one hour and zero minutes",
+          "error": null
+        },
+        {
+          "id": "nemo-en-time-0002",
+          "locale": "en",
+          "category": "time",
+          "expected_spoken": [
+            "one AM"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "01:00 am",
+              "kind": "time"
+            }
+          ],
+          "spoken": "one hour and zero minutes",
+          "error": null
+        },
+        {
+          "id": "nemo-en-time-0003",
+          "locale": "en",
+          "category": "time",
+          "expected_spoken": [
+            "one AM"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "01:00 a.m.",
+              "kind": "time"
+            }
+          ],
+          "spoken": "one hour and zero minutes",
+          "error": null
+        },
+        {
+          "id": "nemo-en-time-0004",
+          "locale": "en",
+          "category": "time",
+          "expected_spoken": [
+            "one AM"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "01:00 a.m",
+              "kind": "time"
+            }
+          ],
+          "spoken": "one hour and zero minutes",
+          "error": null
+        },
+        {
+          "id": "nemo-en-time-0006",
+          "locale": "en",
+          "category": "time",
+          "expected_spoken": [
+            "twenty three o'clock"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "23:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "twenty-three hours and zero minutes",
+          "error": null
+        },
+        {
+          "id": "nemo-en-time-0007",
+          "locale": "en",
+          "category": "time",
+          "expected_spoken": [
+            "one AM"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "1:00 a.m.",
+              "kind": "time"
+            }
+          ],
+          "spoken": "one hour and zero minutes",
+          "error": null
+        },
+        {
+          "id": "nemo-en-time-0008",
+          "locale": "en",
+          "category": "time",
+          "expected_spoken": [
+            "one AM"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "1:00a.m.",
+              "kind": "time"
+            }
+          ],
+          "spoken": "one hour and zero minutes",
+          "error": null
+        },
+        {
+          "id": "nemo-en-time-0009",
+          "locale": "en",
+          "category": "time",
+          "expected_spoken": [
+            "one fifty nine PM"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "1.59 p.m.",
+              "kind": "time"
+            }
+          ],
+          "spoken": "thirteen hours and fifty-nine minutes",
+          "error": null
+        },
+        {
+          "id": "nemo-en-time-0010",
+          "locale": "en",
+          "category": "time",
+          "expected_spoken": [
+            "one fifty nine PM"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "01:59 p.m.",
+              "kind": "time"
+            }
+          ],
+          "spoken": "thirteen hours and fifty-nine minutes",
+          "error": null
+        },
+        {
+          "id": "nemo-es-date-0009",
+          "locale": "es",
+          "category": "date",
+          "expected_spoken": [
+            "treinta de febrero de mil novecientos noventa"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "30-2-1990",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "30-2-1990",
+          "error": null
+        },
+        {
+          "id": "nemo-es-date-0010",
+          "locale": "es",
+          "category": "date",
+          "expected_spoken": [
+            "treinta de febrero de mil novecientos noventa"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "30/2/1990",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "30/2/1990",
+          "error": null
+        },
+        {
+          "id": "nemo-es-measure-0001",
+          "locale": "es",
+          "category": "measure",
+          "expected_spoken": [
+            "uno coma dos a"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "1,2-a",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "1,2-a",
+          "error": null
+        },
+        {
+          "id": "nemo-es-measure-0002",
+          "locale": "es",
+          "category": "measure",
+          "expected_spoken": [
+            "a cinco"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "a-5",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "a-5",
+          "error": null
+        },
+        {
+          "id": "nemo-es-measure-0004",
+          "locale": "es",
+          "category": "measure",
+          "expected_spoken": [
+            "tres y tres quintos de metro"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 1,
+              "source": "3",
+              "kind": "number"
+            },
+            {
+              "start": 2,
+              "end": 5,
+              "source": "3/5",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "tres 3/5 m",
+          "error": null
+        },
+        {
+          "id": "nemo-es-measure-0009",
+          "locale": "es",
+          "category": "measure",
+          "expected_spoken": [
+            "una coma cero una millas por hora"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "1,01 mph",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "uno coma cero uno millas por hora",
+          "error": null
+        },
+        {
+          "id": "nemo-es-measure-0010",
+          "locale": "es",
+          "category": "measure",
+          "expected_spoken": [
+            "una y media milla por hora"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 1,
+              "source": "1",
+              "kind": "number"
+            },
+            {
+              "start": 2,
+              "end": 5,
+              "source": "1/2",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "uno 1/2 mph",
+          "error": null
+        },
+        {
+          "id": "nemo-es-money-0001",
+          "locale": "es",
+          "category": "currency",
+          "expected_spoken": [
+            "un dólar"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "$1",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$1",
+          "error": null
+        },
+        {
+          "id": "nemo-es-money-0002",
+          "locale": "es",
+          "category": "currency",
+          "expected_spoken": [
+            "un dólar"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "1 $",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "1 $",
+          "error": null
+        },
+        {
+          "id": "nemo-es-money-0003",
+          "locale": "es",
+          "category": "currency",
+          "expected_spoken": [
+            "un dólar cincuenta centavos"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "$1,50",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$1,50",
+          "error": null
+        },
+        {
+          "id": "nemo-es-money-0004",
+          "locale": "es",
+          "category": "currency",
+          "expected_spoken": [
+            "un dólar cincuenta centavos"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "1,50 $",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "1,50 $",
+          "error": null
+        },
+        {
+          "id": "nemo-es-money-0005",
+          "locale": "es",
+          "category": "currency",
+          "expected_spoken": [
+            "doscientos millones una libras"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "£200.000.001",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "doscientos millones una libras esterlinas",
+          "error": null
+        },
+        {
+          "id": "nemo-es-money-0006",
+          "locale": "es",
+          "category": "currency",
+          "expected_spoken": [
+            "doscientos millones una libras"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 14,
+              "source": "200.000.001 £",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "doscientos millones una libras esterlinas",
+          "error": null
+        },
+        {
+          "id": "nemo-es-time-0001",
+          "locale": "es",
+          "category": "time",
+          "expected_spoken": [
+            "una"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "1.00",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "1.00",
+          "error": null
+        },
+        {
+          "id": "nemo-es-time-0002",
+          "locale": "es",
+          "category": "time",
+          "expected_spoken": [
+            "una"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "1:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "una hora y cero minutos",
+          "error": null
+        },
+        {
+          "id": "nemo-es-time-0003",
+          "locale": "es",
+          "category": "time",
+          "expected_spoken": [
+            "una"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "01:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "una hora y cero minutos",
+          "error": null
+        },
+        {
+          "id": "nemo-es-time-0004",
+          "locale": "es",
+          "category": "time",
+          "expected_spoken": [
+            "una"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "01 h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "una hora",
+          "error": null
+        },
+        {
+          "id": "nemo-es-time-0007",
+          "locale": "es",
+          "category": "time",
+          "expected_spoken": [
+            "una y cinco"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "1.05",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "1.05 h",
+          "error": null
+        },
+        {
+          "id": "nemo-es-time-0008",
+          "locale": "es",
+          "category": "time",
+          "expected_spoken": [
+            "una y cinco"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "01.05",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "01.05 h",
+          "error": null
+        },
+        {
+          "id": "nemo-es-time-0009",
+          "locale": "es",
+          "category": "time",
+          "expected_spoken": [
+            "una"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "1.00",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "1.00 h",
+          "error": null
+        },
+        {
+          "id": "nemo-es-time-0010",
+          "locale": "es",
+          "category": "time",
+          "expected_spoken": [
+            "una de la mañana"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "1.00 a.m.",
+              "kind": "time"
+            }
+          ],
+          "spoken": "una hora y cero minutos",
+          "error": null
+        },
+        {
+          "id": "nemo-fr-cardinal-0005",
+          "locale": "fr",
+          "category": "number",
+          "expected_spoken": [
+            "soixante et onze"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "71",
+              "kind": "number"
+            }
+          ],
+          "spoken": "soixante-et-onze",
+          "error": null
+        },
+        {
+          "id": "nemo-fr-date-0001",
+          "locale": "fr",
+          "category": "date",
+          "expected_spoken": [
+            "deux mars deux mille trois"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "02.03.2003",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "02.03.2003",
+          "error": null
+        },
+        {
+          "id": "nemo-fr-date-0002",
+          "locale": "fr",
+          "category": "date",
+          "expected_spoken": [
+            "deux mars deux mille trois"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "02/03/2003",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "02/03/2003",
+          "error": null
+        },
+        {
+          "id": "nemo-fr-date-0003",
+          "locale": "fr",
+          "category": "date",
+          "expected_spoken": [
+            "deux mars deux mille trois"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "02-03-2003",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "02-03-2003",
+          "error": null
+        },
+        {
+          "id": "nemo-fr-date-0004",
+          "locale": "fr",
+          "category": "date",
+          "expected_spoken": [
+            "le deux mars deux mille trois"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 3,
+              "end": 13,
+              "source": "02.03.2003",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "le 02.03.2003",
+          "error": null
+        },
+        {
+          "id": "nemo-fr-date-0005",
+          "locale": "fr",
+          "category": "date",
+          "expected_spoken": [
+            "dix-sept juin"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "17.06",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "17.06",
+          "error": null
+        },
+        {
+          "id": "nemo-fr-date-0009",
+          "locale": "fr",
+          "category": "date",
+          "expected_spoken": [
+            "les eighties"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 4,
+              "end": 7,
+              "source": "80s",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "les quatre-vingts secondes",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-date-0001",
+          "locale": "hi",
+          "category": "date",
+          "expected_spoken": [
+            "छह मई"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "06-05",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "06-05",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-date-0002",
+          "locale": "hi",
+          "category": "date",
+          "expected_spoken": [
+            "इकतीस जून"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "३१-०६",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "३१-०६",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-date-0003",
+          "locale": "hi",
+          "category": "date",
+          "expected_spoken": [
+            "दो जनवरी"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "02-01",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "02-01",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-date-0004",
+          "locale": "hi",
+          "category": "date",
+          "expected_spoken": [
+            "चार जनवरी"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "०४-०१",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "०४-०१",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-date-0005",
+          "locale": "hi",
+          "category": "date",
+          "expected_spoken": [
+            "एक अक्टूबर"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "01-10",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "01-10",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-date-0006",
+          "locale": "hi",
+          "category": "date",
+          "expected_spoken": [
+            "बारह जुलाई"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "१२-०७",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "१२-०७",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-date-0007",
+          "locale": "hi",
+          "category": "date",
+          "expected_spoken": [
+            "चार मार्च"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "०४-०३",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "०४-०३",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-date-0010",
+          "locale": "hi",
+          "category": "date",
+          "expected_spoken": [
+            "नौ दिसंबर इक्कीस सौ एक"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 26,
+              "source": "०९-१२-२१०१",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "०९-१२-२१०१",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-measure-0003",
+          "locale": "hi",
+          "category": "measure",
+          "expected_spoken": [
+            "बीस वर्ग किलोमीटर "
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "20 km²",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "बीस वर्ग किलोमीटर",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0001",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "एक सौ ग्यारह रुपए"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "₹111",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "एक सौ ग्यारह भारतीय रुपए",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0002",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "एक हज़ार आठ सौ पाउंड"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 14,
+              "source": "£१८००",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "एक हज़ार आठ सौ ब्रिटिश पाउंड स्टर्लिंग",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0003",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "सात सौ साठ वॉन"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "₩760",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "सात सौ साठ दक्षिण कोरियाई वॉन",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0004",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "पाँच सौ डॉलर"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "$५००",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$५००",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0005",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "बाईस रुपए"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "₹22",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "बाईस भारतीय रुपए",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0006",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "पाँच हज़ार छह सौ लीरा"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 15,
+              "source": "₺५६००",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "पाँच हज़ार छह सौ तुर्की लीरा",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0007",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "एक हज़ार दो सौ लीरा"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "₺1200",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "एक हज़ार दो सौ तुर्की लीरा",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0008",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "एक सौ चौबीस लीरा"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 12,
+              "source": "₺१२४",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "एक सौ चौबीस तुर्की लीरा",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0009",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "छह सौ छियानबे डॉलर"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "$696",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$696",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-money-0010",
+          "locale": "hi",
+          "category": "currency",
+          "expected_spoken": [
+            "एक सौ चौवालीस रुपए"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 12,
+              "source": "₹१४४",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "एक सौ चौवालीस भारतीय रुपए",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0001",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "बारह बजकर दस मिनट दस सेकंड"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "12:10:10",
+              "kind": "time"
+            }
+          ],
+          "spoken": "बारह घंटे और दस मिनट और दस सेकंड",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0002",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "पाँच बजकर बारह मिनट एक सेकंड"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 17,
+              "source": "५:१२:०१",
+              "kind": "time"
+            }
+          ],
+          "spoken": "पाँच घंटे और बारह मिनट और एक सेकंड",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0003",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "तीन बजकर अठारह मिनट तैंतालीस सेकंड"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "3:18:43",
+              "kind": "time"
+            }
+          ],
+          "spoken": "तीन घंटे और अठारह मिनट और तैंतालीस सेकंड",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0004",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "दो बजकर सोलह मिनट"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "२:१६",
+              "kind": "time"
+            }
+          ],
+          "spoken": "दो घंटे और सोलह मिनट",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0005",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "सात बजकर इक्कीस मिनट"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "7:21",
+              "kind": "time"
+            }
+          ],
+          "spoken": "सात घंटे और इक्कीस मिनट",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0006",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "ग्यारह बजकर सत्तावन मिनट"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "११:५७",
+              "kind": "time"
+            }
+          ],
+          "spoken": "ग्यारह घंटे और सत्तावन मिनट",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0007",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "आठ बजे "
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "8:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "आठ घंटे और शून्य मिनट",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0008",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "चार बजे"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "४:००",
+              "kind": "time"
+            }
+          ],
+          "spoken": "चार घंटे और शून्य मिनट",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0009",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "नौ बजे"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "9:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "नौ घंटे और शून्य मिनट",
+          "error": null
+        },
+        {
+          "id": "nemo-hi-time-0010",
+          "locale": "hi",
+          "category": "time",
+          "expected_spoken": [
+            "सुबह के पाँच बजकर बीस मिनट बारह सेकंड"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 20,
+              "end": 37,
+              "source": "५:२०:१२",
+              "kind": "time"
+            }
+          ],
+          "spoken": "सुबह के पाँच घंटे और बीस मिनट और बारह सेकंड",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0001",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "一"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 1,
+              "source": "1",
+              "kind": "number"
+            }
+          ],
+          "spoken": "いち",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0002",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "二"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 1,
+              "source": "2",
+              "kind": "number"
+            }
+          ],
+          "spoken": "に",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0003",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "十"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "10",
+              "kind": "number"
+            }
+          ],
+          "spoken": "じゅう",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0004",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "百"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "100",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ひゃく",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0005",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "千"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "1000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "せん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0006",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "五千"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "5000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ごせん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0007",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "一万"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "10000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "いちまん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0008",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "十二万"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "120000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "じゅうにまん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0009",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "百二十三万"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "1230000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ひゃくにじゅうさんまん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-cardinal-0010",
+          "locale": "ja",
+          "category": "number",
+          "expected_spoken": [
+            "一千二百三十四万五千"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "12345000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "せんにひゃくさんじゅうよんまんごせん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0001",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "二千二十四年一月三十日"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "2024/01/30",
+              "kind": "date"
+            }
+          ],
+          "spoken": "にせんにじゅうよねんいちがつさんじゅうにち",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0002",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "二千二十四年"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "2024年",
+              "kind": "date"
+            }
+          ],
+          "spoken": "にせんにじゅうよねん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0003",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "令和四年"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "R.4",
+              "kind": "date"
+            }
+          ],
+          "spoken": "令和よねん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0004",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "三月"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "3月",
+              "kind": "date"
+            }
+          ],
+          "spoken": "さんがつ",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0005",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "十五日"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "15日",
+              "kind": "date"
+            }
+          ],
+          "spoken": "じゅうごにち",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0006",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "一月一日月曜日から三日水曜日"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 25,
+              "source": "1月1日(月)〜3日(水)",
+              "kind": "date"
+            }
+          ],
+          "spoken": "いちがつついたち月曜日からみっか水曜日",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0007",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "一日から来年二月末まで"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "1日",
+              "kind": "date"
+            },
+            {
+              "start": 16,
+              "end": 20,
+              "source": "2月",
+              "kind": "date"
+            }
+          ],
+          "spoken": "ついたちから来年にがつ末まで",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0008",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "一月から十二月"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 12,
+              "source": "1月〜12月",
+              "kind": "date"
+            }
+          ],
+          "spoken": "いちがつからじゅうにがつ",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0009",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "一月の最終金曜日"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "1月",
+              "kind": "date"
+            }
+          ],
+          "spoken": "いちがつの最終金曜日",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-date-0010",
+          "locale": "ja",
+          "category": "date",
+          "expected_spoken": [
+            "一月二十二日"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "1月22日",
+              "kind": "date"
+            }
+          ],
+          "spoken": "いちがつにじゅうににち",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0001",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "五キロ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "5kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "ご キログラム",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0002",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "ゼロキロ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "0kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "ゼロ キログラム",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0003",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "一キロ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "1 kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "いち キログラム",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0004",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "二キロ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "2ｋｇ",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "に キログラム",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0005",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "百グラム"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "100g",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "ひゃく グラム",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0006",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "五百ミリグラム"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "500mg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "ごひゃく ミリグラム",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0007",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "マイナス三キロ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "-3kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "マイナスさん キログラム",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0008",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "一点五キロ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "1.5kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "いちてんご キログラム",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0009",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "マイナス二点五キロ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "-2.5kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "マイナスにてんご キログラム",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-measure-0010",
+          "locale": "ja",
+          "category": "measure",
+          "expected_spoken": [
+            "零点零五メートル"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "0.05m",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "ゼロてんゼロご メートル",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0001",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "百円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "100円",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "ひゃく 円",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0002",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "一円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "1円",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "いち 円",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0003",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "ゼロ円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "0円",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "ゼロ 円",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0004",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "十円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "10円",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "じゅう 円",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0005",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "千円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "1,000円",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "せん 円",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0006",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "一万二千三百四十五円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "12,345円",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "いちまんにせんさんびゃくよんじゅうご 円",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0007",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "マイナス五百円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "-500円",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "マイナスごひゃく 円",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0008",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "マイナス五百円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 18,
+              "source": "マイナス500円",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "マイナスごひゃく 円",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0009",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "百円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "¥100",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "¥100",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-money-0010",
+          "locale": "ja",
+          "category": "currency",
+          "expected_spoken": [
+            "二千五百円"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "￥2500",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "￥2500",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0001",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "一時三十分"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "1時30分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "いちじさんじゅっぷん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0002",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "一時十三分"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "1時13分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "いちじじゅうさんぷん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0003",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "一時十九分"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "1時19分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "いちじじゅうきゅうふん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0004",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "七時三分"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "7時3分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "しちじさんぷん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0005",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "七時二十八分"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "7時28分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "しちじにじゅうはっぷん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0006",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "三時二十一分"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "3時21分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "さんじにじゅういっぷん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0007",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "三時十五分前"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "3時15分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "さんじじゅうごふん前",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0008",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "三時十八分"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "3時18分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "さんじじゅうはっぷん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0009",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "三時十分"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "3時10分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "さんじじゅっぷん",
+          "error": null
+        },
+        {
+          "id": "nemo-ja-time-0010",
+          "locale": "ja",
+          "category": "time",
+          "expected_spoken": [
+            "九時三十一分"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "9時31分",
+              "kind": "time"
+            }
+          ],
+          "spoken": "くじさんじゅういっぷん",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-cardinal-0005",
+          "locale": "ko",
+          "category": "number",
+          "expected_spoken": [
+            "만삼천"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "13000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "만 삼천",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-cardinal-0007",
+          "locale": "ko",
+          "category": "number",
+          "expected_spoken": [
+            "십이만삼천"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "123000",
+              "kind": "number"
+            }
+          ],
+          "spoken": "십이만 삼천",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-cardinal-0008",
+          "locale": "ko",
+          "category": "number",
+          "expected_spoken": [
+            "일억이천삼백만십이"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "123000012",
+              "kind": "number"
+            }
+          ],
+          "spoken": "일억 이천삼백만 십이",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-date-0001",
+          "locale": "ko",
+          "category": "date",
+          "expected_spoken": [
+            "이천이십사년 "
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "2024년",
+              "kind": "date"
+            }
+          ],
+          "spoken": "이천이십사년",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-date-0002",
+          "locale": "ko",
+          "category": "date",
+          "expected_spoken": [
+            "삼월 "
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "3월",
+              "kind": "date"
+            }
+          ],
+          "spoken": "삼월",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-date-0010",
+          "locale": "ko",
+          "category": "date",
+          "expected_spoken": [
+            "기원전 백이십팔년 "
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 15,
+              "source": "기원전128년",
+              "kind": "date"
+            }
+          ],
+          "spoken": "기원전 백이십팔년",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0001",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "일 킬로그램"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "1kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "일킬로그램",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0002",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "십이 킬로그램"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "12kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "십이킬로그램",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0003",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "영 킬로그램"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "0kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "영킬로그램",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0004",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "백 그램"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "100g",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "백그램",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0005",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "오백 그램"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "500g",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "오백그램",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0006",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "일 미터"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "1m",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "일미터",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0007",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "십이 킬로미터"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "12km",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "십이킬로미터",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0008",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "오 센티미터"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "5cm",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "오센티미터",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0009",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "십오 밀리미터"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "15mm",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "십오밀리미터",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-measure-0010",
+          "locale": "ko",
+          "category": "measure",
+          "expected_spoken": [
+            "천 킬로미터"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "1000km",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "천킬로미터",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0001",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "이천원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "₩2000",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "이천 대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0002",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "이천원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "₩2,000",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "이천 대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0003",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "이천원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "2000원",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "이천 대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0004",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "백이십삼만원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 11,
+              "source": "KRW 1230000",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "백이십삼만 대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0005",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "사천육백억원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 15,
+              "source": "₩460000000000",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "사천육백억 대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0006",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "삼십억원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "₩30억",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "삼십억대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0007",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "삼십조원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "₩30조",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "삼십조대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0008",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "사십오억원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "₩45억",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "사십오억대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0009",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "만오천원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "₩15000",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "만 오천 대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-ko-money-0010",
+          "locale": "ko",
+          "category": "currency",
+          "expected_spoken": [
+            "일원"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "₩1",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "일 대한민국 원",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-date-0002",
+          "locale": "pt",
+          "category": "date",
+          "expected_spoken": [
+            "primeiro de janeiro de dois mil"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "01/01/2000",
+              "kind": "date"
+            }
+          ],
+          "spoken": "um de janeiro de dois mil",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-date-0006",
+          "locale": "pt",
+          "category": "date",
+          "expected_spoken": [
+            "primeiro de maio de dois mil e vinte e cinco"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "1/5/2025",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "1/5/2025",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-date-0007",
+          "locale": "pt",
+          "category": "date",
+          "expected_spoken": [
+            "sete de agosto de dois mil e dez"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "07/08/2010",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "07/08/2010",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-date-0008",
+          "locale": "pt",
+          "category": "date",
+          "expected_spoken": [
+            "nove de junho de dois mil e vinte e quatro"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "9/6/2024",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "9/6/2024",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-date-0009",
+          "locale": "pt",
+          "category": "date",
+          "expected_spoken": [
+            "dois de março de dois mil"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "2/3/2000",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "2/3/2000",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0001",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "um real"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "R$ 1",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "um Real brasileiro",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0002",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "doze reais"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "R$ 12",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "doze Reais brasileiros",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0003",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "cem reais"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "R$ 100",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "cem Reais brasileiros",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0004",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "duzentos reais"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "R$ 200",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "duzentos Reais brasileiros",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0005",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "doze reais e cinco centavos"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "R$ 12,05",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "doze vírgula zero cinco Reais brasileiros",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0006",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "um real e um centavo"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "R$ 1,01",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "um vírgula zero um Real brasileiro",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0007",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "cento e noventa e nove reais e noventa e nove centavos"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "R$ 199,99",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "cento e noventa e nove vírgula nove nove Reais brasileiros",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0008",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "vinte centavos"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "R$ 0,20",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "zero vírgula dois zero Real brasileiro",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0009",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "vinte e cinco centavos"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "R$ 0,25",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "zero vírgula dois cinco Real brasileiro",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-money-0010",
+          "locale": "pt",
+          "category": "currency",
+          "expected_spoken": [
+            "cinquenta centavos"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "R$ 0,50",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "zero vírgula cinco zero Real brasileiro",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-time-0001",
+          "locale": "pt",
+          "category": "time",
+          "expected_spoken": [
+            "catorze horas e trinta"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "14:30",
+              "kind": "time"
+            }
+          ],
+          "spoken": "catorze horas e trinta minutos",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-time-0002",
+          "locale": "pt",
+          "category": "time",
+          "expected_spoken": [
+            "catorze horas e trinta"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "14h30",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "14h30",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-time-0004",
+          "locale": "pt",
+          "category": "time",
+          "expected_spoken": [
+            "nove horas e cinco"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "09:05",
+              "kind": "time"
+            }
+          ],
+          "spoken": "nove horas e cinco minutos",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-time-0005",
+          "locale": "pt",
+          "category": "time",
+          "expected_spoken": [
+            "zero horas e quinze"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "00:15",
+              "kind": "time"
+            }
+          ],
+          "spoken": "zero hora e quinze minutos",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-time-0006",
+          "locale": "pt",
+          "category": "time",
+          "expected_spoken": [
+            "vinte e três horas e cinquenta e nove"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "23:59",
+              "kind": "time"
+            }
+          ],
+          "spoken": "vinte e três horas e cinquenta e nove minutos",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-time-0007",
+          "locale": "pt",
+          "category": "time",
+          "expected_spoken": [
+            "doze horas"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "12:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "doze horas e zero minuto",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-time-0008",
+          "locale": "pt",
+          "category": "time",
+          "expected_spoken": [
+            "catorze horas e trinta"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "14.30",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "14.30",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-time-0009",
+          "locale": "pt",
+          "category": "time",
+          "expected_spoken": [
+            "oito horas"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "08:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "oito horas e zero minuto",
+          "error": null
+        },
+        {
+          "id": "nemo-pt-time-0010",
+          "locale": "pt",
+          "category": "time",
+          "expected_spoken": [
+            "zero horas"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "00:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "zero hora e zero minuto",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-cardinal-0001",
+          "locale": "ru",
+          "category": "number",
+          "expected_spoken": [
+            "три"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "03",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ноль три",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-cardinal-0003",
+          "locale": "ru",
+          "category": "number",
+          "expected_spoken": [
+            "минус пятьдесят"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "-050",
+              "kind": "number"
+            }
+          ],
+          "spoken": "минус ноль пять ноль",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-cardinal-0007",
+          "locale": "ru",
+          "category": "number",
+          "expected_spoken": [
+            "две тысячи триста"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "002300",
+              "kind": "number"
+            }
+          ],
+          "spoken": "ноль ноль два три ноль ноль",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-date-0001",
+          "locale": "ru",
+          "category": "date",
+          "expected_spoken": [
+            "шестое марта две тысячи шестого"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "06.03.2006",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "06.03.2006",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-date-0002",
+          "locale": "ru",
+          "category": "date",
+          "expected_spoken": [
+            "первого января восемьдесят шестого"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "01-01-86",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "01-01-86",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-date-0003",
+          "locale": "ru",
+          "category": "date",
+          "expected_spoken": [
+            "второе марта тысяча девятьсот шестого"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "2/3/1906",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "2/3/1906",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-date-0004",
+          "locale": "ru",
+          "category": "date",
+          "expected_spoken": [
+            "шестое марта тысяча шестого года"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 11,
+              "source": "6/3/1006г.",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "6/3/1006г.",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-date-0006",
+          "locale": "ru",
+          "category": "date",
+          "expected_spoken": [
+            "тридцать первого января ноль шестого"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 8,
+              "source": "31.01.06",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "31.01.06",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-measure-0001",
+          "locale": "ru",
+          "category": "measure",
+          "expected_spoken": [
+            "двенадцать килограм"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "12 кг",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "двенадцать килограмм",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-measure-0002",
+          "locale": "ru",
+          "category": "measure",
+          "expected_spoken": [
+            "двенадцать килограм"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "12кг",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "двенадцать килограмм",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-measure-0003",
+          "locale": "ru",
+          "category": "measure",
+          "expected_spoken": [
+            "три целых две десятых литра"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "3,2 л",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "три запятая два литра",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-measure-0004",
+          "locale": "ru",
+          "category": "measure",
+          "expected_spoken": [
+            "три целых две десятых миллиона литров"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 13,
+              "source": "3,2 млн л",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "три запятая два миллиона литров",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-measure-0006",
+          "locale": "ru",
+          "category": "measure",
+          "expected_spoken": [
+            "четырех килограммовый мешок"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "4-х",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "4-х килограммовый мешок",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-measure-0007",
+          "locale": "ru",
+          "category": "measure",
+          "expected_spoken": [
+            "девять мешок"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 11,
+              "source": "9мешок",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "9мешок",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-measure-0008",
+          "locale": "ru",
+          "category": "measure",
+          "expected_spoken": [
+            "четыре целых два десятых килограммовый мешок"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 30,
+              "source": "4,2-килограммовый",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "4,2-килограммовый мешок",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-measure-0009",
+          "locale": "ru",
+          "category": "measure",
+          "expected_spoken": [
+            "тест одна целая две сотых"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "тест-1",
+              "kind": "identifier"
+            },
+            {
+              "start": 11,
+              "end": 13,
+              "source": "02",
+              "kind": "number"
+            }
+          ],
+          "spoken": "тест-1,ноль два",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-measure-0010",
+          "locale": "ru",
+          "category": "measure",
+          "expected_spoken": [
+            "тест восемь"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "тест-8",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "тест-8",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-money-0001",
+          "locale": "ru",
+          "category": "currency",
+          "expected_spoken": [
+            "один доллар"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "1 USD",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "один доллар США",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-money-0002",
+          "locale": "ru",
+          "category": "currency",
+          "expected_spoken": [
+            "один рубль"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "1 руб.",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "один российский рубль",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-money-0003",
+          "locale": "ru",
+          "category": "currency",
+          "expected_spoken": [
+            "тридцать одного рубля"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "31 руб.",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "тридцать один российский рубль",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-money-0004",
+          "locale": "ru",
+          "category": "currency",
+          "expected_spoken": [
+            "восемнадцать тысяч долларов сэ ш а"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 22,
+              "source": "18000 долл. США",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "восемнадцать тысяч долларов сэ шэ а",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-money-0005",
+          "locale": "ru",
+          "category": "currency",
+          "expected_spoken": [
+            "два рубля"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "2 руб.",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "два российских рубля",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-money-0006",
+          "locale": "ru",
+          "category": "currency",
+          "expected_spoken": [
+            "две целых пять десятых тысячи рублей"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 18,
+              "source": "2,5 тыс руб.",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "два запятая пять тысячи российского рубля",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-money-0007",
+          "locale": "ru",
+          "category": "currency",
+          "expected_spoken": [
+            "две целых три сотых рублей"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 12,
+              "source": "2,03 руб.",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "два запятая ноль три российского рубля",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-money-0008",
+          "locale": "ru",
+          "category": "currency",
+          "expected_spoken": [
+            "шесть рублей тридцать пять копеек"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 20,
+              "source": "6 руб. 35 коп.",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "шесть запятая три пять российского рубля",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-money-0009",
+          "locale": "ru",
+          "category": "currency",
+          "expected_spoken": [
+            "одна целая двадцать три сотых миллиарда рублей"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 21,
+              "source": "1,23 млрд руб.",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "один запятая два три миллиарда российского рубля",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-time-0001",
+          "locale": "ru",
+          "category": "time",
+          "expected_spoken": [
+            "тринадцать часов пять минут"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "13:05",
+              "kind": "time"
+            }
+          ],
+          "spoken": "тринадцать часов и пять минут",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-time-0004",
+          "locale": "ru",
+          "category": "time",
+          "expected_spoken": [
+            "один час ноль минут"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "01:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "один час и ноль минут",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-time-0005",
+          "locale": "ru",
+          "category": "time",
+          "expected_spoken": [
+            "два часа"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "02:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "два часа и ноль минут",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-time-0006",
+          "locale": "ru",
+          "category": "time",
+          "expected_spoken": [
+            "без пятнадцати минут шесть"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "05:45",
+              "kind": "time"
+            }
+          ],
+          "spoken": "пять часов и сорок пять минут",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-time-0007",
+          "locale": "ru",
+          "category": "time",
+          "expected_spoken": [
+            "без одной минуты десять"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "09:59",
+              "kind": "time"
+            }
+          ],
+          "spoken": "девять часов и пятьдесят девять минут",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-time-0008",
+          "locale": "ru",
+          "category": "time",
+          "expected_spoken": [
+            "двенадцать часов"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "12:00",
+              "kind": "time"
+            }
+          ],
+          "spoken": "двенадцать часов и ноль минут",
+          "error": null
+        },
+        {
+          "id": "nemo-ru-time-0009",
+          "locale": "ru",
+          "category": "time",
+          "expected_spoken": [
+            "семь минут девятого"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "08:07",
+              "kind": "time"
+            }
+          ],
+          "spoken": "восемь часов и семь минут",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-date-0002",
+          "locale": "vi",
+          "category": "date",
+          "expected_spoken": [
+            "ngày một tháng mười hai năm hai nghìn hai mươi ba"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "01/12/2023",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "01/12/2023",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-date-0004",
+          "locale": "vi",
+          "category": "date",
+          "expected_spoken": [
+            "ngày mười tháng năm năm hai nghìn"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "10.05.2000",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "10.05.2000",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-measure-0001",
+          "locale": "vi",
+          "category": "measure",
+          "expected_spoken": [
+            "hai trăm linh bốn mét"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "204m",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "hai trăm lẻ bốn mét",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-measure-0002",
+          "locale": "vi",
+          "category": "measure",
+          "expected_spoken": [
+            "mười hai ki lô gam"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "12kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "mười hai kilôgam",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-measure-0003",
+          "locale": "vi",
+          "category": "measure",
+          "expected_spoken": [
+            "một ki lô gam"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "1kg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "một kilôgam",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-measure-0005",
+          "locale": "vi",
+          "category": "measure",
+          "expected_spoken": [
+            "năm trăm mi li gam"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "500mg",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "năm trăm miligam",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-measure-0006",
+          "locale": "vi",
+          "category": "measure",
+          "expected_spoken": [
+            "một trăm bảy mươi lăm xăng ti mét"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "175cm",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "một trăm bảy mươi lăm xentimét",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-measure-0008",
+          "locale": "vi",
+          "category": "measure",
+          "expected_spoken": [
+            "một trăm mi li mét"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "100mm",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "một trăm milimét",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-measure-0009",
+          "locale": "vi",
+          "category": "measure",
+          "expected_spoken": [
+            "năm ki lô mét"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "5km",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "năm kilômét",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0001",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "mười đồng"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "10₫",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "mười đồng Việt Nam",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0002",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "mười đồng"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "10 đồng",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "mười đồng Việt Nam",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0003",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "mười phẩy năm đồng"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 12,
+              "source": "10,5 đồng",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "mười phẩy năm đồng Việt Nam",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0004",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "mười đô la"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "10$",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "10$",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0005",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "một nghìn đô la"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "1000$",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "1000$",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0006",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "mười đô la"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "10 đô la",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "mười đô la Mỹ",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0007",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "mười đô la"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "10 usd",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "mười đô la Mỹ",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0008",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "mười đô la năm mươi xu"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "10,5$",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "10,5$",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0009",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "mười ơ rô"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "10€",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "mười euro",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-money-0010",
+          "locale": "vi",
+          "category": "currency",
+          "expected_spoken": [
+            "mười yên nhật"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "10¥",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "10¥",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0001",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "một giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "1h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "một tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0002",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "hai giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "2h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "hai tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0003",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "ba giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "3h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "ba tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0004",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "bốn giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "4h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "bốn tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0005",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "năm giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "5h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "năm tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0006",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "sáu giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "6h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "sáu tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0007",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "bảy giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "7h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "bảy tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0008",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "tám giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "8h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "tám tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0009",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "chín giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "9h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "chín tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-vi-time-0010",
+          "locale": "vi",
+          "category": "time",
+          "expected_spoken": [
+            "mười giờ"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 3,
+              "source": "10h",
+              "kind": "measure"
+            }
+          ],
+          "spoken": "mười tiếng",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-date-0006",
+          "locale": "zh",
+          "category": "date",
+          "expected_spoken": [
+            "一二年二月二日"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "12/2/2",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "12/2/2",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-date-0007",
+          "locale": "zh",
+          "category": "date",
+          "expected_spoken": [
+            "一二年二月三日"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "12.2.3",
+              "kind": "identifier"
+            }
+          ],
+          "spoken": "12.2.3",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-money-0001",
+          "locale": "zh",
+          "category": "currency",
+          "expected_spoken": [
+            "五美元"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 2,
+              "source": "$5",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$5",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-money-0002",
+          "locale": "zh",
+          "category": "currency",
+          "expected_spoken": [
+            "五人民币"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "￥5",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "￥5",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-money-0003",
+          "locale": "zh",
+          "category": "currency",
+          "expected_spoken": [
+            "一百美元"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "$100",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "$100",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-money-0004",
+          "locale": "zh",
+          "category": "currency",
+          "expected_spoken": [
+            "五欧元"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "€5",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "五 欧元",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-money-0005",
+          "locale": "zh",
+          "category": "currency",
+          "expected_spoken": [
+            "一百英镑"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 5,
+              "source": "£100",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "一百 英镑",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-money-0006",
+          "locale": "zh",
+          "category": "currency",
+          "expected_spoken": [
+            "一百韩元"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 6,
+              "source": "₩100",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "一百 韩元",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-money-0007",
+          "locale": "zh",
+          "category": "currency",
+          "expected_spoken": [
+            "一百美元"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "100美元",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "一百 美元",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-money-0008",
+          "locale": "zh",
+          "category": "currency",
+          "expected_spoken": [
+            "五百美元"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 9,
+              "source": "500美元",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "五百 美元",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-money-0009",
+          "locale": "zh",
+          "category": "currency",
+          "expected_spoken": [
+            "五元"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "5元",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "五 人民币",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-time-0005",
+          "locale": "zh",
+          "category": "time",
+          "expected_spoken": [
+            "三点四分五秒am"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 10,
+              "source": "03:04:05am",
+              "kind": "time"
+            }
+          ],
+          "spoken": "三点四分五秒",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-time-0006",
+          "locale": "zh",
+          "category": "time",
+          "expected_spoken": [
+            "三点四分pm"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "03:04pm",
+              "kind": "time"
+            }
+          ],
+          "spoken": "十五点四分",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-time-0007",
+          "locale": "zh",
+          "category": "time",
+          "expected_spoken": [
+            "十点四分am"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "10:04am",
+              "kind": "time"
+            }
+          ],
+          "spoken": "十点四分",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-time-0008",
+          "locale": "zh",
+          "category": "time",
+          "expected_spoken": [
+            "十点四分pm"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "10:04pm",
+              "kind": "time"
+            }
+          ],
+          "spoken": "二十二点四分",
+          "error": null
+        },
+        {
+          "id": "nemo-zh-time-0009",
+          "locale": "zh",
+          "category": "time",
+          "expected_spoken": [
+            "十三点十分pm"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 7,
+              "source": "13:10pm",
+              "kind": "ambiguous"
+            }
+          ],
+          "spoken": "13:10pm",
+          "error": null
         }
       ],
       "unresolved_by_reason": {
@@ -685,30 +7621,6 @@
         "invalid digit grouping": 11,
         "invalid twelve-hour clock time": 1,
         "unsupported fraction, range, or malformed date": 9
-      },
-      "variants_by_rule": {
-        "alternative_currency_minor_unit_policy": 9,
-        "alternative_german_clock_zero_minute_policy": 8,
-        "alternative_japanese_number_notation": 10,
-        "arabic_hundred_spelling": 1,
-        "arabic_regional_currency_unit_singular": 1,
-        "chinese_currency_name_spacing": 5,
-        "english_hundred_and": 2,
-        "german_compound_spacing": 10,
-        "german_numeric_case": 17,
-        "german_unit_compound_spacing": 4,
-        "japanese_initial_one_thousand": 1,
-        "korean_number_group_spacing": 3,
-        "korean_quantity_unit_spacing": 10,
-        "numeric_hyphen_en_fr": 4,
-        "outer_whitespace": 4,
-        "russian_clock_conjunction": 1,
-        "russian_clock_relative": 3,
-        "russian_clock_zero_minutes": 3,
-        "russian_usd_qualification": 1,
-        "vietnamese_typed_unit_alias": 1,
-        "vietnamese_unit_component_spacing": 5,
-        "vietnamese_zero_tens_linker": 1
       },
       "diagnostics": [
         {
@@ -1713,7 +8625,7 @@
         "invalid twelve-hour clock time": 1,
         "unsupported fraction, range, or malformed date": 9
       },
-      "raw_report_sha256": "3b95f97366c62060f5589a070b1c2b9b6d535902789c24093c3eac6de3d60ed6"
+      "raw_report_sha256": "d9e480f54462cff9447e96012e01b5d71d07c88dc2e9d22c4f15e9f67b81de8b"
     },
     "explicit_policy": {
       "policy": {
@@ -1858,6 +8770,13 @@
         {
           "id": "nemo-ar-money-0001",
           "reference": "سبعة دولار",
+          "rules": [
+            "arabic_regional_currency_unit_singular"
+          ]
+        },
+        {
+          "id": "nemo-ar-money-0008",
+          "reference": "تسعة يورو",
           "rules": [
             "arabic_regional_currency_unit_singular"
           ]
@@ -2216,7 +9135,7 @@
       ],
       "variants_by_rule": {
         "alternative_integer_digit_policy": 1,
-        "arabic_regional_currency_unit_singular": 2,
+        "arabic_regional_currency_unit_singular": 3,
         "english_hundred_and": 2,
         "english_literal_label_separator": 1,
         "german_compound_spacing": 12,
@@ -2240,8 +9159,8 @@
         "parse_cases": 0,
         "parse_exact": 0,
         "spoken_cases": 544,
-        "spoken_exact": 464,
-        "spoken_variant": 49,
+        "spoken_exact": 463,
+        "spoken_variant": 50,
         "spoken_accepted": 513,
         "fully_supported": 540,
         "expected_spans": 0,
@@ -2254,8 +9173,8 @@
           "parse_cases": 0,
           "parse_exact": 0,
           "spoken_cases": 30,
-          "spoken_exact": 11,
-          "spoken_variant": 2,
+          "spoken_exact": 10,
+          "spoken_variant": 3,
           "spoken_accepted": 13,
           "fully_supported": 30,
           "expected_spans": 0,
@@ -2412,8 +9331,8 @@
           "parse_cases": 0,
           "parse_exact": 0,
           "spoken_cases": 109,
-          "spoken_exact": 95,
-          "spoken_variant": 4,
+          "spoken_exact": 94,
+          "spoken_variant": 5,
           "spoken_accepted": 99,
           "fully_supported": 109,
           "expected_spans": 0,
@@ -2795,6 +9714,25 @@
             }
           ],
           "spoken": "تسعة وتسعون سنتا",
+          "error": null
+        },
+        {
+          "id": "nemo-ar-money-0008",
+          "locale": "ar",
+          "category": "currency",
+          "expected_spoken": [
+            "تسعة يورو"
+          ],
+          "expected": null,
+          "predicted": [
+            {
+              "start": 0,
+              "end": 4,
+              "source": "€9",
+              "kind": "currency"
+            }
+          ],
+          "spoken": "تسعة يوروهات",
           "error": null
         },
         {
@@ -4049,7 +10987,7 @@
         "invalid calendar date": 3,
         "invalid twelve-hour clock time": 1
       },
-      "raw_report_sha256": "9c009dd673f59175766c4f82f18dad50c1e11ea9ae436c9a4704bcd6cbc90d81"
+      "raw_report_sha256": "3d4438fe2f69052e4ad216b09df6884daaf0082fe55bc286457438ba6d7ed7c7"
     },
     "authored": {
       "policy": {
@@ -4061,34 +10999,38 @@
         "category_hints": false,
         "locales": {}
       },
+      "reference_conflicts": [],
+      "exact_spoken_ceiling": 34,
+      "variant_matches": [],
+      "variants_by_rule": {},
       "corpus_version": "0.1.0",
       "purpose": "Hand-authored regression and adversarial acceptance cases; not independent production validation. Locale matrix cases share structural grammar families.",
       "totals": {
-        "cases": 209,
-        "parse_cases": 209,
-        "parse_exact": 209,
-        "spoken_cases": 25,
-        "spoken_exact": 25,
+        "cases": 218,
+        "parse_cases": 218,
+        "parse_exact": 218,
+        "spoken_cases": 34,
+        "spoken_exact": 34,
         "spoken_variant": 0,
-        "spoken_accepted": 25,
-        "fully_supported": 173,
-        "expected_spans": 205,
-        "predicted_spans": 205,
-        "correct_spans": 205
+        "spoken_accepted": 34,
+        "fully_supported": 182,
+        "expected_spans": 214,
+        "predicted_spans": 214,
+        "correct_spans": 214
       },
       "by_locale": {
         "ar": {
-          "cases": 10,
-          "parse_cases": 10,
-          "parse_exact": 10,
-          "spoken_cases": 2,
-          "spoken_exact": 2,
+          "cases": 14,
+          "parse_cases": 14,
+          "parse_exact": 14,
+          "spoken_cases": 6,
+          "spoken_exact": 6,
           "spoken_variant": 0,
-          "spoken_accepted": 2,
-          "fully_supported": 9,
-          "expected_spans": 9,
-          "predicted_spans": 9,
-          "correct_spans": 9
+          "spoken_accepted": 6,
+          "fully_supported": 13,
+          "expected_spans": 13,
+          "predicted_spans": 13,
+          "correct_spans": 13
         },
         "bn": {
           "cases": 9,
@@ -4117,30 +11059,30 @@
           "correct_spans": 9
         },
         "en": {
-          "cases": 14,
-          "parse_cases": 14,
-          "parse_exact": 14,
-          "spoken_cases": 2,
-          "spoken_exact": 2,
+          "cases": 15,
+          "parse_cases": 15,
+          "parse_exact": 15,
+          "spoken_cases": 3,
+          "spoken_exact": 3,
           "spoken_variant": 0,
-          "spoken_accepted": 2,
-          "fully_supported": 12,
-          "expected_spans": 13,
-          "predicted_spans": 13,
-          "correct_spans": 13
+          "spoken_accepted": 3,
+          "fully_supported": 13,
+          "expected_spans": 14,
+          "predicted_spans": 14,
+          "correct_spans": 14
         },
         "es": {
-          "cases": 41,
-          "parse_cases": 41,
-          "parse_exact": 41,
-          "spoken_cases": 2,
-          "spoken_exact": 2,
+          "cases": 42,
+          "parse_cases": 42,
+          "parse_exact": 42,
+          "spoken_cases": 3,
+          "spoken_exact": 3,
           "spoken_variant": 0,
-          "spoken_accepted": 2,
-          "fully_supported": 25,
-          "expected_spans": 41,
-          "predicted_spans": 41,
-          "correct_spans": 41
+          "spoken_accepted": 3,
+          "fully_supported": 26,
+          "expected_spans": 42,
+          "predicted_spans": 42,
+          "correct_spans": 42
         },
         "fr": {
           "cases": 9,
@@ -4195,17 +11137,17 @@
           "correct_spans": 9
         },
         "ko": {
-          "cases": 8,
-          "parse_cases": 8,
-          "parse_exact": 8,
-          "spoken_cases": 1,
-          "spoken_exact": 1,
+          "cases": 9,
+          "parse_cases": 9,
+          "parse_exact": 9,
+          "spoken_cases": 2,
+          "spoken_exact": 2,
           "spoken_variant": 0,
-          "spoken_accepted": 1,
-          "fully_supported": 7,
-          "expected_spans": 8,
-          "predicted_spans": 8,
-          "correct_spans": 8
+          "spoken_accepted": 2,
+          "fully_supported": 8,
+          "expected_spans": 9,
+          "predicted_spans": 9,
+          "correct_spans": 9
         },
         "mr": {
           "cases": 8,
@@ -4247,17 +11189,17 @@
           "correct_spans": 8
         },
         "ru": {
-          "cases": 8,
-          "parse_cases": 8,
-          "parse_exact": 8,
-          "spoken_cases": 1,
-          "spoken_exact": 1,
+          "cases": 10,
+          "parse_cases": 10,
+          "parse_exact": 10,
+          "spoken_cases": 3,
+          "spoken_exact": 3,
           "spoken_variant": 0,
-          "spoken_accepted": 1,
-          "fully_supported": 7,
-          "expected_spans": 8,
-          "predicted_spans": 8,
-          "correct_spans": 8
+          "spoken_accepted": 3,
+          "fully_supported": 9,
+          "expected_spans": 10,
+          "predicted_spans": 10,
+          "correct_spans": 10
         },
         "ta": {
           "cases": 8,
@@ -4353,30 +11295,30 @@
           "correct_spans": 9
         },
         "currency": {
-          "cases": 24,
-          "parse_cases": 24,
-          "parse_exact": 24,
-          "spoken_cases": 0,
-          "spoken_exact": 0,
+          "cases": 28,
+          "parse_cases": 28,
+          "parse_exact": 28,
+          "spoken_cases": 4,
+          "spoken_exact": 4,
           "spoken_variant": 0,
-          "spoken_accepted": 0,
-          "fully_supported": 24,
-          "expected_spans": 24,
-          "predicted_spans": 24,
-          "correct_spans": 24
+          "spoken_accepted": 4,
+          "fully_supported": 28,
+          "expected_spans": 28,
+          "predicted_spans": 28,
+          "correct_spans": 28
         },
         "date": {
-          "cases": 26,
-          "parse_cases": 26,
-          "parse_exact": 26,
-          "spoken_cases": 0,
-          "spoken_exact": 0,
+          "cases": 31,
+          "parse_cases": 31,
+          "parse_exact": 31,
+          "spoken_cases": 5,
+          "spoken_exact": 5,
           "spoken_variant": 0,
-          "spoken_accepted": 0,
-          "fully_supported": 26,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26
+          "spoken_accepted": 5,
+          "fully_supported": 31,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31
         },
         "identifier": {
           "cases": 26,
@@ -4457,8 +11399,7 @@
           "correct_spans": 24
         }
       },
-      "exact_spoken_ceiling": 25,
-      "reference_conflicts": [],
+      "failures": [],
       "unresolved_by_reason": {
         "currency symbol needs an explicit ISO currency code": 1,
         "date needs a four-digit year and one- or two-digit day/month": 1,
@@ -4473,7 +11414,6 @@
         "number form or range is not supported for this locale": 1,
         "number separator is ambiguous; set decimal_separator": 1
       },
-      "variants_by_rule": {},
       "diagnostics": [
         {
           "case_id": "en-identifier",
@@ -4886,7 +11826,7 @@
         "number form or range is not supported for this locale": 1,
         "number separator is ambiguous; set decimal_separator": 1
       },
-      "raw_report_sha256": "20ecdef2e77f0282afb9c1c624f9812922c820d6285b36b6b44b1ad60999afcf"
+      "raw_report_sha256": "3866b135facd68d1170ba8aa8f86b94c39648b88f5fe8cdc238cb983618c0f21"
     },
     "limitations": [
       "The external sample has guided development and is no longer held out.",

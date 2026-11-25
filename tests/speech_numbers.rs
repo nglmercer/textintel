@@ -232,6 +232,12 @@ fn arabic_feminine_counts_reuse_scale_data_with_explicit_nominative_context() {
         ("200000", "مائتا ألف"),
         ("200000000", "مائتا مليون"),
         ("3000000022", "ثلاثة مليارات واثنتان وعشرون"),
+        ("101", "مائة وواحدة"),
+        ("102", "مائة واثنتان"),
+        ("1001", "ألف وواحدة"),
+        ("1002", "ألف واثنتان"),
+        ("101000", "مائة وواحد ألف"),
+        ("102000000", "مائة واثنان مليون"),
     ] {
         assert_eq!(
             verbalize_number_feminine(&number(integer), SpeechLocale::Ar, NumberReading::Cardinal)
@@ -240,17 +246,7 @@ fn arabic_feminine_counts_reuse_scale_data_with_explicit_nominative_context() {
             "{integer}"
         );
     }
-    for integer in [
-        "101",
-        "102",
-        "1001",
-        "1002",
-        "101000",
-        "102000000",
-        "1000000000000",
-        "1x",
-        "",
-    ] {
+    for integer in ["1000000000000", "1x", ""] {
         assert!(
             verbalize_number_feminine(&number(integer), SpeechLocale::Ar, NumberReading::Cardinal)
                 .is_none(),

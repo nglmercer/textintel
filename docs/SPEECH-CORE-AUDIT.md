@@ -153,7 +153,7 @@ Two detector APIs retain different contracts:
 | Number composition and spellout data | [`speech/numbers.rs`](../src/speech/numbers.rs) | Typed renderer, quantity/temporal/expression renderers and most versioned language number adapters |
 | Unit noun recognition | [`speech/lexicons.rs`](../src/speech/lexicons.rs) | Alias forms derive from the same CLDR patterns used to render units; derived resource profiles reuse those patterns |
 | Locale aliases, defaults and regional conventions | [`speech/locales.rs`](../src/speech/locales.rs) | `for_locale` supplies versioned resolution, shared adapters and all ten legacy convention constructors; typed alias scope remains explicit |
-| Full localized currency names | [`speech/quantities.rs`](../src/speech/quantities.rs), shared CLDR lexicons | Opt-in `CurrencyNaming::Full` retains qualifiers across the twenty-language lexical path; unknown Arabic count/qualifier paradigms stay unsupported |
+| Full localized currency names | [`speech/quantities.rs`](../src/speech/quantities.rs), shared CLDR lexicons | Opt-in `CurrencyNaming::Full` retains qualifiers across the twenty-language lexical path; the shared Arabic currencies have reviewed count/qualifier paradigms |
 | Pronunciation exceptions | [`speech/dictionary.rs`](../src/speech/dictionary.rs) | One public bounded dictionary with shared lexical boundaries and protected-region handling |
 
 Unicode fixes are functional, not merely capability labels. Before the shared
@@ -345,15 +345,19 @@ kept 1,888 outputs unchanged and fixed two previously panicking oversized
 fractions by preserving input. These are compatibility checks, not independent
 linguistic judgments. Clippy, Rust 1.90 without default features, and API
 documentation checks also passed.
-Arabic full currency names now have reviewed paradigms for 18 of the 37 shared
-codes, including ruble, Swiss franc and four feminine families (INR/PKR/IDR/TRY).
-One shared feminine numeral core replaces the former unit-only table. Reviewed
-dual scale endings are applied only in construct position; isolated/conjoined
-duals retain their ending. Feminine counts ending in 01/02 above 99, such
-internal scale coefficients and nonzero feminine currency fractions remain
-unsupported rather than receiving an inferred noun order. Tests enumerate the
-other 19 unsupported full-name paradigms. A CLDR label alone is not sufficient
-evidence for inflection.
+Arabic full currency names now have reviewed paradigms for all 37 shared
+codes, including irregular or lexically disputed families (euro, won, taka,
+dong, peso, naira, baht, new shekel and zloty). One shared feminine numeral
+core replaces the former unit-only table. Reviewed dual scale endings are
+applied only in construct position; isolated/conjoined duals retain their
+ending. Higher compounds ending in 01/02 use the documented conjoined-cardinal
+convention (مئة وواحدة / مئة واثنتان), while coefficients of masculine scale
+nouns remain masculine. Nonzero decimal tails are read independently of the
+currency noun because فاصلة separates two numerals; natural rational tails are
+governed by their denominator. Exact regression tests cover every shared
+currency in both short and full naming across zero, one, dual, plural,
+accusative, hundred/thousand compounds and nonzero decimal fractions. CLDR
+labels alone are still not treated as sufficient evidence for inflection.
 The ruble noun/gender and plural are supported by [Birzeit Qabas](https://sina.birzeit.edu/qabas/lemma/2023241124)
 and a [university Arabic manual](https://skiu.ru/wp-content/uploads/2024/12/uchebnoe-posobie-arabskij-yazyk-v-religioznoj-sfere.-2-chast.pdf).
 WIPO documents the [Swiss-franc dual](https://www.wipo.int/ar/web/hague-system/hague-system-certified-documents)

@@ -837,21 +837,10 @@ fn feminine_cardinal(n: u64, locale: SpeechLocale) -> Option<String> {
 /// https://uomus.edu.iq/img/lectures21/MUCLecture_2025_6129126.pdf
 /// https://online.aiou.edu.pk/LIVE_SITE/SoftBooks/1952.pdf
 fn arabic_feminine_cardinal(n: u64) -> Option<String> {
-    if n > 99 && matches!(n % 100, 1 | 2) {
-        // The final noun must precede standalone one/two; spelling a feminine
-        // numeral alone does not settle the higher compound's noun position.
-        return None;
-    }
-    let mut scale_groups = n / 1000;
-    while scale_groups != 0 {
-        let coefficient = scale_groups % 1000;
-        if coefficient > 99 && matches!(coefficient % 100, 1 | 2) {
-            // The same unresolved noun-order context can occur before a
-            // masculine scale, e.g. the coefficient101 in101000.
-            return None;
-        }
-        scale_groups /= 1000;
-    }
+    // In a conjoined higher compound, one/two keep their ordinary feminine
+    // forms (مئة وواحدة / مئة واثنتان). Coefficients of thousand/million
+    // scales are composed by the masculine scale grammar in `cardinal`, so
+    // they do not inherit the counted noun's gender.
     if n >= 100 {
         // Hundreds and masculine thousand/million/billion groups keep their
         // existing agreement. Only the remainder counts the feminine noun.

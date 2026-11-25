@@ -10,7 +10,7 @@ fn options(locale: SpeechLocale) -> SpeechOptions {
 }
 
 #[test]
-fn arabic_euro_one_and_dual_reuse_count_agreement_without_inventing_a_full_paradigm() {
+fn arabic_euro_counts_reuse_the_same_reviewed_paradigm_in_style_and_full_naming() {
     for style in [ReadingStyle::Precise, ReadingStyle::Natural] {
         let mut opts = options(SpeechLocale::Ar);
         opts.reading_style = style;
@@ -36,9 +36,9 @@ fn arabic_euro_one_and_dual_reuse_count_agreement_without_inventing_a_full_parad
                     && value.fraction.as_deref() == Some("00") && !value.negative
         ));
         opts.currency_naming = CurrencyNaming::Full;
-        let unresolved = normalize_for_speech("EUR 2.00", &opts).unwrap();
-        assert!(!unresolved.fully_supported);
-        assert_eq!(unresolved.text, "EUR 2.00");
+        let full = normalize_for_speech("EUR 2.00", &opts).unwrap();
+        assert!(full.fully_supported, "{full:?}");
+        assert_eq!(full.text, "يوروان");
     }
 }
 
@@ -453,10 +453,6 @@ fn full_currency_naming_keeps_unsupported_precision_and_unreviewed_grammar_visib
         &parsed.spans[0].value,
         SpeechValue::Currency { value, .. } if value.fraction.as_deref() == Some("125")
     ));
-    // CLDR names alone do not establish the Arabic plural/dual paradigm.
-    let unknown = normalize_for_speech("HKD3", &options).unwrap();
-    assert!(!unknown.fully_supported, "{unknown:?}");
-    assert_eq!(unknown.text, "HKD3");
 }
 
 #[test]
@@ -528,16 +524,8 @@ fn arabic_full_currency_coverage_is_bounded_by_reviewed_noun_and_qualifier_gramm
     options.currency_naming = CurrencyNaming::Full;
     for code in [
         "USD", "GBP", "BRL", "KWD", "SAR", "AED", "EGP", "CAD", "AUD", "NZD", "SGD", "TWD", "RUB",
-        "CHF", "INR", "PKR", "IDR", "TRY",
-    ] {
-        let full = normalize_for_speech(&format!("{code}3"), &options).unwrap();
-        assert!(full.fully_supported, "{code}: {full:?}");
-    }
-    // Remaining19 among37 bundled currencies: unreviewed loan-noun paradigms
-    // or compound qualifiers. A full-name label alone cannot justify them.
-    for code in [
-        "EUR", "PEN", "JPY", "CNY", "KRW", "BDT", "VND", "HKD", "MXN", "ARS", "CLP", "COP", "NGN",
-        "ZAR", "THB", "MYR", "PHP", "ILS", "PLN",
+        "CHF", "INR", "PKR", "IDR", "TRY", "HKD", "PEN", "JPY", "CNY", "ZAR", "MYR", "EUR", "KRW",
+        "BDT", "VND", "MXN", "ARS", "CLP", "COP", "NGN", "THB", "PHP", "ILS", "PLN",
     ] {
         let source = format!("{code}3");
         let parsed = parse_for_speech(&source, &options).unwrap();
@@ -546,8 +534,114 @@ fn arabic_full_currency_coverage_is_bounded_by_reviewed_noun_and_qualifier_gramm
             SpeechValue::Currency { code: parsed_code, .. } if parsed_code == code
         ));
         let full = normalize_for_speech(&source, &options).unwrap();
-        assert!(!full.fully_supported, "{code}: {full:?}");
-        assert_eq!(full.text, source, "{code}: {full:?}");
+        assert!(full.fully_supported, "{code}: {full:?}");
+        assert_ne!(full.text, source, "{code}: {full:?}");
+    }
+}
+
+#[test]
+fn arabic_hong_kong_dollar_uses_the_dollar_paradigm_with_an_invariable_place_qualifier() {
+    for (source, expected) in [
+        ("HKD1", "دولار هونغ كونغ واحد"),
+        ("HKD2", "دولاران هونغ كونغ"),
+        ("HKD3", "ثلاثة دولارات هونغ كونغ"),
+        ("HKD11", "أحد عشر دولارا هونغ كونغ"),
+        ("HKD100", "مئة دولار هونغ كونغ"),
+    ] {
+        let mut options = options(SpeechLocale::Ar);
+        options.reading_style = ReadingStyle::Natural;
+        options.currency_naming = CurrencyNaming::Full;
+        let full = normalize_for_speech(source, &options).unwrap();
+        assert!(full.fully_supported, "{source}: {full:?}");
+        assert_eq!(full.text, expected, "{source}: {full:?}");
+    }
+}
+
+#[test]
+fn arabic_unterm_reviewed_consonant_final_currency_paradigms_inflect_with_qualifiers() {
+    for (source, expected) in [
+        ("JPY1", "ين ياباني واحد"),
+        ("JPY2", "ينان يابانيان"),
+        ("JPY3", "ثلاثة ينات يابانية"),
+        ("JPY11", "أحد عشر ينا يابانيا"),
+        ("CNY1", "يوان صيني واحد"),
+        ("CNY2", "يوانان صينيان"),
+        ("CNY3", "ثلاثة يوانات صينية"),
+        ("PEN1", "سول بيروفي واحد"),
+        ("PEN2", "سولان بيروفيان"),
+        ("PEN3", "ثلاثة سولات بيروفية"),
+        ("MYR1", "رينغيت ماليزي واحد"),
+        ("MYR2", "رينغيتان ماليزيان"),
+        ("MYR3", "ثلاثة رينغيتات ماليزية"),
+        ("ZAR1", "راند جنوب أفريقيا واحد"),
+        ("ZAR2", "راندان جنوب أفريقيا"),
+        ("ZAR3", "ثلاثة راندات جنوب أفريقيا"),
+        ("ZAR11", "أحد عشر راندا جنوب أفريقيا"),
+    ] {
+        let mut options = options(SpeechLocale::Ar);
+        options.reading_style = ReadingStyle::Natural;
+        options.currency_naming = CurrencyNaming::Full;
+        let full = normalize_for_speech(source, &options).unwrap();
+        assert!(full.fully_supported, "{source}: {full:?}");
+        assert_eq!(full.text, expected, "{source}: {full:?}");
+    }
+}
+
+#[test]
+fn arabic_remaining_currency_paradigms_cover_irregular_plural_gender_and_qualifier_agreement() {
+    for (source, expected) in [
+        ("EUR1", "يورو واحد"),
+        ("EUR2", "يوروان"),
+        ("EUR3", "ثلاثة يوروهات"),
+        ("EUR11", "أحد عشر يورو"),
+        ("KRW1", "وون كوريا الجنوبية واحد"),
+        ("KRW2", "وونان كوريا الجنوبية"),
+        ("KRW3", "ثلاثة وونات كوريا الجنوبية"),
+        ("KRW11", "أحد عشر وونا كوريا الجنوبية"),
+        ("BDT1", "تاكا بنغلاديشية واحدة"),
+        ("BDT2", "تاكاتان بنغلاديشيتان"),
+        ("BDT3", "ثلاث تاكات بنغلاديشية"),
+        ("BDT11", "إحدى عشرة تاكا بنغلاديشية"),
+        ("VND1", "دونج فيتنامي واحد"),
+        ("VND2", "دونجان فيتناميان"),
+        ("VND3", "ثلاثة دونجات فيتنامية"),
+        ("VND11", "أحد عشر دونجا فيتناميا"),
+        ("MXN1", "بيزو مكسيكي واحد"),
+        ("MXN2", "بيزوان مكسيكيان"),
+        ("MXN3", "ثلاثة بيزوات مكسيكية"),
+        ("MXN11", "أحد عشر بيزو مكسيكيا"),
+        ("ARS3", "ثلاثة بيزوات أرجنتينية"),
+        ("CLP3", "ثلاثة بيزوات تشيلية"),
+        ("COP3", "ثلاثة بيزوات كولومبية"),
+        ("PHP3", "ثلاثة بيزوات فلبينية"),
+        ("NGN1", "نيرة نيجيرية واحدة"),
+        ("NGN2", "نيرتان نيجيريتان"),
+        ("NGN3", "ثلاث نيرات نيجيرية"),
+        ("NGN11", "إحدى عشرة نيرة نيجيرية"),
+        ("THB1", "بات تايلاندي واحد"),
+        ("THB2", "باتان تايلانديان"),
+        ("THB3", "ثلاثة بات تايلاندية"),
+        ("THB11", "أحد عشر باتا تايلانديا"),
+        ("ILS1", "شيكل إسرائيلي جديد واحد"),
+        ("ILS2", "شيكلان إسرائيليان جديدان"),
+        ("ILS3", "ثلاثة شواكل إسرائيلية جديدة"),
+        ("ILS11", "أحد عشر شيكلا إسرائيليا جديدا"),
+        ("PLN1", "زلوتي بولندي واحد"),
+        ("PLN2", "زلوتيان بولنديان"),
+        ("PLN3", "ثلاثة زلوتيات بولندية"),
+        ("PLN11", "أحد عشر زلوتيا بولنديا"),
+    ] {
+        let mut options = options(SpeechLocale::Ar);
+        options.reading_style = ReadingStyle::Natural;
+        let parsed = parse_for_speech(source, &options).unwrap();
+        options.currency_naming = CurrencyNaming::Full;
+        assert_eq!(parse_for_speech(source, &options).unwrap(), parsed);
+        let full = normalize_for_speech(source, &options).unwrap();
+        assert!(full.fully_supported, "{source}: {full:?}");
+        assert_eq!(full.text, expected, "{source}: {full:?}");
+        assert_eq!(full.readings.len(), 1);
+        assert_eq!(full.readings[0].source, source);
+        assert_eq!(full.readings[0].end, source.len());
     }
 }
 
@@ -641,35 +735,147 @@ fn arabic_feminine_full_currency_counts_have_independent_noun_and_qualifier_agre
 }
 
 #[test]
-fn unreviewed_arabic_feminine_fraction_and_noun_order_are_not_claimed_supported() {
+fn arabic_short_currency_names_reuse_the_unqualified_noun_paradigm_across_currency_aliases() {
+    let mut options = options(SpeechLocale::Ar);
+    options.reading_style = ReadingStyle::Natural;
+    options.currency_naming = CurrencyNaming::Style;
+    for (source, gold) in [
+        ("CAD1", "دولار واحد"),
+        ("AUD2", "دولاران"),
+        ("NZD1", "دولار واحد"),
+        ("SGD2", "دولاران"),
+        ("TWD1", "دولار واحد"),
+        ("HKD2", "دولاران"),
+        ("BRL1", "ريال واحد"),
+        ("EGP2", "جنيهان"),
+    ] {
+        let result = normalize_for_speech(source, &options).unwrap();
+        assert!(result.fully_supported, "{source}: {result:?}");
+        assert_eq!(result.text, gold, "{source}: {result:?}");
+    }
+}
+
+#[test]
+fn arabic_full_currency_agreement_matrix_covers_every_bundled_currency_and_count_regime() {
+    const CODES: &[&str] = &[
+        "USD", "GBP", "BRL", "KWD", "SAR", "AED", "EGP", "CAD", "AUD", "NZD", "SGD", "TWD", "RUB",
+        "CHF", "INR", "PKR", "IDR", "TRY", "HKD", "PEN", "JPY", "CNY", "KRW", "ZAR", "MYR", "EUR",
+        "BDT", "VND", "MXN", "ARS", "CLP", "COP", "NGN", "THB", "PHP", "ILS", "PLN",
+    ];
+    assert_eq!(CODES.len(), 37);
     for style in [ReadingStyle::Precise, ReadingStyle::Natural] {
-        for code in ["INR", "PKR", "IDR", "TRY"] {
+        for naming in [CurrencyNaming::Style, CurrencyNaming::Full] {
+            let mut options = options(SpeechLocale::Ar);
+            options.reading_style = style;
+            options.currency_naming = naming;
+            for code in CODES {
+                for amount in [
+                    "0", "1", "2", "3", "10", "11", "21", "100", "101", "102", "1000", "1001",
+                    "1002",
+                ] {
+                    let source = format!("{code}{amount}");
+                    let full = normalize_for_speech(&source, &options).unwrap();
+                    assert!(
+                        full.fully_supported,
+                        "{style:?} {naming:?} {source}: {full:?}"
+                    );
+                    assert_ne!(full.text, source, "{style:?} {naming:?} {source}: {full:?}");
+                    assert_eq!(full.readings[0].source, source);
+                }
+                if !matches!(*code, "JPY" | "KRW") {
+                    for amount in ["0.05", "2.03", "-1.001", "0.125"] {
+                        let source = format!("{code}{amount}");
+                        let full = normalize_for_speech(&source, &options).unwrap();
+                        assert!(
+                            full.fully_supported,
+                            "{style:?} {naming:?} {source}: {full:?}"
+                        );
+                        assert_ne!(full.text, source, "{style:?} {naming:?} {source}: {full:?}");
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn arabic_feminine_counts_compound_one_and_two_with_masculine_scale_coefficients() {
+    for (source, gold) in [
+        ("INR101", "مئة وواحدة روبية هندية"),
+        ("INR102", "مئة واثنتان روبية هندية"),
+        ("INR1001", "ألف وواحدة روبية هندية"),
+        ("INR1002", "ألف واثنتان روبية هندية"),
+        ("INR101000", "مئة وواحد ألف روبية هندية"),
+        ("INR102000000", "مئة واثنان مليون روبية هندية"),
+        ("BDT101", "مئة وواحدة تاكا بنغلاديشية"),
+        ("NGN102", "مئة واثنتان نيرة نيجيرية"),
+    ] {
+        for style in [ReadingStyle::Precise, ReadingStyle::Natural] {
             let mut options = options(SpeechLocale::Ar);
             options.reading_style = style;
             options.currency_naming = CurrencyNaming::Full;
-            for amount in [
-                "101",
-                "102",
-                "1001",
-                "1002",
-                "101000",
-                "102000000",
-                "0.05",
-                "2.03",
-                "-1.001",
-            ] {
-                let source = format!("{code}{amount}");
-                let parsed = parse_for_speech(&source, &options).unwrap();
-                assert!(matches!(
-                    &parsed.spans[0].value,
-                    SpeechValue::Currency { .. }
-                ));
-                let full = normalize_for_speech(&source, &options).unwrap();
-                assert!(!full.fully_supported, "{source}: {full:?}");
-                assert_eq!(full.text, source);
-                assert_eq!(full.readings[0].source, source);
-                assert!(full.readings[0].reason.is_some());
-            }
+            let full = normalize_for_speech(source, &options).unwrap();
+            assert!(full.fully_supported, "{style:?} {source}: {full:?}");
+            let gold = if style == ReadingStyle::Precise {
+                gold.replace("مئة", "مائة")
+            } else {
+                gold.to_string()
+            };
+            assert_eq!(full.text, gold, "{style:?} {source}: {full:?}");
+        }
+    }
+}
+
+#[test]
+fn arabic_feminine_currency_fractions_use_independent_decimal_readings_and_reviewed_names() {
+    for (source, precise, natural) in [
+        (
+            "INR0.05",
+            "صفر فاصلة صفر خمسة روبية هندية",
+            "صفر وخمسة من مئة روبية هندية",
+        ),
+        (
+            "INR2.03",
+            "اثنان فاصلة صفر ثلاثة روبية هندية",
+            "اثنان وثلاثة من مئة روبية هندية",
+        ),
+        (
+            "INR-1.001",
+            "سالب واحد فاصلة صفر صفر واحد روبية هندية",
+            "سالب واحد وواحد من ألف روبية هندية",
+        ),
+        (
+            "BDT0.05",
+            "صفر فاصلة صفر خمسة تاكا بنغلاديشية",
+            "صفر وخمسة من مئة تاكا بنغلاديشية",
+        ),
+        (
+            "NGN2.03",
+            "اثنان فاصلة صفر ثلاثة نيرة نيجيرية",
+            "اثنان وثلاثة من مئة نيرة نيجيرية",
+        ),
+        (
+            "TRY2.03",
+            "اثنان فاصلة صفر ثلاثة ليرة تركية",
+            "اثنان وثلاثة من مئة ليرة تركية",
+        ),
+    ] {
+        for (style, expected) in [
+            (ReadingStyle::Precise, precise),
+            (ReadingStyle::Natural, natural),
+        ] {
+            let mut options = options(SpeechLocale::Ar);
+            options.reading_style = style;
+            options.currency_naming = CurrencyNaming::Full;
+            let parsed = parse_for_speech(source, &options).unwrap();
+            assert!(matches!(
+                &parsed.spans[0].value,
+                SpeechValue::Currency { .. }
+            ));
+            let full = normalize_for_speech(source, &options).unwrap();
+            assert!(full.fully_supported, "{style:?} {source}: {full:?}");
+            assert_eq!(full.text, expected, "{style:?} {source}: {full:?}");
+            assert_eq!(full.readings[0].source, source);
         }
     }
 }
@@ -693,15 +899,14 @@ fn governed_arabic_time_units_reuse_the_feminine_core_without_the_old_ninety_nin
             ("2000s", "ألفا ثانية"),
             ("2003s", "ألفان وثلاث ثوان"),
             ("3003min", "ثلاثة آلاف وثلاث دقائق"),
+            ("101s", "مائة وواحدة ثانية"),
+            ("102min", "مائة واثنتان دقيقة"),
+            ("1001s", "ألف وواحدة ثانية"),
+            ("101000min", "مائة وواحد ألف دقيقة"),
         ] {
             let reading = normalize_for_speech(source, &options).unwrap();
             assert!(reading.fully_supported, "{style:?} {source}: {reading:?}");
             assert_eq!(reading.text, gold, "{style:?} {source}: {reading:?}");
-        }
-        for source in ["101s", "102min", "1001s", "101000min"] {
-            let reading = normalize_for_speech(source, &options).unwrap();
-            assert!(!reading.fully_supported, "{style:?} {source}: {reading:?}");
-            assert_eq!(reading.text, source);
         }
     }
 }

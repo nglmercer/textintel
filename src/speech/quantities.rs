@@ -1180,17 +1180,11 @@ fn render_money_amount(
         arabic_full_currency_forms(code)?;
     }
     let arabic_feminine = options.locale == SpeechLocale::Ar && arabic_currency_is_feminine(code);
-    if arabic_feminine
-        && value
-            .fraction
-            .as_ref()
-            .is_some_and(|fraction| fraction.bytes().any(|digit| digit != b'0'))
-    {
-        // A feminine integer paradigm does not establish decimal/rational
-        // currency syntax. Keep the exact source until that grammar is reviewed.
-        return None;
-    }
-    if !arabic_feminine && let Some(scaled) = render_written_scale(code, value, source, options) {
+    // Digit-by-digit decimal readings do not agree with the currency noun:
+    // فاصلة is a separator, and each side is read as an independent numeral.
+    // Rational natural readings are likewise governed by their denominator,
+    // not by the lexical gender of the currency being measured.
+    if let Some(scaled) = render_written_scale(code, value, source, options) {
         return Some(scaled);
     }
     if options.reading_style == ReadingStyle::Precise
@@ -1318,6 +1312,21 @@ fn render_money_amount(
             joined
         });
     }
+    if locale == SpeechLocale::Ar && fraction.is_some() {
+        // A decimal tail is read independently of the counted currency noun.
+        // Use the reviewed singular currency phrase rather than an invariant
+        // CLDR label, which in particular cannot express the feminine taka
+        // and naira terminology or the irregular shekel name.
+        let singular = if options.currency_naming == CurrencyNaming::Full {
+            arabic_full_currency_forms(code)?[0].clone()
+        } else if let Some(forms) = arabic_currency_forms(code) {
+            forms[0].to_string()
+        } else {
+            name.to_string()
+        };
+        let words = verbalize_with_options(value, options, NumberReading::Cardinal)?;
+        return Some(format!("{words} {singular}"));
+    }
     if locale == SpeechLocale::Ar && plural_value.fraction.is_none() {
         if options.currency_naming == CurrencyNaming::Full {
             let forms = arabic_full_currency_forms(code)?;
@@ -1388,6 +1397,24 @@ fn full_currency_name(code: &str, category: &str, options: &SpeechOptions) -> Op
 }
 
 fn arabic_full_currency_forms(code: &str) -> Option<[String; 4]> {
+    if code == "HKD" {
+        // هونغ كونغ is an invariable proper-place qualifier, not a nisba
+        // adjective competing for agreement with دولار. CLDR supplies the
+        // lexical name; the reviewed dollar noun paradigm supplies its forms.
+        return Some(arabic_currency_forms("USD")?.map(|form| format!("{form} هونغ كونغ")));
+    }
+    if code == "ZAR" {
+        // جنوب أفريقيا is likewise a fixed proper-country name. UNTERM's
+        // South Africa record gives masculine راند and plural راندات.
+        // https://unterm.un.org/unterm2/view/unhq/e3b4a626-fd77-4083-b30f-d6c1dca3a910
+        return Some(arabic_currency_forms("ZAR")?.map(|form| format!("{form} جنوب أفريقيا")));
+    }
+    if matches!(code, "EUR" | "KRW" | "BDT" | "NGN" | "THB" | "ILS") {
+        // These paradigms have irregular plurals, invariant country phrases,
+        // multi-adjective names, or authoritative spellings that cannot be
+        // decomposed into the productive single-nisba rule below.
+        return Some(arabic_currency_forms(code)?.map(str::to_string));
+    }
     let name = currency_name(SpeechLocale::Ar, code, "other")?;
     let (noun, qualifier) = name.split_once(' ')?;
     // Bound the productive nisba adjective rule to a single reviewed
@@ -1405,7 +1432,8 @@ fn arabic_full_currency_forms(code: &str) -> Option<[String; 4]> {
         qualifier.strip_suffix('ي')?
     };
     let base = [
-        "USD", "GBP", "KWD", "SAR", "AED", "RUB", "CHF", "INR", "TRY",
+        "USD", "GBP", "KWD", "SAR", "AED", "RUB", "CHF", "INR", "TRY", "PEN", "JPY", "CNY", "MYR",
+        "VND", "MXN", "PLN",
     ]
     .into_iter()
     .filter_map(arabic_currency_forms)
@@ -1433,7 +1461,7 @@ fn arabic_full_currency_forms(code: &str) -> Option<[String; 4]> {
 }
 
 fn arabic_currency_is_feminine(code: &str) -> bool {
-    matches!(code, "INR" | "PKR" | "IDR" | "TRY")
+    matches!(code, "INR" | "PKR" | "IDR" | "TRY" | "BDT" | "NGN")
 }
 
 /// A regional spoken alternative, never the default money renderer. Gadalla
@@ -1474,14 +1502,6 @@ fn arabic_currency_major(
     value: &NumberValue,
     options: &SpeechOptions,
 ) -> Option<String> {
-    if code == "EUR" {
-        // Reviewed one/dual forms only, not a complete euro paradigm:
-        // UN A/CONF.219/2021/INF/1, p.16 §107: يورو واحد;
-        // UN E/C.12/69/D/48/2018, p.2: يوروان.
-        // https://digitallibrary.un.org/record/3950930/files/A_CONF.219_2021_INF_1-AR.pdf
-        // https://digitallibrary.un.org/record/3993942/files/E_C.12_69_D_48_2018-AR.pdf
-        return arabic_one_two_count("يورو", "يوروان", value, false);
-    }
     // Standalone (nominative) currency quantities. Small-number agreement is
     // explicit; display names alone do not encode Arabic one/two/3–10 forms.
     arabic_noun_count(
@@ -1515,15 +1535,21 @@ fn arabic_one_two_count(
 
 fn arabic_currency_forms(code: &str) -> Option<[&'static str; 4]> {
     Some(match code {
-        "USD" => ["دولار", "دولاران", "دولارات", "دولارا"],
-        "GBP" => ["جنيه", "جنيهان", "جنيهات", "جنيها"],
+        // Other dollar currencies share the same unqualified noun paradigm in
+        // the short style. Their qualifiers belong only to full naming.
+        "USD" | "CAD" | "AUD" | "NZD" | "SGD" | "TWD" | "HKD" => {
+            ["دولار", "دولاران", "دولارات", "دولارا"]
+        }
+        // Egyptian and pound-sterling style names share the unqualified noun
+        // جنيه; full naming derives the country adjective separately.
+        "GBP" | "EGP" => ["جنيه", "جنيهان", "جنيهات", "جنيها"],
         "KWD" => [
             "دينار كويتي",
             "ديناران كويتيان",
             "دنانير كويتية",
             "دينارا كويتيا",
         ],
-        "SAR" => ["ريال", "ريالان", "ريالات", "ريالا"],
+        "SAR" | "BRL" => ["ريال", "ريالان", "ريالات", "ريالا"],
         "AED" => ["درهم", "درهمان", "دراهم", "درهما"],
         // Masculine noun and plural: Birzeit Qabas, lemma 2023241124;
         // SKIU / Pyatigorsk State University, Arabic textbook part 2 (2024),
@@ -1545,6 +1571,91 @@ fn arabic_currency_forms(code: &str) -> Option<[&'static str; 4]> {
         // https://uomus.edu.iq/img/lectures21/MUCLecture_2024_51215125.pdf
         "INR" | "PKR" | "IDR" => ["روبية", "روبيتان", "روبيات", "روبية"],
         "TRY" => ["ليرة", "ليرتان", "ليرات", "ليرة"],
+        // UNTERM country records document the singular and plural of these
+        // consonant-final loan nouns. Their dual/accusative forms are the
+        // regular masculine endings already used by the reviewed paradigms.
+        // Japan ين/ينات: https://unterm.un.org/unterm2/view/unhq/6bf9481b-2a49-475f-a0cb-eaa6544800ea
+        // China يوان/يوانات: https://unterm.un.org/unterm2/view/unhq/f9584092-3401-4a9a-a43f-6697c61fcf33
+        // Malaysia رينغيت/رينغيتات: https://unterm.un.org/unterm2/view/unhq/819631a7-37d3-4b1e-b777-f1b6a2ccdd62
+        // Peru سول/سولات: https://unterm.un.org/unterm2/view/unhq/fe3f7326-ddc8-40ba-8b9f-ac295ed610fc
+        "JPY" => ["ين", "ينان", "ينات", "ينا"],
+        "CNY" => ["يوان", "يوانان", "يوانات", "يوانا"],
+        "MYR" => ["رينغيت", "رينغيتان", "رينغيتات", "رينغيتا"],
+        "PEN" => ["سول", "سولان", "سولات", "سولا"],
+        // UNTERM South Africa: masculine راند, plural راندات.
+        "ZAR" => ["راند", "راندان", "راندات", "راندا"],
+        // Euro one/dual forms are attested in UN Arabic documents; PONS gives
+        // the sound loan plural يوروهات and uses it with خمسة. The singular is
+        // case-invariable because the borrowed noun ends in a long vowel.
+        // https://digitallibrary.un.org/record/3950930/files/A_CONF.219_2021_INF_1-AR.pdf
+        // https://digitallibrary.un.org/record/3993942/files/E_C.12_69_D_48_2018-AR.pdf
+        // https://de.pons.com/%C3%BCbersetzung/deutsch-arabisch/Euro
+        "EUR" => ["يورو", "يوروان", "يوروهات", "يورو"],
+        // KBS Arabic explicitly uses 5 وونات; كوريا الجنوبية is the fixed
+        // proper-country name, so only the noun inflects.
+        // https://rki.kbs.co.kr/service/contents_view.htm?board_code=&board_seq=63917&id=&lang=a&menu_cate=travel&page=8
+        "KRW" => [
+            "وون كوريا الجنوبية",
+            "وونان كوريا الجنوبية",
+            "وونات كوريا الجنوبية",
+            "وونا كوريا الجنوبية",
+        ],
+        // UNTERM gives تاكا/تاكات. Arabic usage treats تاكا as feminine and
+        // attests the dual oblique form التاكاتين, hence nominative تاكاتان.
+        // https://unterm.un.org/unterm2/view/unhq/c73a28a0-bba7-4de3-9674-0f06d0aac7a8
+        // https://ar.wikipedia.org/wiki/%D8%AA%D8%A7%D9%83%D8%A7_%D8%A8%D9%86%D8%BA%D9%84%D8%A7%D8%AF%D9%8A%D8%B4%D9%8A
+        "BDT" => [
+            "تاكا بنغلاديشية",
+            "تاكاتان بنغلاديشيتان",
+            "تاكات بنغلاديشية",
+            "تاكا بنغلاديشية",
+        ],
+        // UNTERM attests the same consonant-final loan morphology for دونغ;
+        // contemporary Arabic news usage spells this currency دونج and uses
+        // دونجات/دونجا. The CLDR spelling is retained for lexical consistency.
+        // https://unterm.un.org/unterm2/view/unhq/cc63aa1f-62b8-4edf-b7c8-03111fa66d89
+        "VND" => ["دونج", "دونجان", "دونجات", "دونجا"],
+        // UNTERM gives بيسو/بيسوات. Arabic reference usage also attests the
+        // CLDR spelling بيزو and the plural بيزوات; the vowel-final singular
+        // remains case-invariable while its adjective inflects.
+        // https://unterm.un.org/unterm2/view/unhq/86af548b-4937-46a5-892c-e2143400e530
+        // https://ar.wikipedia.org/wiki/%D8%A8%D9%8A%D8%B2%D9%88_%D9%81%D9%84%D8%A8%D9%8A%D9%86%D9%8A
+        "MXN" | "ARS" | "CLP" | "COP" | "PHP" => ["بيزو", "بيزوان", "بيزوات", "بيزو"],
+        // UNTERM uses the feminine noun نيرة and plural نيرات; unlike the
+        // invariant CLDR label, this reviewed terminology has a complete
+        // feminine paradigm with regular تاء مربوطة dual formation.
+        // https://unterm.un.org/unterm2/view/unhq/f8b274b0-f014-4b25-99fd-6f2953f4aa1c
+        "NGN" => [
+            "نيرة نيجيرية",
+            "نيرتان نيجيريتان",
+            "نيرات نيجيرية",
+            "نيرة نيجيرية",
+        ],
+        // UNTERM records بات as both singular and plural. Leskoff's Arabic
+        // currency glossary independently uses بات تايلاندي rather than the
+        // CLDR transliteration باخت.
+        // https://unterm.un.org/unterm2/view/unhq/0159ec12-b34f-4a0d-852a-359ede7b2de9
+        // https://www.leskoff.com/s02720-0
+        "THB" => [
+            "بات تايلاندي",
+            "باتان تايلانديان",
+            "بات تايلاندية",
+            "باتا تايلانديا",
+        ],
+        // The Bank of Israel's Arabic pages pair singular شيكل جديد with the
+        // broken plural شواكل جديدة (for example, خمسة شواكل جديدة). Broken
+        // nonhuman plurals take feminine-singular adjectives.
+        // https://www.boi.org.il/ar/roles-ar/%D8%A7%D9%84%D8%A3%D9%88%D8%B1%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D9%82%D8%AF%D9%8A-%D8%A9/first-series-of-the-new-sheqel/
+        "ILS" => [
+            "شيكل إسرائيلي جديد",
+            "شيكلان إسرائيليان جديدان",
+            "شواكل إسرائيلية جديدة",
+            "شيكلا إسرائيليا جديدا",
+        ],
+        // UNTERM Poland gives زلوتي/زلوتيات. The noun behaves like other
+        // masculine nisba-final loans in the dual and accusative.
+        // https://unterm.un.org/unterm2/view/unhq/f1b285eb-6097-463b-ac1a-495b33b115b5
+        "PLN" => ["زلوتي", "زلوتيان", "زلوتيات", "زلوتيا"],
         _ => return None,
     })
 }
