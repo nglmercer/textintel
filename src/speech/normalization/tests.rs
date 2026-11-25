@@ -111,14 +111,15 @@ fn timestamps_cover_every_supported_locale() {
             }
             let extended_precision = "2026-10-16T00:00:00.1234567890Z";
             let result = normalize(extended_precision, &opts(language, Some(locale))).unwrap();
-            if language == "it" {
-                assert_eq!(result.spoken, extended_precision, "{locale}");
-                assert_eq!(result.warnings[0].code, WarningCode::AmbiguousTime);
-            } else {
-                assert_eq!(result.changes.len(), 1, "{locale}: {:?}", result.warnings);
-                assert!(result.warnings.is_empty(), "{locale}");
-                assert_ne!(result.spoken, extended_precision, "{locale}");
-            }
+            assert_eq!(result.changes.len(), 1, "{locale}: {:?}", result.warnings);
+            assert!(result.warnings.is_empty(), "{locale}");
+            assert_ne!(result.spoken, extended_precision, "{locale}");
+
+            let leap = "1990-12-31T23:59:60Z";
+            let result = normalize(leap, &opts(language, Some(locale))).unwrap();
+            assert_eq!(result.changes.len(), 1, "{locale}: {:?}", result.warnings);
+            assert!(result.warnings.is_empty(), "{locale}");
+            assert_ne!(result.spoken, leap, "{locale}");
         }
     }
 }
@@ -1222,6 +1223,39 @@ fn scientific_notation_and_attached_durations() {
             styled(text, "es", Some("es-PE"), ReadingStyle::Precise),
             text
         );
+    }
+}
+
+#[test]
+fn shared_expression_adapters_close_legacy_language_coverage_gaps() {
+    let typed_legacy = ["en", "es", "pt", "fr", "de", "ru", "zh", "ja", "ko"];
+    for language in typed_legacy {
+        for style in [ReadingStyle::Precise, ReadingStyle::Natural] {
+            for text in ["1e6", "10–15", "10–15 kg"] {
+                let spoken = styled(text, language, None, style);
+                assert_ne!(spoken, text, "{language}/{style:?}/{text}");
+            }
+            // Attached durations remain opt-in natural speech.
+            let spoken = styled("1h30", language, None, style);
+            if style == ReadingStyle::Precise {
+                assert_eq!(spoken, "1h30", "{language}/{style:?}");
+            } else {
+                assert_ne!(spoken, "1h30", "{language}/{style:?}");
+            }
+        }
+        for text in ["1/2", "3/4", "1h30"] {
+            let spoken = styled(text, language, None, ReadingStyle::Natural);
+            assert_ne!(spoken, text, "{language}/natural/{text}");
+        }
+    }
+    assert_eq!(
+        styled("10–15", "ru", None, ReadingStyle::Precise),
+        "от десяти до пятнадцати"
+    );
+    // Italian is a versioned-only adapter with no typed locale implementation;
+    // these forms stay explicitly unsupported rather than guessed.
+    for text in ["1e6", "10–15", "1h30"] {
+        assert_eq!(styled(text, "it", None, ReadingStyle::Natural), text);
     }
 }
 

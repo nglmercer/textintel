@@ -175,7 +175,11 @@ existing accent-folding policy retains script-specific marks.
    removed in favor of public `DateOrder`; historical en-GB and CJK policies
    remain unchanged. Legacy fraction/duration adapters now guard their supported
    rendering budget even for source values that fit `u64`, preventing calls
-   outside the numeric renderer's range. Dispatch, `Amount` conversion and
+   outside the numeric renderer's range. Typed legacy locales now consume one
+   typed parse for timestamps, scientific notation, attached durations,
+   fractions and ranges, with explicit compatibility renderers retaining
+   established versioned wording; Italian remains versioned-only because it has
+   no typed locale implementation. Dispatch, `Amount` conversion and
    established formatting still merit review; these are compatibility adapters,
    not a second scientific, duration, fraction/range, grouping or Gregorian
    source grammar.
@@ -188,9 +192,12 @@ existing accent-folding policy retains script-specific marks.
    The private `LexicalSource` now shares the original code/tag protection map
    across legacy classification and typed augmentation within `normalize`;
    there is at most one protection scan per call, and `Off` / structured JSON
-   branches skip it. This consolidates lexical metadata, not semantic dispatch.
-   Both front ends should ultimately consume the same parsed document once,
-   retaining established versioned wording as explicit rendering adapters.
+   branches skip it. Within augmentation, the typed document is now parsed once
+   and compatibility adapters project timestamps and shared expression values
+   from those semantic spans rather than running parallel source recognizers.
+   General semantic dispatch still differs by language. Both front ends should
+   ultimately consume the same parsed document once, retaining established
+   versioned wording as explicit rendering adapters.
 
 3. **Keep regional interpretation and pronunciation scope explicit.**
    `locales::for_locale` now derives concrete regional records from the shared

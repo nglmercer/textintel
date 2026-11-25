@@ -457,3 +457,13 @@ fn attached_vulgar_fraction_sign_is_part_of_the_exact_value_and_source_span() {
         assert!(result.fully_supported);
     }
 }
+
+#[test]
+fn russian_range_endpoints_use_genitive_case() {
+    let ru = options(SpeechLocale::Ru);
+    let (_, value) = expressions::parse_at("10–15", 0, &ru).unwrap();
+    assert_eq!(
+        expressions::render(&value, &ru).as_deref(),
+        Some("от десяти до пятнадцати")
+    );
+}

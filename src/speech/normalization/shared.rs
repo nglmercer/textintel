@@ -4,7 +4,10 @@ use super::{
     ChangeKind, Confidence, CoverageLevel, NormalizationWarning, NormalizeError, NormalizeOptions,
     TextChange, WarningCode,
 };
-use crate::speech::{AbbreviationPolicy, SpeechLocale, SpeechOptions, SpeechValue};
+use crate::speech::{
+    AbbreviationPolicy, SpeechDocument, SpeechLocale, SpeechNormalization, SpeechOptions,
+    SpeechReading, SpeechSpan, SpeechValue,
+};
 use std::collections::BTreeMap;
 
 /// Languages covered by the shared parser that have no legacy rule adapter.
@@ -38,10 +41,32 @@ pub(super) fn coverage(
         })
         .collect()
 }
-pub(super) fn classify(
+
+/// One typed parse/render pass over the original lexical source. Keeping the
+/// document beside its readings lets compatibility adapters project semantic
+/// values without running a second classifier.
+pub(super) struct TypedAnalysis {
+    document: SpeechDocument,
+    result: SpeechNormalization,
+}
+
+impl TypedAnalysis {
+    fn rows(&self) -> impl Iterator<Item = (&SpeechSpan, &SpeechReading)> {
+        document_rows(&self.document, &self.result)
+    }
+}
+
+fn document_rows<'a>(
+    document: &'a SpeechDocument,
+    result: &'a SpeechNormalization,
+) -> impl Iterator<Item = (&'a SpeechSpan, &'a SpeechReading)> {
+    document.spans.iter().zip(&result.readings)
+}
+
+fn analyze(
     source: &crate::speech::lexer::LexicalSource<'_>,
     opts: &NormalizeOptions,
-) -> Result<(Vec<TextChange>, Vec<NormalizationWarning>), NormalizeError> {
+) -> Result<TypedAnalysis, NormalizeError> {
     let locale: SpeechLocale = opts
         .language
         .parse()
@@ -61,47 +86,64 @@ pub(super) fn classify(
         .map_err(|_| NormalizeError::InvalidReadingOptions)?;
     let result = crate::speech::verbalize::verbalize_document_with_options(&document, &options)
         .map_err(|_| NormalizeError::InvalidReadingOptions)?;
-    let mut changes = Vec::new();
-    let mut warnings = Vec::new();
-    for (span, reading) in document.spans.iter().zip(&result.readings) {
-        let kind = match &span.value {
-            SpeechValue::Text => continue,
-            SpeechValue::Number { value, .. } => {
-                if value.fraction.is_some() {
-                    ChangeKind::Decimal
-                } else {
-                    ChangeKind::Number
-                }
+    Ok(TypedAnalysis { document, result })
+}
+
+fn change_kind(value: &SpeechValue) -> Option<ChangeKind> {
+    Some(match value {
+        SpeechValue::Text | SpeechValue::Identifier { .. } => return None,
+        SpeechValue::Number { value, .. } => {
+            if value.fraction.is_some() {
+                ChangeKind::Decimal
+            } else {
+                ChangeKind::Number
             }
-            SpeechValue::Abbreviation { .. } => ChangeKind::Abbreviation,
-            SpeechValue::Date { .. } => ChangeKind::Date,
-            SpeechValue::Time { .. } => ChangeKind::Time,
-            SpeechValue::Currency { .. } => ChangeKind::Currency,
-            SpeechValue::Percent { .. } => ChangeKind::Percentage,
-            SpeechValue::InflectedNumber { .. } => ChangeKind::Number,
-            SpeechValue::MeasuredExpression { .. } => ChangeKind::Unit,
-            SpeechValue::LabelledNumber { .. } => ChangeKind::Unit,
-            SpeechValue::Measure { .. } => ChangeKind::Unit,
-            SpeechValue::Expression { value } => match crate::speech::expressions::kind(value) {
-                "ordinal" => ChangeKind::Ordinal,
-                "fraction" => ChangeKind::Fraction,
-                "range" => ChangeKind::Range,
-                "duration" => ChangeKind::Time,
-                _ => ChangeKind::Number,
-            },
-            SpeechValue::Temporal { value } => {
-                if crate::speech::temporal::kind(value) == "time" {
-                    ChangeKind::Time
-                } else {
-                    ChangeKind::Date
-                }
+        }
+        SpeechValue::Abbreviation { .. } => ChangeKind::Abbreviation,
+        SpeechValue::Date { .. } => ChangeKind::Date,
+        SpeechValue::Time { .. } => ChangeKind::Time,
+        SpeechValue::Currency { .. } => ChangeKind::Currency,
+        SpeechValue::Percent { .. } => ChangeKind::Percentage,
+        SpeechValue::InflectedNumber { .. } => ChangeKind::Number,
+        SpeechValue::MeasuredExpression { .. } => ChangeKind::Unit,
+        SpeechValue::LabelledNumber { .. } => ChangeKind::Unit,
+        SpeechValue::Measure { .. } => ChangeKind::Unit,
+        SpeechValue::Expression { value } => match crate::speech::expressions::kind(value) {
+            "ordinal" => ChangeKind::Ordinal,
+            "fraction" => ChangeKind::Fraction,
+            "range" => ChangeKind::Range,
+            "duration" => ChangeKind::Time,
+            _ => ChangeKind::Number,
+        },
+        SpeechValue::Temporal { value } => {
+            if crate::speech::temporal::kind(value) == "time" {
+                ChangeKind::Time
+            } else {
+                ChangeKind::Date
             }
-            SpeechValue::Identifier { .. } => continue,
-            SpeechValue::Ambiguous { .. } => ChangeKind::Number,
-        };
-        if reading.supported {
-            if reading.spoken != span.source {
-                changes.push(TextChange {
+        }
+        SpeechValue::Ambiguous { .. } => ChangeKind::Number,
+    })
+}
+
+fn warning_kind(kind: ChangeKind) -> WarningCode {
+    match kind {
+        ChangeKind::Date => WarningCode::AmbiguousDate,
+        ChangeKind::Time => WarningCode::AmbiguousTime,
+        ChangeKind::Currency => WarningCode::AmbiguousCurrency,
+        _ => WarningCode::AmbiguousNumber,
+    }
+}
+
+fn generic_row(
+    span: &SpeechSpan,
+    reading: &SpeechReading,
+) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
+    let kind = change_kind(&span.value)?;
+    if reading.supported {
+        if reading.spoken != span.source {
+            return Some((
+                Some(TextChange {
                     kind,
                     start: span.start,
                     end: span.end,
@@ -111,20 +153,38 @@ pub(super) fn classify(
                     } else {
                         Confidence::High
                     },
-                });
-            }
-        } else {
-            let code = match kind {
-                ChangeKind::Date => WarningCode::AmbiguousDate,
-                ChangeKind::Time => WarningCode::AmbiguousTime,
-                ChangeKind::Currency => WarningCode::AmbiguousCurrency,
-                _ => WarningCode::AmbiguousNumber,
-            };
-            warnings.push(NormalizationWarning {
-                code,
+                }),
+                None,
+            ));
+        }
+        Some((None, None))
+    } else {
+        Some((
+            None,
+            Some(NormalizationWarning {
+                code: warning_kind(kind),
                 start: span.start,
                 end: span.end,
-            });
+            }),
+        ))
+    }
+}
+
+pub(super) fn classify(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    opts: &NormalizeOptions,
+) -> Result<(Vec<TextChange>, Vec<NormalizationWarning>), NormalizeError> {
+    let analysis = analyze(source, opts)?;
+    let mut changes = Vec::new();
+    let mut warnings = Vec::new();
+    for (span, reading) in analysis.rows() {
+        if let Some((change, warning)) = generic_row(span, reading) {
+            if let Some(change) = change {
+                changes.push(change);
+            }
+            if let Some(warning) = warning {
+                warnings.push(warning);
+            }
         }
     }
     Ok((changes, warnings))
@@ -146,6 +206,436 @@ pub(super) fn feature(kind: ChangeKind) -> super::rules::Feature {
         ChangeKind::Fraction => Feature::Fractions,
     }
 }
+
+fn typed_expression_options(opts: &NormalizeOptions) -> Option<SpeechOptions> {
+    let locale: SpeechLocale = opts.language.parse().ok()?;
+    let profile = crate::speech::locales::for_locale(&opts.locale)?;
+    let mut options = SpeechOptions::new(locale);
+    options.reading_style = opts.reading_style;
+    options.decimal_separator = Some(profile.decimal_separator);
+    Some(options)
+}
+
+fn exact_number(value: u64) -> crate::speech::NumberValue {
+    crate::speech::NumberValue {
+        negative: false,
+        integer: value.to_string(),
+        fraction: None,
+    }
+}
+
+fn amount_number(value: &super::rules::Amount) -> crate::speech::NumberValue {
+    crate::speech::NumberValue {
+        negative: value.negative,
+        integer: value.int.to_string(),
+        fraction: value.frac.clone(),
+    }
+}
+
+fn render_typed_expression(
+    value: crate::speech::expressions::ExpressionValue,
+    opts: &NormalizeOptions,
+) -> Option<String> {
+    crate::speech::expressions::render(&value, &typed_expression_options(opts)?)
+}
+
+/// Project a typed timestamp into the established versioned renderer when the
+/// legacy adapter supports its precision. Longer exact fractions remain with
+/// the shared typed rendering, matching the existing augmentation contract.
+fn legacy_timestamp(
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    locale: &str,
+) -> Option<TextChange> {
+    use crate::speech::temporal::{TemporalValue, TimestampOffset};
+    use chrono::TimeZone;
+    let SpeechValue::Temporal {
+        value:
+            TemporalValue::Timestamp {
+                year,
+                month,
+                day,
+                hour,
+                minute,
+                second,
+                fraction,
+                offset,
+            },
+    } = &span.value
+    else {
+        return None;
+    };
+    if fraction
+        .as_deref()
+        .is_some_and(|fraction| fraction.len() > 9)
+    {
+        return None;
+    }
+    let year = year.parse::<u32>().ok()?;
+    if !super::rules::valid_date(year, *month, *day) {
+        return None;
+    }
+    let seconds = match offset {
+        TimestampOffset::Utc | TimestampOffset::UnknownLocal => 0,
+        TimestampOffset::Known {
+            negative,
+            hours,
+            minutes,
+        } => {
+            let total = (hours * 3600 + minutes * 60) as i32;
+            if *negative { -total } else { total }
+        }
+    };
+    let offset = chrono::FixedOffset::east_opt(seconds)?;
+    let value = offset
+        .with_ymd_and_hms(year as i32, *month, *day, *hour, *minute, *second)
+        .single()?;
+    let replacement = rules.datetime(&value, fraction.as_deref().unwrap_or(""), locale)?;
+    Some(TextChange {
+        kind: ChangeKind::Date,
+        start: span.start,
+        end: span.end,
+        replacement,
+        confidence: Confidence::High,
+    })
+}
+
+fn legacy_scientific(
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<TextChange> {
+    // Accept either a precise-style protected identifier or the Natural typed
+    // expression: the Versioned shape profile itself decides compatibility.
+    let (mantissa, exponent) = super::classify::parse_scientific(&span.source)?;
+    let replacement = rules
+        .scientific(&mantissa, exponent, &opts.locale)
+        .or_else(|| {
+            render_typed_expression(
+                crate::speech::expressions::ExpressionValue::Scientific {
+                    mantissa: amount_number(&mantissa),
+                    exponent,
+                },
+                opts,
+            )
+        })?;
+    Some(TextChange {
+        kind: ChangeKind::Decimal,
+        start: span.start,
+        end: span.end,
+        replacement,
+        confidence: Confidence::High,
+    })
+}
+
+fn legacy_duration(
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<TextChange> {
+    if opts.reading_style != super::ReadingStyle::Natural {
+        return None;
+    }
+    let (hours, minutes, seconds) = super::classify::parse_duration(&span.source)?;
+    if ![hours, minutes, seconds]
+        .iter()
+        .all(|value| *value <= super::classify::MAX_INTEGER)
+    {
+        return None;
+    }
+    let replacement = rules
+        .duration(hours, minutes, seconds, &opts.locale)
+        .or_else(|| {
+            use crate::speech::expressions::{DurationComponent, DurationUnit, ExpressionValue};
+            let components = [
+                (hours, DurationUnit::Hours),
+                (minutes, DurationUnit::Minutes),
+                (seconds, DurationUnit::Seconds),
+            ]
+            .into_iter()
+            .filter(|(value, _)| *value > 0)
+            .map(|(value, unit)| DurationComponent { unit, value })
+            .collect();
+            render_typed_expression(ExpressionValue::Duration { components }, opts)
+        })?;
+    Some(TextChange {
+        kind: ChangeKind::Unit,
+        start: span.start,
+        end: span.end,
+        replacement,
+        confidence: Confidence::High,
+    })
+}
+
+fn versioned_relation(source: &str) -> Option<crate::speech::shapes::RelationShape> {
+    use crate::speech::shapes::{self, ShapePolicy};
+    let options = crate::speech::SpeechOptions::new(crate::speech::SpeechLocale::En);
+    shapes::relation(source, 0, &options, ShapePolicy::Versioned)
+        .filter(|shape| shape.end == source.len())
+}
+
+fn fraction_like(source: &str) -> bool {
+    let parts: Vec<&str> = source.split('/').collect();
+    parts.len() == 2
+        && parts
+            .iter()
+            .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+}
+
+/// Fractions retain the versioned ambiguity contract: only Natural rendering
+/// with a reviewed fractional noun becomes speech; otherwise the whole slash
+/// form carries one AmbiguousFraction warning.
+fn legacy_fraction(
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
+    if !fraction_like(&span.source) {
+        return None;
+    }
+    use crate::speech::shapes::RelationValue;
+    let values = versioned_relation(&span.source).and_then(|shape| match shape.value {
+        RelationValue::Fraction {
+            numerator,
+            denominator,
+        } => Some((
+            numerator.integer.parse::<u64>().ok()?,
+            denominator.integer.parse::<u64>().ok()?,
+        )),
+        _ => None,
+    });
+    if opts.reading_style == super::ReadingStyle::Natural
+        && let Some((numerator, denominator)) = values
+        && numerator <= super::classify::MAX_INTEGER
+        && denominator <= super::classify::MAX_INTEGER
+        && let Some(replacement) = rules.fraction(numerator, denominator, &opts.locale)
+    {
+        return Some((
+            Some(TextChange {
+                kind: ChangeKind::Fraction,
+                start: span.start,
+                end: span.end,
+                replacement,
+                confidence: Confidence::High,
+            }),
+            None,
+        ));
+    }
+    Some((
+        None,
+        Some(NormalizationWarning {
+            code: WarningCode::AmbiguousFraction,
+            start: span.start,
+            end: span.end,
+        }),
+    ))
+}
+
+fn versioned_range(source: &str) -> Option<(u64, u64)> {
+    use crate::speech::shapes::RelationValue;
+    let shape = versioned_relation(source)?;
+    let RelationValue::Range { from, to } = shape.value else {
+        return None;
+    };
+    Some((
+        from.integer.parse::<u64>().ok()?,
+        to.integer.parse::<u64>().ok()?,
+    ))
+}
+
+/// Reproduce the legacy field join for `10–15 kg`: exactly one space-like
+/// separator, no punctuation, and an unprotected unit field.
+fn joined_range_unit(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+) -> Option<(usize, super::rules::Unit)> {
+    let fields = source.fields();
+    let index = fields.iter().position(|field| {
+        field.core_start == span.start && field.core_end == span.end && field.has_core()
+    })?;
+    let current = fields[index];
+    let next = *fields.get(index + 1)?;
+    let gap = &source.text()[current.end..next.start];
+    if !(current.bare_end()
+        && next.bare_start()
+        && !next.protected
+        && next.has_core()
+        && matches!(gap, " " | "\u{a0}" | "\u{202f}"))
+    {
+        return None;
+    }
+    let unit = super::rules::unit_from_str(&source.text()[next.core_start..next.core_end])?;
+    Some((next.core_end, unit))
+}
+
+fn legacy_unit_from_key(key: &str) -> Option<super::rules::Unit> {
+    use super::rules::Unit;
+    Some(match key {
+        "mass-kilogram" => Unit::Kilogram,
+        "mass-gram" => Unit::Gram,
+        "length-kilometer" => Unit::Kilometer,
+        "length-meter" => Unit::Meter,
+        "length-centimeter" => Unit::Centimeter,
+        "length-millimeter" => Unit::Millimeter,
+        "volume-liter" => Unit::Liter,
+        "volume-milliliter" => Unit::Milliliter,
+        "temperature-celsius" => Unit::Celsius,
+        "temperature-fahrenheit" => Unit::Fahrenheit,
+        "digital-gigabyte" => Unit::Gigabyte,
+        "frequency-megahertz" => Unit::Megahertz,
+        "duration-millisecond" => Unit::Millisecond,
+        _ => return None,
+    })
+}
+
+fn key_for_legacy_unit(unit: super::rules::Unit) -> &'static str {
+    use super::rules::Unit;
+    match unit {
+        Unit::Kilogram => "mass-kilogram",
+        Unit::Gram => "mass-gram",
+        Unit::Kilometer => "length-kilometer",
+        Unit::Meter => "length-meter",
+        Unit::Centimeter => "length-centimeter",
+        Unit::Millimeter => "length-millimeter",
+        Unit::Liter => "volume-liter",
+        Unit::Milliliter => "volume-milliliter",
+        Unit::Celsius => "temperature-celsius",
+        Unit::Fahrenheit => "temperature-fahrenheit",
+        Unit::KilometersPerHour => "speed-kilometer-per-hour",
+        Unit::MetersPerSecond => "speed-meter-per-second",
+        Unit::Gigabyte => "digital-gigabyte",
+        Unit::Megahertz => "frequency-megahertz",
+        Unit::Millisecond => "duration-millisecond",
+    }
+}
+
+fn render_typed_range(
+    from: u64,
+    to: u64,
+    unit: Option<super::rules::Unit>,
+    opts: &NormalizeOptions,
+) -> Option<String> {
+    use crate::speech::expressions::ExpressionValue;
+    let value = ExpressionValue::Range {
+        from: exact_number(from),
+        to: exact_number(to),
+    };
+    if let Some(unit) = unit {
+        let measured = SpeechValue::MeasuredExpression {
+            unit: key_for_legacy_unit(unit).into(),
+            value,
+        };
+        crate::speech::quantities::render(&measured, "", &typed_expression_options(opts)?)
+    } else {
+        render_typed_expression(value, opts)
+    }
+}
+
+fn number_count(value: &crate::speech::NumberValue) -> Option<u64> {
+    (value.fraction.is_none() && !value.negative).then(|| value.integer.parse::<u64>().ok())?
+}
+
+/// Natural typed parsing recognizes a measured range as one semantic span.
+/// Project that same span back to the established versioned range+unit rule.
+fn legacy_measured_range(
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<TextChange> {
+    use crate::speech::expressions::ExpressionValue;
+    let SpeechValue::MeasuredExpression { unit, value } = &span.value else {
+        return None;
+    };
+    let ExpressionValue::Range { from, to } = value else {
+        return None;
+    };
+    let unit = legacy_unit_from_key(unit)?;
+    let from = number_count(from)?;
+    let to = number_count(to)?;
+    let replacement = rules
+        .range(from, to, Some(unit), &opts.locale)
+        .or_else(|| render_typed_range(from, to, Some(unit), opts))?;
+    Some(TextChange {
+        kind: ChangeKind::Range,
+        start: span.start,
+        end: span.end,
+        replacement,
+        confidence: Confidence::High,
+    })
+}
+
+fn legacy_range(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<TextChange> {
+    let (from, to) = versioned_range(&span.source)?;
+    let (end, unit) = joined_range_unit(source, span)
+        .map(|(end, unit)| (end, Some(unit)))
+        .unwrap_or((span.end, None));
+    let replacement = rules
+        .range(from, to, unit, &opts.locale)
+        .or_else(|| render_typed_range(from, to, unit, opts))?;
+    Some(TextChange {
+        kind: ChangeKind::Range,
+        start: span.start,
+        end,
+        replacement,
+        confidence: Confidence::High,
+    })
+}
+
+fn timestamp_shaped(source: &str) -> bool {
+    source.len() >= 11
+        && source.as_bytes().get(4) == Some(&b'-')
+        && source
+            .as_bytes()
+            .get(10)
+            .is_some_and(|b| *b == b'T' || *b == b't')
+}
+
+/// Compatibility renderers for semantic values that used to have a second
+/// classifier. They only replace wording; shared parsing remains authoritative.
+fn legacy_row(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+    reading: &SpeechReading,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
+    let _ = reading;
+    if let Some(row) = legacy_fraction(span, rules, opts) {
+        return Some(row);
+    }
+    if let Some(change) = legacy_measured_range(span, rules, opts) {
+        return Some((Some(change), None));
+    }
+    if let Some(change) = legacy_range(source, span, rules, opts) {
+        return Some((Some(change), None));
+    }
+    if let Some(change) = legacy_scientific(span, rules, opts) {
+        return Some((Some(change), None));
+    }
+    if let Some(change) = legacy_duration(span, rules, opts) {
+        return Some((Some(change), None));
+    }
+    if timestamp_shaped(&span.source) && matches!(span.value, SpeechValue::Ambiguous { .. }) {
+        return Some((
+            None,
+            Some(NormalizationWarning {
+                code: WarningCode::AmbiguousTime,
+                start: span.start,
+                end: span.end,
+            }),
+        ));
+    }
+    if let Some(change) = legacy_timestamp(span, rules, &opts.locale) {
+        return Some((Some(change), None));
+    }
+    None
+}
+
 /// Retain established presentation rules while filling missing feature adapters
 /// from the same typed core. Existing replacements and preservation diagnostics win.
 pub(super) fn augment(
@@ -159,9 +649,41 @@ pub(super) fn augment(
         return Ok(());
     }
     let text = source.text();
-    let (extra, _) = classify(source, opts)?;
-    for change in extra {
-        if legacy.coverage(feature(change.kind)) != CoverageLevel::None
+    let analysis = analyze(source, opts)?;
+    for (span, reading) in analysis.rows() {
+        let compatibility = legacy_row(source, span, reading, legacy, opts);
+        if let Some((_, Some(warning))) = &compatibility
+            && !warnings
+                .iter()
+                .any(|old| old.start < warning.end && warning.start < old.end)
+        {
+            warnings.push(warning.clone());
+        }
+        // A legacy warning alone never blocked typed augmentation in the
+        // historical pipeline: it only stayed attached to the preserved source.
+        // Compatibility supersedes the typed row when it produces an actual
+        // replacement; warning-only rows still allow missing-feature adapters.
+        let is_compatibility = compatibility
+            .as_ref()
+            .and_then(|(change, _)| change.as_ref())
+            .is_some();
+        let row = if is_compatibility {
+            compatibility
+        } else {
+            generic_row(span, reading)
+        };
+        let Some((change, warning)) = row else {
+            continue;
+        };
+        // Generic typed warnings remain diagnostic input to the compatibility
+        // adapter, but the versioned API's legacy classifier owns public warning
+        // spans except when a compatibility rule explicitly projects one above.
+        let _ = warning;
+        let Some(change) = change else {
+            continue;
+        };
+        if !is_compatibility
+            && legacy.coverage(feature(change.kind)) != CoverageLevel::None
             && !matches!(change.kind, ChangeKind::Date | ChangeKind::Time)
         {
             continue;
@@ -198,5 +720,6 @@ pub(super) fn augment(
         changes.push(change);
     }
     changes.sort_by_key(|v| v.start);
+    warnings.sort_by_key(|v| v.start);
     Ok(())
 }

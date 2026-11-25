@@ -307,13 +307,15 @@ Recommended implementation order:
    script-specific attachment. Interpret symbols through explicit
    source-locale options.
 3. Independently reviewed spoken gold for RFC 3339 timestamps, ordinals,
-   fractions, ranges, scientific notation and durations. The typed parser now
-   has timestamp IR and rendering, but its cross-locale timestamp wording still
-   needs native review.
-4. A shared typed representation for new grammar, with versioned adapters
-   retaining the versioned normalizer’s source offsets, warnings, and identity.
-   Regression tests must protect established behavior while duplicated rules
-   are consolidated.
+   fractions, ranges, scientific notation and durations. The typed parser has
+   timestamp IR/rendering, the versioned adapters now cover the shared
+   expression families across typed legacy languages, and Russian ranges use
+   genitive endpoints, but cross-locale wording still needs native review.
+4. Continue consolidating semantic dispatch around the shared typed document.
+   Source protection, timestamps, scientific notation, attached durations,
+   fractions and ranges now use shared parsing/shape evidence with versioned
+   adapters retaining offsets, warnings and compatibility wording; broader
+   number/currency/date dispatch still needs consolidation.
 5. Context distinguishing padded counts, phone/serial/postal identifiers,
    mixed-script text, and domain abbreviations. Add independently reviewed
    minimal pairs before expanding transformations.

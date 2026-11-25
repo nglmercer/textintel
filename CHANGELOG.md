@@ -96,6 +96,14 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
   scientific, duration, fraction and range grammars share compatibility profiles.
 - Versioned classification and typed augmentation share one immutable source
   protection map instead of rescanning code and tags independently.
+- Versioned timestamp, scientific-notation, attached-duration, fraction and
+  range handling now consumes shared typed/source shape evidence through explicit
+  compatibility renderers. The adapters preserve established English/Spanish
+  wording and warning behavior while closing missing shared-expression coverage
+  in the other typed legacy languages; measured ranges remain one semantic span.
+  Russian range endpoints use the CLDR-backed genitive inventory, and RFC 3339
+  normalization preserves exact extended fractions and verified leap seconds
+  across the versioned adapters.
 
 ### Removed
 

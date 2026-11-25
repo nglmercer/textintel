@@ -228,7 +228,11 @@ pub(crate) fn timestamp_parts(
         out.push_str(labels.second);
         out.push_str(": ");
     }
-    out.push_str(&number(value.second().into()));
+    // chrono represents a positive leap second as 23:59:59 with a nanosecond
+    // at or above one billion. Project the written RFC 3339 second back to 60
+    // instead of silently reading the preceding second twice.
+    let second = value.second() + u32::from(value.nanosecond() >= 1_000_000_000);
+    out.push_str(&number(second.into()));
     if !fraction.is_empty() {
         out.push(' ');
         out.push_str(labels.point);

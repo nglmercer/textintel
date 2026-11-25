@@ -19,7 +19,7 @@ use super::{
     AbbreviationPolicy, ChangeKind, Confidence, NormalizationWarning, NormalizeOptions,
     ReadingStyle, TextChange, WarningCode,
 };
-use chrono::{Datelike, Timelike};
+use chrono::Datelike;
 
 /// Largest integer read as a number (15 digits).
 pub(crate) const MAX_INTEGER: u64 = 999_999_999_999_999;
@@ -247,7 +247,7 @@ fn shared_date_fields(
 /// decimal separator even when it is not the locale convention. Returns
 /// `None` for malformed shapes or an exponent with more than two digits
 /// (preserved as written).
-fn parse_scientific(raw: &str) -> Option<(Amount, i32)> {
+pub(crate) fn parse_scientific(raw: &str) -> Option<(Amount, i32)> {
     use crate::speech::shapes::{self, ShapePolicy};
     let options = crate::speech::SpeechOptions::new(crate::speech::SpeechLocale::En);
     let shape = shapes::scientific(raw, 0, &options, ShapePolicy::Versioned)?;
@@ -267,7 +267,7 @@ fn parse_scientific(raw: &str) -> Option<(Amount, i32)> {
 /// Parse attached durations: `1h`, `1h30`, `1h30min`, `1h30min15s`, `30min`,
 /// `45s`. The bare number after `h` is minutes. Returns
 /// `(hours, minutes, seconds)`; at least one component is present.
-fn parse_duration(raw: &str) -> Option<(u64, u64, u64)> {
+pub(crate) fn parse_duration(raw: &str) -> Option<(u64, u64, u64)> {
     use crate::speech::shapes::{self, DurationUnit, ShapePolicy};
     let shape = shapes::duration(raw, 0, ShapePolicy::Versioned)?;
     if shape.end != raw.len() {
@@ -640,7 +640,11 @@ impl<'a> Classifier<'a> {
         let done = index + 1;
 
         // A timestamp is one span: never partially rewrite its date or offset.
-        if core.len() >= 11
+        // Typed locales consume the shared timestamp IR through the compatibility
+        // adapter below. Italian remains on this legacy projection until it has
+        // a typed locale implementation.
+        if self.language == "it"
+            && core.len() >= 11
             && core.as_bytes().get(4) == Some(&b'-')
             && core
                 .as_bytes()
@@ -652,15 +656,19 @@ impl<'a> Classifier<'a> {
                 .and_then(|s| s.strip_prefix('.'))
                 .map(|s| s.split(|c: char| !c.is_ascii_digit()).next().unwrap_or(""))
                 .unwrap_or("");
+            let shared_valid = matches!(
+                crate::speech::temporal::parse_timestamp_at(core, 0),
+                Some((end, crate::speech::temporal::TemporalValue::Timestamp { .. }))
+                    if end == core.len()
+            );
             match chrono::DateTime::parse_from_rfc3339(core) {
                 Ok(value)
-                    if fraction.len() <= 9
+                    if shared_valid
                         && valid_date(
                             value.date_naive().year() as u32,
                             value.date_naive().month(),
                             value.date_naive().day(),
-                        )
-                        && value.time().nanosecond() < 1_000_000_000 =>
+                        ) =>
                 {
                     if let Some(spoken) = self.rules.datetime(&value, fraction, self.locale) {
                         self.change(ChangeKind::Date, start, end, spoken);
@@ -673,25 +681,27 @@ impl<'a> Classifier<'a> {
             return done;
         }
 
-        // Scientific notation is unambiguous and is read in every style.
-        if let Some((mantissa, exponent)) = parse_scientific(core) {
-            if let Some(spoken) = self.rules.scientific(&mantissa, exponent, self.locale) {
-                self.change(ChangeKind::Decimal, start, end, spoken);
+        // Scientific notation and attached durations use the shared shape
+        // grammar. Typed locales render them through the compatibility adapter
+        // in shared.rs; Italian remains on this legacy projection until it has
+        // a typed locale implementation.
+        if self.language == "it" {
+            if let Some((mantissa, exponent)) = parse_scientific(core) {
+                if let Some(spoken) = self.rules.scientific(&mantissa, exponent, self.locale) {
+                    self.change(ChangeKind::Decimal, start, end, spoken);
+                }
+                return done;
             }
-            return done;
-        }
-
-        // Attached durations are opt-in natural speech. `precise` keeps the
-        // original byte-for-byte so existing callers do not change.
-        if self.style == ReadingStyle::Natural
-            && let Some((hours, minutes, seconds)) = parse_duration(core)
-            && [hours, minutes, seconds]
-                .iter()
-                .all(|value| *value <= MAX_INTEGER)
-            && let Some(spoken) = self.rules.duration(hours, minutes, seconds, self.locale)
-        {
-            self.change(ChangeKind::Unit, start, end, spoken);
-            return done;
+            if self.style == ReadingStyle::Natural
+                && let Some((hours, minutes, seconds)) = parse_duration(core)
+                && [hours, minutes, seconds]
+                    .iter()
+                    .all(|value| *value <= MAX_INTEGER)
+                && let Some(spoken) = self.rules.duration(hours, minutes, seconds, self.locale)
+            {
+                self.change(ChangeKind::Unit, start, end, spoken);
+                return done;
+            }
         }
 
         // Attached currency prefix / suffix.
@@ -734,7 +744,10 @@ impl<'a> Classifier<'a> {
             return self.clock(index);
         }
         if core.contains('–') {
-            return self.range(index);
+            if self.language == "it" {
+                return self.range(index);
+            }
+            return done;
         }
         if core.matches('-').count() == 2 && !core.starts_with('-') {
             self.iso_date(core, start, end);
@@ -800,7 +813,7 @@ impl<'a> Classifier<'a> {
             return;
         }
         match parts.as_slice() {
-            [_, _] => {
+            [_, _] if self.language == "it" => {
                 use crate::speech::shapes::{self, RelationValue, ShapePolicy};
                 let options = crate::speech::SpeechOptions::new(crate::speech::SpeechLocale::En);
                 let values = shapes::relation(core, 0, &options, ShapePolicy::Versioned)
@@ -826,6 +839,9 @@ impl<'a> Classifier<'a> {
                     self.warn(WarningCode::AmbiguousFraction, start, end);
                 }
             }
+            // Typed locales receive the same versioned compatibility through
+            // shared.rs; `[_, _]` date disambiguation never reaches this arm.
+            [_, _] => {}
             [year, month, day] if year.len() == 4 && month.len() <= 2 && day.len() <= 2 => {
                 self.calendar_date(core, start, end)
             }

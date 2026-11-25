@@ -316,6 +316,22 @@ fn number(value: &NumberValue, options: &SpeechOptions) -> Option<String> {
     verbalize_count_with_options(value, options)
 }
 
+/// Range endpoints governed by `от`/`до` are genitive in Russian. Use the
+/// explicit CLDR-backed genitive inventory instead of nominative cardinal
+/// words; non-integer forms remain unsupported rather than approximated.
+fn range_number(value: &NumberValue, options: &SpeechOptions) -> Option<String> {
+    if options.locale == SpeechLocale::Ru {
+        return super::grammar::render(
+            &SpeechValue::InflectedNumber {
+                value: value.clone(),
+                inflection: super::grammar::NumberInflection::Genitive,
+            },
+            options,
+        );
+    }
+    number(value, options)
+}
+
 /// Render an expression using the same exact-number and quantity core as spans.
 pub fn render(value: &ExpressionValue, options: &SpeechOptions) -> Option<String> {
     render_with_gender(value, options, false)
@@ -382,8 +398,8 @@ pub fn render_with_gender(
         }
         ExpressionValue::Range { from, to } => Some(range_template(
             options.locale,
-            &number(from, options)?,
-            &number(to, options)?,
+            &range_number(from, options)?,
+            &range_number(to, options)?,
         )),
         ExpressionValue::Ordinal { value, marker } => ordinal(*value, marker, options),
         ExpressionValue::Duration { components } => {
