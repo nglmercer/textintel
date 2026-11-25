@@ -261,26 +261,41 @@ languages. No incompatible rows were removed. It supplies spoken text, not
 entity boundaries. [Selection, licensing, and caveats](../data/speech/reference-nemo.README.md)
 include upstream invalid dates and reading-policy assumptions.
 
-| Feature | Exact matches / examples |
-|---|---:|
-| Numbers | 91 / 120 |
-| Dates | 20 / 106 |
-| Currency | 10 / 109 |
-| Time | 10 / 99 |
-| Measures | 25 / 110 |
+| Feature | Exact / cases | Exact + accepted variants |
+|---|---:|---:|
+| Numbers | 91 / 120 | 108 / 120 |
+| Dates | 51 / 106 | 60 / 106 |
+| Currency | 6 / 109 | 23 / 109 |
+| Time | 23 / 99 | 38 / 99 |
+| Measures | 45 / 110 | 74 / 110 |
+
+Re-measured on the current tree with the automatic-policy command recorded in
+[`data/speech/current-metrics.json`](../data/speech/current-metrics.json)
+(544 cases, 216 exact, 303 accepted, 454 fully supported). The pinned snapshot
+predates the timestamp/abbreviation speech commits; the NeMo categories do not
+exercise those input types, so its per-category agreement is unchanged and the
+snapshot remains accurate for what it measures.
 
 Investigate failures before changing behavior. Examples illustrate different
 causes: English `123` differs by optional “and” and hyphenation; Japanese gold
-uses kanji while the experimental renderer produces kana. Conversely, Spanish
-`1 enero` exposes missing named-date grammar, Russian `06.03.2006` exposes a
-missing date shape, and `12KG` exposes missing case-insensitive unit recognition.
-Bare `$` also requires an explicit currency convention rather than a guess.
+uses kanji while the experimental renderer produces kana. Several historically
+missing shapes are now implemented and verified on the current tree: named-month
+dates (`1 enero` → “primero de enero”; also English and Russian), dotted date
+forms (`06.03.2006` reads correctly in Russian once the date order is known —
+the default ambiguity rejection is intentional protection), and case-insensitive
+unit symbols (`12KG` → “doce kilogramos”). Verified remaining gaps include
+month-year partial dates (`May 2024` passes through unnormalized in every
+locale) and currency agreement in general (6 / 109 exact — the weakest
+category). Bare `$` also requires an explicit currency convention rather than a
+guess.
 
 Recommended implementation order:
 
-1. Named months, dotted/partial date forms, weekday validation, year-reading
-   conventions, and localized clock expressions. Keep invalid calendars and
-   ambiguous dates protected.
+1. ~~Named months, dotted date forms, year-reading conventions, and localized
+   clock expressions~~ — implemented and verified on the current tree. Still
+   open within this item: month-year partial date forms (`May 2024`) and
+   weekday-on-date validation (weekday names are read, not checked against the
+   calendar). Keep invalid calendars and ambiguous dates protected.
 2. Currency and measure dictionaries with noun gender/case, minor units,
    inflected forms, case variants, native unit symbols, and script-specific
    attachment. Interpret symbols through explicit source-locale options.
