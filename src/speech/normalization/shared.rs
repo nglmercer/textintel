@@ -686,6 +686,28 @@ fn next_word_after_field<'a>(
         .then(|| field_core(text, next))
 }
 
+/// Mark fields consumed by the versioned phone-like digit-run protection.
+/// The typed parser owns span recognition for these languages, but this
+/// lexical guard retains the compatibility boundary: two or more digit
+/// groups joined by one space-like separator are data, not independent
+/// quantities. Italian still uses the classifier implementation directly.
+fn legacy_digit_run_membership(
+    text: &str,
+    fields: &[crate::speech::lexer::Field],
+) -> Vec<bool> {
+    let mut members = vec![false; fields.len()];
+    let mut index = 0;
+    while index < fields.len() {
+        if let Some(end) = super::classify::digit_run_end(text, fields, index) {
+            members[index..end].fill(true);
+            index = end;
+        } else {
+            index += 1;
+        }
+    }
+    members
+}
+
 /// Whether a core would reach the legacy plain-number dispatcher. Earlier
 /// numeric owners (scientific notation, Natural durations, slashes, clocks,
 /// ranges and ISO dates) consume or preserve the core before any separated
@@ -1490,7 +1512,15 @@ pub(super) fn augment(
     }
     let text = source.text();
     let analysis = analyze(source, opts)?;
+    let fields = source.fields();
+    let digit_run_members = legacy_digit_run_membership(text, &fields);
     for (span, reading) in analysis.rows() {
+        if overlapping_field_indices(&fields, span)
+            .iter()
+            .any(|index| digit_run_members[*index])
+        {
+            continue;
+        }
         let compatibility = legacy_row(source, span, reading, legacy, opts);
         if let Some((_, Some(warning))) = &compatibility
             && !warnings

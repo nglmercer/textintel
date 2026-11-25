@@ -1255,6 +1255,40 @@ fn padded_identifiers_remain_protected_outside_counts() {
 }
 
 #[test]
+fn typed_languages_retain_digit_run_protection_without_duplicate_dispatch() {
+    for (language, locale) in [
+        ("en", "en-US"),
+        ("es", "es-PE"),
+        ("ru", "ru-RU"),
+        ("fr", "fr-FR"),
+        ("it", "it-IT"),
+    ] {
+        for text in [
+            "987 654 321",
+            "+51 987 654 321",
+            "987 654 321 kg",
+            "12 34 56 kg",
+            "007 008 errores",
+        ] {
+            for style in [
+                ReadingStyle::Precise,
+                ReadingStyle::Natural,
+                ReadingStyle::Digits,
+            ] {
+                let result = normalize(text, &styled_opts(language, Some(locale), style)).unwrap();
+                assert_eq!(result.spoken, text, "{language} {style:?} {text}");
+                assert!(result.changes.is_empty(), "{language} {style:?} {text}");
+                assert!(result.warnings.is_empty(), "{language} {style:?} {text}");
+            }
+        }
+    }
+    assert_eq!(
+        spoken("12 34 56%", "en", Some("en-US")),
+        "12 34 fifty-six percent"
+    );
+}
+
+#[test]
 fn quantity_context_does_not_weaken_other_languages() {
     // Only Spanish proves a count from a following common noun. Other
     // locales keep their existing ambiguity policy (and their `digits`

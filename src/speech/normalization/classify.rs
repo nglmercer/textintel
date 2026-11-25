@@ -288,6 +288,48 @@ fn all_digits(raw: &str) -> bool {
     !raw.is_empty() && raw.bytes().all(|b| b.is_ascii_digit())
 }
 
+fn joinable_field(text: &str, fields: &[Field], index: usize) -> Option<usize> {
+    let current = fields[index];
+    let next_index = index + 1;
+    let next = *fields.get(next_index)?;
+    let gap = &text[current.end..next.start];
+    (current.bare_end()
+        && next.bare_start()
+        && !next.protected
+        && next.has_core()
+        && matches!(gap, " " | "\u{a0}" | "\u{202f}"))
+    .then_some(next_index)
+}
+
+/// End of the versioned phone-like digit run starting at `index`, or `None`
+/// when fewer than two pure digit groups are joined by exactly one space-like
+/// separator. Shared augmentation and the Italian classifier use this same
+/// lexical boundary; it is intentionally protection, not a numeric parse.
+pub(super) fn digit_run_end(text: &str, fields: &[Field], index: usize) -> Option<usize> {
+    let field = *fields.get(index)?;
+    let core = &text[field.core_start..field.core_end];
+    if field.protected
+        || !field.has_core()
+        || !core.bytes().any(|byte| byte.is_ascii_digit())
+        || is_protected_identifier(core)
+    {
+        return None;
+    }
+    let digits = core.strip_prefix('+').unwrap_or(core);
+    if !all_digits(digits) {
+        return None;
+    }
+    let mut last = index;
+    while let Some(next) = joinable_field(text, fields, last) {
+        let next_core = &text[fields[next].core_start..fields[next].core_end];
+        if !all_digits(next_core) {
+            break;
+        }
+        last = next;
+    }
+    (last > index).then_some(last + 1)
+}
+
 fn plain_integer(raw: &str) -> Option<u64> {
     if !all_digits(raw) || raw.len() > 15 || (raw.len() > 1 && raw.starts_with('0')) {
         return None;
@@ -564,7 +606,9 @@ impl<'a> Classifier<'a> {
         if !core.bytes().any(|b| b.is_ascii_digit()) || is_protected_identifier(core) {
             return index + 1;
         }
-        if let Some(next) = self.digit_run(index) {
+        if self.language == "it"
+            && let Some(next) = self.digit_run(index)
+        {
             return next;
         }
         self.numeric(index)
@@ -592,19 +636,7 @@ impl<'a> Classifier<'a> {
     /// Phone-like runs: two or more space-separated pure digit groups
     /// (`987 654 321`, `+51 987 654 321`) are protected.
     fn digit_run(&mut self, index: usize) -> Option<usize> {
-        let core = self.core(index);
-        let digits = core.strip_prefix('+').unwrap_or(core);
-        if !all_digits(digits) {
-            return None;
-        }
-        let mut last = index;
-        while let Some(next) = self.joinable(last) {
-            if !all_digits(self.core(next)) {
-                break;
-            }
-            last = next;
-        }
-        (last > index).then_some(last + 1)
+        digit_run_end(self.text, &self.fields, index)
     }
 
     /// Standalone symbol field followed by an amount (`S/ 150,50`,

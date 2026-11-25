@@ -182,9 +182,9 @@ existing accent-folding policy retains script-specific marks.
    with explicit compatibility renderers retaining established versioned wording,
    gender context, quantity context, minor-unit precision, scale-word warnings
    and meridiem punctuation boundaries; Italian remains versioned-only because
-   it has no typed locale implementation. Abbreviation dispatch, digit-run
-   protection, residual identifier policy and established formatting still merit
-   review; these are compatibility adapters, not a second scientific, duration,
+   it has no typed locale implementation. Abbreviation dispatch, residual
+   identifier policy and established formatting still merit review; these are
+   compatibility adapters, not a second scientific, duration,
    fraction/range, grouping, Gregorian or quantity source grammar.
 
 2. **Two classification paths are still dispatched by language.**
@@ -200,7 +200,7 @@ existing accent-folding policy retains script-specific marks.
    values from those semantic spans rather than running parallel source
    recognizers. Numeric, calendar, clock and joined-quantity semantic dispatch
    now consumes the typed spans in typed legacy languages; residual dispatch
-   still differs for abbreviations, digit runs and identifier-shaped text. Both
+   still differs for abbreviations and identifier-shaped text. Both
    front ends should ultimately consume the same parsed document once, retaining
    established versioned wording as explicit rendering adapters.
 

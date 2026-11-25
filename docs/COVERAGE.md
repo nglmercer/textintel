@@ -317,8 +317,7 @@ Recommended implementation order:
    plain numbers, percentages, legacy measure units and compatibility currencies
    now use shared parsing/shape evidence with versioned adapters retaining
    offsets, warnings, context-sensitive morphology and compatibility wording;
-   abbreviation, digit-run and residual identifier dispatch still needs
-   consolidation.
+   abbreviation and residual identifier dispatch still needs consolidation.
 5. Context distinguishing padded counts, phone/serial/postal identifiers,
    mixed-script text, and domain abbreviations. Add independently reviewed
    minimal pairs before expanding transformations.
