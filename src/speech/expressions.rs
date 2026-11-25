@@ -781,9 +781,105 @@ pub fn ordinal(value: u64, marker: &str, options: &SpeechOptions) -> Option<Stri
             }
         ),
         Tr => turkish_ordinal(&words)?,
+        Ru => russian_ordinal(value, options)?,
         _ => super::numbers::basic_ordinal(value, options.locale)?,
     })
 }
+/// Russian nominative masculine ordinal composition. Only the final numeric
+/// component becomes an ordinal; higher scale components remain cardinal, as in
+/// `две тысячи двадцать первый`. The small lexical inventory follows the same
+/// CLDR RBNF ordinal paradigm family used by the shared Russian number data.
+fn russian_ordinal(value: u64, options: &SpeechOptions) -> Option<String> {
+    const UNDER_HUNDRED: [&str; 21] = [
+        "",
+        "первый",
+        "второй",
+        "третий",
+        "четвёртый",
+        "пятый",
+        "шестой",
+        "седьмой",
+        "восьмой",
+        "девятый",
+        "десятый",
+        "одиннадцатый",
+        "двенадцатый",
+        "тринадцатый",
+        "четырнадцатый",
+        "пятнадцатый",
+        "шестнадцатый",
+        "семнадцатый",
+        "восемнадцатый",
+        "девятнадцатый",
+        "двадцатый",
+    ];
+    const TENS: [&str; 10] = [
+        "",
+        "",
+        "двадцатый",
+        "тридцатый",
+        "сороковой",
+        "пятидесятый",
+        "шестидесятый",
+        "семидесятый",
+        "восьмидесятый",
+        "девяностый",
+    ];
+    const HUNDREDS: [&str; 10] = [
+        "",
+        "сотый",
+        "двухсотый",
+        "трёхсотый",
+        "четырёхсотый",
+        "пятисотый",
+        "шестисотый",
+        "семисотый",
+        "восьмисотый",
+        "девятисотый",
+    ];
+    if value == 0 {
+        return None;
+    }
+    if value <= 20 {
+        return Some(UNDER_HUNDRED[value as usize].into());
+    }
+    if value < 100 {
+        let unit = value % 10;
+        if unit == 0 {
+            return Some(TENS[(value / 10) as usize].into());
+        }
+        let tens = number(&literal(value - unit), options)?;
+        return Some(format!("{tens} {}", UNDER_HUNDRED[unit as usize]));
+    }
+    if value < 1000 {
+        let remainder = value % 100;
+        if remainder == 0 {
+            return Some(HUNDREDS[(value / 100) as usize].into());
+        }
+        let hundreds = number(&literal(value - remainder), options)?;
+        return Some(format!(
+            "{hundreds} {}",
+            russian_ordinal(remainder, options)?
+        ));
+    }
+    match value {
+        1_000 => return Some("тысячный".into()),
+        1_000_000 => return Some("миллионный".into()),
+        1_000_000_000 => return Some("миллиардный".into()),
+        1_000_000_000_000 => return Some("триллионный".into()),
+        _ => {}
+    }
+    let remainder = value % 1000;
+    if remainder == 0 {
+        // Exact multiples of thousand have their own fused ordinal paradigm
+        // (`двухтысячный`, `трёхтысячный`, ...). Do not approximate them with
+        // a cardinal phrase.
+        return None;
+    }
+    let high = number(&literal(value - remainder), options)?;
+    Some(format!("{high} {}", russian_ordinal(remainder, options)?))
+}
+
 fn romance_ordinal(value: u64, locale: SpeechLocale) -> Option<String> {
     if value > 999 {
         return None;

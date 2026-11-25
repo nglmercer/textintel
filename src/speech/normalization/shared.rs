@@ -239,6 +239,59 @@ fn render_typed_expression(
     crate::speech::expressions::render(&value, &typed_expression_options(opts)?)
 }
 
+fn legacy_ordinal_marker(marker: &str) -> Option<super::rules::OrdinalMarker<'_>> {
+    use super::rules::OrdinalMarker;
+    Some(match marker {
+        "st" | "nd" | "rd" | "th" => OrdinalMarker::Suffix(marker),
+        "º" | ".º" => OrdinalMarker::Masculine,
+        "ª" | ".ª" => OrdinalMarker::Feminine,
+        _ => return None,
+    })
+}
+
+/// Locate the lexical field corresponding to an ordinal span and apply the
+/// versioned next-word rule: no punctuation at either edge and no line break.
+fn next_word_after_span<'a>(
+    source: &crate::speech::lexer::LexicalSource<'a>,
+    span: &SpeechSpan,
+) -> Option<&'a str> {
+    let fields = source.fields();
+    let index = fields.iter().position(|field| {
+        field.core_start == span.start && field.core_end == span.end && field.has_core()
+    })?;
+    let current = fields[index];
+    let next = *fields.get(index + 1)?;
+    let gap = &source.text()[current.end..next.start];
+    (current.bare_end() && next.bare_start() && next.has_core() && !gap.contains('\n'))
+        .then(|| &source.text()[next.core_start..next.core_end])
+}
+
+/// Project typed ordinal semantics into the versioned gender/context-aware
+/// ordinal renderers. Other ordinal marker families remain with typed rendering.
+fn legacy_ordinal(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    locale: &str,
+) -> Option<TextChange> {
+    use crate::speech::expressions::ExpressionValue;
+    let SpeechValue::Expression {
+        value: ExpressionValue::Ordinal { value, marker },
+    } = &span.value
+    else {
+        return None;
+    };
+    let marker = legacy_ordinal_marker(marker)?;
+    let replacement = rules.ordinal(*value, marker, next_word_after_span(source, span), locale)?;
+    Some(TextChange {
+        kind: ChangeKind::Ordinal,
+        start: span.start,
+        end: span.end,
+        replacement,
+        confidence: Confidence::High,
+    })
+}
+
 /// Project a typed timestamp into the established versioned renderer when the
 /// legacy adapter supports its precision. Longer exact fractions remain with
 /// the shared typed rendering, matching the existing augmentation contract.
@@ -586,6 +639,168 @@ fn legacy_range(
     })
 }
 
+fn legacy_clock_warning(source: &str) -> Option<WarningCode> {
+    // Typed spans own the whole separated meridiem (`13:30 PM`), while the
+    // versioned clock grammar examined only the numeric clock body here.
+    let mut clock = source.trim_end();
+    let lower = clock.to_ascii_lowercase();
+    for form in ["a.m.", "p.m.", "a.m", "p.m", "am", "pm"] {
+        if lower.ends_with(form) {
+            clock = clock[..clock.len() - form.len()].trim_end();
+            break;
+        }
+    }
+    let parts: Vec<&str> = clock.split(':').collect();
+    if !parts
+        .iter()
+        .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_digit()))
+    {
+        return None;
+    }
+    match parts.as_slice() {
+        [hour, minute] if minute.len() == 2 && hour.len() <= 2 => Some(WarningCode::AmbiguousTime),
+        [_, _] => Some(WarningCode::AmbiguousFraction),
+        [hour, minute, second] if hour.len() <= 2 && minute.len() == 2 && second.len() == 2 => {
+            Some(WarningCode::AmbiguousTime)
+        }
+        _ => None,
+    }
+}
+
+fn source_meridiem(source: &str) -> Option<super::rules::Meridiem> {
+    let lower = source.trim_end().to_ascii_lowercase();
+    if lower.ends_with("p.m.") || lower.ends_with("p.m") || lower.ends_with("pm") {
+        Some(super::rules::Meridiem::Pm)
+    } else if lower.ends_with("a.m.") || lower.ends_with("a.m") || lower.ends_with("am") {
+        Some(super::rules::Meridiem::Am)
+    } else {
+        None
+    }
+}
+
+fn written_clock_hour(hour: u32, meridiem: Option<super::rules::Meridiem>) -> u32 {
+    match meridiem {
+        Some(super::rules::Meridiem::Pm) if hour >= 13 => hour - 12,
+        Some(super::rules::Meridiem::Am) if hour == 0 => 12,
+        _ => hour,
+    }
+}
+
+/// The dotted meridiem's final period is ambiguous with sentence punctuation.
+/// Typed parsing owns the complete written meridiem; compatibility keeps the
+/// versioned boundary rule and leaves that period outside the replacement when
+/// it is sentence-final. Lowercase continuations treat it as abbreviation
+/// punctuation, exactly as the legacy joining logic did.
+fn dotted_meridiem_period_is_sentence(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+) -> bool {
+    let lower = span.source.trim_end().to_ascii_lowercase();
+    if !lower.ends_with("a.m.") && !lower.ends_with("p.m.") {
+        return false;
+    }
+    let text = source.text();
+    let Some(rest) = text.get(span.end..) else {
+        return true;
+    };
+    let mut whitespace = String::new();
+    for ch in rest.chars() {
+        if ch.is_whitespace() {
+            whitespace.push(ch);
+            continue;
+        }
+        if matches!(ch, ',' | ';' | ':' | ')') {
+            return false;
+        }
+        return whitespace.contains('\n') || !(ch.is_lowercase() || ch.is_ascii_digit());
+    }
+    true
+}
+
+fn legacy_clock(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
+    use crate::speech::temporal::TemporalValue;
+    let warning = |code| {
+        Some((
+            None,
+            Some(NormalizationWarning {
+                code,
+                start: span.start,
+                end: span.end,
+            }),
+        ))
+    };
+    let (hour, minute, meridiem) = match &span.value {
+        // Precise/phonetic parsing uses the compact compatibility IR, where
+        // AM/PM is already folded into a 24-hour value. Recover only the
+        // written 12-hour hour for the versioned renderer; no new clock
+        // semantics are invented here.
+        SpeechValue::Time {
+            hour,
+            minute,
+            second: None,
+        } => {
+            let meridiem = source_meridiem(&span.source);
+            (written_clock_hour(*hour, meridiem), *minute, meridiem)
+        }
+        SpeechValue::Temporal {
+            value:
+                TemporalValue::Clock {
+                    hour,
+                    minute: Some(minute),
+                    second: None,
+                    period: None,
+                    meridiem,
+                    half: false,
+                },
+        } => {
+            let meridiem = match meridiem.as_deref() {
+                None => None,
+                Some(value) if value.eq_ignore_ascii_case("am") => Some(super::rules::Meridiem::Am),
+                Some(value) if value.eq_ignore_ascii_case("pm") => Some(super::rules::Meridiem::Pm),
+                Some(_) => return None,
+            };
+            (*hour, *minute, meridiem)
+        }
+        _ => {
+            if matches!(span.value, SpeechValue::Ambiguous { .. })
+                && span.source.contains(':')
+                && let Some(code) = legacy_clock_warning(&span.source)
+            {
+                return warning(code);
+            }
+            return None;
+        }
+    };
+    if let Some(replacement) =
+        rules.time_styled(hour, minute, meridiem, opts.reading_style, &opts.locale)
+    {
+        let end = if dotted_meridiem_period_is_sentence(source, span) {
+            span.end - 1
+        } else {
+            span.end
+        };
+        return Some((
+            Some(TextChange {
+                kind: ChangeKind::Time,
+                start: span.start,
+                end,
+                replacement,
+                confidence: Confidence::Medium,
+            }),
+            None,
+        ));
+    }
+    // A valid typed clock whose versioned renderer intentionally fails closed
+    // (for example Russian case-dependent times) remains eligible for typed
+    // rendering. Consuming the row here would regress shared semantic coverage.
+    None
+}
+
 fn timestamp_shaped(source: &str) -> bool {
     source.len() >= 11
         && source.as_bytes().get(4) == Some(&b'-')
@@ -605,6 +820,9 @@ fn legacy_row(
     opts: &NormalizeOptions,
 ) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
     let _ = reading;
+    if let Some(change) = legacy_ordinal(source, span, rules, &opts.locale) {
+        return Some((Some(change), None));
+    }
     if let Some(row) = legacy_fraction(span, rules, opts) {
         return Some(row);
     }
@@ -619,6 +837,9 @@ fn legacy_row(
     }
     if let Some(change) = legacy_duration(span, rules, opts) {
         return Some((Some(change), None));
+    }
+    if let Some(row) = legacy_clock(source, span, rules, opts) {
+        return Some(row);
     }
     if timestamp_shaped(&span.source) && matches!(span.value, SpeechValue::Ambiguous { .. }) {
         return Some((

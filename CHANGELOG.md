@@ -9,6 +9,13 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ### Added
 
+- Extended versioned ordinal and clock consolidation: Russian compound
+  ordinals now compose their final component (`21st` → `двадцать первый`),
+  typed ordinal and two-component clock spans drive the versioned gender- and
+  punctuation-aware adapters in legacy languages, and typed clocks continue to
+  fill locales whose context-dependent versioned renderer intentionally fails
+  closed.
+
 - Completed Arabic currency count agreement for the shared 37-currency matrix:
   reviewed singular/dual/plural/accusative full-name paradigms, feminine
   compound 01/02 counts, shared short noun paradigms across currency aliases,

@@ -467,3 +467,25 @@ fn russian_range_endpoints_use_genitive_case() {
         Some("от десяти до пятнадцати")
     );
 }
+
+#[test]
+fn russian_ordinals_compose_final_components_without_cardinal_substitution() {
+    let ru = options(SpeechLocale::Ru);
+    for (value, gold) in [
+        (21, "двадцать первый"),
+        (101, "сто первый"),
+        (110, "сто десятый"),
+        (2021, "две тысячи двадцать первый"),
+        (1000, "тысячный"),
+    ] {
+        assert_eq!(
+            expressions::ordinal(value, "st", &ru).as_deref(),
+            Some(gold),
+            "{value}"
+        );
+    }
+    // Exact non-one thousands use a distinct fused paradigm that is not yet
+    // part of the reviewed inventory; they fail closed rather than becoming
+    // a cardinal phrase.
+    assert_eq!(expressions::ordinal(2000, "st", &ru), None);
+}

@@ -177,10 +177,11 @@ existing accent-folding policy retains script-specific marks.
    rendering budget even for source values that fit `u64`, preventing calls
    outside the numeric renderer's range. Typed legacy locales now consume one
    typed parse for timestamps, scientific notation, attached durations,
-   fractions and ranges, with explicit compatibility renderers retaining
-   established versioned wording; Italian remains versioned-only because it has
-   no typed locale implementation. Dispatch, `Amount` conversion and
-   established formatting still merit review; these are compatibility adapters,
+   fractions, ranges, ordinals and two-component clocks, with explicit
+   compatibility renderers retaining established versioned wording, gender
+   context and meridiem punctuation boundaries; Italian remains versioned-only
+   because it has no typed locale implementation. Dispatch, `Amount` conversion
+   and established formatting still merit review; these are compatibility adapters,
    not a second scientific, duration, fraction/range, grouping or Gregorian
    source grammar.
 
@@ -193,9 +194,10 @@ existing accent-folding policy retains script-specific marks.
    across legacy classification and typed augmentation within `normalize`;
    there is at most one protection scan per call, and `Off` / structured JSON
    branches skip it. Within augmentation, the typed document is now parsed once
-   and compatibility adapters project timestamps and shared expression values
-   from those semantic spans rather than running parallel source recognizers.
-   General semantic dispatch still differs by language. Both front ends should
+   and compatibility adapters project timestamps, clocks and shared expression
+   values from those semantic spans rather than running parallel source
+   recognizers. General semantic dispatch still differs by language, especially
+   for numbers, currencies and calendar dates. Both front ends should
    ultimately consume the same parsed document once, retaining established
    versioned wording as explicit rendering adapters.
 

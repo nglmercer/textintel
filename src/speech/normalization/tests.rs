@@ -1252,6 +1252,20 @@ fn shared_expression_adapters_close_legacy_language_coverage_gaps() {
         styled("10–15", "ru", None, ReadingStyle::Precise),
         "от десяти до пятнадцати"
     );
+    assert_eq!(
+        styled("21st", "ru", None, ReadingStyle::Precise),
+        "двадцать первый"
+    );
+    // Typed clocks fill legacy languages whose versioned renderer explicitly
+    // fails closed because case or wording context is unavailable.
+    assert_eq!(
+        styled("15:30", "de", None, ReadingStyle::Precise),
+        "fünfzehn uhr dreißig"
+    );
+    assert_eq!(
+        styled("15:30", "ru", None, ReadingStyle::Precise),
+        "пятнадцать часов и тридцать минут"
+    );
     // Italian is a versioned-only adapter with no typed locale implementation;
     // these forms stay explicitly unsupported rather than guessed.
     for text in ["1e6", "10–15", "1h30"] {

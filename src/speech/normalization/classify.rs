@@ -346,7 +346,7 @@ const SCALE_WORDS: &[&str] = &[
     "billones",
 ];
 
-const MERIDIEMS: &[(&str, Meridiem)] = &[
+pub(crate) const MERIDIEMS: &[(&str, Meridiem)] = &[
     ("a.m", Meridiem::Am),
     ("p.m", Meridiem::Pm),
     ("A.M", Meridiem::Am),
@@ -725,7 +725,9 @@ impl<'a> Classifier<'a> {
             self.percent(rest, start, end);
             return done;
         }
-        if let Some(next) = self.ordinal(index) {
+        if self.language == "it"
+            && let Some(next) = self.ordinal(index)
+        {
             return next;
         }
         for (form, unit) in UNIT_FORMS {
@@ -741,7 +743,10 @@ impl<'a> Classifier<'a> {
             return done;
         }
         if core.contains(':') {
-            return self.clock(index);
+            if self.language == "it" {
+                return self.clock(index);
+            }
+            return done;
         }
         if core.contains('–') {
             if self.language == "it" {
