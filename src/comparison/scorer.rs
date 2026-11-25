@@ -378,6 +378,22 @@ pub fn score_fingerprints(
     // single-swap probe is blind to paraphrases and meaning flips that
     // change several slots at once.
     let (multi_swap_synonym_coverage, multi_swap_antonym) = multi_swap_relation(&words_a, &words_b);
+    // Cross-lingual lexical knowledge for single-word pairs: true cognates
+    // (`internet`/`internet`) carry positive evidence while canonical false
+    // friends (`red`/`red`, `rope`/`ropa`) carry negative evidence — the
+    // only signal that can separate byte-identical strings whose meanings
+    // diverge across languages. Scoped to single-word pairs so ordinary
+    // same-language matching is untouched.
+    let (cognate_match, false_friend) = if single_word_pair > 0.5 {
+        let left_fold = casefold_text(&words_a[0]);
+        let right_fold = casefold_text(&words_b[0]);
+        (
+            crate::resources::cognates::are_cognates(&left_fold, &right_fold) as u8 as f64,
+            crate::resources::cognates::are_false_friends(&left_fold, &right_fold) as u8 as f64,
+        )
+    } else {
+        (0.0, 0.0)
+    };
     let swapped_word_similarity = finite_or_zero(swapped_word_similarity(&swap));
     let swapped_phonetic_raw = finite_or_zero(swapped_phonetic_similarity(&swap));
     // Cross-language swaps (`mi`/`my`) are switches, not confusables:
@@ -510,6 +526,8 @@ pub fn score_fingerprints(
         format!("single_word_pair={single_word_pair:.0}"),
         format!("swapped_word_similarity={swapped_word_similarity:.3}"),
         format!("swapped_phonetic={swapped_phonetic:.3}"),
+        format!("cognate_match={cognate_match:.3}"),
+        format!("false_friend={false_friend:.3}"),
         format!("swap_synonym={swap_synonym:.3}"),
         format!("swap_antonym={swap_antonym:.3}"),
         format!("multi_swap_synonym_coverage={multi_swap_synonym_coverage:.3}"),
@@ -598,6 +616,8 @@ pub fn score_fingerprints(
         swap_antonym,
         multi_swap_synonym_coverage,
         multi_swap_antonym,
+        cognate_match,
+        false_friend,
         normalized_identity,
         substring_containment,
         cross_script_pair,

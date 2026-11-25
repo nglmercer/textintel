@@ -4,6 +4,7 @@
 //! repository contains a small seed set, while applications can add complete
 //! licensed dictionaries without changing the analysis code.
 
+pub mod cognates;
 mod error;
 mod index;
 mod loader;

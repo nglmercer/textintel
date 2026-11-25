@@ -11,6 +11,8 @@ BASE_EXPR = {
     "swap_antonym": "result.swap_antonym",
     "multi_swap_synonym_coverage": "result.multi_swap_synonym_coverage",
     "multi_swap_antonym": "result.multi_swap_antonym",
+    "cognate_match": "result.cognate_match",
+    "false_friend": "result.false_friend",
     "swapped_phonetic": "result.swapped_phonetic",
     "confusable_swap": "result.confusable_swap",
     "valid_swap_similarity": "result.valid_swap_similarity",
@@ -74,6 +76,12 @@ def feature_block(names):
             lines.append(f"    f[{i}] = result.swapped_word_similarity * result.lexicon_validity;")
         elif n == "char_sq":
             lines.append("    { let c = result.character.unwrap_or(0.0); f[%d] = c * c; }" % i)
+        elif n == "cognate_x_char":
+            lines.append(f"    f[{i}] = result.cognate_match * result.character.unwrap_or(0.0).max(0.3);")
+        elif n == "antonym_x_char":
+            lines.append(f"    f[{i}] = result.swap_antonym.max(result.multi_swap_antonym) * result.character.unwrap_or(0.0);")
+        elif n == "synonym_x_char":
+            lines.append(f"    f[{i}] = result.swap_synonym.max(result.multi_swap_synonym_coverage) * result.character.unwrap_or(0.0);")
         elif n == "semantic_sq":
             lines.append("    { let s = result.semantic.unwrap_or(0.0); f[%d] = s * s; }" % i)
         else:

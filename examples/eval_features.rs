@@ -104,6 +104,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 result.multi_swap_synonym_coverage,
             ),
             ("multi_swap_antonym", result.multi_swap_antonym),
+            ("cognate_match", result.cognate_match),
+            ("false_friend", result.false_friend),
             ("swapped_phonetic", result.swapped_phonetic),
             ("confusable_swap", result.confusable_swap),
             ("valid_swap_similarity", result.valid_swap_similarity),

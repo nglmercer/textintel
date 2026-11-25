@@ -636,6 +636,21 @@ pub struct ComparisonResult {
     /// escape the single-swap probe; this is their negative evidence.
     #[serde(default)]
     pub multi_swap_antonym: f64,
+    /// 1.0 when both sides are single tokens in the same baked true-cognate
+    /// group ([`crate::resources::cognates`]), else 0.0. Cross-language
+    /// cognates (`internet`/`internet`, `music`/`música`) share meaning
+    /// behind orthographic neighbors — positive evidence character
+    /// statistics cannot confirm.
+    #[serde(default)]
+    pub cognate_match: f64,
+    /// 1.0 when both sides are single tokens forming a canonical
+    /// false-friend pair (`red`/`red`, `rope`/`ropa`: surface neighbors
+    /// whose meanings diverge across languages), else 0.0. This is the only
+    /// evidence that can separate byte-identical false friends from true
+    /// cognates; scoped to single-word pairs so same-language matching is
+    /// untouched.
+    #[serde(default)]
+    pub false_friend: f64,
     /// Semantic cosine when the top languages differ, else `0.0`.
     /// Cross-language matches route here; same-language pairs read `0.0`.
     #[serde(default)]
