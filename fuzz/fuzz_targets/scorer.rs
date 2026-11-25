@@ -49,4 +49,14 @@ fuzz_target!(|input: String| {
         );
         check_finite(result.score);
     }
+    // Path 3: spam calibration over arbitrary text — the trained logistic
+    // layer must stay finite and bounded over hostile feature vectors.
+    if let Ok(result) = engine.detect_spam(&bounded) {
+        check_finite(result.probability);
+        assert!(
+            (0.0..=1.0).contains(&result.probability),
+            "spam probability must stay in [0, 1], got {}",
+            result.probability
+        );
+    }
 });

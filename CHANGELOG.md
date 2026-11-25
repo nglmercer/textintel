@@ -9,6 +9,27 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ### Added
 
+- Baked decision ensemble for comparison scoring with default weights:
+  gradient-boosted trees blended with a logistic layer over the explainable
+  evidence vector (`src/comparison/decision.rs`). Unlike the removed neural
+  infrastructure, inference is compile-time-baked, deterministic,
+  allocation-free and dependency-free; every input feature remains visible in
+  `evidence`/`explanations`. Custom `SimilarityWeights` retain the plain
+  weighted combination. Training protocol and reproducibility notes in
+  `tools/train_decision/README.md`. Measured on the held-out test split:
+  accuracy 0.921, F1 0.934, ROC-AUC 0.981; search recall@5 0.970, MRR 0.885;
+  all quality gates pass.
+- Baked synonym/antonym lexicon and cross-lingual cognate/false-friend
+  inventory with explainable `ComparisonResult` channels (`swap_synonym`,
+  `swap_antonym`, `multi_swap_synonym_coverage`, `multi_swap_antonym`,
+  `cognate_match`, `false_friend`), separating paraphrase substitutions from
+  meaning flips and true cognates from byte-identical false friends.
+- Trained logistic spam calibration replacing the hand-weighted heuristic sum
+  (`src/detection/spam.rs`). `SpamResult.calibrated` is now `true`; measured
+  on the strictly held-out corpus split: accuracy 0.969, F1 0.968 (was 0.0),
+  ROC-AUC 0.998. Retraining protocol in `tools/train_spam/README.md`; custom
+  `SpamPredictor` substitution unchanged.
+
 - Optional complete typed-value gold and separate semantic evaluation metrics,
   preserving exact signs, currency identities, time fields and decimal precision.
   Value failures remain failures under both spoken comparison gates. A separate
@@ -41,6 +62,11 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ### Changed
 
+- `EngineConfig::default()` enables the deterministic rule-based phonetic and
+  feature-hash semantic channels; both are dependency-free and available in
+  `--no-default-features` builds. Phonetic evidence is suppressed for
+  disjoint-script pairs, fixing the inversion where true cross-script
+  transliterations scored below same-script lookalikes.
 - Focus the crate on deterministic text analysis, comparison, decoding,
   provider boundaries, and storage. The default dependency set is lightweight.
 - The local preset enables caches and deterministic providers without reading

@@ -112,8 +112,7 @@ const COGNATE_GROUPS: &[&[&str]] = &[
     &["history", "historia"],
     &["science", "ciencia"],
     &["medicine", "medicina"],
-    &["television", "television"],
-    &["radio", "radio"],
+    &["television"],
     &["taxi"],
     &["metro"],
     &["olive", "oliva"],
@@ -128,7 +127,6 @@ const COGNATE_GROUPS: &[&[&str]] = &[
     &["dolphin", "delfino", "dauphin"],
     &["volcano", "vulcano", "volcan"],
     &["elephant", "elefante"],
-    &["cafe", "cafe"],
 ];
 
 fn normalize_key(text: &str) -> String {
@@ -209,7 +207,41 @@ mod tests {
         assert!(are_cognates("music", "música"));
         assert!(are_cognates("Paris", "París"));
         assert!(are_cognates("hospital", "hôpital"));
+        assert!(are_cognates("coffee", "café"));
         assert!(!are_cognates("red", "red"));
         assert!(!are_cognates("music", "mesa"));
+    }
+
+    #[test]
+    fn cognate_groups_have_no_duplicate_membership() {
+        // A form in two groups silently keeps only the last assignment in the
+        // index, breaking the earlier group's pairs (`cafe` once shadowed the
+        // `coffee`/`café` group this way). Pin the invariant.
+        let mut membership = std::collections::BTreeMap::new();
+        for (group, forms) in COGNATE_GROUPS.iter().enumerate() {
+            let mut seen_in_group = std::collections::BTreeSet::new();
+            for form in *forms {
+                let key = normalize_key(form);
+                assert!(
+                    seen_in_group.insert(key.clone()),
+                    "form {form:?} is duplicated inside cognate group {group}"
+                );
+                if let Some(previous) = membership.insert(key.clone(), group) {
+                    panic!("form {form:?} appears in both cognate groups {previous} and {group}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn false_friends_never_share_a_cognate_group() {
+        // A pair cannot be both a true cognate and a false friend: the two
+        // channels encode opposite evidence for the same surface relation.
+        for (a, b) in FALSE_FRIENDS {
+            assert!(
+                !are_cognates(a, b),
+                "false-friend pair {a:?}/{b:?} also falls inside one cognate group"
+            );
+        }
     }
 }

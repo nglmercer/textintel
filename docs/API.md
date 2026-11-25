@@ -25,7 +25,13 @@ the timing structure.
 ## Comparison and decoding
 
 - `compare`, `compare_batch`, and `compare_fingerprints` combine available
-  evidence channels. Missing channels are omitted and weights renormalized.
+  evidence channels. With the default `SimilarityWeights`, the final score is
+  repriced by the baked decision ensemble (gradient-boosted trees plus a
+  logistic layer) trained on the labeled evaluation corpus — every input
+  feature remains visible in `evidence`/`explanations`, so output stays
+  auditable end to end. With any custom weights or `SimilarityProfile`, the
+  score is the plain weighted combination: missing channels are omitted and
+  weights renormalized.
 - `duplicate` and `duplicate_with_mode` apply an explicit threshold to a
   duplicate mode. Modes include combined, near-exact, lexical, semantic,
   phonetic, decoded, and visual comparison.
@@ -35,7 +41,11 @@ the timing structure.
   can also implement `SimilarityScorer`.
 
 Scores depend on the configured providers and resources. They are not a
-universal probability of equivalent meaning.
+universal probability of equivalent meaning. The decision ensemble is trained
+and measured on the bundled corpus with the protocol in
+`tools/train_decision/README.md`; applications with their own labeled data
+can retrain through the same protocol or replace scoring entirely through
+`SimilarityScorer`.
 
 ## Patterns, spam signals, and search
 
