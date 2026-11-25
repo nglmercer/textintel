@@ -48,7 +48,10 @@ unrelated texts across scripts and lengths. They are labelled negative and
 assigned to the train split. Verified properties:
 
 - no noise `a`/`b` text appears verbatim anywhere in the test split (0/2100
-  overlap on either side), so the held-out claim is intact;
+  overlap on either side), so there is no verbatim train/test leakage;
+  note however that test residuals informed feature and lexicon design
+  iterations during development, so test numbers are an optimistic
+  generalization estimate rather than a pristine-holdout bound;
 - pairs with substring containment or near-identity are excluded at training
   time rather than trusted as negatives.
 

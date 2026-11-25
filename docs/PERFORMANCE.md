@@ -59,10 +59,17 @@ the gate command on every push.
 Use validation data to choose task thresholds and reserve the test split for
 reporting — the training protocols follow this, and the final operating point
 was confirmed on the harness after the ranking simulator was validated exact
-against it. Passing gates measure generalization on the bundled corpora; they
-are not proof of accuracy on application data, and the cross-language
-inventory covers common international vocabulary rather than the long tail of
-cross-lingual lexicon. Spam scores report `calibrated=true` for the baked
+against it. One honesty caveat: model *training* consumed only train and
+validation rows, and the lexicons encode linguistic facts rather than test
+labels, but test-split residuals were inspected while iterating on feature
+and lexicon design. The reported test numbers therefore measure the shipped
+system on the bundled benchmark — treat them as an optimistic estimate of
+generalization rather than a pristine untouched-holdout bound, and prefer a
+fresh application-specific holdout for procurement-grade claims. Passing
+gates measure generalization on the bundled corpora; they are not proof of
+accuracy on application data, and the cross-language inventory covers common
+international vocabulary rather than the long tail of cross-lingual
+lexicon. Spam scores report `calibrated=true` for the baked
 logistic model trained on the bundled corpus train split; both train and
 held-out splits come from the same UCI SMS distribution, so spam calibration
 measures within-distribution generalization. Applications with domain traffic

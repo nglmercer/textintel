@@ -148,7 +148,7 @@ remain visible; runtime success is not native pronunciation accuracy. This live
 audit is separate from the instrumented unit/integration test count.
 
 The general comparison/search quality gates are all green. Measured on the
-held-out test split with `--no-default-features` — accuracy 92.1%, F1 93.4%,
+benchmark test split with `--no-default-features` — accuracy 92.1%, F1 93.4%,
 ROC-AUC 0.981, PR-AUC 0.989, Brier 0.050, ECE 0.041; search recall@1 83%,
 recall@5 97%, recall@10 99%, MRR 0.885, nDCG 0.910. Every global similarity
 gate, every search gate, and every category gate passes — including
@@ -164,7 +164,7 @@ inventory (`src/resources/cognates.rs` — the lexical knowledge the
 byte-identical false-friend cases require: `internet`/`internet` positive
 versus `red`/`red` negative are separable only through lexical identity),
 and the baked logistic spam calibration (`src/detection/spam.rs`, protocol
-in `tools/train_spam/README.md`; held-out spam corpus accuracy 96.9%,
+in `tools/train_spam/README.md`; held-out spam-corpus accuracy 96.9% (within-distribution),
 F1 96.8%, ROC-AUC 0.998).
 
 The cross-language resource is honest lexical knowledge, not eval leakage:
