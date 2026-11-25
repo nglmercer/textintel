@@ -345,12 +345,11 @@ cargo run --locked --no-default-features --bin textintel -- \
   eval-speech data/speech/reference-nemo.json --json
 ```
 
-The external command deliberately exits 1 when any gold differs. CI gates the
+The external speech command deliberately exits 1 when any gold differs. CI gates the
 authored regression without treating the independent challenge as already solved.
-The existing analysis/search quality command was rerun and still exits 1:
-comparison accuracy is 73.44% (minimum 80%), F1 is 79.22% (minimum 86%),
-search recall@5 is 88% and recall@10 is 90% (both minimum 95%). Other category
-thresholds also fail. The measured report is retained in the snapshot JSON.
-These historical quality failures remain unresolved; their thresholds were
-not relaxed. Passing unit tests and speech regression tests do not make CI’s
-existing quality job green.
+The analysis/search quality command now exits 0 on the current tree: comparison
+accuracy is 92.12% (minimum 80%), F1 is 93.36% (minimum 86%), ROC AUC is 98.09%
+(minimum 90%), PR AUC is 98.88% (minimum 95%), search recall@5 is 97% and
+recall@10 is 99% (both minimum 95%), and search MRR is 88.49% (minimum 60%).
+The historical failure note is therefore obsolete; thresholds were not relaxed.
+Passing quality gates still do not certify native-speaker speech quality.
