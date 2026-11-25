@@ -825,6 +825,29 @@ fn parse_date(raw: &str, opts: &SpeechOptions) -> Option<TemporalValue> {
                 year,
             });
         }
+        if index == 0 {
+            // Month-year partial dates (`May 2024`, `mayo de 2024`): the day
+            // is absent, not unknown. Four-digit years only — shorter numbers
+            // after a month name are ordinals or days, never years.
+            let month_year = match &words[1..] {
+                [year] if year.len() == 4 => ascii_digits(year).map(|y| (None, y)),
+                [connector @ ("de" | "del"), year] if year.len() == 4 => {
+                    ascii_digits(year).map(|y| (Some((*connector).into()), y))
+                }
+                _ => None,
+            };
+            if let Some((connector, year)) = month_year {
+                return Some(parsed_date_value(
+                    Some(year),
+                    Some(m),
+                    None,
+                    DatePresentation::MonthFirst,
+                    connector,
+                    year_label,
+                    opts,
+                ));
+            }
+        }
         if index == 0 && (2..=3).contains(&words.len()) {
             let day = day_number(words[1])?;
             let year = words.get(2).map(|s| ascii_digits(s)).transpose_option()?;
@@ -2285,6 +2308,14 @@ fn format_calendar_components(
     }
     if locale == En {
         let month_name = month_name?.to_lowercase();
+        if d.is_none() {
+            let mut output = month_name;
+            if let Some(year) = year {
+                output.push(' ');
+                output.push_str(&year);
+            }
+            return Some(output);
+        }
         let day = english_ordinal(d?)?.replace('-', " ");
         let mut output = if *presentation == DatePresentation::MonthFirst {
             format!("{month_name} {day}")
