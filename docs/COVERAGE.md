@@ -25,9 +25,9 @@ and `ta` have no external cases in it. Most locales have only one complete
 spoken gold in the authored corpus. More independently reviewed application text
 is needed to estimate precision across the twenty-language TTS surface.
 
-The authored regression matches the annotated spans in **209/209 cases**,
-including all 205 expected spans, and passes **25/25 complete spoken golds**.
-The current policy reports 173/209 fully supported authored readings; this is a
+The authored regression matches the annotated spans in **214/214 cases**,
+including all 210 expected spans, and passes **30/30 complete spoken golds**.
+The current policy reports 178/214 fully supported authored readings; this is a
 rendering diagnostic and does not add spoken gold. The catalog adds 24 sourced
 forms. Its 44-entry inventory still has two typed locales with no entries.
 Its other cases have no spoken gold and are not counted as correct utterances.
@@ -38,8 +38,8 @@ full IR gold for **660 cases across twenty locales**, with **640/640 exact value
 spans**. All 660 cases match their complete semantic expectations, including
 explicit empty sets for ordinary prose. These are designed structural
 regressions with shared templates, not independent production or pronunciation
-validation; there is no spoken gold. The original NeMo and 209-case inputs remain
-unchanged, and their reports do not acquire semantic denominators.
+validation; there is no spoken gold. The original NeMo input remains unchanged;
+the authored 214-case regression does not acquire a semantic denominator.
 The new matrix completes 600/660 renderings; the other sixty deliberately retain
 invalid dates, code or JSON. A correct preserved IR is not a supported utterance.
 NeMo supplies no span annotations, so it cannot establish parser precision/recall.
@@ -233,7 +233,7 @@ This snapshot distinguishes executed code, regression results, and spoken agreem
 | Versioned normalizer line coverage | 94.29% | Language rules exercised |
 | Experimental typed parser line coverage | 95.14% | Parser paths exercised |
 | Shared segmentation line coverage | 97.93% | Bounded splitting paths exercised |
-| Authored typed regression | 209 / 209 exact parses; 25 / 25 spoken gold | Covered regression cases only |
+| Authored typed regression | 214 / 214 exact parses; 30 / 30 spoken gold | Covered regression cases only |
 | External NeMo sample | 156 / 544 exact spoken strings (28.68%) | Strict external string agreement for the experimental API |
 
 The overall coverage comparison uses the same command/filter as the baseline
@@ -248,9 +248,9 @@ unit tests. Tests exercise supported forms, ambiguity preservation, warnings,
 locale validation, and input/output budgets. They do not establish universal
 linguistic accuracy or acoustic quality.
 
-The hand-authored regression includes 205 annotated typed spans across 20
-language conventions. Only 25 cases contain complete spoken gold; the remaining
-cases must not be counted as correct spoken outputs. Of 209 cases, 170 report
+The hand-authored regression includes 210 annotated typed spans across 20
+language conventions. Only 30 cases contain complete spoken gold; the remaining
+cases must not be counted as correct spoken outputs. Of 214 cases, 178 report
 `fully_supported`; unresolved cases include intentionally ambiguous inputs and
 protected identifiers. That flag is an implementation diagnostic, not accuracy.
 
@@ -285,9 +285,11 @@ forms (`06.03.2006` reads correctly in Russian once the date order is known —
 the default ambiguity rejection is intentional protection), and case-insensitive
 unit symbols (`12KG` → “doce kilogramos”). Month-year partial dates are now
 implemented and regression-covered across all twenty typed locales (`May 2024`,
-`mayo de 2024`, `май 2024`, and CJK year-month forms), including native-script
-decimal digit years. Verified remaining gaps include currency agreement in
-general (6 / 109 exact — the weakest category). Bare `$` also requires an
+`May of 2024`, `mayo de 2024`, `май 2024 года`, `в мае 2024 года`, CJK
+year-month forms, and width-disambiguated numeric forms such as `05/2024` under
+explicit date intent), including native-script decimal digit years. Verified
+remaining gaps include currency agreement in general (6 / 109 exact — the
+weakest category). Bare `$` also requires an
 explicit currency convention rather than a guess.
 
 Recommended implementation order:

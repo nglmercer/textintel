@@ -152,6 +152,17 @@ clocks. Formal `오전`/`오후` and an explicit AM/PM suffix share the same str
 preserved as a whole unresolved clock. Broader period words receive no inferred
 hour intervals.
 
+Named month-year forms are partial calendar values rather than guessed full
+dates: `May 2024`, `May of 2024`, `mayo de 2024`, `май 2024 года`, Russian
+prepositional `в мае 2024 года`, CJK year-month forms, and Vietnamese
+`tháng 5 năm 2024` preserve `day: None` in `TemporalValue::Date`. Numeric
+year-month forms such as `2024-05` and
+width-disambiguated trailing-year forms such as `05/2024` use the same IR, but
+only with explicit Date interpretation because slash/dash number pairs can
+otherwise be ranges or fractions. Two-digit numbers after a month remain days or
+ordinals, never guessed two-digit years. Native Unicode decimal digits are
+folded before width validation.
+
 `InvalidDatePolicy::Preserve` leaves an impossible Gregorian date unresolved.
 `InvalidDatePolicy::ReadComponents` instead permits literal reading of an atomic
 date with resolved order and individually bounded components. Month must be

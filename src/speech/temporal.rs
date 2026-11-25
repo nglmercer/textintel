@@ -31,9 +31,10 @@ pub enum TemporalValue {
         month: Option<u32>,
         day: Option<u32>,
         presentation: DatePresentation,
-        /// Preserve a written connector such as Spanish `del`.
+        /// Preserve a written grammatical connector such as Spanish `del` or a
+        /// required Russian governing preposition such as `в`.
         connector: Option<String>,
-        /// An explicitly written year label, e.g. Russian `г.`.
+        /// An explicitly written year label, e.g. Russian `г.` or `года`.
         year_label: bool,
     },
     /// Individually bounded components which do not form a Gregorian date.
@@ -132,6 +133,20 @@ const RUSSIAN_NOMINATIVE_MONTHS: [&str; 12] = [
     "октябрь",
     "ноябрь",
     "декабрь",
+];
+const RUSSIAN_PREPOSITIONAL_MONTHS: [&str; 12] = [
+    "январе",
+    "феврале",
+    "марте",
+    "апреле",
+    "мае",
+    "июне",
+    "июле",
+    "августе",
+    "сентябре",
+    "октябре",
+    "ноябре",
+    "декабре",
 ];
 
 pub fn kind(value: &TemporalValue) -> &'static str {
@@ -509,7 +524,7 @@ fn possible_start(text: &str, locale: SpeechLocale) -> bool {
         return true;
     }
     let token = text.split_whitespace().next().unwrap_or("");
-    month_number(locale, token).is_some()
+    month_number(locale, token.trim_end_matches(',')).is_some()
         || matches!(locale, SpeechLocale::Ja) && text.starts_with(['R', 'H', 'S', '令', '平', '昭'])
         || matches!(locale, SpeechLocale::Ko)
             && (clock_period_prefix(text, locale).0.is_some()
@@ -517,6 +532,16 @@ fn possible_start(text: &str, locale: SpeechLocale) -> bool {
                     .iter()
                     .any(|prefix| text.starts_with(prefix)))
         || locale == SpeechLocale::Zh && text.starts_with("公元")
+        || locale == SpeechLocale::Ru && {
+            let mut tokens = text.split_whitespace();
+            tokens
+                .next()
+                .is_some_and(|token| token.trim_end_matches(',').to_lowercase() == "в")
+                && tokens
+                    .next()
+                    .and_then(russian_prepositional_month)
+                    .is_some()
+        }
         || locale == SpeechLocale::Vi
             && ["ngày ", "Ngày ", "tháng "]
                 .iter()
@@ -547,6 +572,14 @@ fn parse_expression(raw: &str, opts: &SpeechOptions) -> Option<TemporalValue> {
 
 fn number(raw: &str) -> Option<u32> {
     ascii_digits(raw)?.parse().ok()
+}
+
+fn russian_prepositional_month(raw: &str) -> Option<u32> {
+    let raw = raw.trim_end_matches('.').to_lowercase();
+    RUSSIAN_PREPOSITIONAL_MONTHS
+        .iter()
+        .position(|name| raw == *name)
+        .map(|index| index as u32 + 1)
 }
 
 fn month_number(locale: SpeechLocale, raw: &str) -> Option<u32> {
@@ -724,6 +757,25 @@ fn parsed_date_value(
     )
 }
 
+fn strip_russian_year_label(raw: &str) -> Option<&str> {
+    ["г.", " года"].iter().find_map(|suffix| {
+        let start = raw.len().checked_sub(suffix.len())?;
+        (raw.get(start..)?.to_lowercase() == *suffix).then(|| raw[..start].trim_end())
+    })
+}
+
+fn month_year_connector(locale: SpeechLocale, connector: &str) -> Option<&'static str> {
+    if connector.eq_ignore_ascii_case("de") {
+        Some("de")
+    } else if connector.eq_ignore_ascii_case("del") {
+        Some("del")
+    } else if locale == SpeechLocale::En && connector.eq_ignore_ascii_case("of") {
+        Some("of")
+    } else {
+        None
+    }
+}
+
 fn parse_date(raw: &str, opts: &SpeechOptions) -> Option<TemporalValue> {
     let locale = opts.locale;
     if opts.interpret_as == SpeechInterpretation::Date
@@ -782,7 +834,7 @@ fn parse_date(raw: &str, opts: &SpeechOptions) -> Option<TemporalValue> {
         }
     }
     let (body, year_label) = if locale == SpeechLocale::Ru {
-        raw.strip_suffix("г.")
+        strip_russian_year_label(raw)
             .map(|s| (s.trim_end(), true))
             .unwrap_or((raw, false))
     } else {
@@ -792,6 +844,22 @@ fn parse_date(raw: &str, opts: &SpeechOptions) -> Option<TemporalValue> {
     // widths remain explicit and invalid named dates are preserved as a whole.
     let normalized = body.replace([',', '-'], " ");
     let words: Vec<&str> = normalized.split_whitespace().collect();
+    if locale == SpeechLocale::Ru
+        && words.len() == 3
+        && words[0].to_lowercase() == "в"
+        && let Some(m) = russian_prepositional_month(words[1])
+        && let Some(year) = ascii_digits(words[2]).filter(|year| year.len() == 4)
+    {
+        return Some(parsed_date_value(
+            Some(year),
+            Some(m),
+            None,
+            DatePresentation::MonthFirst,
+            Some("в".into()),
+            year_label,
+            opts,
+        ));
+    }
     if let Some((index, m)) = words
         .iter()
         .enumerate()
@@ -832,9 +900,8 @@ fn parse_date(raw: &str, opts: &SpeechOptions) -> Option<TemporalValue> {
             let four_digit_year = |raw: &str| ascii_digits(raw).filter(|year| year.len() == 4);
             let month_year = match &words[1..] {
                 [year] => four_digit_year(year).map(|y| (None, y)),
-                [connector @ ("de" | "del"), year] => {
-                    four_digit_year(year).map(|y| (Some((*connector).into()), y))
-                }
+                [connector, year] => month_year_connector(locale, connector)
+                    .and_then(|c| four_digit_year(year).map(|y| (Some(c.into()), y))),
                 _ => None,
             };
             if let Some((connector, year)) = month_year {
@@ -978,7 +1045,32 @@ fn parse_numeric_date_impl(
         if opts.interpret_as != SpeechInterpretation::Date {
             return None;
         }
-        if digits[0].len() == 4 || opts.date_order == DateOrder::YearMonthDay {
+        if digits[0].len() == 4 {
+            return Some(parsed_date_value(
+                Some(digits[0].clone()),
+                Some(values[1]),
+                None,
+                DatePresentation::Numeric,
+                None,
+                year_label,
+                opts,
+            ));
+        }
+        if digits[1].len() == 4 {
+            if digits[0].len() > 2 {
+                return Some(invalid("invalid partial calendar date width"));
+            }
+            return Some(parsed_date_value(
+                Some(digits[1].clone()),
+                Some(values[0]),
+                None,
+                DatePresentation::Numeric,
+                None,
+                year_label,
+                opts,
+            ));
+        }
+        if opts.date_order == DateOrder::YearMonthDay {
             return Some(parsed_date_value(
                 Some(digits[0].clone()),
                 Some(values[1]),
@@ -2327,7 +2419,11 @@ fn format_calendar_components(
         if d.is_none() {
             let mut output = month_name;
             if let Some(year) = year {
-                output.push(' ');
+                if connector == Some("of") {
+                    output.push_str(" of ");
+                } else {
+                    output.push(' ');
+                }
                 output.push_str(&year);
             }
             return Some(output);
@@ -2350,9 +2446,17 @@ fn format_calendar_components(
             // (`мая`) is only grammatical when governed by a day number. The
             // year renders genitive with explicit `года`, matching dated
             // usage (`две тысячи двадцать четвёртого года`).
-            let mut result = RUSSIAN_NOMINATIVE_MONTHS
-                .get(m?.checked_sub(1)? as usize)?
-                .to_string();
+            let prepositional = connector == Some("в");
+            let names = if prepositional {
+                RUSSIAN_PREPOSITIONAL_MONTHS
+            } else {
+                RUSSIAN_NOMINATIVE_MONTHS
+            };
+            let mut result = names.get(m?.checked_sub(1)? as usize)?.to_string();
+            if prepositional {
+                result.insert(0, ' ');
+                result.insert(0, 'в');
+            }
             if let Some(raw) = year_n {
                 result.push(' ');
                 result.push_str(&russian_calendar_year(raw)?);

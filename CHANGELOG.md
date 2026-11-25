@@ -39,8 +39,11 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
   exact quantities, calendar forms, fractions, ranges, scientific notation,
   ordinals, durations, and diagnostics for unresolved readings.
 - Month-year partial date parsing and rendering across the twenty typed speech
-  locales, preserving the absent day in temporal IR and accepting native-script
-  decimal digit years.
+  locales, preserving the absent day in temporal IR. Named forms include
+  grammatical connectors plus Russian full year labels and prepositional month
+  forms; width-disambiguated numeric forms such as `05/2024` are recognized
+  under explicit date intent; and native-script decimal digit years are
+  accepted.
 - Add bounded alternate readings for standalone German exact-hour clocks and
   Arabic integer currency counts 3–10 with reviewed masculine unit nouns,
   preserving source metadata, value, sign and currency naming. Decimal/register

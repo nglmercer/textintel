@@ -3577,6 +3577,101 @@
       "spoken": [
         "नमस्ते दुनिया"
       ]
+    },
+    {
+      "id": "month-year-en-of",
+      "locale": "en",
+      "text": "May of 2024",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 11,
+          "source": "May of 2024",
+          "kind": "date"
+        }
+      ],
+      "spoken": [
+        "may of twenty twenty four"
+      ]
+    },
+    {
+      "id": "month-year-es-uppercase",
+      "locale": "es",
+      "text": "MAYO DE 2024",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 12,
+          "source": "MAYO DE 2024",
+          "kind": "date"
+        }
+      ],
+      "spoken": [
+        "mayo de dos mil veinticuatro"
+      ]
+    },
+    {
+      "id": "month-year-ru-year-label",
+      "locale": "ru",
+      "text": "май 2024 года",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "май 2024 года",
+          "kind": "date"
+        }
+      ],
+      "spoken": [
+        "май две тысячи двадцать четвёртого года"
+      ]
+    },
+    {
+      "id": "month-year-ko-irregular",
+      "locale": "ko",
+      "text": "2024년 6월",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 12,
+          "source": "2024년 6월",
+          "kind": "date"
+        }
+      ],
+      "spoken": [
+        "이천이십사년 유월"
+      ]
+    },
+    {
+      "id": "month-year-ru-prepositional",
+      "locale": "ru",
+      "text": "в мае 2024 года",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "date",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 23,
+          "source": "в мае 2024 года",
+          "kind": "date"
+        }
+      ],
+      "spoken": [
+        "в мае две тысячи двадцать четвёртого года"
+      ]
     }
   ]
 }

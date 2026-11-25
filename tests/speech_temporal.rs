@@ -122,19 +122,21 @@ fn public_month_year_values_render_for_every_language_style_and_notation() {
                 let mut opts = SpeechOptions::new(locale);
                 opts.reading_style = reading_style;
                 opts.number_notation = number_notation;
-                let value = TemporalValue::Date {
-                    year: Some("2024".into()),
-                    month: Some(5),
-                    day: None,
-                    presentation: temporal::DatePresentation::MonthFirst,
-                    connector: None,
-                    year_label: false,
-                };
-                assert!(
-                    temporal::render(&value, locale, &opts)
-                        .is_some_and(|spoken| !spoken.is_empty()),
-                    "{locale:?} {reading_style:?} {number_notation:?}"
-                );
+                for month in 1..=12 {
+                    let value = TemporalValue::Date {
+                        year: Some("2024".into()),
+                        month: Some(month),
+                        day: None,
+                        presentation: temporal::DatePresentation::MonthFirst,
+                        connector: None,
+                        year_label: false,
+                    };
+                    assert!(
+                        temporal::render(&value, locale, &opts)
+                            .is_some_and(|spoken| !spoken.is_empty()),
+                        "{locale:?} {reading_style:?} {number_notation:?} month {month}"
+                    );
+                }
             }
         }
     }
@@ -181,12 +183,192 @@ fn month_year_dates_have_no_day_and_shorter_numbers_remain_days() {
 }
 
 #[test]
+fn trailing_numeric_month_year_uses_width_not_date_order_guesses() {
+    for (locale, source, expected) in [
+        (SpeechLocale::En, "5/2024", "may twenty twenty four"),
+        (SpeechLocale::De, "05.2024", "Mai zweitausendvierundzwanzig"),
+        (
+            SpeechLocale::Ru,
+            "05-2024",
+            "май две тысячи двадцать четвёртого года",
+        ),
+        (SpeechLocale::Ar, "٠٥/٢٠٢٤", "مايو ألفان وأربعة وعشرون"),
+    ] {
+        for date_order in [DateOrder::DayMonthYear, DateOrder::YearMonthDay] {
+            let mut opts = options(locale);
+            opts.date_order = date_order;
+            assert_eq!(render(source, &opts), expected, "{source} {date_order:?}");
+            let (_, value) = temporal::parse_at(source, 0, &opts).unwrap();
+            assert!(
+                matches!(
+                    value,
+                    TemporalValue::Date {
+                        year: Some(ref year),
+                        month: Some(5),
+                        day: None,
+                        ..
+                    } if year == "2024"
+                ),
+                "{source}: {value:?}"
+            );
+        }
+    }
+    let mut short_opts = options(SpeechLocale::En);
+    short_opts.date_order = DateOrder::MonthDayYear;
+    let (_, short) = temporal::parse_at("05/24", 0, &short_opts).unwrap();
+    assert!(
+        matches!(
+            short,
+            TemporalValue::Date {
+                year: None,
+                month: Some(5),
+                day: Some(24),
+                ..
+            }
+        ),
+        "{short:?}"
+    );
+    let (_, invalid) = temporal::parse_at("13/2024", 0, &options(SpeechLocale::En)).unwrap();
+    assert!(
+        matches!(invalid, TemporalValue::Invalid { .. }),
+        "{invalid:?}"
+    );
+}
+
+#[test]
+fn grammatical_month_year_connectors_and_full_year_labels_are_atomic() {
+    let en = options(SpeechLocale::En);
+    assert_eq!(render("May of 2024", &en), "may of twenty twenty four");
+    assert_eq!(render("May, 2024", &en), "may twenty twenty four");
+    assert_eq!(render("MAY OF 2024", &en), "may of twenty twenty four");
+    let (_, value) = temporal::parse_at("May of 2024", 0, &en).unwrap();
+    assert!(
+        matches!(
+            value,
+            TemporalValue::Date {
+                connector: Some(ref connector),
+                day: None,
+                ..
+            } if connector == "of"
+        ),
+        "{value:?}"
+    );
+
+    let ru = options(SpeechLocale::Ru);
+    assert_eq!(
+        render("май 2024 года", &ru),
+        "май две тысячи двадцать четвёртого года"
+    );
+    assert_eq!(
+        render("МАЙ 2024 ГОДА", &ru),
+        "май две тысячи двадцать четвёртого года"
+    );
+    assert_eq!(
+        render("в мае 2024 года", &ru),
+        "в мае две тысячи двадцать четвёртого года"
+    );
+    assert_eq!(
+        render("В МАЕ 2024 ГОДА", &ru),
+        "в мае две тысячи двадцать четвёртого года"
+    );
+    let (end, prepositional) = temporal::parse_at("в мае 2024 года", 0, &ru).unwrap();
+    assert_eq!(end, "в мае 2024 года".len());
+    assert!(
+        matches!(
+            prepositional,
+            TemporalValue::Date {
+                connector: Some(ref connector),
+                year_label: true,
+                month: Some(5),
+                day: None,
+                ..
+            } if connector == "в"
+        ),
+        "{prepositional:?}"
+    );
+    assert_eq!(
+        render("MAYO DE 2024", &options(SpeechLocale::Es)),
+        "mayo de dos mil veinticuatro"
+    );
+    let (end, value) = temporal::parse_at("май 2024 года", 0, &ru).unwrap();
+    assert_eq!(end, "май 2024 года".len());
+    assert!(
+        matches!(
+            value,
+            TemporalValue::Date {
+                year_label: true,
+                day: None,
+                ..
+            }
+        ),
+        "{value:?}"
+    );
+}
+
+#[test]
+fn russian_month_year_uses_every_nominative_month_and_cjk_irregulars() {
+    let ru = options(SpeechLocale::Ru);
+    for (month, (name, prepositional)) in [
+        ("январь", "январе"),
+        ("февраль", "феврале"),
+        ("март", "марте"),
+        ("апрель", "апреле"),
+        ("май", "мае"),
+        ("июнь", "июне"),
+        ("июль", "июле"),
+        ("август", "августе"),
+        ("сентябрь", "сентябре"),
+        ("октябрь", "октябре"),
+        ("ноябрь", "ноябре"),
+        ("декабрь", "декабре"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let value = TemporalValue::Date {
+            year: Some("2024".into()),
+            month: Some(month as u32 + 1),
+            day: None,
+            presentation: temporal::DatePresentation::MonthFirst,
+            connector: None,
+            year_label: false,
+        };
+        assert_eq!(
+            temporal::render(&value, SpeechLocale::Ru, &ru).unwrap(),
+            format!("{name} две тысячи двадцать четвёртого года")
+        );
+        let value = TemporalValue::Date {
+            year: Some("2024".into()),
+            month: Some(month as u32 + 1),
+            day: None,
+            presentation: temporal::DatePresentation::MonthFirst,
+            connector: Some("в".into()),
+            year_label: false,
+        };
+        assert_eq!(
+            temporal::render(&value, SpeechLocale::Ru, &ru).unwrap(),
+            format!("в {prepositional} две тысячи двадцать четвёртого года")
+        );
+    }
+    let ko = options(SpeechLocale::Ko);
+    assert_eq!(render("2024년 6월", &ko), "이천이십사년 유월");
+    assert_eq!(render("2024년 10월", &ko), "이천이십사년 시월");
+    let mut ja = options(SpeechLocale::Ja);
+    ja.number_notation = NumberNotation::Phonetic;
+    assert_eq!(render("2024年6月", &ja), "にせんにじゅうよねんろくがつ");
+}
+
+#[test]
 fn month_year_year_width_counts_unicode_digits_not_utf8_bytes() {
     for (locale, source, expected) in [
         (SpeechLocale::Ar, "مايو ٢٠٢٤", "مايو ألفان وأربعة وعشرون"),
         (SpeechLocale::Hi, "मई २०२४", "मई दो हज़ार चौबीस"),
         (SpeechLocale::Bn, "মে ২০২৪", "মে দুই হাজার চব্বিশ"),
         (SpeechLocale::En, "May ２０２４", "may twenty twenty four"),
+        (SpeechLocale::Ur, "مئی ۲۰۲۴", "مئی دو ہزار چوبیس"),
+        (SpeechLocale::Pa, "ਮਈ ੨੦੨੪", "ਮਈ ਦੋ ਹਜ਼ਾਰ ਚੌਵੀ"),
+        (SpeechLocale::Te, "మే ౨౦౨౪", "మే రెండు వేల ఇరవై నాలుగు"),
+        (SpeechLocale::Ta, "மே ௨௦௨௪", "மே இரண்டாயிரத்து இருபத்து நான்கு"),
     ] {
         assert_eq!(render(source, &options(locale)), expected, "{source}");
     }

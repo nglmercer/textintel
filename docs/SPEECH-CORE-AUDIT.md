@@ -404,10 +404,12 @@ Verified scope-reducing facts (measured on the tree, not assumed):
 - Month-name recognition exists in `month_number()` (`src/speech/temporal.rs`),
   covering CLDR month forms plus grammatical aliases (e.g. Russian nominative
   `май` alongside genitive `мая`), with 3+ letter abbreviations.
-- `parse_date` (`src/speech/temporal.rs:728`) already produces partial forms
+- `parse_date` (`src/speech/temporal.rs`) already produces partial forms
   for bare years and decades; the month-year rule slots in as another arm
-  before falling through to numeric parsing: recognize `<month-name> <4-digit
-  year>` and locale-appropriate inversions, producing `Date { day: None }`.
+  before falling through to numeric parsing: recognize `<month-name> [connector]
+  <4-digit year>` and locale-appropriate inversions, producing
+  `Date { day: None }`. Numeric `YYYY-MM` and width-disambiguated `MM/YYYY`
+  forms use the same IR under explicit date intent.
 - The real work is per-locale rendering in `render()` for `day: None`:
   connector and case rules (English "may twenty twenty four"; Spanish "mayo
   de dos mil veinticuatro"; Russian nominative month `май` plus genitive year
@@ -416,14 +418,23 @@ Verified scope-reducing facts (measured on the tree, not assumed):
   design assumption that it should be repeated here was wrong. Year rendering
   itself already exists in all locales — this is composition, not new number
   grammar.
-- Guardrails: `SpeechInterpretation::Date` hints must force the parse;
-  1-2 digit years after a month name are ordinals/days, not month-year;
+- Guardrails: `SpeechInterpretation::Date` hints must force numeric partial
+  forms; 1-2 digit years after a month name are ordinals/days, not month-year;
   ambiguous bare numbers stay protected exactly as today. Four-digit width is
   decimal-digit count after Unicode digit folding, never UTF-8 byte length.
+  Connectors and Russian year labels are recognized case-insensitively and
+  consumed atomically rather than left as prose.
 
 Execution result: the parse arm and renderer are covered by exact regression
-cases for all twenty locales, representative en/es/ru/ja semantic IR checks,
-the short-number guardrail, and native-script digit years. The authored
-speech evaluation gate remains exit 0, the NeMo aggregate is unchanged as
-described above, and `COVERAGE.md` no longer lists month-year partial dates
-as a verified gap.
+cases for all twenty locales, every public month across every locale/style/
+notation combination, all twelve Russian nominative and prepositional month
+forms, Korean `유월`/`시월` and Japanese phonetic irregulars, representative
+en/es/ru/ja semantic IR checks, the short-number guardrail, English `of`,
+uppercase connectors, Russian full `года` labels and prepositional `в мае`
+forms, trailing numeric
+`MM/YYYY` forms, and native-script digit years across the applicable Unicode
+decimal scripts. The authored speech evaluation now includes month-year cases
+and remains exit 0 at 214/214 exact
+parses and 30/30 spoken golds. The NeMo aggregate is unchanged as described
+above, and `COVERAGE.md` no longer lists month-year partial dates as a verified
+gap.
