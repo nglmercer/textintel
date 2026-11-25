@@ -387,7 +387,14 @@ locale supplies a geographical time zone.
 separate metrics and remaining reference/quality-gate failures. These checks do
 not make the remaining architecture and language work above complete.
 
-## Implementation design: month-year partial dates (next grammar task)
+## Implementation design: month-year partial dates
+
+Status: implemented and regression-covered across the twenty typed locales.
+The design facts below are retained because they explain the small IR surface
+and the guardrails; one initial grammar assumption is corrected inline for
+Russian. The pinned NeMo aggregate is unchanged at 216 / 544 exact and 303 /
+544 accepted: the reference's dayless month-year cases use already-supported
+East Asian/Vietnamese forms and none exercise the newly added named-month arm.
 
 Verified scope-reducing facts (measured on the tree, not assumed):
 
@@ -401,20 +408,22 @@ Verified scope-reducing facts (measured on the tree, not assumed):
   for bare years and decades; the month-year rule slots in as another arm
   before falling through to numeric parsing: recognize `<month-name> <4-digit
   year>` and locale-appropriate inversions, producing `Date { day: None }`.
-- The remaining real work is per-locale rendering in `render()` for
-  `day: None`: connector and case rules (English "May two thousand
-  twenty-four"; Spanish "mayo de dos mil veinticuatro"; Russian genitive
-  month `мая` plus genitive year reading; CJK `2024年5月` ordering). Year
-  rendering itself already exists in all locales — this is composition, not
-  new number grammar.
+- The real work is per-locale rendering in `render()` for `day: None`:
+  connector and case rules (English "may twenty twenty four"; Spanish "mayo
+  de dos mil veinticuatro"; Russian nominative month `май` plus genitive year
+  reading and explicit `года`; CJK `2024年5月` ordering). Russian genitive
+  `мая` is grammatical only when governed by a day number, so the initial
+  design assumption that it should be repeated here was wrong. Year rendering
+  itself already exists in all locales — this is composition, not new number
+  grammar.
 - Guardrails: `SpeechInterpretation::Date` hints must force the parse;
   1-2 digit years after a month name are ordinals/days, not month-year;
-  ambiguous bare numbers stay protected exactly as today.
+  ambiguous bare numbers stay protected exactly as today. Four-digit width is
+  decimal-digit count after Unicode digit folding, never UTF-8 byte length.
 
-Execution checklist for the implementing session: (1) parse arm + unit tests
-for en/es/ru/ja representative locales; (2) render arms per locale family
-with regression tests; (3) verify no behavior change for inputs that parse
-today (run the full speech eval gate — must stay exit 0); (4) measure the
-NeMo reference before/after; (5) update COVERAGE.md verified-gaps list.
-Budget estimate stands at multiple hours because of the 20-locale render
-matrix, not the parse rule.
+Execution result: the parse arm and renderer are covered by exact regression
+cases for all twenty locales, representative en/es/ru/ja semantic IR checks,
+the short-number guardrail, and native-script digit years. The authored
+speech evaluation gate remains exit 0, the NeMo aggregate is unchanged as
+described above, and `COVERAGE.md` no longer lists month-year partial dates
+as a verified gap.

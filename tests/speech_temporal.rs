@@ -58,6 +58,141 @@ fn named_and_partial_dates_are_real_calendar_values() {
 }
 
 #[test]
+fn month_year_partial_dates_render_in_all_twenty_languages() {
+    let cases = [
+        (SpeechLocale::En, "May 2024", "may twenty twenty four"),
+        (
+            SpeechLocale::Es,
+            "mayo de 2024",
+            "mayo de dos mil veinticuatro",
+        ),
+        (SpeechLocale::Zh, "2024年5月", "二零二四年五月"),
+        (SpeechLocale::Hi, "मई 2024", "मई दो हज़ार चौबीस"),
+        (SpeechLocale::Ar, "مايو 2024", "مايو ألفان وأربعة وعشرون"),
+        (SpeechLocale::Fr, "mai 2024", "mai deux mille vingt-quatre"),
+        (
+            SpeechLocale::Pt,
+            "maio de 2024",
+            "maio de dois mil e vinte e quatro",
+        ),
+        (
+            SpeechLocale::Ru,
+            "май 2024",
+            "май две тысячи двадцать четвёртого года",
+        ),
+        (SpeechLocale::Bn, "মে 2024", "মে দুই হাজার চব্বিশ"),
+        (SpeechLocale::Ur, "مئی 2024", "مئی دو ہزار چوبیس"),
+        (SpeechLocale::Id, "Mei 2024", "Mei dua ribu dua puluh empat"),
+        (
+            SpeechLocale::De,
+            "Mai 2024",
+            "Mai zweitausendvierundzwanzig",
+        ),
+        (SpeechLocale::Ja, "2024年5月", "二千二十四年五月"),
+        (SpeechLocale::Pa, "ਮਈ 2024", "ਮਈ ਦੋ ਹਜ਼ਾਰ ਚੌਵੀ"),
+        (SpeechLocale::Mr, "मे 2024", "मे दोन हजार चोवीस"),
+        (SpeechLocale::Te, "మే 2024", "మే రెండు వేల ఇరవై నాలుగు"),
+        (SpeechLocale::Tr, "Mayıs 2024", "Mayıs iki bin yirmi dört"),
+        (SpeechLocale::Ta, "மே 2024", "மே இரண்டாயிரத்து இருபத்து நான்கு"),
+        (
+            SpeechLocale::Vi,
+            "tháng 5 2024",
+            "tháng năm năm hai nghìn hai mươi tư",
+        ),
+        (SpeechLocale::Ko, "2024년 5월", "이천이십사년 오월"),
+    ];
+    assert_eq!(cases.len(), SpeechLocale::ALL.len());
+    for (index, (locale, ..)) in cases.iter().enumerate() {
+        assert_eq!(*locale, SpeechLocale::ALL[index]);
+    }
+    for (locale, source, expected) in cases {
+        assert_eq!(render(source, &options(locale)), expected, "{source}");
+    }
+}
+
+#[test]
+fn public_month_year_values_render_for_every_language_style_and_notation() {
+    for locale in SpeechLocale::ALL {
+        for reading_style in [
+            ReadingStyle::Precise,
+            ReadingStyle::Natural,
+            ReadingStyle::Digits,
+        ] {
+            for number_notation in [NumberNotation::Phonetic, NumberNotation::Orthographic] {
+                let mut opts = SpeechOptions::new(locale);
+                opts.reading_style = reading_style;
+                opts.number_notation = number_notation;
+                let value = TemporalValue::Date {
+                    year: Some("2024".into()),
+                    month: Some(5),
+                    day: None,
+                    presentation: temporal::DatePresentation::MonthFirst,
+                    connector: None,
+                    year_label: false,
+                };
+                assert!(
+                    temporal::render(&value, locale, &opts)
+                        .is_some_and(|spoken| !spoken.is_empty()),
+                    "{locale:?} {reading_style:?} {number_notation:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn month_year_dates_have_no_day_and_shorter_numbers_remain_days() {
+    for (locale, source) in [
+        (SpeechLocale::En, "May 2024"),
+        (SpeechLocale::Es, "mayo de 2024"),
+        (SpeechLocale::Ru, "май 2024"),
+        (SpeechLocale::Ja, "2024年5月"),
+    ] {
+        let (end, value) = temporal::parse_at(source, 0, &options(locale)).unwrap();
+        assert_eq!(end, source.len(), "{source}");
+        assert!(
+            matches!(
+                value,
+                TemporalValue::Date {
+                    year: Some(ref year),
+                    month: Some(5),
+                    day: None,
+                    ..
+                } if year == "2024"
+            ),
+            "{source}: {value:?}"
+        );
+    }
+    for (locale, source) in [(SpeechLocale::En, "May 24"), (SpeechLocale::Ar, "مايو ٢٤")] {
+        let (_, value) = temporal::parse_at(source, 0, &options(locale)).unwrap();
+        assert!(
+            matches!(
+                value,
+                TemporalValue::Date {
+                    year: None,
+                    month: Some(5),
+                    day: Some(24),
+                    ..
+                }
+            ),
+            "{source}: {value:?}"
+        );
+    }
+}
+
+#[test]
+fn month_year_year_width_counts_unicode_digits_not_utf8_bytes() {
+    for (locale, source, expected) in [
+        (SpeechLocale::Ar, "مايو ٢٠٢٤", "مايو ألفان وأربعة وعشرون"),
+        (SpeechLocale::Hi, "मई २०२४", "मई दो हज़ार चौबीस"),
+        (SpeechLocale::Bn, "মে ২০২৪", "মে দুই হাজার চব্বিশ"),
+        (SpeechLocale::En, "May ２０２４", "may twenty twenty four"),
+    ] {
+        assert_eq!(render(source, &options(locale)), expected, "{source}");
+    }
+}
+
+#[test]
 fn calendar_components_preserve_written_year_width_and_native_script() {
     for (locale, source, expected) in [
         (SpeechLocale::Zh, "05年", "零五年"),

@@ -283,19 +283,19 @@ missing shapes are now implemented and verified on the current tree: named-month
 dates (`1 enero` → “primero de enero”; also English and Russian), dotted date
 forms (`06.03.2006` reads correctly in Russian once the date order is known —
 the default ambiguity rejection is intentional protection), and case-insensitive
-unit symbols (`12KG` → “doce kilogramos”). Verified remaining gaps include
-month-year partial dates (`May 2024` passes through unnormalized in every
-locale) and currency agreement in general (6 / 109 exact — the weakest
-category). Bare `$` also requires an explicit currency convention rather than a
-guess.
+unit symbols (`12KG` → “doce kilogramos”). Month-year partial dates are now
+implemented and regression-covered across all twenty typed locales (`May 2024`,
+`mayo de 2024`, `май 2024`, and CJK year-month forms), including native-script
+decimal digit years. Verified remaining gaps include currency agreement in
+general (6 / 109 exact — the weakest category). Bare `$` also requires an
+explicit currency convention rather than a guess.
 
 Recommended implementation order:
 
-1. ~~Named months, dotted date forms, year-reading conventions, and localized
-   clock expressions~~ — implemented and verified on the current tree. Still
-   open within this item: month-year partial date forms (`May 2024`) and
-   weekday-on-date validation (weekday names are read, not checked against the
-   calendar). Keep invalid calendars and ambiguous dates protected.
+1. ~~Named months, dotted date forms, year-reading conventions, localized
+   clock expressions, month-year partial date forms, and CJK weekday-on-date
+   validation~~ — implemented and verified on the current tree. Keep invalid
+   calendars and ambiguous dates protected.
 2. Currency and measure dictionaries with noun gender/case, minor units,
    inflected forms, case variants, native unit symbols, and script-specific
    attachment. Interpret symbols through explicit source-locale options.

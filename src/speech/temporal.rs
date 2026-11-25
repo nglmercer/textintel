@@ -119,6 +119,21 @@ pub enum CalendarItem {
     Range,
 }
 
+const RUSSIAN_NOMINATIVE_MONTHS: [&str; 12] = [
+    "январь",
+    "февраль",
+    "март",
+    "апрель",
+    "май",
+    "июнь",
+    "июль",
+    "август",
+    "сентябрь",
+    "октябрь",
+    "ноябрь",
+    "декабрь",
+];
+
 pub fn kind(value: &TemporalValue) -> &'static str {
     match value {
         TemporalValue::Clock { .. } | TemporalValue::FractionalClock { .. } => "time",
@@ -552,23 +567,7 @@ fn month_number(locale: SpeechLocale, raw: &str) -> Option<u32> {
     // Calendar month names use grammatical forms not always present in CLDR's
     // standalone table. These are lexical aliases, not example-specific rows.
     if locale == SpeechLocale::Ru {
-        for (i, name) in [
-            "январь",
-            "февраль",
-            "март",
-            "апрель",
-            "май",
-            "июнь",
-            "июль",
-            "август",
-            "сентябрь",
-            "октябрь",
-            "ноябрь",
-            "декабрь",
-        ]
-        .iter()
-        .enumerate()
-        {
+        for (i, name) in RUSSIAN_NOMINATIVE_MONTHS.iter().enumerate() {
             if raw == *name {
                 return Some(i as u32 + 1);
             }
@@ -828,11 +827,13 @@ fn parse_date(raw: &str, opts: &SpeechOptions) -> Option<TemporalValue> {
         if index == 0 {
             // Month-year partial dates (`May 2024`, `mayo de 2024`): the day
             // is absent, not unknown. Four-digit years only — shorter numbers
-            // after a month name are ordinals or days, never years.
+            // after a month name are ordinals or days, never years. Width is
+            // decimal-digit count after Unicode folding, never UTF-8 bytes.
+            let four_digit_year = |raw: &str| ascii_digits(raw).filter(|year| year.len() == 4);
             let month_year = match &words[1..] {
-                [year] if year.len() == 4 => ascii_digits(year).map(|y| (None, y)),
-                [connector @ ("de" | "del"), year] if year.len() == 4 => {
-                    ascii_digits(year).map(|y| (Some((*connector).into()), y))
+                [year] => four_digit_year(year).map(|y| (None, y)),
+                [connector @ ("de" | "del"), year] => {
+                    four_digit_year(year).map(|y| (Some((*connector).into()), y))
                 }
                 _ => None,
             };
@@ -2226,6 +2227,21 @@ fn render_calendar(
     )
 }
 
+fn russian_calendar_year(raw: u32) -> Option<String> {
+    let year = if raw == 0 {
+        "ноль".to_owned()
+    } else if raw < 10 {
+        format!("ноль {}", verbalize::russian_year(raw)?)
+    } else {
+        verbalize::russian_year(raw)?
+    };
+    if let Some(tail) = year.strip_prefix("одна тысяча") {
+        Some(format!("тысяча{tail}"))
+    } else {
+        Some(year)
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn format_calendar_components(
     year: Option<&str>,
@@ -2334,25 +2350,12 @@ fn format_calendar_components(
             // (`мая`) is only grammatical when governed by a day number. The
             // year renders genitive with explicit `года`, matching dated
             // usage (`две тысячи двадцать четвёртого года`).
-            const NOMINATIVE: [&str; 12] = [
-                "январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август",
-                "сентябрь", "октябрь", "ноябрь", "декабрь",
-            ];
-            let mut result = NOMINATIVE.get(m?.checked_sub(1)? as usize)?.to_string();
+            let mut result = RUSSIAN_NOMINATIVE_MONTHS
+                .get(m?.checked_sub(1)? as usize)?
+                .to_string();
             if let Some(raw) = year_n {
-                let y = if raw == 0 {
-                    "ноль".to_owned()
-                } else if raw < 10 {
-                    format!("ноль {}", verbalize::russian_year(raw)?)
-                } else {
-                    verbalize::russian_year(raw)?
-                };
-                let y = y
-                    .strip_prefix("одна тысяча")
-                    .map(|tail| format!("тысяча{tail}"))
-                    .unwrap_or(y);
                 result.push(' ');
-                result.push_str(&y);
+                result.push_str(&russian_calendar_year(raw)?);
                 result.push_str(" года");
             }
             return Some(result);
@@ -2366,19 +2369,8 @@ fn format_calendar_components(
         };
         let mut result = format!("{day} {}", month_name?);
         if let Some(raw) = year_n {
-            let y = if raw == 0 {
-                "ноль".to_owned()
-            } else if raw < 10 {
-                format!("ноль {}", verbalize::russian_year(raw)?)
-            } else {
-                verbalize::russian_year(raw)?
-            };
-            let y = y
-                .strip_prefix("одна тысяча")
-                .map(|tail| format!("тысяча{tail}"))
-                .unwrap_or(y);
             result.push(' ');
-            result.push_str(&y);
+            result.push_str(&russian_calendar_year(raw)?);
         }
         if year_label {
             result.push_str(" года");

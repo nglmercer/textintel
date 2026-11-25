@@ -38,6 +38,9 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
   conventions, with explicit interpretation, date/decimal/currency policies,
   exact quantities, calendar forms, fractions, ranges, scientific notation,
   ordinals, durations, and diagnostics for unresolved readings.
+- Month-year partial date parsing and rendering across the twenty typed speech
+  locales, preserving the absent day in temporal IR and accepting native-script
+  decimal digit years.
 - Add bounded alternate readings for standalone German exact-hour clocks and
   Arabic integer currency counts 3–10 with reviewed masculine unit nouns,
   preserving source metadata, value, sign and currency naming. Decimal/register
