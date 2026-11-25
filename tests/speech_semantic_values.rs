@@ -28,7 +28,7 @@ fn case<'a>(corpus: &'a SpeechCorpus, locale: SpeechLocale, suffix: &str) -> &'a
 #[test]
 fn designed_gold_has_twenty_locales_twelve_value_contrasts_and_exact_byte_offsets() {
     let corpus = SpeechCorpus::from_file(CORPUS).unwrap();
-    assert_eq!(corpus.cases.len(), 560);
+    assert_eq!(corpus.cases.len(), 660);
     assert_eq!(
         corpus
             .cases
@@ -45,7 +45,7 @@ fn designed_gold_has_twenty_locales_twelve_value_contrasts_and_exact_byte_offset
                 .iter()
                 .filter(|case| case.locale == locale)
                 .count(),
-            28
+            33
         );
         for (left, right) in PAIRS {
             let left = case(&corpus, locale, left);
@@ -72,7 +72,16 @@ fn designed_gold_has_twenty_locales_twelve_value_contrasts_and_exact_byte_offset
     }
     for case in &corpus.cases {
         assert!(case.spoken.is_empty());
-        assert_eq!(case.decimal_separator, Some('.'));
+        assert_eq!(
+            case.decimal_separator,
+            if case.id.contains("-rfc3339-") {
+                None
+            } else {
+                Some('.')
+            },
+            "{}",
+            case.id
+        );
         assert_eq!(case.date_order, DateOrder::RejectAmbiguous);
         let mut previous_end = 0;
         for span in case.expected_values.as_ref().unwrap() {
@@ -92,12 +101,12 @@ fn default_evaluation_checks_the_complete_semantic_matrix_without_spoken_gold() 
     let corpus = SpeechCorpus::from_file(CORPUS).unwrap();
     let report = evaluate_speech(&corpus).unwrap();
     let semantic = report.totals.semantic.as_ref().unwrap();
-    assert_eq!(semantic.cases, 560);
+    assert_eq!(semantic.cases, 660);
     assert_eq!(semantic.exact, semantic.cases, "{:?}", report.failures);
-    assert_eq!(semantic.expected_spans, 540);
-    assert_eq!(semantic.predicted_spans, 540);
-    assert_eq!(semantic.correct_spans, 540);
-    assert_eq!(report.totals.parse_cases, 540);
+    assert_eq!(semantic.expected_spans, 640);
+    assert_eq!(semantic.predicted_spans, 640);
+    assert_eq!(semantic.correct_spans, 640);
+    assert_eq!(report.totals.parse_cases, 640);
     assert_eq!(report.totals.parse_exact, report.totals.parse_cases);
     assert_eq!(report.totals.spoken_cases, 0);
     assert_eq!(report.totals.spoken_exact, 0);
@@ -106,14 +115,14 @@ fn default_evaluation_checks_the_complete_semantic_matrix_without_spoken_gold() 
     assert!(report.passes(false));
     for locale in SpeechLocale::ALL {
         let semantic = report.by_locale[locale.code()].semantic.as_ref().unwrap();
-        assert_eq!((semantic.cases, semantic.exact), (28, 28), "{locale:?}");
+        assert_eq!((semantic.cases, semantic.exact), (33, 33), "{locale:?}");
         assert_eq!(
             (
                 semantic.expected_spans,
                 semantic.predicted_spans,
                 semantic.correct_spans
             ),
-            (27, 27, 27)
+            (32, 32, 32)
         );
     }
 }

@@ -219,6 +219,9 @@ fn parse_at(text: &str, start: usize, options: &SpeechOptions) -> Option<(usize,
     if let Some(end) = super::lexer::filename_end(text, start) {
         return Some((end, identifier("filename")));
     }
+    if let Some((end, value)) = super::temporal::parse_timestamp_at(text, start) {
+        return Some((end, temporal_ir(value, options)));
+    }
     // Rendering style cannot turn an automatically protected phone shape
     // into a numerical range. Explicit numeric intent still selects ranges.
     if options.interpret_as == super::types::SpeechInterpretation::Auto
@@ -515,6 +518,10 @@ fn enforce_hint(value: SpeechValue, options: &SpeechOptions) -> SpeechValue {
         }
         (SpeechValue::Temporal { value }, Hint::Time) => {
             super::temporal::kind(value) == "time" || super::temporal::kind(value) == "ambiguous"
+        }
+        (SpeechValue::Temporal { value }, Hint::DateTime) => {
+            super::temporal::kind(value) == "datetime"
+                || super::temporal::kind(value) == "ambiguous"
         }
         (SpeechValue::Currency { .. }, Hint::Currency) => true,
         (

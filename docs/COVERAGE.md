@@ -34,13 +34,13 @@ Its other cases have no spoken gold and are not counted as correct utterances.
 `parse_exact` compares annotated span offsets, source text and kind. These
 legacy cases have no complete value annotations; their parse metric is not
 semantic-value accuracy. The separate `semantic-values.json` matrix now supplies
-full IR gold for **560 cases across twenty locales**, with **540/540 exact value
-spans**. All 560 cases match their complete semantic expectations, including
+full IR gold for **660 cases across twenty locales**, with **640/640 exact value
+spans**. All 660 cases match their complete semantic expectations, including
 explicit empty sets for ordinary prose. These are designed structural
 regressions with shared templates, not independent production or pronunciation
 validation; there is no spoken gold. The original NeMo and 209-case inputs remain
 unchanged, and their reports do not acquire semantic denominators.
-The new matrix completes 500/560 renderings; the other sixty deliberately retain
+The new matrix completes 600/660 renderings; the other sixty deliberately retain
 invalid dates, code or JSON. A correct preserved IR is not a supported utterance.
 NeMo supplies no span annotations, so it cannot establish parser precision/recall.
 Its `fully_supported` count is 540/544 under the unchanged reference policy, a
@@ -124,9 +124,10 @@ A separate `subsecond_clock_regression_audit` records 80 current CLI cases:
 four fractional precisions in each of twenty locales, with exact fields and
 distinct readings. The Rust matrix additionally covers 1,800 combinations of
 seconds, precision, style and notation, plus Korean period contradictions and
-source protections. Full timestamp support remains outside those counts;
-twenty timestamp probes remain complete, unexpanded identifiers. These new
-formats are absent from the selected NeMo sample. The subsecond implementation
+source protections. The separate RFC 3339 timestamp matrix adds 100 semantic
+cases (five per locale) for UTC, fractional numeric offsets, unknown local
+offsets, year zero and verified historical leap seconds. Malformed timestamps remain
+atomic. These formats are absent from the selected NeMo sample. The subsecond implementation
 in `c3a96f5` left all seven existing NeMo/authored reports byte-identical to its
 preceding snapshot. The current comparison rules add eight German exact-hour
 variants and one Arabic currency variant under automatic policy, and two Arabic
@@ -255,9 +256,10 @@ Recommended implementation order:
 2. Currency and measure dictionaries with noun gender/case, minor units,
    inflected forms, case variants, native unit symbols, and script-specific
    attachment. Interpret symbols through explicit source-locale options.
-3. Ordinals, fractions, ranges, scientific notation, durations, and RFC3339
-   in the experimental typed grammar. The versioned normalizer already implements
-   these features with language-specific limits.
+3. Independently reviewed spoken gold for RFC 3339 timestamps, ordinals,
+   fractions, ranges, scientific notation and durations. The typed parser now
+   has timestamp IR and rendering, but its cross-locale timestamp wording still
+   needs native review.
 4. A shared typed representation for new grammar, with versioned adapters
    retaining the versioned normalizer’s source offsets, warnings, and identity.
    Regression tests must protect established behavior while duplicated rules

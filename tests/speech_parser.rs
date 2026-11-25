@@ -349,15 +349,7 @@ fn space_grouped_amounts_are_complete_and_cjk_needs_no_spaces() {
 #[test]
 fn malformed_compounds_are_not_fragmented_into_valid_inner_numbers() {
     let options = options();
-    for text in [
-        "-1e3",
-        "1.e3",
-        "1,e3",
-        "-1e-3",
-        "1,2e3",
-        "0xFF",
-        "2024-01-01T00:00:00Z",
-    ] {
+    for text in ["-1e3", "1.e3", "1,e3", "-1e-3", "1,2e3", "0xFF"] {
         assert!(
             matches!(one(text, &options), SpeechValue::Identifier { .. }),
             "{text}"

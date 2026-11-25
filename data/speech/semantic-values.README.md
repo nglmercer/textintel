@@ -1,7 +1,8 @@
 # Designed semantic-value regression corpus
 
-`semantic-values.json` contains 560 designed cases: 28 per locale for all twenty
-members of `SpeechLocale::ALL`. It annotates 540 non-Text spans. This is an
+`semantic-values.json` contains 660 designed cases: 33 per locale for all twenty
+members of `SpeechLocale::ALL`. It annotates 640 non-Text spans, including 100
+RFC 3339 timestamp cases. This is an
 authored regression matrix with shared structural templates, not an independent
 held-out benchmark, a representative production sample, or native pronunciation
 validation. There are no spoken-form golds.
@@ -36,11 +37,13 @@ Each locale has the following twelve contrast pairs:
 | Integer padding | `0` / `000` | Cardinal zero versus digit reading with retained padding |
 | Decimal-digit magnitude | Native decimal `42` / `43` | Canonical ASCII integer values, original source retained |
 
-Four additional cases per locale cover a number embedded in Unicode prose,
+The original cases per locale cover a number embedded in Unicode prose,
 the corresponding backtick-protected numeric text, protected structured JSON,
 and ordinary prose with no structured spans. The code and JSON cases explicitly
 expect Identifier values, not an empty list. Only plain prose expects
-`expected_values: []`.
+`expected_values: []`. Four further cases per locale cover RFC 3339 UTC,
+fractional numeric offsets, unknown local offsets, verified leap seconds, and
+year zero.
 
 The digit matrix uses Devanagari for Hindi/Marathi, Bengali for Bengali,
 Arabic-Indic for Arabic, extended Arabic-Indic for Urdu, Gurmukhi for Punjabi,
@@ -62,21 +65,21 @@ a valid calendar date.
 
 `expected_values` contains every non-Text SpeechSpan, including its complete
 SpeechValue, source, and UTF-8 offsets. Twenty `fraction-four` cases intentionally
-omit `expected_spans` to exercise semantic-only evaluation. The other 540 cases
+omit `expected_spans` to exercise semantic-only evaluation. The other 640 cases
 also annotate the existing span/type contract. This does not retroactively add
 value validation to the historical `parse_exact` metric.
 
 These cases do not evaluate natural-language inflection, regional reading
-preferences, G2P quality, pronunciation, ambiguous date-order resolution, or
-RFC3339 timestamps. Their repetition across languages verifies the common API
-contract; it does not make 560 independent linguistic observations. Native and
+preferences, G2P quality, pronunciation or ambiguous date-order resolution.
+Timestamp repetition across languages verifies the common API contract; it
+does not make 660 independent linguistic observations. Native and
 independently collected evaluation data remain separate work.
 
 Equality here means exact IR under these declared options. It is not an
 option-agnostic equivalence between Natural and Precise representations. In
 particular, scientific notation, fractions, ranges, durations, ordinals and
 composed localized readings need another explicitly selected profile and their
-own designed gold; this matrix is not complete feature coverage.
+own designed gold; timestamp entries have no spoken-form gold.
 
 The tests also substitute deliberately wrong signs, magnitudes, precision,
 assets, clock fields and protected-span expectations in temporary in-memory
@@ -91,7 +94,7 @@ reviewed one/dual euro forms through the shared count helper; the committed
 semantic gold was not changed. Full-name paradigms remain separately bounded.
 The [core audit](../../docs/SPEECH-CORE-AUDIT.md) records the primary sources.
 
-The current matrix completes 500 of 560 renderings. The remaining 60 are the
+The current matrix completes 600 of 660 renderings. The remaining 60 are the
 intentionally preserved invalid dates, backtick code and structured JSON (twenty
 each). Semantic agreement counts recognition of those preserved values; it does
 not count them as supported utterances. The corpus still has no spoken gold.

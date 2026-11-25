@@ -50,6 +50,7 @@ fn options(parsed: &ParsedArgs) -> Result<SpeechOptions, Box<dyn std::error::Err
             "number" => SpeechInterpretation::Number,
             "date" => SpeechInterpretation::Date,
             "time" => SpeechInterpretation::Time,
+            "datetime" => SpeechInterpretation::DateTime,
             "currency" => SpeechInterpretation::Currency,
             "measure" => SpeechInterpretation::Measure,
             "duration" => SpeechInterpretation::Duration,

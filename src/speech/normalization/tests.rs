@@ -104,14 +104,20 @@ fn timestamps_cover_every_supported_locale() {
                 result.spoken
             );
             assert!(!result.spoken.contains('0'), "{locale}: {}", result.spoken);
-            for invalid in [
-                "2026-02-30T00:00:00Z",
-                "2026-10-16T25:00:00Z",
-                "2026-10-16T00:00:00.1234567890Z",
-            ] {
+            for invalid in ["2026-02-30T00:00:00Z", "2026-10-16T25:00:00Z"] {
                 let result = normalize(invalid, &opts(language, Some(locale))).unwrap();
                 assert_eq!(result.spoken, invalid, "{locale}");
                 assert_eq!(result.warnings[0].code, WarningCode::AmbiguousTime);
+            }
+            let extended_precision = "2026-10-16T00:00:00.1234567890Z";
+            let result = normalize(extended_precision, &opts(language, Some(locale))).unwrap();
+            if language == "it" {
+                assert_eq!(result.spoken, extended_precision, "{locale}");
+                assert_eq!(result.warnings[0].code, WarningCode::AmbiguousTime);
+            } else {
+                assert_eq!(result.changes.len(), 1, "{locale}: {:?}", result.warnings);
+                assert!(result.warnings.is_empty(), "{locale}");
+                assert_ne!(result.spoken, extended_precision, "{locale}");
             }
         }
     }

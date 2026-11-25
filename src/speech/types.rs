@@ -146,6 +146,7 @@ pub enum SpeechInterpretation {
     Number,
     Date,
     Time,
+    DateTime,
     Currency,
     Measure,
     Duration,

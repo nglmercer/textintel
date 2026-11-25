@@ -106,7 +106,7 @@ const TEXTINTEL_ARGS: &[ArgSpec] = &[
         "interpret-as",
         "interpret-as",
         "KIND",
-        "Explicit semantic hint: auto|number|date|time|currency|measure|duration.",
+        "Explicit semantic hint: auto|number|date|time|datetime|currency|measure|duration.",
     ),
     value(
         "currency",

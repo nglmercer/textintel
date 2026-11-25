@@ -72,6 +72,7 @@ impl SpeechCorpus {
                             | "duration"
                             | "date"
                             | "time"
+                            | "datetime"
                             | "currency"
                             | "percent"
                             | "measure"
@@ -365,6 +366,7 @@ fn options_for_case(case: &SpeechCase, policy: &SpeechEvaluationPolicy) -> Speec
             "number" => SpeechInterpretation::Number,
             "date" => SpeechInterpretation::Date,
             "time" => SpeechInterpretation::Time,
+            "datetime" => SpeechInterpretation::DateTime,
             "currency" => SpeechInterpretation::Currency,
             "measure" => SpeechInterpretation::Measure,
             _ => SpeechInterpretation::Auto,

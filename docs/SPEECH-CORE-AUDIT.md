@@ -279,7 +279,7 @@ existing accent-folding policy retains script-specific marks.
 1. Extend independently reviewed semantic and spoken data. Optional
    `expected_values` now reuses complete `SpeechSpan` / `SpeechValue` IR, with
    separate semantic counts and exit gates that cannot accept a wrong value
-   through spoken variants. The new designed matrix checks 560 cases and 540
+   through spoken variants. The new designed matrix checks 660 cases and 640
    exact value spans across twenty locales, including sign, currency, precision,
    AM/PM and protected-source contrasts. Its expectations were written before
    running the parser; it has no spoken gold and is not independent production
@@ -293,10 +293,11 @@ existing accent-folding policy retains script-specific marks.
    substitutions separate; test ambiguous titles, treatments and document
    references in prose, with exact-string results distinct from reviewed
    acceptable variants.
-3. Add complete timestamp IR by composing the existing calendar, clock, exact
-   fraction and lexer primitives. Preserve offset spelling and its semantics,
-   reject incomplete candidates atomically and keep code/data protections. This
-   needs separate parsing and spoken gold; it is absent from the NeMo sample.
+3. Collect independently reviewed spoken gold for complete timestamps and
+   region-specific date/time wording across all twenty locales. The typed
+   parser now preserves exact offsets, fractional precision, unknown-offset
+   semantics and malformed-input boundaries; existing references do not
+   establish native pronunciation quality.
 
 ## Verification scope
 
@@ -375,11 +376,13 @@ existing major/minor composition reuses the reviewed cent grammar.
 The subsecond regression matrix covers 1,800 language/style/notation/precision
 combinations, plus explicit AM/PM, unsupported suffixes, field bounds and source
 protection. It verifies exact fields and distinct written precision, not native
-pronunciation. Full RFC3339 timestamps remain unexpanded identifiers. Future
-support must retain offset spelling and fractional precision and account for
-the [RFC3339 grammar](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6)
-and its [RFC9557 update to Z semantics](https://www.rfc-editor.org/rfc/rfc9557.html#section-2.2);
-neither a numeric offset nor a locale supplies a geographical time zone.
+pronunciation. A separate timestamp matrix now covers 100 semantic cases (five
+per locale), including fractions, known and unknown offsets, year zero, and verified
+historical leap seconds. The parser follows the [RFC 3339 grammar](https://www.rfc-editor.org/rfc/rfc3339.html#section-5.6);
+its -00:00 handling follows the original [unknown-local-offset convention](https://www.rfc-editor.org/rfc/rfc3339.html#section-4.3).
+The positive leap-second snapshot is dated to IERS Bulletin C 72 (2026-07) and
+must be updated after later announcements. Neither a numeric offset nor a
+locale supplies a geographical time zone.
 [Coverage and evaluation](COVERAGE.md) records the
 separate metrics and remaining reference/quality-gate failures. These checks do
 not make the remaining architecture and language work above complete.

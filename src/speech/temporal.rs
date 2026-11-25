@@ -63,6 +63,19 @@ pub enum TemporalValue {
         /// Canonical ASCII digits, including every leading and trailing zero.
         fraction: String,
     },
+    /// Complete RFC 3339 timestamp. The wall-clock fields stay in their written
+    /// offset; this value never converts to a different timezone.
+    Timestamp {
+        year: String,
+        month: u32,
+        day: u32,
+        hour: u32,
+        minute: u32,
+        second: u32,
+        /// Exact ASCII digits, including leading and trailing zeroes.
+        fraction: Option<String>,
+        offset: TimestampOffset,
+    },
     EraYear {
         era: String,
         year: String,
@@ -84,6 +97,20 @@ pub enum TemporalValue {
     },
 }
 
+/// RFC 3339 distinguishes `-00:00` (unknown local offset) from a known zero
+/// offset. `Z`/`z` and `+00:00` retain their separate written semantics.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum TimestampOffset {
+    Utc,
+    Known {
+        negative: bool,
+        hours: u32,
+        minutes: u32,
+    },
+    UnknownLocal,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum CalendarItem {
@@ -95,6 +122,7 @@ pub enum CalendarItem {
 pub fn kind(value: &TemporalValue) -> &'static str {
     match value {
         TemporalValue::Clock { .. } | TemporalValue::FractionalClock { .. } => "time",
+        TemporalValue::Timestamp { .. } => "datetime",
         TemporalValue::InvalidCalendarDate { .. } => "invalid_date",
         TemporalValue::Invalid { .. } => "ambiguous",
         _ => "date",
@@ -195,7 +223,6 @@ pub fn parse_at(
 ) -> Option<(usize, TemporalValue)> {
     let rest = text.get(start..)?;
     if rest.is_empty()
-        || !possible_start(rest, options.locale)
         || matches!(
             options.interpret_as,
             SpeechInterpretation::Number
@@ -204,6 +231,12 @@ pub fn parse_at(
                 | SpeechInterpretation::Duration
         )
     {
+        return None;
+    }
+    if let Some(parsed) = parse_timestamp_at(text, start) {
+        return Some(parsed);
+    }
+    if !possible_start(rest, options.locale) {
         return None;
     }
     if let Some(parsed) = parse_fractional_clock_at(text, start, options) {
@@ -251,6 +284,208 @@ pub fn parse_at(
         }
     }
     None
+}
+
+/// Parse a complete RFC 3339 timestamp atomically. Once the fixed date/T
+/// prefix is present, malformed suffixes become one unresolved value instead
+/// of falling through to separate date, clock and offset fragments.
+pub fn parse_timestamp_at(text: &str, start: usize) -> Option<(usize, TemporalValue)> {
+    let rest = text.get(start..)?;
+    if !timestamp_prefix(rest.as_bytes()) {
+        return None;
+    }
+    let end = timestamp_candidate_end(rest);
+    let raw = &rest[..end];
+    let parsed = parse_timestamp(raw)
+        .unwrap_or_else(|| invalid("invalid or unsupported RFC 3339 timestamp"));
+    Some((start + end, parsed))
+}
+
+fn timestamp_prefix(bytes: &[u8]) -> bool {
+    bytes.len() >= 11
+        && bytes[..4].iter().all(u8::is_ascii_digit)
+        && bytes[4] == b'-'
+        && bytes[5..7].iter().all(u8::is_ascii_digit)
+        && bytes[7] == b'-'
+        && bytes[8..10].iter().all(u8::is_ascii_digit)
+        && matches!(bytes[10], b'T' | b't')
+}
+
+fn timestamp_candidate_end(rest: &str) -> usize {
+    let mut end = 0;
+    for (offset, ch) in rest.char_indices() {
+        if ch.is_whitespace()
+            || matches!(
+                ch,
+                ';' | '!' | '?' | '。' | '！' | '？' | '(' | ')' | '（' | '）'
+            )
+            || ch == ',' && has_complete_timestamp_offset(&rest[..offset])
+        {
+            break;
+        }
+        end = offset + ch.len_utf8();
+    }
+    // Sentence punctuation is outside the timestamp. Brackets and path-like
+    // suffixes remain inside so IXDTF annotations cannot be silently dropped.
+    while end > 0 && rest[..end].ends_with('.') {
+        end -= rest[..end].chars().next_back().map_or(0, char::len_utf8);
+    }
+    while end > 0 && rest[..end].ends_with(',') {
+        end -= 1;
+    }
+    end
+}
+
+fn has_complete_timestamp_offset(prefix: &str) -> bool {
+    prefix.ends_with(['Z', 'z'])
+        || prefix.as_bytes().get(prefix.len().saturating_sub(6)) == Some(&b'+')
+            && prefix.as_bytes().get(prefix.len().saturating_sub(3)) == Some(&b':')
+        || prefix.as_bytes().get(prefix.len().saturating_sub(6)) == Some(&b'-')
+            && prefix.as_bytes().get(prefix.len().saturating_sub(3)) == Some(&b':')
+}
+
+fn parse_timestamp(raw: &str) -> Option<TemporalValue> {
+    let bytes = raw.as_bytes();
+    if !timestamp_prefix(bytes) || bytes.iter().any(|byte| !byte.is_ascii()) {
+        return None;
+    }
+    let year = &raw[..4];
+    let year_number = year.parse::<u32>().ok()?;
+    let month = raw[5..7].parse::<u32>().ok()?;
+    let day = raw[8..10].parse::<u32>().ok()?;
+    let hour = raw.get(11..13)?.parse::<u32>().ok()?;
+    let minute = raw.get(14..16)?.parse::<u32>().ok()?;
+    let second = raw.get(17..19)?.parse::<u32>().ok()?;
+    if bytes.get(13) != Some(&b':')
+        || bytes.get(16) != Some(&b':')
+        || !valid_timestamp_date(year_number, month, day)
+        || hour > 23
+        || minute > 59
+        || second > 60
+    {
+        return None;
+    }
+    let mut cursor = 19;
+    let fraction = if bytes.get(cursor) == Some(&b'.') {
+        cursor += 1;
+        let begin = cursor;
+        while bytes.get(cursor).is_some_and(u8::is_ascii_digit) {
+            cursor += 1;
+        }
+        if cursor == begin || cursor - begin > super::core::MAX_NUMBER_DIGITS {
+            return None;
+        }
+        Some(raw[begin..cursor].to_owned())
+    } else {
+        None
+    };
+    let offset = match bytes.get(cursor).copied()? {
+        b'Z' | b'z' if cursor + 1 == bytes.len() => TimestampOffset::Utc,
+        sign @ (b'+' | b'-') if cursor + 6 == bytes.len() && bytes[cursor + 3] == b':' => {
+            let hours = raw.get(cursor + 1..cursor + 3)?.parse::<u32>().ok()?;
+            let minutes = raw.get(cursor + 4..cursor + 6)?.parse::<u32>().ok()?;
+            if hours > 23 || minutes > 59 {
+                return None;
+            }
+            if sign == b'-' && hours == 0 && minutes == 0 {
+                TimestampOffset::UnknownLocal
+            } else {
+                TimestampOffset::Known {
+                    negative: sign == b'-',
+                    hours,
+                    minutes,
+                }
+            }
+        }
+        _ => return None,
+    };
+    if second == 60 && !valid_leap_second(year_number, month, day, hour, minute, &offset) {
+        return None;
+    }
+    Some(TemporalValue::Timestamp {
+        year: year.to_owned(),
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        fraction,
+        offset,
+    })
+}
+
+fn valid_timestamp_date(year: u32, month: u32, day: u32) -> bool {
+    year <= 9999
+        && day >= 1
+        && crate::core::calendar::days_in_month(year, month).is_some_and(|maximum| day <= maximum)
+}
+
+/// IERS has announced no leap second after 2016 through Bulletin C 72
+/// (2026-07). Historical positive leap-second dates follow the NIST table.
+/// This versioned snapshot deliberately fails closed until the data is updated.
+fn valid_leap_second(
+    year: u32,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+    offset: &TimestampOffset,
+) -> bool {
+    use chrono::{Datelike, Duration, NaiveDate, Timelike};
+    let local_minus_utc_minutes = match offset {
+        TimestampOffset::Utc => 0,
+        TimestampOffset::Known {
+            negative,
+            hours,
+            minutes,
+        } => {
+            let absolute = (*hours * 60 + *minutes) as i32;
+            if *negative { -absolute } else { absolute }
+        }
+        // RFC 3339 `-00:00` says the UTC instant is known. It is read as UTC
+        // for validating a leap second while retaining the unknown local zone.
+        TimestampOffset::UnknownLocal => 0,
+    };
+    let Some(local) = NaiveDate::from_ymd_opt(year as i32, month, day)
+        .and_then(|date| date.and_hms_opt(hour, minute, 59))
+    else {
+        return false;
+    };
+    let utc = local - Duration::minutes(i64::from(local_minus_utc_minutes));
+    if utc.hour() != 23 || utc.minute() != 59 || utc.second() != 59 {
+        return false;
+    }
+    let date = (utc.year(), utc.month(), utc.day());
+    matches!(
+        date,
+        (1972, 6, 30)
+            | (1972, 12, 31)
+            | (1973, 12, 31)
+            | (1974, 12, 31)
+            | (1975, 12, 31)
+            | (1976, 12, 31)
+            | (1977, 12, 31)
+            | (1978, 12, 31)
+            | (1979, 12, 31)
+            | (1981, 6, 30)
+            | (1982, 6, 30)
+            | (1983, 6, 30)
+            | (1985, 6, 30)
+            | (1987, 12, 31)
+            | (1989, 12, 31)
+            | (1990, 12, 31)
+            | (1992, 6, 30)
+            | (1993, 6, 30)
+            | (1994, 6, 30)
+            | (1995, 12, 31)
+            | (1997, 6, 30)
+            | (1998, 12, 31)
+            | (2005, 12, 31)
+            | (2008, 12, 31)
+            | (2012, 6, 30)
+            | (2015, 6, 30)
+            | (2016, 12, 31)
+    )
 }
 
 fn possible_start(text: &str, locale: SpeechLocale) -> bool {
@@ -1588,6 +1823,27 @@ pub fn render(value: &TemporalValue, locale: SpeechLocale, opts: &SpeechOptions)
                 opts,
             )
         }
+        TemporalValue::Timestamp {
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+            fraction,
+            offset,
+        } => render_timestamp(
+            year,
+            *month,
+            *day,
+            *hour,
+            *minute,
+            *second,
+            fraction.as_deref(),
+            offset,
+            locale,
+            opts,
+        ),
         TemporalValue::EraYear { era, year } => {
             let n = positive_era_year(year)?;
             let year = ascii_digits(year)?;
@@ -1744,6 +2000,174 @@ pub fn render(value: &TemporalValue, locale: SpeechLocale, opts: &SpeechOptions)
     }
 }
 
+fn render_timestamp(
+    year: &str,
+    month: u32,
+    day: u32,
+    hour: u32,
+    minute: u32,
+    second: u32,
+    fraction: Option<&str>,
+    offset: &TimestampOffset,
+    locale: SpeechLocale,
+    opts: &SpeechOptions,
+) -> Option<String> {
+    let year_number = year.parse::<u32>().ok()?;
+    if year.len() != 4
+        || !year.bytes().all(|byte| byte.is_ascii_digit())
+        || !valid_timestamp_date(year_number, month, day)
+        || hour > 23
+        || minute > 59
+        || second > 60
+        || fraction.is_some_and(|digits| !valid_fraction(digits))
+        || second == 60 && !valid_leap_second(year_number, month, day, hour, minute, offset)
+    {
+        return None;
+    }
+    let date = format_calendar_components(
+        Some(year),
+        Some(month),
+        Some(day),
+        &DatePresentation::Numeric,
+        None,
+        false,
+        locale,
+        opts,
+    )?;
+    let clock = if second == 60 {
+        let time = render_clock(
+            hour,
+            Some(minute),
+            None,
+            None,
+            None,
+            None,
+            false,
+            locale,
+            opts,
+        )?;
+        let seconds = verbalize::quantity(
+            locale,
+            "duration-second",
+            &NumberValue {
+                negative: false,
+                integer: "60".into(),
+                fraction: fraction.map(str::to_owned),
+            },
+        )?;
+        verbalize::join_parts(locale, &[time, seconds])
+    } else {
+        render_clock(
+            hour,
+            Some(minute),
+            Some(second),
+            fraction,
+            None,
+            None,
+            false,
+            locale,
+            opts,
+        )?
+    };
+    let zone = render_timestamp_offset(offset, locale)?;
+    Some(format!("{date}, {clock} {zone}"))
+}
+
+fn render_timestamp_offset(offset: &TimestampOffset, locale: SpeechLocale) -> Option<String> {
+    use SpeechLocale::*;
+    match offset {
+        TimestampOffset::Utc => Some("UTC".into()),
+        TimestampOffset::UnknownLocal => Some(
+            match locale {
+                En => "UTC, local offset unknown",
+                Es => "UTC, desfase local desconocido",
+                Zh => "UTC，本地时差未知",
+                Hi => "UTC, स्थानीय समयांतर अज्ञात",
+                Ar => "UTC، فرق التوقيت المحلي غير معروف",
+                Fr => "UTC, décalage local inconnu",
+                Pt => "UTC, deslocamento local desconhecido",
+                Ru => "UTC, местное смещение неизвестно",
+                Bn => "UTC, স্থানীয় সময়ের ব্যবধান অজানা",
+                Ur => "UTC، مقامی آفسیٹ نامعلوم",
+                Id => "UTC, offset lokal tidak diketahui",
+                De => "UTC, lokaler Offset unbekannt",
+                Ja => "UTC、現地オフセット不明",
+                Pa => "UTC, ਸਥਾਨਕ ਆਫਸੈੱਟ ਅਣਜਾਣ",
+                Mr => "UTC, स्थानिक ऑफसेट अज्ञात",
+                Te => "UTC, స్థానిక ఆఫ్‌సెట్ తెలియదు",
+                Tr => "UTC, yerel saat farkı bilinmiyor",
+                Ta => "UTC, உள்ளூர் நேர விலகல் தெரியவில்லை",
+                Vi => "UTC, độ lệch giờ địa phương không xác định",
+                Ko => "UTC, 현지 오프셋 알 수 없음",
+            }
+            .into(),
+        ),
+        TimestampOffset::Known {
+            negative,
+            hours,
+            minutes,
+        } => {
+            if *hours > 23 || *minutes > 59 || *negative && *hours == 0 && *minutes == 0 {
+                return None;
+            }
+            let sign = match (locale, negative) {
+                (En, false) => "plus",
+                (Es, false) => "más",
+                (Zh, false) => "加",
+                (Hi, false) => "प्लस",
+                (Ar, false) => "زائد",
+                (Fr, false) => "plus",
+                (Pt, false) => "mais",
+                (Ru, false) => "плюс",
+                (Bn, false) => "যোগ",
+                (Ur, false) => "جمع",
+                (Id, false) => "plus",
+                (De, false) => "plus",
+                (Ja, false) => "プラス",
+                (Pa, false) => "ਜੋੜ",
+                (Mr, false) => "अधिक",
+                (Te, false) => "ప్లస్",
+                (Tr, false) => "artı",
+                (Ta, false) => "கூட்டல்",
+                (Vi, false) => "cộng",
+                (Ko, false) => "플러스",
+                (En, true) => "minus",
+                (Es, true) => "menos",
+                (Zh, true) => "减",
+                (Hi, true) => "माइनस",
+                (Ar, true) => "ناقص",
+                (Fr, true) => "moins",
+                (Pt, true) => "menos",
+                (Ru, true) => "минус",
+                (Bn, true) => "বিয়োগ",
+                (Ur, true) => "منفی",
+                (Id, true) => "minus",
+                (De, true) => "minus",
+                (Ja, true) => "マイナス",
+                (Pa, true) => "ਘਟਾਓ",
+                (Mr, true) => "वजा",
+                (Te, true) => "మైనస్",
+                (Tr, true) => "eksi",
+                (Ta, true) => "கழித்தல்",
+                (Vi, true) => "trừ",
+                (Ko, true) => "마이너스",
+            };
+            let hour = verbalize::quantity(locale, "duration-hour", &number_value(*hours))?;
+            let minute = verbalize::quantity(locale, "duration-minute", &number_value(*minutes))?;
+            let amount = verbalize::join_parts(locale, &[hour, minute]);
+            Some(format!("UTC {sign} {amount}"))
+        }
+    }
+}
+
+fn number_value(value: u32) -> NumberValue {
+    NumberValue {
+        negative: false,
+        integer: value.to_string(),
+        fraction: None,
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn render_calendar(
     year: Option<&str>,
@@ -1795,7 +2219,11 @@ fn format_calendar_components(
         let mut parts = vec![];
         if let Some(year) = year {
             if locale == Ja && opts.number_notation == NumberNotation::Phonetic {
-                parts.push(verbalize::japanese_year(year_n?)?);
+                parts.push(if year_n? == 0 {
+                    format!("{}ねん", cardinal(locale, 0)?)
+                } else {
+                    verbalize::japanese_year(year_n?)?
+                });
             } else {
                 let spoken = if locale == Zh {
                     digits(locale, year)?.replace(' ', "")
@@ -1878,7 +2306,9 @@ fn format_calendar_components(
         };
         let mut result = format!("{day} {}", month_name?);
         if let Some(raw) = year_n {
-            let y = if raw < 10 {
+            let y = if raw == 0 {
+                "ноль".to_owned()
+            } else if raw < 10 {
                 format!("ноль {}", verbalize::russian_year(raw)?)
             } else {
                 verbalize::russian_year(raw)?

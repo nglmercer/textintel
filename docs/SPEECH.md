@@ -57,7 +57,7 @@ must inspect both fields before treating the result as validated calendar data.
 | `reading_style` | `precise`, `natural`, or `digits` |
 | `abbreviation_policy` | `contextual` (default), `preserve`, or explicit `bibliographic` forms |
 | `number_notation` | Pronunciation-oriented or orthographic number forms, including Japanese kana/kanji |
-| `interpret_as` | Caller-supplied context: auto, number, date, time, currency, measure, or duration |
+| `interpret_as` | Caller-supplied context: auto, number, date, time, datetime, currency, measure, or duration |
 | `currency_symbols` | Explicit per-symbol ISO assignments; absent mappings preserve uncertainty |
 | `default_currency` | A caller-selected fallback for ambiguous currency symbols when no symbol map is supplied |
 | `currency_naming` | `style` (default) retains the reading style's wording; opt-in `full` retains localized currency qualifiers |
@@ -129,9 +129,23 @@ textintel normalize-speech '03:15:01,0010 pm' --locale en --interpret-as time --
 Without Time intent, a comma may separate independent data and is not assumed to
 be a fractional-second marker. Malformed candidates, excess precision and
 unsupported zone suffixes remain whole with diagnostics. Code, URLs, filenames,
-paths, JSON and markup retain their existing protections. This floating-clock
-profile does not implement complete RFC3339 timestamps, timezone conversion,
-or leap-second validation; complete timestamp identifiers remain unexpanded.
+paths, JSON and markup retain their existing protections. The separate
+timestamp grammar recognizes complete RFC 3339 date-times as one
+`TemporalValue::Timestamp`; use `--interpret-as datetime` when the caller
+already knows the field is a timestamp. It keeps the written wall time and
+numeric offset, preserves all fraction digits up to the shared 128-digit input
+limit, accepts the RFC 3339 four-digit year range including `0000`, and
+distinguishes `-00:00` (unknown local offset) from `Z` and
+`+00:00`. It does not convert to another timezone. Lowercase `t`/`z` are
+accepted. Malformed values, over-limit fractions and bracketed IXDTF
+annotations stay one unresolved span.
+
+`:60` is supported only for dates in the bundled positive leap-second table,
+which is based on IERS Bulletin C 72 from July 2026 and records events through
+2016. Update that table when IERS announces a later leap second. The renderer
+speaks the local calendar and clock fields plus the explicit UTC offset; this is
+a deterministic cross-locale reading convention, not independently reviewed
+native pronunciation gold.
 Known Korean period prefixes stay part of the clock, including fractional
 clocks. Formal `오전`/`오후` and an explicit AM/PM suffix share the same strict
 12-hour validation and opt-in redundant-hour normalization. Contradictions are
@@ -300,6 +314,7 @@ textintel normalize-speech 'US$7' --locale en --reading-style natural --currency
 textintel normalize-speech '13:10pm' --locale zh --reading-style natural --clock-policy normalize-redundant-period --json
 textintel normalize-speech '30/02/1990' --locale es --reading-style natural --invalid-date-policy read-components --json
 textintel normalize-speech '३१-०६' --locale hi --reading-style natural --invalid-date-policy read-components --interpret-as date --json
+textintel normalize-speech '2024-02-29T03:15:01.001000+05:30' --locale en --interpret-as datetime --json
 textintel normalize-speech 'Dr. Smith arrived.' --locale en --abbreviation-policy contextual --json
 textintel eval-speech data/speech/evaluation.json --json
 textintel eval-speech data/speech/reference-nemo.json --json

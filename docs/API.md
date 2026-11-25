@@ -139,8 +139,17 @@ cannot project to compact `Time`; nested wrappers, incomplete inner clocks and
 malformed precision are rejected. Dot fractions are recognized automatically;
 comma fractions require `SpeechInterpretation::Time`. Fractional seconds use
 literal Precise number reading while the surrounding clock keeps the selected
-style and notation. This is a floating-clock profile, not RFC3339 timestamp or
-timezone support. Protected structured inputs remain protected.
+style and notation. Complete timestamps use the separate
+`TemporalValue::Timestamp` with the explicit `SpeechInterpretation::DateTime`
+hint. The parser accepts RFC 3339's fixed date/time/offset form, including
+lowercase `t`/`z`, up to 128 fractional digits, and keeps the source wall
+time without timezone conversion. Four-digit year zero is valid in this
+timestamp grammar. `TimestampOffset::UnknownLocal` preserves
+the `-00:00` distinction from UTC or known numeric offsets. Malformed or
+over-limit timestamps and IXDTF annotations stay atomic and unresolved.
+Positive leap seconds are accepted against the bundled IERS/NIST table through
+2016 (checked through IERS Bulletin C 72, July 2026); a later IERS announcement
+requires refreshing that table. Protected structured inputs remain protected.
 `invalid_date_policy` defaults to `InvalidDatePolicy::Preserve`, which retains
 an impossible Gregorian date's source and diagnostic. Explicit
 `InvalidDatePolicy::ReadComponents` can read an atomic date's known components
@@ -159,7 +168,7 @@ languages; a display name alone does not establish Arabic count agreement.
 Unknown Arabic noun/qualifier paradigms remain unsupported, with source text
 and diagnostics preserved.
 A `SpeechInterpretation` hint expresses caller-known intent such as number,
-date, time, measure, currency or duration; it is not inferred from a test ID.
+date, time, datetime, measure, currency or duration; it is not inferred from a test ID.
 Symbol-to-ISO currency mappings and bounded unit aliases supply application
 conventions. Invalid options return an error before parsing or rendering.
 

@@ -5,10 +5,10 @@
   "base_commit": "5917360cee6348d55a51fefe9393cc0dd5cc960b",
   "worktree": "measured before commit; source_tree pins the verified inputs",
   "source_tree": {
-    "sha256": "04434d4738397c4d5afe80946d01e7690a8eca4bf467c8e4a7f9b2611f2718b4",
-    "files": 303,
+    "sha256": "04377572af3752e9f78d6f0074a8e6c28222bba5e41f9b161a68ab12ee74a977",
+    "files": 304,
     "definition": "SHA256 over sorted relative POSIX path + NUL + file bytes + NUL for all files under src/tests/resources/data/language, plus Cargo.toml/Cargo.lock/build.rs and the four speech corpus/policy JSON inputs (including semantic-values.json). Documentation and generated snapshots excluded.",
-    "parent_commit": "afa57c907315e3a65ec44cb6213518ea8678d2e0"
+    "parent_commit": "d94fa99f9a4774f0d47e3bbc80ca9d42cf958c88"
   },
   "tools": {
     "rustc": "1.99.0 (b940084d7 2026-09-28)",
@@ -88,17 +88,17 @@
       "src/core/calendar.rs": {
         "count": 14,
         "covered": 14,
-        "percent": 100.0
+        "percent": 100
       },
       "src/core/numeric.rs": {
         "count": 19,
         "covered": 19,
-        "percent": 100.0
+        "percent": 100
       },
       "src/core/unicode.rs": {
         "count": 26,
         "covered": 26,
-        "percent": 100.0
+        "percent": 100
       },
       "src/entities/currency.rs": {
         "count": 111,
@@ -133,7 +133,7 @@
       "src/entities/numeric.rs": {
         "count": 43,
         "covered": 43,
-        "percent": 100.0
+        "percent": 100
       },
       "src/entities/provider.rs": {
         "count": 279,
@@ -163,7 +163,7 @@
       "src/phonetic/mod.rs": {
         "count": 3,
         "covered": 3,
-        "percent": 100.0
+        "percent": 100
       },
       "src/speech/core.rs": {
         "count": 259,
@@ -203,7 +203,7 @@
       "src/speech/locales.rs": {
         "count": 35,
         "covered": 35,
-        "percent": 100.0
+        "percent": 100
       },
       "src/speech/normalization/classify.rs": {
         "count": 886,
@@ -223,7 +223,7 @@
       "src/speech/normalization/render.rs": {
         "count": 93,
         "covered": 93,
-        "percent": 100.0
+        "percent": 100
       },
       "src/speech/normalization/rules/de.rs": {
         "count": 312,
@@ -408,7 +408,7 @@
       "sha256": "a947bf15ef89660e8b24dfe54d397cac4f126805a942c0692c4d8e235a996577"
     },
     "data/speech/semantic-values.json": {
-      "sha256": "b8753d1a4313d77ad06f7afaa20df9759cb016e1930cd59d7431bbe7f30b8bbe"
+      "sha256": "13d0a7fc871400704e67fe2d0c0226b86043db5739046cee0af8fad16ec33607"
     }
   },
   "original_nemo_gold_unchanged_from_base_commit": true,
@@ -5859,426 +5859,426 @@
         "locales": {}
       },
       "corpus_version": "1.0.0",
-      "purpose": "Designed exact semantic-value regression matrix for twenty locales. Literal expected IR is authored before parser execution; shared structural templates are not an independent held-out or native-pronunciation benchmark. No spoken gold.",
+      "purpose": "Designed exact semantic-value regression matrix for twenty locales. Literal expected IR is authored before parser execution; shared structural templates are not an independent held-out or native-pronunciation benchmark. Includes 100 RFC 3339 timestamp cases; no spoken gold.",
       "totals": {
-        "cases": 560,
-        "parse_cases": 540,
-        "parse_exact": 540,
+        "cases": 660,
+        "parse_cases": 640,
+        "parse_exact": 640,
         "spoken_cases": 0,
         "spoken_exact": 0,
         "spoken_variant": 0,
         "spoken_accepted": 0,
-        "fully_supported": 500,
-        "expected_spans": 520,
-        "predicted_spans": 520,
-        "correct_spans": 520,
+        "fully_supported": 600,
+        "expected_spans": 620,
+        "predicted_spans": 620,
+        "correct_spans": 620,
         "semantic": {
-          "cases": 560,
-          "exact": 560,
-          "expected_spans": 540,
-          "predicted_spans": 540,
-          "correct_spans": 540
+          "cases": 660,
+          "exact": 660,
+          "expected_spans": 640,
+          "predicted_spans": 640,
+          "correct_spans": 640
         }
       },
       "by_locale": {
         "ar": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "bn": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "de": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "en": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "es": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "fr": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "hi": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "id": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "ja": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "ko": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "mr": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "pa": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "pt": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "ru": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "ta": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "te": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "tr": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "ur": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "vi": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         },
         "zh": {
-          "cases": 28,
-          "parse_cases": 27,
-          "parse_exact": 27,
+          "cases": 33,
+          "parse_cases": 32,
+          "parse_exact": 32,
           "spoken_cases": 0,
           "spoken_exact": 0,
           "spoken_variant": 0,
           "spoken_accepted": 0,
-          "fully_supported": 25,
-          "expected_spans": 26,
-          "predicted_spans": 26,
-          "correct_spans": 26,
+          "fully_supported": 30,
+          "expected_spans": 31,
+          "predicted_spans": 31,
+          "correct_spans": 31,
           "semantic": {
-            "cases": 28,
-            "exact": 28,
-            "expected_spans": 27,
-            "predicted_spans": 27,
-            "correct_spans": 27
+            "cases": 33,
+            "exact": 33,
+            "expected_spans": 32,
+            "predicted_spans": 32,
+            "correct_spans": 32
           }
         }
       },
@@ -6341,6 +6341,26 @@
             "expected_spans": 20,
             "predicted_spans": 20,
             "correct_spans": 20
+          }
+        },
+        "datetime": {
+          "cases": 100,
+          "parse_cases": 100,
+          "parse_exact": 100,
+          "spoken_cases": 0,
+          "spoken_exact": 0,
+          "spoken_variant": 0,
+          "spoken_accepted": 0,
+          "fully_supported": 100,
+          "expected_spans": 100,
+          "predicted_spans": 100,
+          "correct_spans": 100,
+          "semantic": {
+            "cases": 100,
+            "exact": 100,
+            "expected_spans": 100,
+            "predicted_spans": 100,
+            "correct_spans": 100
           }
         },
         "identifier": {
@@ -7120,7 +7140,7 @@
         "invalid calendar date": 20
       },
       "failures": [],
-      "raw_report_sha256": "b8269eb3f270f7f2b218bc6b653959a5102bc6ce86569e0b4b28133f6ce76e5f"
+      "raw_report_sha256": "85c5ba2a2194eaad14ebcecaf43064725655afd74bf9034da434ecd1051eec49"
     }
   },
   "cardinal_adapter_migration": {
@@ -7160,7 +7180,7 @@
       "mrr": 0.8473219043975704,
       "ndcg_at_10": 0.858619718491046
     },
-    "raw_report_sha256": "6e68e0f0d862d40aa94b328bc003ba64a5a989c47906e61d4a24e8a8688b27b4"
+    "raw_report_sha256": "74e2cb9074314283e7e0311eae0df6e174cef6c34e2d51dc59d04ed897ab8717"
   },
   "library_quality_gate_failures": [
     "gate failure: similarity.roc_auc=0.812 below minimum 0.900",
@@ -8348,132 +8368,6 @@
         "supported": true
       }
     ],
-    "full_timestamp_gap": {
-      "scope": "Complete RFC3339-shaped timestamps remain unsupported identifiers; these cases are not included in supported fractional-clock totals.",
-      "cases": 20,
-      "rows": [
-        {
-          "locale": "en",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "es",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "zh",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "hi",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "ar",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "fr",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "pt",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "ru",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "bn",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "ur",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "id",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "de",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "ja",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "pa",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "mr",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "te",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "tr",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "ta",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "vi",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        },
-        {
-          "locale": "ko",
-          "source": "2024-02-29T03:15:01Z",
-          "kind": "alphanumeric",
-          "supported": false
-        }
-      ]
-    },
     "command_template": [
       "target/debug/textintel",
       "COMMAND",
@@ -8483,7 +8377,138 @@
       "--reading-style",
       "natural",
       "--json"
-    ]
+    ],
+    "full_timestamp_support": {
+      "scope": "100 exact semantic RFC 3339 cases across all twenty locales. These have no spoken gold; rendering support is measured separately from linguistic accuracy. Malformed forms, excess precision and protected source ranges have atomic regressions.",
+      "cases": 100,
+      "cases_per_locale": 5,
+      "semantic_exact": 100,
+      "rendering_supported": 100,
+      "spoken_gold_cases": 0,
+      "semantic_report_sha256": "85c5ba2a2194eaad14ebcecaf43064725655afd74bf9034da434ecd1051eec49",
+      "rows": [
+        {
+          "locale": "en",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "es",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "zh",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "hi",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "ar",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "fr",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "pt",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "ru",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "bn",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "ur",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "id",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "de",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "ja",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "pa",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "mr",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "te",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "tr",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "ta",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "vi",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        },
+        {
+          "locale": "ko",
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "supported": true
+        }
+      ]
+    }
   },
   "variant_comparison_update": {
     "baseline_commit": "c3a96f544b6585ed9bae69a944f87cdda7c456b6",
@@ -8548,13 +8573,16 @@
     ],
     "legacy_corpora_have_complete_semantic_value_gold": false,
     "semantic_values": {
-      "cases": 560,
-      "expected_value_spans": 540,
+      "cases": 660,
+      "expected_value_spans": 640,
       "locales": 20,
       "spoken_gold_cases": 0,
       "expectations_written_before_parser_run": true,
       "initial_gold_sha256": "b8753d1a4313d77ad06f7afaa20df9759cb016e1930cd59d7431bbe7f30b8bbe",
-      "scope": "Designed exact-IR structural regression under default Precise/Phonetic/Auto options, not independent native or production accuracy."
+      "scope": "Designed exact-IR structural regression under default Precise/Phonetic/Auto options, including 100 RFC 3339 timestamp cases; not independent native or production accuracy.",
+      "timestamp_cases": 100,
+      "timestamp_cases_per_locale": 5,
+      "current_corpus_sha256": "13d0a7fc871400704e67fe2d0c0226b86043db5739046cee0af8fad16ec33607"
     }
   },
   "verification_execution": {

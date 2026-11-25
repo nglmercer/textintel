@@ -494,7 +494,6 @@ fn protected_data_and_full_timestamps_are_not_fractional_clocks() {
             "03:15:01.001.wav",
             "<time value=\"03:15:01.001\">x</time>",
             "03:15:01.001@example.org",
-            "2024-02-29T03:15:01.001Z",
         ] {
             let parsed = parse_for_speech(source, &opts).unwrap();
             assert!(
@@ -505,6 +504,16 @@ fn protected_data_and_full_timestamps_are_not_fractional_clocks() {
             assert_eq!(rendered.text, source);
             assert!(!rendered.fully_supported, "{source}: {rendered:?}");
         }
+        let source = "2024-02-29T03:15:01.001Z";
+        let parsed = parse_for_speech(source, &opts).unwrap();
+        assert_eq!(parsed.spans.len(), 1);
+        assert!(matches!(
+            parsed.spans[0].value,
+            SpeechValue::Temporal {
+                value: TemporalValue::Timestamp { .. }
+            }
+        ));
+        assert!(normalize_for_speech(source, &opts).unwrap().fully_supported);
     }
 }
 

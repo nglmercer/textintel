@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "purpose": "Designed exact semantic-value regression matrix for twenty locales. Literal expected IR is authored before parser execution; shared structural templates are not an independent held-out or native-pronunciation benchmark. No spoken gold.",
+  "purpose": "Designed exact semantic-value regression matrix for twenty locales. Literal expected IR is authored before parser execution; shared structural templates are not an independent held-out or native-pronunciation benchmark. Includes 100 RFC 3339 timestamp cases; no spoken gold.",
   "cases": [
     {
       "id": "en-semantic-decimal-positive",
@@ -17580,6 +17580,4226 @@
       "category": "plain",
       "expected_spans": [],
       "expected_values": [],
+      "spoken": []
+    },
+    {
+      "id": "en-semantic-rfc3339-zulu",
+      "locale": "en",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-semantic-rfc3339-offset_fraction",
+      "locale": "en",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-semantic-rfc3339-unknown_local_offset",
+      "locale": "en",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-semantic-rfc3339-verified_leap_second",
+      "locale": "en",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-semantic-rfc3339-zulu",
+      "locale": "es",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-semantic-rfc3339-offset_fraction",
+      "locale": "es",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-semantic-rfc3339-unknown_local_offset",
+      "locale": "es",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-semantic-rfc3339-verified_leap_second",
+      "locale": "es",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-semantic-rfc3339-zulu",
+      "locale": "zh",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-semantic-rfc3339-offset_fraction",
+      "locale": "zh",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-semantic-rfc3339-unknown_local_offset",
+      "locale": "zh",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-semantic-rfc3339-verified_leap_second",
+      "locale": "zh",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-semantic-rfc3339-zulu",
+      "locale": "hi",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-semantic-rfc3339-offset_fraction",
+      "locale": "hi",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-semantic-rfc3339-unknown_local_offset",
+      "locale": "hi",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-semantic-rfc3339-verified_leap_second",
+      "locale": "hi",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-semantic-rfc3339-zulu",
+      "locale": "ar",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-semantic-rfc3339-offset_fraction",
+      "locale": "ar",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-semantic-rfc3339-unknown_local_offset",
+      "locale": "ar",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-semantic-rfc3339-verified_leap_second",
+      "locale": "ar",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-semantic-rfc3339-zulu",
+      "locale": "fr",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-semantic-rfc3339-offset_fraction",
+      "locale": "fr",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-semantic-rfc3339-unknown_local_offset",
+      "locale": "fr",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-semantic-rfc3339-verified_leap_second",
+      "locale": "fr",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-semantic-rfc3339-zulu",
+      "locale": "pt",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-semantic-rfc3339-offset_fraction",
+      "locale": "pt",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-semantic-rfc3339-unknown_local_offset",
+      "locale": "pt",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-semantic-rfc3339-verified_leap_second",
+      "locale": "pt",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-semantic-rfc3339-zulu",
+      "locale": "ru",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-semantic-rfc3339-offset_fraction",
+      "locale": "ru",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-semantic-rfc3339-unknown_local_offset",
+      "locale": "ru",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-semantic-rfc3339-verified_leap_second",
+      "locale": "ru",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-semantic-rfc3339-zulu",
+      "locale": "bn",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-semantic-rfc3339-offset_fraction",
+      "locale": "bn",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-semantic-rfc3339-unknown_local_offset",
+      "locale": "bn",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-semantic-rfc3339-verified_leap_second",
+      "locale": "bn",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-semantic-rfc3339-zulu",
+      "locale": "ur",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-semantic-rfc3339-offset_fraction",
+      "locale": "ur",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-semantic-rfc3339-unknown_local_offset",
+      "locale": "ur",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-semantic-rfc3339-verified_leap_second",
+      "locale": "ur",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-semantic-rfc3339-zulu",
+      "locale": "id",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-semantic-rfc3339-offset_fraction",
+      "locale": "id",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-semantic-rfc3339-unknown_local_offset",
+      "locale": "id",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-semantic-rfc3339-verified_leap_second",
+      "locale": "id",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-semantic-rfc3339-zulu",
+      "locale": "de",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-semantic-rfc3339-offset_fraction",
+      "locale": "de",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-semantic-rfc3339-unknown_local_offset",
+      "locale": "de",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-semantic-rfc3339-verified_leap_second",
+      "locale": "de",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-semantic-rfc3339-zulu",
+      "locale": "ja",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-semantic-rfc3339-offset_fraction",
+      "locale": "ja",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-semantic-rfc3339-unknown_local_offset",
+      "locale": "ja",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-semantic-rfc3339-verified_leap_second",
+      "locale": "ja",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-semantic-rfc3339-zulu",
+      "locale": "pa",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-semantic-rfc3339-offset_fraction",
+      "locale": "pa",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-semantic-rfc3339-unknown_local_offset",
+      "locale": "pa",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-semantic-rfc3339-verified_leap_second",
+      "locale": "pa",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-semantic-rfc3339-zulu",
+      "locale": "mr",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-semantic-rfc3339-offset_fraction",
+      "locale": "mr",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-semantic-rfc3339-unknown_local_offset",
+      "locale": "mr",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-semantic-rfc3339-verified_leap_second",
+      "locale": "mr",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-semantic-rfc3339-zulu",
+      "locale": "te",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-semantic-rfc3339-offset_fraction",
+      "locale": "te",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-semantic-rfc3339-unknown_local_offset",
+      "locale": "te",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-semantic-rfc3339-verified_leap_second",
+      "locale": "te",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-semantic-rfc3339-zulu",
+      "locale": "tr",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-semantic-rfc3339-offset_fraction",
+      "locale": "tr",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-semantic-rfc3339-unknown_local_offset",
+      "locale": "tr",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-semantic-rfc3339-verified_leap_second",
+      "locale": "tr",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-semantic-rfc3339-zulu",
+      "locale": "ta",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-semantic-rfc3339-offset_fraction",
+      "locale": "ta",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-semantic-rfc3339-unknown_local_offset",
+      "locale": "ta",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-semantic-rfc3339-verified_leap_second",
+      "locale": "ta",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-semantic-rfc3339-zulu",
+      "locale": "vi",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-semantic-rfc3339-offset_fraction",
+      "locale": "vi",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-semantic-rfc3339-unknown_local_offset",
+      "locale": "vi",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-semantic-rfc3339-verified_leap_second",
+      "locale": "vi",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-semantic-rfc3339-zulu",
+      "locale": "ko",
+      "text": "2024-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "2024-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-semantic-rfc3339-offset_fraction",
+      "locale": "ko",
+      "text": "2024-02-29T03:15:01.001000+05:30",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 32,
+          "source": "2024-02-29T03:15:01.001000+05:30",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": "001000",
+              "offset": {
+                "type": "known",
+                "negative": false,
+                "hours": 5,
+                "minutes": 30
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-semantic-rfc3339-unknown_local_offset",
+      "locale": "ko",
+      "text": "2024-02-29T03:15:01-00:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "2024-02-29T03:15:01-00:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "2024",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "unknown_local"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-semantic-rfc3339-verified_leap_second",
+      "locale": "ko",
+      "text": "1990-12-31T15:59:60-08:00",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 25,
+          "source": "1990-12-31T15:59:60-08:00",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "1990",
+              "month": 12,
+              "day": 31,
+              "hour": 15,
+              "minute": 59,
+              "second": 60,
+              "fraction": null,
+              "offset": {
+                "type": "known",
+                "negative": true,
+                "hours": 8,
+                "minutes": 0
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "en-semantic-rfc3339-year-zero",
+      "locale": "en",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "es-semantic-rfc3339-year-zero",
+      "locale": "es",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "zh-semantic-rfc3339-year-zero",
+      "locale": "zh",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "hi-semantic-rfc3339-year-zero",
+      "locale": "hi",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ar-semantic-rfc3339-year-zero",
+      "locale": "ar",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "fr-semantic-rfc3339-year-zero",
+      "locale": "fr",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pt-semantic-rfc3339-year-zero",
+      "locale": "pt",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ru-semantic-rfc3339-year-zero",
+      "locale": "ru",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "bn-semantic-rfc3339-year-zero",
+      "locale": "bn",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ur-semantic-rfc3339-year-zero",
+      "locale": "ur",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "id-semantic-rfc3339-year-zero",
+      "locale": "id",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "de-semantic-rfc3339-year-zero",
+      "locale": "de",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ja-semantic-rfc3339-year-zero",
+      "locale": "ja",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "pa-semantic-rfc3339-year-zero",
+      "locale": "pa",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "mr-semantic-rfc3339-year-zero",
+      "locale": "mr",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "te-semantic-rfc3339-year-zero",
+      "locale": "te",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "tr-semantic-rfc3339-year-zero",
+      "locale": "tr",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ta-semantic-rfc3339-year-zero",
+      "locale": "ta",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "vi-semantic-rfc3339-year-zero",
+      "locale": "vi",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
+      "spoken": []
+    },
+    {
+      "id": "ko-semantic-rfc3339-year-zero",
+      "locale": "ko",
+      "text": "0000-02-29T03:15:01Z",
+      "decimal_separator": null,
+      "date_order": "reject_ambiguous",
+      "category": "datetime",
+      "expected_spans": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime"
+        }
+      ],
+      "expected_values": [
+        {
+          "start": 0,
+          "end": 20,
+          "source": "0000-02-29T03:15:01Z",
+          "kind": "datetime",
+          "value": {
+            "type": "temporal",
+            "value": {
+              "type": "timestamp",
+              "year": "0000",
+              "month": 2,
+              "day": 29,
+              "hour": 3,
+              "minute": 15,
+              "second": 1,
+              "fraction": null,
+              "offset": {
+                "type": "utc"
+              }
+            }
+          }
+        }
+      ],
       "spoken": []
     }
   ]
