@@ -20,6 +20,11 @@
     "recall_at_10_min": 0.95,
     "mrr_min": 0.6
   },
+  "spam": {
+    "accuracy_min": 0.9,
+    "f1_min": 0.9,
+    "roc_auc_min": 0.95
+  },
   "categories": {
     "code_switching": {
       "count_min": 12,
