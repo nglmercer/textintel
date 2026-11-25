@@ -2000,6 +2000,7 @@ pub fn render(value: &TemporalValue, locale: SpeechLocale, opts: &SpeechOptions)
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_timestamp(
     year: &str,
     month: u32,

@@ -105,13 +105,11 @@ use crate::core::types::ComparisonResult;
 """)
     out.append(f"const INIT: f64 = {init!r};\n")
     out.append(f"const LEARNING_RATE: f64 = {lr!r};\n")
-    out.append(f"pub(crate) const FEATURE_COUNT: usize = {nfeat};\n\n")
+    
     out.append("/// Feature values extracted once per comparison, in the fixed baked\n")
     out.append("/// order the ensemble was trained with.\n")
     out.append(f"fn feature_vector(result: &ComparisonResult) -> [f64; {nfeat}] {{\n")
     out.append(f"    let mut f = [0.0f64; {nfeat}];\n")
-    out.append("    let semantic = result.semantic.unwrap_or(0.0);\n")
-    out.append("    let character = result.character.unwrap_or(0.0);\n")
     for line in feature_block(names):
         # normalize to use locals where emitted by hand
         out.append(line + "\n")

@@ -21,9 +21,11 @@ fn analyze_preserves_raw_and_populates_channels() {
     assert!(!fp.unicode_features.nfc.is_empty());
     assert!(!fp.decoded_texts().collect::<Vec<_>>().is_empty());
     assert!(fp.top_language().is_some());
-    // Model-free default: no embedding or phonetic providers engaged.
-    assert!(fp.semantic_embeddings.is_empty());
-    assert!(fp.phonetic_candidates.is_empty());
+    // Dependency-free default: the rule-based G2P and feature-hash embedding
+    // providers are engaged, so phonetic/semantic evidence is populated
+    // without any external model.
+    assert!(!fp.semantic_embeddings.is_empty());
+    assert!(!fp.phonetic_candidates.is_empty());
 }
 
 #[test]
@@ -229,9 +231,10 @@ fn compare_identical_texts_scores_one() {
     assert_eq!(result.character, Some(1.0));
     assert_eq!(result.lexical, Some(1.0));
     assert!(result.score > 0.99, "score: {}", result.score);
-    // Model-free default leaves provider channels empty.
-    assert_eq!(result.semantic, None);
-    assert_eq!(result.phonetic, None);
+    // Dependency-free default engages the local providers, so the
+    // phonetic/semantic evidence channels are populated.
+    assert!(result.semantic.is_some());
+    assert!(result.phonetic.is_some());
 }
 
 #[test]

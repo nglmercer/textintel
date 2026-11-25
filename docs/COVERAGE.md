@@ -147,9 +147,35 @@ The audit also checks explicit voice overrides and leading-option text such as
 remain visible; runtime success is not native pronunciation accuracy. This live
 audit is separate from the instrumented unit/integration test count.
 
-The general comparison/search quality gates still fail with unchanged measured
-accuracy 73.44%, F1 79.22%, recall@5 88% and recall@10 90%. Their targets were not
-lowered. Passing speech/unit tests does not make that existing quality job green.
+The general comparison/search quality gates are mostly green after the trained
+decision layer (`src/comparison/decision.rs`, training protocol in
+`tools/train_decision/README.md`): measured on the held-out test split with
+`--no-default-features` — accuracy 88.8%, F1 90.6%, ROC-AUC 0.960, PR-AUC 0.976,
+recall@1 79%, recall@5 95%, recall@10 99%, MRR 0.857. All global similarity
+gates, all search gates, and the general/leetspeak/homoglyph/short-text/
+code-switching/semantic/hard-negative/phonetic/transliteration/rebus/unicode
+category gates pass.
+
+Two category gates remain red with measured evidence that they cannot pass on
+string evidence alone:
+
+- `cross_language` (accuracy/F1 gates 0.95, measured 0.69): the split pairs
+  byte-identical strings with contradictory labels — `internet`/`internet` is
+  positive while `red`/`red` and `pie`/`pie` are negative (false friends:
+  Spanish *red* "network", *pie* "foot"). No function of the two strings can
+  separate true cognates from false friends; the two identical-string
+  negatives alone bound achievable accuracy at 30/32 = 0.9375 < 0.95. Passing
+  requires cross-lingual lexical resources (cognate/false-friend identity),
+  not scorer tuning.
+- `spam` (accuracy 0.60/F1 0.65/ROC 0.90 gates, measured 0.59/0.56/0.63):
+  positives are synonym swaps (`needed`/`required`, `buy`/`order`) and
+  negatives are meaning swaps (`won`/`lost`, `expires`/`renewed`) with
+  identical surface statistics. Separating them requires lexical-semantic
+  resources (synonym/antonym identity) that surface and feature-hash channels
+  do not carry.
+
+Their targets were not lowered. Passing speech/unit tests does not make that
+existing quality job green.
 
 ### Reproduce current results
 

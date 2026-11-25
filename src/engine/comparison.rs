@@ -22,7 +22,8 @@ impl TextIntelligence {
         } else if let Some(profile) = &self.similarity_profile {
             score_fingerprints_with_profile(left, right, profile)
         } else {
-            let mut result = weighted_score_fingerprints(left, right, &self.config.similarity_weights);
+            let mut result =
+                weighted_score_fingerprints(left, right, &self.config.similarity_weights);
             // The trained decision layer is the default readout of the
             // explainable evidence vector; explicit custom weights keep the
             // plain weighted-mean interpretation they configure.
