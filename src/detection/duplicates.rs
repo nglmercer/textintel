@@ -37,7 +37,8 @@ pub fn duplicate_result_with_mode(
             mode,
         };
     }
-    let comparison = score_fingerprints(left, right, weights);
+    let mut comparison = score_fingerprints(left, right, weights);
+    crate::comparison::apply_decision_if_default(&mut comparison, weights);
     let (score, reason) = match mode {
         DuplicateMode::Combined => (
             comparison.score,

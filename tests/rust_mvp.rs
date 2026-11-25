@@ -283,6 +283,29 @@ fn patterns_spam_duplicates_and_search_use_fingerprints() {
     let duplicate = e.duplicate("COMPRA AHORA", "compra ahora", 0.8).unwrap();
     assert!(duplicate.duplicate);
 
+    // Combined duplicate scoring must use the same decision-ensemble score
+    // as compare under default weights — the two APIs can never drift into
+    // different semantics for the same pair. Exact/normalized equality still
+    // short-circuits to 1.0 by design (`"normalized match"`).
+    for (left, right) in [
+        ("increase your credit score", "boost your credit score fast"),
+        ("hello world", "completely different text"),
+        (
+            "subscription expires today",
+            "subscription renewed yesterday",
+        ),
+    ] {
+        let comparison = e.compare(left, right).unwrap();
+        let duplicate = e.duplicate(left, right, 0.0).unwrap();
+        assert_eq!(
+            comparison.score, duplicate.score,
+            "compare/duplicate score mismatch for {left:?}/{right:?}"
+        );
+    }
+    let leet = e.duplicate("c0mpr4 ah0r4", "compra ahora", 0.0).unwrap();
+    assert_eq!(leet.score, 1.0);
+    assert_eq!(leet.reason, "normalized match");
+
     e.add_document("one", "gana dinero").unwrap();
     e.add_document("two", "ferrocarril").unwrap();
     let results = e.find_similar("gana 💰", 2).unwrap();

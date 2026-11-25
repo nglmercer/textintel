@@ -27,9 +27,10 @@ impl TextIntelligence {
             // The trained decision layer is the default readout of the
             // explainable evidence vector; explicit custom weights keep the
             // plain weighted-mean interpretation they configure.
-            if self.config.similarity_weights == crate::core::config::SimilarityWeights::default() {
-                crate::comparison::decision::apply_decision_layer(&mut result);
-            }
+            crate::comparison::apply_decision_if_default(
+                &mut result,
+                &self.config.similarity_weights,
+            );
             result
         }
     }
