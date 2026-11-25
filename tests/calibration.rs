@@ -69,8 +69,10 @@ fn perfect_separation_scores_perfect_discrimination() {
 }
 
 #[test]
-fn heuristic_spam_is_never_marked_calibrated() {
+fn trained_spam_calibration_is_marked_and_bounded() {
     let engine = TextIntelligence::new(EngineConfig::default());
+    let mut spam_score: f64 = 0.0;
+    let mut ham_score: f64 = 1.0;
     for text in [
         "WIN FREE PRIZE claim now",
         "hello, how are you today",
@@ -79,9 +81,18 @@ fn heuristic_spam_is_never_marked_calibrated() {
     ] {
         let result = engine.detect_spam(text).unwrap();
         assert!(
-            !result.calibrated,
-            "heuristic scores are uncalibrated by construction"
+            result.calibrated,
+            "the baked logistic calibration is trained on the v2 spam corpus"
         );
         assert!((0.0..=1.0).contains(&result.probability));
+        if text.contains("PRIZE") || text.contains("meds") {
+            spam_score = spam_score.max(result.probability);
+        } else {
+            ham_score = ham_score.min(result.probability);
+        }
     }
+    assert!(
+        spam_score > ham_score,
+        "spam-template texts must outrank ordinary messages: spam={spam_score} ham={ham_score}"
+    );
 }

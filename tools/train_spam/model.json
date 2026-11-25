@@ -1,0 +1,19 @@
+{
+ "bias": -16.395197164859592,
+ "weights": {
+  "confusable_count": 0.0,
+  "decoded_similarity": -7.797349100171666,
+  "email_count": 1.2204202700220232,
+  "emoji_count": -0.14100956734952533,
+  "emoji_ratio": -8.148358881436808,
+  "entropy": 5.20608268539773,
+  "mixed_scripts": 0.0,
+  "number_ratio": 23.5746455294641,
+  "obfuscation_score": 2.5476262671319936,
+  "pattern_score": 0.0,
+  "punctuation_ratio": -32.99134961294641,
+  "repetition_score": -22.841607410644457,
+  "uppercase_ratio": -0.7686965710003549,
+  "url_count": 6.233677775773596
+ }
+}

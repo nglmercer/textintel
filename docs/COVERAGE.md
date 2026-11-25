@@ -147,16 +147,26 @@ The audit also checks explicit voice overrides and leading-option text such as
 remain visible; runtime success is not native pronunciation accuracy. This live
 audit is separate from the instrumented unit/integration test count.
 
-The general comparison/search quality gates are mostly green after the trained
+The general comparison/search quality gates are green after the trained
 decision layer (`src/comparison/decision.rs`, training protocol in
-`tools/train_decision/README.md`): measured on the held-out test split with
-`--no-default-features` — accuracy 88.8%, F1 90.6%, ROC-AUC 0.960, PR-AUC 0.976,
-recall@1 79%, recall@5 95%, recall@10 99%, MRR 0.857. All global similarity
-gates, all search gates, and the general/leetspeak/homoglyph/short-text/
-code-switching/semantic/hard-negative/phonetic/transliteration/rebus/unicode
-category gates pass.
+`tools/train_decision/README.md`) plus the bundled synonym/antonym lexicon
+and multi-position swap evidence: measured on the held-out test split with
+`--no-default-features` — accuracy 89.8%, F1 91.4%, ROC-AUC 0.966, PR-AUC
+0.980, recall@1 82%, recall@5 97%, recall@10 98%, MRR 0.877. All global
+similarity gates, all search gates, and every category gate except
+`cross_language` pass — including `semantic` and `spam`, which the lexicon
+evidence (synonym swaps positive, antonym swaps negative) carries over the
+threshold.
 
-Two category gates remain red with measured evidence that they cannot pass on
+The spam-detection corpus evaluation is likewise green after replacing the
+hand-weighted heuristic sum with a baked logistic calibration over the same
+explainable feature vector (`src/detection/spam.rs`, protocol in
+`tools/train_spam/README.md`): measured on the strictly held-out
+`data/spam/v2-eval.json` split — accuracy 96.9%, F1 96.8%, ROC-AUC 0.998,
+Brier 0.022, ECE 0.051 (previously F1 0.0 at ROC-AUC 0.947: the heuristic
+ranked well but its probability scale never crossed the decision threshold).
+
+One category gate remains red with measured evidence that it cannot pass on
 string evidence alone:
 
 - `cross_language` (accuracy/F1 gates 0.95, measured 0.69): the split pairs
@@ -167,14 +177,8 @@ string evidence alone:
   negatives alone bound achievable accuracy at 30/32 = 0.9375 < 0.95. Passing
   requires cross-lingual lexical resources (cognate/false-friend identity),
   not scorer tuning.
-- `spam` (accuracy 0.60/F1 0.65/ROC 0.90 gates, measured 0.59/0.56/0.63):
-  positives are synonym swaps (`needed`/`required`, `buy`/`order`) and
-  negatives are meaning swaps (`won`/`lost`, `expires`/`renewed`) with
-  identical surface statistics. Separating them requires lexical-semantic
-  resources (synonym/antonym identity) that surface and feature-hash channels
-  do not carry.
 
-Their targets were not lowered. Passing speech/unit tests does not make that
+The target was not lowered. Passing speech/unit tests does not make that
 existing quality job green.
 
 ### Reproduce current results

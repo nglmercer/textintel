@@ -65,7 +65,7 @@ fn local_preset_ignores_legacy_model_files_and_environment() {
         String::from_utf8_lossy(&result.stderr)
     );
     let report: serde_json::Value = serde_json::from_slice(&result.stdout).unwrap();
-    assert_eq!(report["providers"]["spam"]["provider"], "heuristic_spam_v1");
+    assert_eq!(report["providers"]["spam"]["provider"], "logistic_spam_v2");
     assert_eq!(
         report["providers"]["embedding"]["provider"],
         "feature_hash_embedding"

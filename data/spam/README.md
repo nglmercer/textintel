@@ -2,8 +2,10 @@
 
 SMS spam/ham development examples (`v2-train.json`, 240 items) and
 held-out evaluation examples (`v2-eval.json`, 160 items). The historical
-training filename is retained for split compatibility; the library includes
-no training program or trained classifier.
+training filename is retained for split compatibility. The bundled default
+spam predictor is a deterministic logistic calibration trained on
+`v2-train.json` with the protocol in `tools/train_spam/`; `v2-eval.json`
+remains a strictly held-out measurement split.
 
 ## Source
 

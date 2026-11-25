@@ -25,7 +25,7 @@ fn production_local_builds_and_reports_graceful_fallbacks() {
     assert_eq!(diagnostics.embedding.provider, "feature_hash_embedding");
     assert_eq!(diagnostics.embedding.quality, CapabilityLevel::Basic);
     assert!(diagnostics.similarity.is_none());
-    assert_eq!(diagnostics.spam.provider, "heuristic_spam_v1");
+    assert_eq!(diagnostics.spam.provider, "logistic_spam_v2");
 }
 
 #[test]
@@ -55,9 +55,10 @@ fn diagnostics_cover_resources_and_missing_channels() {
             .any(|info| info.kind == "abbreviation" && info.language.as_deref() == Some("en")),
         "manifest must list abbreviation packs"
     );
-    // The default engine has no embedding backend: reported unavailable and
-    // listed as degraded, never scored as zero similarity.
-    assert_eq!(diagnostics.embedding.quality, CapabilityLevel::Unavailable);
+    // The default engine carries the deterministic feature-hash embedding
+    // baseline: reported Basic and still listed as degraded below the
+    // production neural tier, never scored as zero similarity.
+    assert_eq!(diagnostics.embedding.quality, CapabilityLevel::Basic);
     assert!(
         diagnostics
             .degraded
@@ -94,7 +95,7 @@ fn diagnostics_expose_the_full_running_configuration() {
         Some("rule_based_transliteration")
     );
     assert!(diagnostics.similarity.is_none());
-    assert_eq!(diagnostics.spam.provider, "heuristic_spam_v1");
+    assert_eq!(diagnostics.spam.provider, "logistic_spam_v2");
     // Store type, ANN status, cache status.
     assert_eq!(diagnostics.store_capabilities.store_type, "memory");
     assert_eq!(

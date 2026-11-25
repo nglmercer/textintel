@@ -45,8 +45,9 @@ Use `match_patterns` and `remove_pattern` to query/manage the registry.
 `save_patterns_to` and `load_patterns_from` persist definitions and re-analyze
 examples on load.
 
-`detect_spam` returns heuristic features, labels, reasons, and an uncalibrated
-score. It does not infer intent from a trained classifier.
+`detect_spam` returns explainable features, labels, reasons, and a calibrated
+probability from the baked logistic model trained on the bundled v2 spam corpus
+train split. Applications can substitute their own `SpamPredictor`.
 
 `add_document`, `remove_document`, and `document_count` manage the configured
 store. `find_similar` returns ranked results with retrieval metadata;
