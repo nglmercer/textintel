@@ -35,15 +35,24 @@ assert!(candidates.iter().any(|c| c.text.eq_ignore_ascii_case("saludos")));
 - Provider interfaces for application-supplied embeddings, language tools,
   scoring, reranking, and storage.
 
-Heuristic scores are evidence, not calibrated predictions. Resource packs are
-starter dictionaries and shared speech resources; they are not complete dictionaries.
-Embedding vectors are optional. The included feature-hash vectorizer is a
-simple deterministic baseline, not a contextual encoder.
+Comparison scores combine explainable evidence channels through a baked
+decision ensemble, and spam probabilities come from a baked logistic
+calibration — both are small compile-time constant models over auditable
+features, deterministic and dependency-free, with documented retraining
+protocols in `tools/train_decision/` and `tools/train_spam/`. They are
+calibrated to the bundled evaluation corpora, not universal probabilities.
+Resource packs are starter dictionaries and shared speech resources; they are
+not complete dictionaries. Embedding vectors are optional. The included
+feature-hash vectorizer is a simple deterministic baseline, not a contextual
+encoder.
 
-Concrete model inference, generation, decision models, training tools, and
-trained artifacts have been removed from the library. Previous experiments
-remain useful as [references](docs/EXPERIMENTS.md), not supported backends.
-Applications can implement the provider interfaces in separate integrations.
+Heavy neural inference infrastructure — runtime model backends, generation,
+model catalogs, and their training/evaluation programs — has been removed
+from the library. Previous experiments remain useful as
+[references](docs/EXPERIMENTS.md), not supported backends. Applications can
+implement the provider interfaces in separate integrations, substitute their
+own `SimilarityScorer` or `SpamPredictor`, or retrain the baked layers
+through the documented protocols.
 
 ## Text preparation for TTS
 
@@ -163,7 +172,7 @@ cargo run --locked --bin textintel -- diagnostics
 cargo run --locked --bin textintel -- --help
 ```
 
-The CLI also supports heuristic spam signals, duplicate checks, JSONL batch
+The CLI also supports spam signals, duplicate checks, JSONL batch
 analysis, resource inspection, dataset evaluation, and JSON-store indexing
 and search. Run `<command> --help` for its accepted flags.
 
@@ -184,8 +193,11 @@ cargo doc --locked --no-deps --all-features
 cargo bench --locked --no-run --all-features
 ```
 
-Evaluation data and optional quality targets live under `data/`. Some targets
-currently exceed the heuristic baseline; they must not be interpreted as
-verified library accuracy. See [evaluation limits](docs/PERFORMANCE.md).
+Evaluation data and quality targets live under `data/`; the baked decision
+ensemble and spam calibration currently pass every gate on the held-out test
+split (`cargo run --locked --no-default-features --bin textintel -- eval
+data/evaluation --split test --gates data/quality-gates.json` exits zero).
+Gates measure generalization on the bundled corpora — they are not proof of
+accuracy on application data. See [evaluation limits](docs/PERFORMANCE.md).
 
 MIT — see [LICENSE-MIT](LICENSE-MIT).

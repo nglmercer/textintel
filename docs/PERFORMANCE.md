@@ -49,12 +49,21 @@ performance comparisons.
 ## Evaluation limits
 
 `data/evaluation` contains labeled train, validation, and test splits used by
-the evaluation API; no training code is included. `data/quality-gates.json`
-contains ambitious task-quality targets retained for visibility. The existing
-heuristic baseline does not meet every target, particularly semantic and
-cross-language similarity and some retrieval recall targets. Removing model
-experiments does not establish that those quality gaps have been solved.
+the evaluation API. Training code for the baked models lives outside the
+library crate in `tools/train_decision/` and `tools/train_spam/`; the crate
+itself ships only compile-time-constant inference. `data/quality-gates.json`
+holds the enforced quality targets: the baked decision ensemble and spam
+calibration currently pass every gate on the held-out test split, and CI runs
+the gate command on every push.
 
 Use validation data to choose task thresholds and reserve the test split for
-reporting. Heuristic spam scores report `calibrated=false`. Model comparisons
-and the old production-model gates are no longer part of the library workflow.
+reporting — the training protocols follow this, and the final operating point
+was confirmed on the harness after the ranking simulator was validated exact
+against it. Passing gates measure generalization on the bundled corpora; they
+are not proof of accuracy on application data, and the cross-language
+inventory covers common international vocabulary rather than the long tail of
+cross-lingual lexicon. Spam scores report `calibrated=true` for the baked
+logistic model trained on the bundled corpus train split; both train and
+held-out splits come from the same UCI SMS distribution, so spam calibration
+measures within-distribution generalization. Applications with domain traffic
+should retrain or substitute predictors through the provider boundaries.
