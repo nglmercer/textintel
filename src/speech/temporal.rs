@@ -2329,6 +2329,34 @@ fn format_calendar_components(
         return Some(output);
     }
     if locale == Ru {
+        if d.is_none() {
+            // Month-year without a day keeps the month nominative — genitive
+            // (`мая`) is only grammatical when governed by a day number. The
+            // year renders genitive with explicit `года`, matching dated
+            // usage (`две тысячи двадцать четвёртого года`).
+            const NOMINATIVE: [&str; 12] = [
+                "январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август",
+                "сентябрь", "октябрь", "ноябрь", "декабрь",
+            ];
+            let mut result = NOMINATIVE.get(m?.checked_sub(1)? as usize)?.to_string();
+            if let Some(raw) = year_n {
+                let y = if raw == 0 {
+                    "ноль".to_owned()
+                } else if raw < 10 {
+                    format!("ноль {}", verbalize::russian_year(raw)?)
+                } else {
+                    verbalize::russian_year(raw)?
+                };
+                let y = y
+                    .strip_prefix("одна тысяча")
+                    .map(|tail| format!("тысяча{tail}"))
+                    .unwrap_or(y);
+                result.push(' ');
+                result.push_str(&y);
+                result.push_str(" года");
+            }
+            return Some(result);
+        }
         let d = d?;
         let day = if year_n.is_some_and(|y| y < 100) || *presentation == DatePresentation::DayFirst
         {
