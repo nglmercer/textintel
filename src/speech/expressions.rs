@@ -864,6 +864,14 @@ fn russian_ordinal(value: u64, options: &SpeechOptions) -> Option<String> {
     }
     match value {
         1_000 => return Some("тысячный".into()),
+        2_000 => return Some("двухтысячный".into()),
+        3_000 => return Some("трёхтысячный".into()),
+        4_000 => return Some("четырёхтысячный".into()),
+        5_000 => return Some("пятитысячный".into()),
+        6_000 => return Some("шеститысячный".into()),
+        7_000 => return Some("семитысячный".into()),
+        8_000 => return Some("восьмитысячный".into()),
+        9_000 => return Some("девятитысячный".into()),
         1_000_000 => return Some("миллионный".into()),
         1_000_000_000 => return Some("миллиардный".into()),
         1_000_000_000_000 => return Some("триллионный".into()),

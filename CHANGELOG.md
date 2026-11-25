@@ -12,7 +12,8 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 - Extended the semantic-dispatch consolidation to numeric calendar dates: typed date spans now feed the versioned locale renderers and ambiguity/invalid-date diagnostics in legacy languages, removing parallel date recognition outside Italian.
 
 - Extended versioned ordinal and clock consolidation: Russian compound
-  ordinals now compose their final component (`21st` → `двадцать первый`),
+  ordinals now compose their final component (`21st` → `двадцать первый`)
+  and exact 2,000–9,000 forms use the fused `-тысячный` paradigm,
   typed ordinal and two-component clock spans drive the versioned gender- and
   punctuation-aware adapters in legacy languages, and typed clocks continue to
   fill locales whose context-dependent versioned renderer intentionally fails

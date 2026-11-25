@@ -477,6 +477,8 @@ fn russian_ordinals_compose_final_components_without_cardinal_substitution() {
         (110, "сто десятый"),
         (2021, "две тысячи двадцать первый"),
         (1000, "тысячный"),
+        (2000, "двухтысячный"),
+        (9000, "девятитысячный"),
     ] {
         assert_eq!(
             expressions::ordinal(value, "st", &ru).as_deref(),
@@ -484,8 +486,7 @@ fn russian_ordinals_compose_final_components_without_cardinal_substitution() {
             "{value}"
         );
     }
-    // Exact non-one thousands use a distinct fused paradigm that is not yet
-    // part of the reviewed inventory; they fail closed rather than becoming
-    // a cardinal phrase.
-    assert_eq!(expressions::ordinal(2000, "st", &ru), None);
+    // Larger exact multiples of thousand use fused paradigms outside the
+    // reviewed inventory; they fail closed rather than becoming cardinal phrases.
+    assert_eq!(expressions::ordinal(10_000, "st", &ru), None);
 }
