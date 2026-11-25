@@ -12,9 +12,13 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 - Completed Arabic currency count agreement for the shared 37-currency matrix:
   reviewed singular/dual/plural/accusative full-name paradigms, feminine
   compound 01/02 counts, shared short noun paradigms across currency aliases,
-  and exact decimal readings for feminine currencies. Regression coverage now
-  exercises every shared currency across count regimes and nonzero decimal
-  fractions in both short and full naming modes.
+  and exact decimal readings for feminine currencies. Precise short-name
+  English/Spanish fractional amounts now fall back to exact decimal readings
+  when no reviewed minor-unit composition exists, and locale-specific feminine
+  agreement covers Portuguese/Russian naira and Russian taka. Regression
+  coverage exercises every shared currency in all twenty speech locales across
+  count regimes and nonzero decimal fractions in both short and full naming
+  modes.
 
 - Baked decision ensemble for comparison scoring with default weights:
   gradient-boosted trees blended with a logistic layer over the explainable

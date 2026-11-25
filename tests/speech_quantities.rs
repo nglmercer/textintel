@@ -432,7 +432,7 @@ fn full_currency_names_preserve_sign_scales_and_minor_only_identity() {
 }
 
 #[test]
-fn full_currency_naming_keeps_unsupported_precision_and_unreviewed_grammar_visible() {
+fn full_currency_naming_keeps_true_precision_boundaries_visible() {
     for (locale, source) in [(SpeechLocale::Ja, "JPY0.5"), (SpeechLocale::Ko, "KRW0.5")] {
         let mut options = options(locale);
         options.reading_style = ReadingStyle::Natural;
@@ -1099,6 +1099,119 @@ fn natural_currency_minor_units_preserve_values_and_agreement() {
         let result = normalize_for_speech(source, &options).unwrap();
         assert_eq!(result.text, expected, "{source}: {result:?}");
         assert!(result.fully_supported, "{source}");
+    }
+}
+
+#[test]
+fn currency_agreement_matrix_supports_shared_currencies_across_twenty_languages() {
+    const CODES: &[&str] = &[
+        "USD", "GBP", "BRL", "KWD", "SAR", "AED", "EGP", "CAD", "AUD", "NZD", "SGD", "TWD", "RUB",
+        "CHF", "INR", "PKR", "IDR", "TRY", "HKD", "PEN", "JPY", "CNY", "KRW", "ZAR", "MYR", "EUR",
+        "BDT", "VND", "MXN", "ARS", "CLP", "COP", "NGN", "THB", "PHP", "ILS", "PLN",
+    ];
+    assert_eq!(CODES.len(), 37);
+    let amounts = [
+        "0", "1", "2", "3", "10", "11", "21", "100", "101", "102", "1000", "1001", "1002", "0.05",
+        "2.03", "-1.001",
+    ];
+    for naming in [CurrencyNaming::Style, CurrencyNaming::Full] {
+        for style in [ReadingStyle::Precise, ReadingStyle::Natural] {
+            for locale in SpeechLocale::ALL {
+                let mut options = options(locale);
+                options.currency_naming = naming;
+                options.reading_style = style;
+                for code in CODES {
+                    for amount in amounts {
+                        if matches!(*code, "JPY" | "KRW") && amount.contains('.') {
+                            // Yen and won have no ordinary circulating minor unit;
+                            // preserving those fractional sources is deliberate.
+                            continue;
+                        }
+                        let source = format!("{code}{amount}");
+                        let result = normalize_for_speech(&source, &options).unwrap();
+                        assert!(
+                            result.fully_supported,
+                            "{locale:?} {naming:?} {style:?} {source}: {result:?}"
+                        );
+                        assert_ne!(
+                            result.text, source,
+                            "{locale:?} {naming:?} {style:?} {source}: {result:?}"
+                        );
+                        assert_eq!(result.readings[0].source, source);
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn gendered_currency_numerals_follow_reviewed_locale_specific_noun_gender() {
+    for (locale, source, expected) in [
+        (SpeechLocale::Pt, "NGN1", "uma Naira nigeriana"),
+        (SpeechLocale::Pt, "NGN2", "duas Nairas nigerianas"),
+        (SpeechLocale::Ru, "NGN1", "одна нигерийская найра"),
+        (SpeechLocale::Ru, "NGN2", "две нигерийские найры"),
+        (SpeechLocale::Ru, "BDT1", "одна бангладешская така"),
+        (SpeechLocale::Ru, "BDT2", "две бангладешские таки"),
+        (SpeechLocale::Pt, "NGN21", "vinte e uma Nairas nigerianas"),
+        (SpeechLocale::Ru, "BDT102", "сто две бангладешские таки"),
+        // These lexical names are masculine in the reviewed shared inventory.
+        (SpeechLocale::Es, "NGN1", "un naira nigeriano"),
+        (SpeechLocale::Fr, "NGN1", "un naira nigérian"),
+        (SpeechLocale::De, "NGN1", "ein Nigerianischer Naira"),
+        (SpeechLocale::Es, "NGN101", "ciento un nairas nigerianos"),
+    ] {
+        let mut options = options(locale);
+        options.reading_style = ReadingStyle::Natural;
+        options.currency_naming = CurrencyNaming::Full;
+        let result = normalize_for_speech(source, &options).unwrap();
+        assert!(result.fully_supported, "{locale:?} {source}: {result:?}");
+        assert_eq!(result.text, expected, "{locale:?} {source}: {result:?}");
+    }
+}
+
+#[test]
+fn precise_style_currency_fractions_fall_back_to_exact_decimal_readings_instead_of_dropping_support()
+ {
+    for (locale, source, expected) in [
+        (
+            SpeechLocale::En,
+            "KWD0.05",
+            "zero point zero five Kuwaiti dinars",
+        ),
+        (
+            SpeechLocale::En,
+            "CAD2.03",
+            "two point zero three Canadian dollars",
+        ),
+        (
+            SpeechLocale::En,
+            "RUB-1.001",
+            "minus one point zero zero one Russian rubles",
+        ),
+        (
+            SpeechLocale::Es,
+            "KWD0.05",
+            "cero coma cero cinco dinares kuwaitíes",
+        ),
+        (
+            SpeechLocale::Es,
+            "CAD2.03",
+            "dos coma cero tres dólares canadienses",
+        ),
+        (
+            SpeechLocale::Es,
+            "RUB-1.001",
+            "menos uno coma cero cero un rublos rusos",
+        ),
+    ] {
+        let mut options = options(locale);
+        options.reading_style = ReadingStyle::Precise;
+        options.currency_naming = CurrencyNaming::Style;
+        let result = normalize_for_speech(source, &options).unwrap();
+        assert!(result.fully_supported, "{locale:?} {source}: {result:?}");
+        assert_eq!(result.text, expected, "{locale:?} {source}: {result:?}");
     }
 }
 

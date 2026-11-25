@@ -237,7 +237,7 @@ fn times_have_validated_24_hour_fields_and_counter_readings() {
 }
 
 #[test]
-fn money_reads_minor_units_and_preserves_unhandled_precision_or_currency() {
+fn money_reads_minor_units_decimal_fallback_and_preserves_true_boundaries() {
     for (locale, code, integer, fraction, expected) in [
         (
             SpeechLocale::Es,
@@ -281,8 +281,17 @@ fn money_reads_minor_units_and_preserves_unhandled_precision_or_currency() {
         assert_eq!(r.text, expected, "{locale:?} {code}");
         assert!(r.fully_supported, "{r:?}");
     }
+    let exact_decimal = single(
+        SpeechLocale::Es,
+        "original",
+        SpeechValue::Currency {
+            code: "PEN".into(),
+            value: n("1", Some("123")),
+        },
+    );
+    assert!(exact_decimal.fully_supported, "{exact_decimal:?}");
+    assert_eq!(exact_decimal.text, "uno coma uno dos tres soles peruanos");
     for (locale, code, fraction) in [
-        (SpeechLocale::Es, "PEN", Some("123")),
         (SpeechLocale::En, "ZZZ", None),
         (SpeechLocale::En, "JPY", Some("01")),
     ] {

@@ -220,16 +220,23 @@ coverage of arbitrary nouns, grammatical cases, dialects, counters, or precision
 `CurrencyNaming::Full` uses these shared CLDR names independently of reading
 style: Natural English `US$7` can retain “seven US dollars.” It does not choose
 an ISO currency for an ambiguous symbol. Arabic additionally requires a reviewed
-count-noun and qualifier paradigm; unknown paradigms remain unsupported even
-when a CLDR display name exists. Currency precision and subunit limitations also
-remain explicit diagnostics. `CurrencyNaming::Style`, the default, preserves
-the established style-specific names.
-Arabic Full naming has reviewed paradigms for 18 of the 37 codes. The four
-feminine families INR/PKR/IDR/TRY use the shared feminine numeral core; counts
-ending in 01/02 above 99, such internal scale coefficients, and nonzero feminine
-currency fractions remain outside its reviewed domain. Unsupported readings
-retain their source and typed value. Exact zero fractions can be read as integer
-counts without deleting the fraction from IR.
+count-noun and qualifier paradigm rather than treating a CLDR display name as
+sufficient evidence for inflection. `CurrencyNaming::Style`, the default,
+preserves the established style-specific names.
+Arabic naming now has reviewed paradigms for all 37 shared codes, including
+irregular plurals, feminine families, fixed proper-country qualifiers and
+lexically disputed loanwords. Feminine higher compounds ending in 01/02 use the
+reviewed conjoined-cardinal forms, while masculine scale coefficients keep
+their own agreement. Nonzero decimal tails use exact independent decimal or
+rational readings because they do not agree with the currency noun. Exact zero
+fractions can be read as integer counts without deleting the fraction from IR.
+A twenty-language matrix exercises all shared currencies across zero, one,
+two, plural, compound, hundred/thousand and nonzero decimal regimes in both
+naming modes and reading styles. Nonzero fractional yen/won inputs remain
+deliberately source-preserving because those currencies have no ordinary
+circulating minor unit; the renderer does not invent one. When a precise style
+has no reviewed minor-unit composition, it falls back to the exact decimal major-currency
+reading rather than dropping support.
 Numeric ranges and independently checked composition rules are documented in
 [`src/speech/data/README.md`](../src/speech/data/README.md).
 

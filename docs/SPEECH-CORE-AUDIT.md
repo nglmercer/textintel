@@ -356,8 +356,10 @@ nouns remain masculine. Nonzero decimal tails are read independently of the
 currency noun because فاصلة separates two numerals; natural rational tails are
 governed by their denominator. Exact regression tests cover every shared
 currency in both short and full naming across zero, one, dual, plural,
-accusative, hundred/thousand compounds and nonzero decimal fractions. CLDR
-labels alone are still not treated as sufficient evidence for inflection.
+accusative, hundred/thousand compounds and nonzero decimal fractions. A second
+matrix covers the same regimes for all 37 shared currencies in every one of the
+twenty speech locales, in both reading styles and naming modes. CLDR labels
+alone are still not treated as sufficient evidence for inflection.
 The ruble noun/gender and plural are supported by [Birzeit Qabas](https://sina.birzeit.edu/qabas/lemma/2023241124)
 and a [university Arabic manual](https://skiu.ru/wp-content/uploads/2024/12/uchebnoe-posobie-arabskij-yazyk-v-religioznoj-sfere.-2-chast.pdf).
 WIPO documents the [Swiss-franc dual](https://www.wipo.int/ar/web/hague-system/hague-system-certified-documents)

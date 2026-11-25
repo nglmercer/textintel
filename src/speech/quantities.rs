@@ -1190,8 +1190,9 @@ fn render_money_amount(
     if options.reading_style == ReadingStyle::Precise
         && options.locale != SpeechLocale::Ar
         && options.currency_naming == CurrencyNaming::Style
+        && let Some(words) = money(options.locale, code, value)
     {
-        return money(options.locale, code, value);
+        return Some(words);
     }
     let locale = options.locale;
     let one = value.integer == "1"
@@ -1482,6 +1483,31 @@ pub(super) fn regional_arabic_currency_unit_variant(
         || arabic_currency_is_feminine(code)
         || !(3..=10).contains(&value.integer.parse::<u64>().ok()?)
     {
+        return None;
+    }
+    // The regional singular-unit construction is attested for established
+    // Arabic monetary-unit nouns such as dollar, dinar, riyal, pound, dirham,
+    // ruble, franc, and the invariant euro loan. Do not extrapolate it to every
+    // newly reviewed foreign noun merely because that noun is masculine.
+    if !matches!(
+        code.as_str(),
+        "USD"
+            | "CAD"
+            | "AUD"
+            | "NZD"
+            | "SGD"
+            | "TWD"
+            | "HKD"
+            | "GBP"
+            | "EGP"
+            | "KWD"
+            | "SAR"
+            | "BRL"
+            | "AED"
+            | "RUB"
+            | "CHF"
+            | "EUR"
+    ) {
         return None;
     }
     let name = if options.currency_naming == CurrencyNaming::Full {

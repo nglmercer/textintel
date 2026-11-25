@@ -271,10 +271,10 @@ include upstream invalid dates and reading-policy assumptions.
 
 Re-measured on the current tree with the automatic-policy command recorded in
 [`data/speech/current-metrics.json`](../data/speech/current-metrics.json)
-(544 cases, 216 exact, 303 accepted, 454 fully supported). The pinned snapshot
-predates the timestamp/abbreviation speech commits; the NeMo categories do not
-exercise those input types, so its per-category agreement is unchanged and the
-snapshot remains accurate for what it measures.
+(544 cases, 215 exact, 303 accepted, 454 fully supported). The automatic-policy
+snapshot is a support/agreement measurement, not a certification of reviewed
+currency grammar; most strict currency differences come from missing explicit
+locale/currency policy and reviewed register variants.
 
 Investigate failures before changing behavior. Examples illustrate different
 causes: English `123` differs by optional “and” and hyphenation; Japanese gold
@@ -325,9 +325,9 @@ example should become a reviewed regression only after deciding its intended
 locale, reading style, valid alternatives, and preservation policy. Do not
 replace its gold with whatever the implementation currently emits.
 
-Validation also passed 479 tests with all features, 446 tests with no default
+Validation also passed 803 tests with all features, 763 tests with no default
 features and all targets, Clippy with warnings denied, documentation without
-warnings, and a Rust 1.90 all-targets check. The compiling
+warnings, formatting checks, and a Rust 1.90 all-targets check. The compiling
 [`examples/speech.rs`](../examples/speech.rs) demonstrates preparation for a TTS consumer.
 
 ### Historical reproduction

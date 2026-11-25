@@ -733,6 +733,7 @@ fn regional_arabic_currency_units_compose_reviewed_masculine_names_and_complete_
                 ("AED", "درهم"),
                 ("RUB", "روبل"),
                 ("CHF", "فرنك"),
+                ("EUR", "يورو"),
             ] {
                 check(
                     &format!("{code}{amount}"),
@@ -759,6 +760,7 @@ fn regional_arabic_currency_units_compose_reviewed_masculine_names_and_complete_
             ("TWD", "دولار تايواني"),
             ("BRL", "ريال برازيلي"),
             ("EGP", "جنيه مصري"),
+            ("HKD", "دولار هونغ كونغ"),
         ] {
             check(
                 &format!("{code}4"),

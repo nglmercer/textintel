@@ -886,8 +886,21 @@ fn replace_suffix(value: String, from: &str, to: &str) -> String {
 pub(super) fn currency_gender(locale: SpeechLocale, code: &str) -> Option<&'static str> {
     use SpeechLocale::*;
     match locale {
-        Es | Pt | Fr if matches!(code, "GBP" | "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
-        Ru if matches!(code, "JPY" | "KRW" | "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
+        // Portuguese naira and rupee/lira-type currency nouns are feminine.
+        // Spanish usage is mixed but the shared lexical name uses masculine
+        // naira nigeriano, while French naira and German Naira are masculine;
+        // NGN is therefore deliberately absent from those branches.
+        Es | Pt if matches!(code, "GBP" | "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
+        Pt if code == "NGN" => Some("feminine"),
+        Fr if matches!(code, "GBP" | "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
+        // Russian иена/вона/така/найра and rupee/lira-type nouns are feminine.
+        Ru if matches!(
+            code,
+            "JPY" | "KRW" | "INR" | "PKR" | "IDR" | "TRY" | "BDT" | "NGN"
+        ) =>
+        {
+            Some("feminine")
+        }
         De if matches!(code, "INR" | "PKR" | "IDR" | "TRY") => Some("feminine"),
         _ => Some("masculine"),
     }
