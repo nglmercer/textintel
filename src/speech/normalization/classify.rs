@@ -301,7 +301,7 @@ fn is_vulgar_fraction(c: char) -> bool {
 
 /// Written currency marker.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Symbol {
+pub(crate) enum Symbol {
     Known(Currency),
     /// `$`: US dollars only where the locale says so.
     Dollar,
@@ -309,7 +309,7 @@ enum Symbol {
     Ambiguous,
 }
 
-fn symbol(raw: &str) -> Option<Symbol> {
+pub(crate) fn symbol(raw: &str) -> Option<Symbol> {
     Some(match raw {
         "S/" | "S/." | "PEN" => Symbol::Known(Currency::Pen),
         "€" | "EUR" => Symbol::Known(Currency::Eur),
@@ -324,9 +324,9 @@ fn symbol(raw: &str) -> Option<Symbol> {
 }
 
 /// Prefix symbols attached to the amount, longest first.
-const ATTACHED_PREFIXES: &[&str] = &["S/.", "S/", "US$", "R$", "$", "€", "£", "¥"];
+pub(crate) const ATTACHED_PREFIXES: &[&str] = &["S/.", "S/", "US$", "R$", "$", "€", "£", "¥"];
 /// Suffix symbols attached to the amount.
-const ATTACHED_SUFFIXES: &[&str] = &["€", "£", "$", "¥"];
+pub(crate) const ATTACHED_SUFFIXES: &[&str] = &["€", "£", "$", "¥"];
 
 /// Words after an amount that make a currency reading unsafe
 /// (`$1.5 million`).
@@ -356,6 +356,70 @@ pub(crate) const MERIDIEMS: &[(&str, Meridiem)] = &[
     ("AM", Meridiem::Am),
     ("PM", Meridiem::Pm),
 ];
+
+/// Shared versioned rendering context used by compatibility projections.
+#[derive(Clone, Copy)]
+pub(crate) struct RuleContext<'a> {
+    pub conv: &'a Conventions,
+    pub rules: &'a dyn LanguageRules,
+    pub locale: &'a str,
+}
+
+/// Project one already isolated legacy currency shape through the versioned
+/// currency policy. Shape recognition stays in the caller; this helper is the
+/// single compatibility implementation used by both the Italian classifier and
+/// typed-span adapters.
+pub(crate) fn project_money(
+    sym: Symbol,
+    amount_raw: &str,
+    start: usize,
+    end: usize,
+    next_word: Option<&str>,
+    context: RuleContext<'_>,
+) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
+    let parsed = parse_number(amount_raw, context.conv, true);
+    if parsed == NumParse::NotNumber {
+        return None;
+    }
+    let warning = |code| Some((None, Some(NormalizationWarning { code, start, end })));
+    let currency = match sym {
+        Symbol::Known(currency) => currency,
+        Symbol::Dollar => match context.conv.dollar {
+            Some(currency) => currency,
+            None => return warning(WarningCode::AmbiguousCurrency),
+        },
+        Symbol::Ambiguous => return warning(WarningCode::AmbiguousCurrency),
+    };
+    let amount = match parsed {
+        NumParse::Value(amount) => amount,
+        NumParse::TooLarge => return warning(WarningCode::NumberTooLarge),
+        _ => return warning(WarningCode::AmbiguousNumber),
+    };
+    if next_word.is_some_and(|word| SCALE_WORDS.contains(&word.to_lowercase().as_str())) {
+        return warning(WarningCode::AmbiguousCurrency);
+    }
+    let cents = match &amount.frac {
+        None => None,
+        Some(frac) if frac.len() == 2 && currency.has_subunit() => frac.parse::<u32>().ok(),
+        Some(_) => return warning(WarningCode::AmbiguousNumber),
+    };
+    if amount.negative {
+        return Some((None, None));
+    }
+    let replacement = context
+        .rules
+        .currency(currency, amount.int, cents, context.locale);
+    Some((
+        replacement.map(|replacement| TextChange {
+            kind: ChangeKind::Currency,
+            start,
+            end,
+            replacement,
+            confidence: Confidence::High,
+        }),
+        None,
+    ))
+}
 
 struct Classifier<'a> {
     text: &'a str,
@@ -478,7 +542,9 @@ impl<'a> Classifier<'a> {
         if let Some(next) = self.abbreviation(index) {
             return next;
         }
-        if let Some(next) = self.currency_symbol_field(index) {
+        if self.language == "it"
+            && let Some(next) = self.currency_symbol_field(index)
+        {
             return next;
         }
         if core.chars().any(is_vulgar_fraction) {
@@ -576,61 +642,26 @@ impl<'a> Classifier<'a> {
         end: usize,
         last_index: usize,
     ) -> Option<usize> {
-        let parsed = parse_number(amount_raw, &self.conv, true);
-        if parsed == NumParse::NotNumber {
-            return None;
-        }
-        let consumed = Some(last_index + 1);
-        let currency = match sym {
-            Symbol::Known(currency) => currency,
-            Symbol::Dollar => match self.conv.dollar {
-                Some(currency) => currency,
-                None => {
-                    self.warn(WarningCode::AmbiguousCurrency, start, end);
-                    return consumed;
-                }
+        let next_word = self.next_word(last_index);
+        let (change, warning) = project_money(
+            sym,
+            amount_raw,
+            start,
+            end,
+            next_word,
+            RuleContext {
+                conv: &self.conv,
+                rules: self.rules,
+                locale: self.locale,
             },
-            Symbol::Ambiguous => {
-                self.warn(WarningCode::AmbiguousCurrency, start, end);
-                return consumed;
-            }
-        };
-        let amount = match parsed {
-            NumParse::Value(amount) => amount,
-            NumParse::TooLarge => {
-                self.warn(WarningCode::NumberTooLarge, start, end);
-                return consumed;
-            }
-            _ => {
-                self.warn(WarningCode::AmbiguousNumber, start, end);
-                return consumed;
-            }
-        };
-        let followed_by_scale = self
-            .next_word(last_index)
-            .is_some_and(|w| SCALE_WORDS.contains(&w.to_lowercase().as_str()));
-        if followed_by_scale {
-            self.warn(WarningCode::AmbiguousCurrency, start, end);
-            return consumed;
+        )?;
+        if let Some(warning) = warning {
+            self.warnings.push(warning);
         }
-        let cents = match &amount.frac {
-            None => None,
-            Some(frac) if frac.len() == 2 && currency.has_subunit() => frac.parse::<u32>().ok(),
-            Some(_) => {
-                self.warn(WarningCode::AmbiguousNumber, start, end);
-                return consumed;
-            }
-        };
-        if amount.negative {
-            return consumed;
+        if let Some(change) = change {
+            self.changes.push(change);
         }
-        if let Some(spoken) = self
-            .rules
-            .currency(currency, amount.int, cents, self.locale)
-        {
-            self.change(ChangeKind::Currency, start, end, spoken);
-        }
-        consumed
+        Some(last_index + 1)
     }
 
     fn numeric(&mut self, index: usize) -> usize {
@@ -704,38 +735,44 @@ impl<'a> Classifier<'a> {
             }
         }
 
-        // Attached currency prefix / suffix.
-        for prefix in ATTACHED_PREFIXES {
-            if let Some(rest) = core.strip_prefix(prefix)
-                && rest.starts_with(|c: char| c.is_ascii_digit())
-                && let Some(sym) = symbol(prefix)
-            {
-                return self.money(sym, rest, start, end, index).unwrap_or(done);
+        // Attached currency prefix / suffix, percent, and unit forms are
+        // consumed from typed spans in typed languages. Italian remains on
+        // this legacy projection until it has a typed locale implementation.
+        if self.language == "it" {
+            for prefix in ATTACHED_PREFIXES {
+                if let Some(rest) = core.strip_prefix(prefix)
+                    && rest.starts_with(|c: char| c.is_ascii_digit())
+                    && let Some(sym) = symbol(prefix)
+                {
+                    return self.money(sym, rest, start, end, index).unwrap_or(done);
+                }
             }
-        }
-        for suffix in ATTACHED_SUFFIXES {
-            if let Some(rest) = core.strip_suffix(suffix)
-                && rest.ends_with(|c: char| c.is_ascii_digit())
-                && let Some(sym) = symbol(suffix)
-            {
-                return self.money(sym, rest, start, end, index).unwrap_or(done);
+            for suffix in ATTACHED_SUFFIXES {
+                if let Some(rest) = core.strip_suffix(suffix)
+                    && rest.ends_with(|c: char| c.is_ascii_digit())
+                    && let Some(sym) = symbol(suffix)
+                {
+                    return self.money(sym, rest, start, end, index).unwrap_or(done);
+                }
             }
-        }
-        if let Some(rest) = core.strip_suffix('%') {
-            self.percent(rest, start, end);
-            return done;
+            if let Some(rest) = core.strip_suffix('%') {
+                self.percent(rest, start, end);
+                return done;
+            }
         }
         if self.language == "it"
             && let Some(next) = self.ordinal(index)
         {
             return next;
         }
-        for (form, unit) in UNIT_FORMS {
-            if let Some(rest) = core.strip_suffix(form)
-                && rest.ends_with(|c: char| c.is_ascii_digit())
-            {
-                self.quantity(rest, *unit, start, end);
-                return done;
+        if self.language == "it" {
+            for (form, unit) in UNIT_FORMS {
+                if let Some(rest) = core.strip_suffix(form)
+                    && rest.ends_with(|c: char| c.is_ascii_digit())
+                {
+                    self.quantity(rest, *unit, start, end);
+                    return done;
+                }
             }
         }
         if core.contains('/') {
@@ -1037,7 +1074,9 @@ impl<'a> Classifier<'a> {
         let (negative, body) = strip_sign(core);
         let pure_digits = !negative && all_digits(body) && !is_protected_identifier(core);
 
-        if let Some(next) = self.joinable(index) {
+        if self.language == "it"
+            && let Some(next) = self.joinable(index)
+        {
             let next_core = self.core(next);
             let next_end = self.fields[next].core_end;
             if next_core == "%" {

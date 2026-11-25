@@ -9,6 +9,8 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ### Added
 
+- Consolidated joined quantity and currency dispatch in typed legacy languages: typed semantic spans now feed versioned percent, unit and money renderers while preserving symbol ambiguity, minor-unit precision, scale-word warnings, locale separator policy, quantity-context canonicalization, warning offsets, protected sources, and scientific/range precedence.
+
 - Consolidated plain-number dispatch in typed legacy languages: typed semantic spans now feed versioned cardinal/decimal/digit renderers while preserving separator ambiguity, leading-zero policy, quantity-context canonicalization, gender/counter diagnostics, signed/grouped digit reading, and numeric digit budgets.
 
 - Extended the semantic-dispatch consolidation to numeric calendar dates: typed date spans now feed the versioned locale renderers and ambiguity/invalid-date diagnostics in legacy languages, removing parallel date recognition outside Italian.

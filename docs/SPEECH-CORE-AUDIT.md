@@ -177,13 +177,15 @@ existing accent-folding policy retains script-specific marks.
    rendering budget even for source values that fit `u64`, preventing calls
    outside the numeric renderer's range. Typed legacy locales now consume one
    typed parse for timestamps, scientific notation, attached durations,
-   fractions, ranges, ordinals, two-component clocks, numeric calendar dates and plain numbers, with explicit
-   compatibility renderers retaining established versioned wording, gender
-   context and meridiem punctuation boundaries; Italian remains versioned-only
-   because it has no typed locale implementation. Currency dispatch, joined quantity `Amount` conversion
-   and established formatting still merit review; these are compatibility adapters,
-   not a second scientific, duration, fraction/range, grouping or Gregorian
-   source grammar.
+   fractions, ranges, ordinals, two-component clocks, numeric calendar dates,
+   plain numbers, percentages, legacy measure units and compatibility currencies,
+   with explicit compatibility renderers retaining established versioned wording,
+   gender context, quantity context, minor-unit precision, scale-word warnings
+   and meridiem punctuation boundaries; Italian remains versioned-only because
+   it has no typed locale implementation. Abbreviation dispatch, digit-run
+   protection, residual identifier policy and established formatting still merit
+   review; these are compatibility adapters, not a second scientific, duration,
+   fraction/range, grouping, Gregorian or quantity source grammar.
 
 2. **Two classification paths are still dispatched by language.**
    [`normalization/shared.rs`](../src/speech/normalization/shared.rs) sends eleven
@@ -196,10 +198,11 @@ existing accent-folding policy retains script-specific marks.
    branches skip it. Within augmentation, the typed document is now parsed once
    and compatibility adapters project timestamps, clocks and shared expression
    values from those semantic spans rather than running parallel source
-   recognizers. General semantic dispatch still differs by language, especially
-   for currencies. Both front ends should
-   ultimately consume the same parsed document once, retaining established
-   versioned wording as explicit rendering adapters.
+   recognizers. Numeric, calendar, clock and joined-quantity semantic dispatch
+   now consumes the typed spans in typed legacy languages; residual dispatch
+   still differs for abbreviations, digit runs and identifier-shaped text. Both
+   front ends should ultimately consume the same parsed document once, retaining
+   established versioned wording as explicit rendering adapters.
 
 3. **Keep regional interpretation and pronunciation scope explicit.**
    `locales::for_locale` now derives concrete regional records from the shared

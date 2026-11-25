@@ -639,6 +639,440 @@ fn legacy_range(
     })
 }
 
+type LegacyRow = (Option<TextChange>, Option<NormalizationWarning>);
+
+fn overlapping_field_indices(
+    fields: &[crate::speech::lexer::Field],
+    span: &SpeechSpan,
+) -> Vec<usize> {
+    fields
+        .iter()
+        .enumerate()
+        .filter(|(_, field)| field.core_start < span.end && span.start < field.core_end)
+        .map(|(index, _)| index)
+        .collect()
+}
+
+fn field_core(text: &str, field: crate::speech::lexer::Field) -> &str {
+    &text[field.core_start..field.core_end]
+}
+
+fn joinable_field(
+    text: &str,
+    fields: &[crate::speech::lexer::Field],
+    index: usize,
+) -> Option<usize> {
+    let current = fields[index];
+    let next_index = index + 1;
+    let next = *fields.get(next_index)?;
+    let gap = &text[current.end..next.start];
+    (current.bare_end()
+        && next.bare_start()
+        && !next.protected
+        && next.has_core()
+        && matches!(gap, " " | "\u{a0}" | "\u{202f}"))
+    .then_some(next_index)
+}
+
+fn next_word_after_field<'a>(
+    text: &'a str,
+    fields: &[crate::speech::lexer::Field],
+    index: usize,
+) -> Option<&'a str> {
+    let current = fields[index];
+    let next = *fields.get(index + 1)?;
+    let gap = &text[current.end..next.start];
+    (current.bare_end() && next.bare_start() && next.has_core() && !gap.contains('\n'))
+        .then(|| field_core(text, next))
+}
+
+/// Whether a core would reach the legacy plain-number dispatcher. Earlier
+/// numeric owners (scientific notation, Natural durations, slashes, clocks,
+/// ranges and ISO dates) consume or preserve the core before any separated
+/// percent/unit/currency join may run.
+fn legacy_plain_dispatch_core(core: &str, style: super::ReadingStyle) -> bool {
+    if super::classify::parse_scientific(core).is_some() {
+        return false;
+    }
+    if style == super::ReadingStyle::Natural
+        && let Some((hours, minutes, seconds)) = super::classify::parse_duration(core)
+        && [hours, minutes, seconds]
+            .iter()
+            .all(|value| *value <= super::classify::MAX_INTEGER)
+    {
+        return false;
+    }
+    !core.contains(['/', ':', '–']) && !(core.matches('-').count() == 2 && !core.starts_with('-'))
+}
+
+/// Project a typed or partially typed currency candidate through the exact
+/// versioned money policy. Typed parsing proves that the source is quantity-like;
+/// this adapter intentionally re-applies the legacy lexical shape so ambiguous
+/// symbols, scale words, subunit precision, locale separator policy and warning
+/// offsets remain byte-for-byte compatible.
+fn legacy_money(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<LegacyRow> {
+    if !matches!(
+        &span.value,
+        SpeechValue::Number { .. }
+            | SpeechValue::Ambiguous { .. }
+            | SpeechValue::Currency { .. }
+            | SpeechValue::Identifier { .. }
+    ) {
+        return None;
+    }
+    let conv = rules.conventions(&opts.locale)?;
+    let text = source.text();
+    let fields = source.fields();
+    for index in overlapping_field_indices(&fields, span) {
+        let field = fields[index];
+        let core = field_core(text, field);
+        if field.protected || crate::speech::lexer::is_protected_identifier(core) {
+            continue;
+        }
+
+        // Separate prefix symbol (`S/ 150,50`, `USD 12`). The lexer strips the
+        // final dot in `S/.` as trailing punctuation, just as in the legacy
+        // classifier, so retain that special shape exactly.
+        let trail = &text[field.core_end..field.end];
+        let prefix_symbol = if core == "S/" && trail == "." {
+            super::classify::symbol("S/.")
+        } else if field.bare_end() {
+            super::classify::symbol(core)
+        } else {
+            None
+        };
+        if let Some(sym) = prefix_symbol {
+            let amount_index = index + 1;
+            let amount = fields.get(amount_index).copied();
+            let amount_joined = amount.is_some_and(|amount| {
+                let gap = &text[field.end..amount.start];
+                matches!(gap, " " | "\u{a0}" | "\u{202f}")
+                    && amount.bare_start()
+                    && !amount.protected
+            });
+            if let Some(amount) = amount.filter(|_| amount_joined)
+                && let Some(row) = super::classify::project_money(
+                    sym,
+                    field_core(text, amount),
+                    field.core_start,
+                    amount.core_end,
+                    next_word_after_field(text, &fields, amount_index),
+                    super::classify::RuleContext {
+                        conv: &conv,
+                        rules,
+                        locale: &opts.locale,
+                    },
+                )
+            {
+                return Some(row);
+            }
+        }
+
+        // Attached prefix / suffix (`$12.50`, `3€`).
+        for prefix in super::classify::ATTACHED_PREFIXES {
+            if let Some(rest) = core.strip_prefix(prefix)
+                && rest.starts_with(|c: char| c.is_ascii_digit())
+                && let Some(sym) = super::classify::symbol(prefix)
+                && let Some(row) = super::classify::project_money(
+                    sym,
+                    rest,
+                    field.core_start,
+                    field.core_end,
+                    next_word_after_field(text, &fields, index),
+                    super::classify::RuleContext {
+                        conv: &conv,
+                        rules,
+                        locale: &opts.locale,
+                    },
+                )
+            {
+                return Some(row);
+            }
+        }
+        for suffix in super::classify::ATTACHED_SUFFIXES {
+            if let Some(rest) = core.strip_suffix(suffix)
+                && rest.ends_with(|c: char| c.is_ascii_digit())
+                && let Some(sym) = super::classify::symbol(suffix)
+                && let Some(row) = super::classify::project_money(
+                    sym,
+                    rest,
+                    field.core_start,
+                    field.core_end,
+                    next_word_after_field(text, &fields, index),
+                    super::classify::RuleContext {
+                        conv: &conv,
+                        rules,
+                        locale: &opts.locale,
+                    },
+                )
+            {
+                return Some(row);
+            }
+        }
+
+        // Separated suffix (`150 USD`, `20 $`). Peruvian `S/` remains
+        // prefix-only in the versioned grammar.
+        if legacy_plain_dispatch_core(core, opts.reading_style)
+            && core.bytes().any(|byte| byte.is_ascii_digit())
+            && let Some(symbol_index) = joinable_field(text, &fields, index)
+        {
+            let symbol_field = fields[symbol_index];
+            let symbol_core = field_core(text, symbol_field);
+            if symbol_core != "S/"
+                && symbol_core != "S/."
+                && let Some(sym) = super::classify::symbol(symbol_core)
+                && let Some(row) = super::classify::project_money(
+                    sym,
+                    core,
+                    field.core_start,
+                    symbol_field.core_end,
+                    next_word_after_field(text, &fields, symbol_index),
+                    super::classify::RuleContext {
+                        conv: &conv,
+                        rules,
+                        locale: &opts.locale,
+                    },
+                )
+            {
+                return Some(row);
+            }
+        }
+    }
+    None
+}
+
+fn percent_row(
+    raw: &str,
+    start: usize,
+    end: usize,
+    rules: &dyn super::rules::LanguageRules,
+    conv: &super::rules::Conventions,
+    locale: &str,
+) -> LegacyRow {
+    use super::classify::NumParse;
+    match super::classify::parse_number(raw, conv, false) {
+        NumParse::Value(amount) => (
+            rules
+                .percent(&amount, locale)
+                .map(|replacement| TextChange {
+                    kind: ChangeKind::Percentage,
+                    start,
+                    end,
+                    replacement,
+                    confidence: Confidence::High,
+                }),
+            None,
+        ),
+        NumParse::Ambiguous => (
+            None,
+            Some(NormalizationWarning {
+                code: WarningCode::AmbiguousNumber,
+                start,
+                end,
+            }),
+        ),
+        NumParse::TooLarge => (
+            None,
+            Some(NormalizationWarning {
+                code: WarningCode::NumberTooLarge,
+                start,
+                end,
+            }),
+        ),
+        NumParse::NotNumber => (None, None),
+    }
+}
+
+/// Project the two legacy percent shapes (`12,5%` and `12,5 %`) without
+/// widening them to the typed prefix-percent grammar.
+fn legacy_percent(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<LegacyRow> {
+    if !matches!(
+        &span.value,
+        SpeechValue::Number { .. }
+            | SpeechValue::Ambiguous { .. }
+            | SpeechValue::Percent { .. }
+            | SpeechValue::Identifier { .. }
+    ) {
+        return None;
+    }
+    let conv = rules.conventions(&opts.locale)?;
+    let text = source.text();
+    let fields = source.fields();
+    for index in overlapping_field_indices(&fields, span) {
+        let field = fields[index];
+        let core = field_core(text, field);
+        if field.protected || crate::speech::lexer::is_protected_identifier(core) {
+            continue;
+        }
+        if let Some(raw) = core.strip_suffix('%')
+            && !raw.is_empty()
+            && legacy_plain_dispatch_core(raw, opts.reading_style)
+        {
+            return Some(percent_row(
+                raw,
+                field.core_start,
+                field.core_end,
+                rules,
+                &conv,
+                &opts.locale,
+            ));
+        }
+        if legacy_plain_dispatch_core(core, opts.reading_style)
+            && core.bytes().any(|byte| byte.is_ascii_digit())
+            && let Some(percent_index) = joinable_field(text, &fields, index)
+        {
+            let percent = fields[percent_index];
+            if field_core(text, percent) == "%" {
+                return Some(percent_row(
+                    core,
+                    field.core_start,
+                    percent.core_end,
+                    rules,
+                    &conv,
+                    &opts.locale,
+                ));
+            }
+        }
+    }
+    None
+}
+
+fn unit_row(
+    raw: &str,
+    unit: super::rules::Unit,
+    start: usize,
+    end: usize,
+    warning_end: usize,
+    context: super::classify::RuleContext<'_>,
+    number_context: super::classify::NumberContext,
+) -> LegacyRow {
+    use super::classify::NumParse;
+    match super::classify::parse_number_in(raw, context.conv, number_context) {
+        NumParse::Value(amount) => (
+            context
+                .rules
+                .unit(&amount, unit, context.locale)
+                .map(|replacement| TextChange {
+                    kind: ChangeKind::Unit,
+                    start,
+                    end,
+                    replacement,
+                    confidence: Confidence::High,
+                }),
+            None,
+        ),
+        NumParse::Ambiguous => (
+            None,
+            Some(NormalizationWarning {
+                code: WarningCode::AmbiguousNumber,
+                start,
+                end: warning_end,
+            }),
+        ),
+        NumParse::TooLarge => (
+            None,
+            Some(NormalizationWarning {
+                code: WarningCode::NumberTooLarge,
+                start,
+                end: warning_end,
+            }),
+        ),
+        NumParse::NotNumber => (None, None),
+    }
+}
+
+/// Project the versioned unit dictionary over typed measure candidates. The
+/// warning-span asymmetry is deliberate compatibility: attached malformed units
+/// warn over the full core, while separated malformed units warn only over the
+/// amount field even though the unit is consumed.
+fn legacy_unit(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<LegacyRow> {
+    if !matches!(
+        &span.value,
+        SpeechValue::Number { .. }
+            | SpeechValue::Ambiguous { .. }
+            | SpeechValue::Measure { .. }
+            | SpeechValue::Identifier { .. }
+    ) {
+        return None;
+    }
+    let conv = rules.conventions(&opts.locale)?;
+    let text = source.text();
+    let fields = source.fields();
+    for index in overlapping_field_indices(&fields, span) {
+        let field = fields[index];
+        let core = field_core(text, field);
+        if field.protected || crate::speech::lexer::is_protected_identifier(core) {
+            continue;
+        }
+        for (form, unit) in super::rules::UNIT_FORMS {
+            if let Some(rest) = core.strip_suffix(form)
+                && rest.ends_with(|c: char| c.is_ascii_digit())
+                && legacy_plain_dispatch_core(rest, opts.reading_style)
+            {
+                return Some(unit_row(
+                    rest,
+                    *unit,
+                    field.core_start,
+                    field.core_end,
+                    field.core_end,
+                    super::classify::RuleContext {
+                        conv: &conv,
+                        rules,
+                        locale: &opts.locale,
+                    },
+                    super::classify::NumberContext::Plain,
+                ));
+            }
+        }
+        // Separated units are reached only when the core would have reached
+        // the legacy plain-number dispatcher. Ranges, clocks, slashes and ISO
+        // dates have earlier semantic ownership and must not be swallowed here.
+        if legacy_plain_dispatch_core(core, opts.reading_style)
+            && core.bytes().any(|byte| byte.is_ascii_digit())
+            && let Some(unit_index) = joinable_field(text, &fields, index)
+        {
+            let unit_field = fields[unit_index];
+            let unit_core = field_core(text, unit_field);
+            if let Some(unit) = super::rules::unit_from_str(unit_core) {
+                let context = if rules.quantity_context(unit_core) {
+                    super::classify::NumberContext::Quantity
+                } else {
+                    super::classify::NumberContext::Plain
+                };
+                return Some(unit_row(
+                    core,
+                    unit,
+                    field.core_start,
+                    unit_field.core_end,
+                    field.core_end,
+                    super::classify::RuleContext {
+                        conv: &conv,
+                        rules,
+                        locale: &opts.locale,
+                    },
+                    context,
+                ));
+            }
+        }
+    }
+    None
+}
+
 fn all_ascii_digits(source: &str) -> bool {
     !source.is_empty() && source.bytes().all(|byte| byte.is_ascii_digit())
 }
@@ -990,6 +1424,15 @@ fn legacy_row(
     opts: &NormalizeOptions,
 ) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
     let _ = reading;
+    if let Some(row) = legacy_money(source, span, rules, opts) {
+        return Some(row);
+    }
+    if let Some(row) = legacy_percent(source, span, rules, opts) {
+        return Some(row);
+    }
+    if let Some(row) = legacy_unit(source, span, rules, opts) {
+        return Some(row);
+    }
     if let Some(row) = legacy_plain_number(source, span, rules, opts) {
         return Some(row);
     }

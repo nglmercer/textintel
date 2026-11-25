@@ -313,10 +313,12 @@ Recommended implementation order:
    genitive endpoints, but cross-locale wording still needs native review.
 4. Continue consolidating semantic dispatch around the shared typed document.
    Source protection, timestamps, scientific notation, attached durations,
-   fractions, ranges, ordinals, two-component clocks, numeric calendar dates and plain numbers now use shared
-   parsing/shape evidence with versioned adapters retaining offsets, warnings,
-   context-sensitive morphology and compatibility wording; broader
-   currency and joined-quantity dispatch still needs consolidation.
+   fractions, ranges, ordinals, two-component clocks, numeric calendar dates,
+   plain numbers, percentages, legacy measure units and compatibility currencies
+   now use shared parsing/shape evidence with versioned adapters retaining
+   offsets, warnings, context-sensitive morphology and compatibility wording;
+   abbreviation, digit-run and residual identifier dispatch still needs
+   consolidation.
 5. Context distinguishing padded counts, phone/serial/postal identifiers,
    mixed-script text, and domain abbreviations. Add independently reviewed
    minimal pairs before expanding transformations.

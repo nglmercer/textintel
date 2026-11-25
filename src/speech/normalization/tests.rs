@@ -506,6 +506,70 @@ fn pure_unsigned_integer_compatibility_preserves_legacy_context_policy() {
 }
 
 #[test]
+fn joined_quantity_compatibility_preserves_legacy_shapes_and_warning_spans() {
+    assert_eq!(
+        spoken("12.5 %", "en", Some("en-US")),
+        "twelve point five percent"
+    );
+    assert_eq!(spoken("20 $", "en", Some("en-US")), "twenty dollars");
+    assert_eq!(spoken("S/. 21", "en", Some("en-US")), "twenty-one soles");
+    assert_eq!(spoken("007 kg", "es", Some("es-PE")), "siete kilogramos");
+    assert_eq!(
+        spoken("1.234 kg", "es", Some("es-PE")),
+        "mil doscientos treinta y cuatro kilogramos"
+    );
+    assert_eq!(
+        spoken("1e2 kg", "en", Some("en-US")),
+        "one times ten to the power of two kg"
+    );
+    assert_eq!(spoken("`12 kg`", "en", Some("en-US")), "`12 kg`");
+    assert!(warning_codes("`12 kg`", "en", Some("en-US")).is_empty());
+
+    let warning_span = |text: &str, language: &str, locale: &str| {
+        let result = normalize(text, &opts(language, Some(locale))).unwrap();
+        assert_eq!(result.spoken, text);
+        result
+            .warnings
+            .iter()
+            .map(|warning| (warning.code, warning.start, warning.end))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        warning_span("USD 5 million", "en", "en-US"),
+        vec![(WarningCode::AmbiguousCurrency, 0, 5)]
+    );
+    assert_eq!(
+        warning_span("$1.5 million", "en", "en-US"),
+        vec![(WarningCode::AmbiguousCurrency, 0, 4)]
+    );
+    assert_eq!(
+        warning_span("12.50 €", "es", "es-PE"),
+        vec![(WarningCode::AmbiguousNumber, 0, 9)]
+    );
+    assert_eq!(
+        warning_span("1.5 L", "es", "es-PE"),
+        vec![(WarningCode::AmbiguousNumber, 0, 3)]
+    );
+    assert_eq!(
+        warning_span("1.5L", "es", "es-PE"),
+        vec![(WarningCode::AmbiguousNumber, 0, 4)]
+    );
+
+    let mut digits = opts("en", Some("en-US"));
+    digits.reading_style = ReadingStyle::Digits;
+    let ranged = normalize("10–15kg", &digits).unwrap();
+    assert_eq!(ranged.spoken, "ten to fifteenkg");
+    assert_eq!(
+        ranged
+            .changes
+            .iter()
+            .map(|change| (change.kind, change.start, change.end))
+            .collect::<Vec<_>>(),
+        vec![(ChangeKind::Range, 0, 7)]
+    );
+}
+
+#[test]
 fn protected_tokens_are_untouched() {
     for text in [
         "Minecraft 1.21.11",
