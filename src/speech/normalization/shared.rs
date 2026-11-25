@@ -801,6 +801,72 @@ fn legacy_clock(
     None
 }
 
+fn legacy_date(
+    span: &SpeechSpan,
+    rules: &dyn super::rules::LanguageRules,
+    opts: &NormalizeOptions,
+) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
+    use crate::speech::temporal::{DatePresentation, TemporalValue};
+    let fields = match &span.value {
+        SpeechValue::Date { year, month, day } => Some((*year, *month, *day)),
+        SpeechValue::Temporal {
+            value:
+                TemporalValue::Date {
+                    year: Some(year),
+                    month: Some(month),
+                    day: Some(day),
+                    presentation: DatePresentation::Numeric,
+                    connector: None,
+                    year_label: false,
+                },
+        } => year.parse::<u32>().ok().map(|year| (year, *month, *day)),
+        _ => None,
+    };
+    if let Some((year, month, day)) = fields {
+        let replacement = rules.date(year, month, day, &opts.locale)?;
+        return Some((
+            Some(TextChange {
+                kind: ChangeKind::Date,
+                start: span.start,
+                end: span.end,
+                replacement,
+                confidence: Confidence::High,
+            }),
+            None,
+        ));
+    }
+    if !matches!(span.value, SpeechValue::Ambiguous { .. })
+        || span.source.chars().any(|ch| matches!(ch, 'T' | 't' | ':'))
+        || !(span.source.contains('/') || span.source.matches('-').count() == 2)
+    {
+        return None;
+    }
+    let parts: Vec<&str> = span.source.split('/').collect();
+    if matches!(parts.as_slice(), [a, b, year] if a.len() <= 2 && b.len() <= 2 && year.len() == 2) {
+        return Some((
+            None,
+            Some(NormalizationWarning {
+                code: WarningCode::AmbiguousDate,
+                start: span.start,
+                end: span.end,
+            }),
+        ));
+    }
+    let conv = rules.conventions(&opts.locale)?;
+    let Err(code) = super::classify::shared_date_fields(&span.source, &conv, opts.locale_explicit)
+    else {
+        return None;
+    };
+    Some((
+        None,
+        Some(NormalizationWarning {
+            code,
+            start: span.start,
+            end: span.end,
+        }),
+    ))
+}
+
 fn timestamp_shaped(source: &str) -> bool {
     source.len() >= 11
         && source.as_bytes().get(4) == Some(&b'-')
@@ -839,6 +905,9 @@ fn legacy_row(
         return Some((Some(change), None));
     }
     if let Some(row) = legacy_clock(source, span, rules, opts) {
+        return Some(row);
+    }
+    if let Some(row) = legacy_date(span, rules, opts) {
         return Some(row);
     }
     if timestamp_shaped(&span.source) && matches!(span.value, SpeechValue::Ambiguous { .. }) {

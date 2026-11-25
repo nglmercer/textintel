@@ -197,7 +197,7 @@ pub(crate) fn parse_number_in(raw: &str, conv: &Conventions, context: NumberCont
 /// Adapt shared date semantics to the versioned API's existing warning policy.
 /// Unambiguous day/month order wins before an explicit locale default; the
 /// versioned four-digit-year profile remains restricted to years 1000–9999.
-fn shared_date_fields(
+pub(crate) fn shared_date_fields(
     raw: &str,
     conv: &Conventions,
     locale_explicit: bool,
@@ -739,7 +739,9 @@ impl<'a> Classifier<'a> {
             }
         }
         if core.contains('/') {
-            self.slash(core, start, end);
+            if self.language == "it" {
+                self.slash(core, start, end);
+            }
             return done;
         }
         if core.contains(':') {
@@ -755,7 +757,9 @@ impl<'a> Classifier<'a> {
             return done;
         }
         if core.matches('-').count() == 2 && !core.starts_with('-') {
-            self.iso_date(core, start, end);
+            if self.language == "it" {
+                self.iso_date(core, start, end);
+            }
             return done;
         }
         self.plain_number(index)
