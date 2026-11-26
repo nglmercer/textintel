@@ -337,7 +337,7 @@ fn plain_integer(raw: &str) -> Option<u64> {
     raw.parse().ok().filter(|n| *n <= MAX_INTEGER)
 }
 
-fn is_vulgar_fraction(c: char) -> bool {
+pub(super) fn is_vulgar_fraction(c: char) -> bool {
     matches!(c, '\u{00BC}'..='\u{00BE}' | '\u{2150}'..='\u{215F}' | '\u{2189}')
 }
 

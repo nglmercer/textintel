@@ -618,6 +618,24 @@ fn fractions_and_leading_zeros_warn() {
 }
 
 #[test]
+fn vulgar_fraction_compatibility_does_not_need_the_legacy_classifier() {
+    for style in [ReadingStyle::Precise, ReadingStyle::Digits] {
+        let result = normalize("½", &styled_opts("en", Some("en-US"), style)).unwrap();
+        assert_eq!(result.spoken, "½");
+        assert_eq!(
+            result.warnings.iter().map(|w| w.code).collect::<Vec<_>>(),
+            vec![WarningCode::AmbiguousFraction]
+        );
+    }
+    // The historical warning is superseded only when a typed row resolves the
+    // same span as genuinely new shared coverage.
+    let natural = styled_opts("pt", Some("pt-BR"), ReadingStyle::Natural);
+    let result = normalize("½", &natural).unwrap();
+    assert_eq!(result.spoken, "um dividido por dois");
+    assert!(result.warnings.is_empty());
+}
+
+#[test]
 fn large_numbers_are_preserved() {
     let text = "1000000000000000";
     assert_eq!(spoken(text, "es", None), text);

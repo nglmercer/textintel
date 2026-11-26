@@ -311,14 +311,16 @@ Recommended implementation order:
    timestamp IR/rendering, the versioned adapters now cover the shared
    expression families across typed legacy languages, and Russian ranges use
    genitive endpoints, but cross-locale wording still needs native review.
-4. Continue consolidating semantic dispatch around the shared typed document.
-   Source protection, timestamps, scientific notation, attached durations,
-   fractions, ranges, ordinals, two-component clocks, numeric calendar dates,
-   plain numbers, percentages, legacy measure units, compatibility currencies
-   and pre-catalog abbreviations now use shared parsing/shape evidence with
+4. Semantic dispatch in typed legacy languages is consolidated around the
+   shared typed document. Source protection, timestamps, scientific notation,
+   attached durations, fractions, ranges, ordinals, two-component clocks,
+   numeric calendar dates, plain numbers, percentages, legacy measure units,
+   compatibility currencies, pre-catalog abbreviations, digit-run protection
+   and vulgar-fraction diagnostics use shared parsing/shape evidence with
    versioned adapters retaining offsets, warnings, context-sensitive morphology
-   and compatibility wording; residual identifier dispatch still needs
-   consolidation.
+   and compatibility wording. Identifier-shaped spans remain fail-closed
+   application data; adapters inspect them only to preserve malformed localized
+   quantity warnings exactly.
 5. Context distinguishing padded counts, phone/serial/postal identifiers,
    mixed-script text, and domain abbreviations. Add independently reviewed
    minimal pairs before expanding transformations.

@@ -709,6 +709,35 @@ fn legacy_digit_run_membership(text: &str, fields: &[crate::speech::lexer::Field
     members
 }
 
+/// Warnings the versioned classifier attached to vulgar-fraction fields.
+/// Typed parsing only supports those forms in Natural style, so this lexical
+/// adapter preserves the Precise/Digits diagnostics and the historical
+/// warning-first ordering before a typed Natural row may resolve the span.
+fn legacy_vulgar_fraction_warnings(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+) -> Vec<NormalizationWarning> {
+    let text = source.text();
+    source
+        .fields()
+        .iter()
+        .filter(|field| field.has_core() && !field.protected)
+        .filter_map(|field| {
+            let core = field_core(text, *field);
+            if !core.chars().any(super::classify::is_vulgar_fraction) {
+                return None;
+            }
+            let (_, body) = super::classify::strip_sign(core);
+            body.chars()
+                .all(|c| c.is_ascii_digit() || super::classify::is_vulgar_fraction(c))
+                .then_some(NormalizationWarning {
+                    code: WarningCode::AmbiguousFraction,
+                    start: field.core_start,
+                    end: field.core_end,
+                })
+        })
+        .collect()
+}
+
 /// Whether a core would reach the legacy plain-number dispatcher. Earlier
 /// numeric owners (scientific notation, Natural durations, slashes, clocks,
 /// ranges and ISO dates) consume or preserve the core before any separated
@@ -1541,6 +1570,14 @@ pub(super) fn augment(
     let analysis = analyze(source, opts)?;
     let fields = source.fields();
     let digit_run_members = legacy_digit_run_membership(text, &fields);
+    for warning in legacy_vulgar_fraction_warnings(source) {
+        if !warnings
+            .iter()
+            .any(|old| old.start < warning.end && warning.start < old.end)
+        {
+            warnings.push(warning);
+        }
+    }
     for (span, reading) in analysis.rows() {
         if overlapping_field_indices(&fields, span)
             .iter()

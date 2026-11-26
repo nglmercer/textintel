@@ -183,26 +183,30 @@ existing accent-folding policy retains script-specific marks.
    established versioned wording, gender context, quantity context, minor-unit
    precision, scale-word warnings and meridiem punctuation boundaries; Italian
    remains versioned-only because it has no typed locale implementation.
-   Residual identifier policy and established formatting still merit review;
-   these are compatibility adapters, not a second scientific, duration,
-   fraction/range, grouping, Gregorian or quantity source grammar.
+   Identifier-shaped spans remain fail-closed application data. Adapters
+   inspect them only because the typed parser can use an alphanumeric shape for
+   a malformed localized quantity candidate; suppressing that inspection would
+   lose established warnings. This is compatibility evidence, not a second
+   scientific, duration, fraction/range, grouping, Gregorian or quantity source
+   grammar.
 
-2. **Two classification paths are still dispatched by language.**
+2. **The legacy field classifier is now confined to Italian and unknown pass-through languages.**
    [`normalization/shared.rs`](../src/speech/normalization/shared.rs) sends eleven
-   languages directly to the typed core and augments legacy languages separately.
-   The choice now comes from `has_versioned_adapter` in the shared locale
-   registry, so adding a language no longer requires a second dispatch list.
-   The private `LexicalSource` now shares the original code/tag protection map
-   across legacy classification and typed augmentation within `normalize`;
-   there is at most one protection scan per call, and `Off` / structured JSON
-   branches skip it. Within augmentation, the typed document is now parsed once
-   and compatibility adapters project timestamps, clocks and shared expression
-   values from those semantic spans rather than running parallel source
-   recognizers. Numeric, calendar, clock and joined-quantity semantic dispatch
-   now consumes the typed spans in typed legacy languages; residual dispatch
-   still differs for identifier-shaped text. Both
-   front ends should ultimately consume the same parsed document once, retaining
-   established versioned wording as explicit rendering adapters.
+   shared-only languages directly to the typed core. Typed legacy languages now
+   parse the same typed document once and project versioned behavior through
+   explicit compatibility adapters; they no longer run the legacy field
+   classifier at all. Italian remains on that classifier because it has no
+   typed locale implementation. The choice comes from `has_versioned_adapter`
+   in the shared locale registry, so adding a language no longer requires a
+   second dispatch list. The private `LexicalSource` shares the original
+   code/tag protection map across classification and typed augmentation within
+   `normalize`; there is at most one protection scan per call, and `Off` /
+   structured JSON branches skip it. Within augmentation, compatibility
+   adapters project timestamps, clocks, expressions, numeric/calendar values,
+   joined quantities, abbreviations, digit-run protection and vulgar-fraction
+   diagnostics from typed spans or explicit lexical guards rather than parallel
+   recognizers. Versioned wording remains an explicit rendering adapter over
+   the shared parsed document.
 
 3. **Keep regional interpretation and pronunciation scope explicit.**
    `locales::for_locale` now derives concrete regional records from the shared

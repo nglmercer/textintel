@@ -245,6 +245,14 @@ pub fn normalize(text: &str, opts: &NormalizeOptions) -> Result<NormalizedText, 
             let source = lexer::LexicalSource::new(text);
             if shared::uses_shared(&opts.language) {
                 shared::classify(&source, opts)?
+            } else if opts.language.parse::<crate::speech::SpeechLocale>().is_ok() {
+                // Typed legacy languages consume the same typed document as the
+                // shared frontend. Compatibility adapters in `augment` now own
+                // all versioned presentation and diagnostics for them; the
+                // legacy field classifier remains the Italian implementation.
+                let (mut changes, mut warnings) = (Vec::new(), Vec::new());
+                shared::augment(&source, opts, language_rules, &mut changes, &mut warnings)?;
+                (changes, warnings)
             } else {
                 let (mut changes, mut warnings) = classify::classify(&source, language_rules, opts);
                 shared::augment(&source, opts, language_rules, &mut changes, &mut warnings)?;
