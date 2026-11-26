@@ -178,13 +178,13 @@ existing accent-folding policy retains script-specific marks.
    outside the numeric renderer's range. Typed legacy locales now consume one
    typed parse for timestamps, scientific notation, attached durations,
    fractions, ranges, ordinals, two-component clocks, numeric calendar dates,
-   plain numbers, percentages, legacy measure units and compatibility currencies,
-   with explicit compatibility renderers retaining established versioned wording,
-   gender context, quantity context, minor-unit precision, scale-word warnings
-   and meridiem punctuation boundaries; Italian remains versioned-only because
-   it has no typed locale implementation. Abbreviation dispatch, residual
-   identifier policy and established formatting still merit review; these are
-   compatibility adapters, not a second scientific, duration,
+   plain numbers, percentages, legacy measure units, compatibility currencies
+   and pre-catalog abbreviations, with explicit compatibility renderers retaining
+   established versioned wording, gender context, quantity context, minor-unit
+   precision, scale-word warnings and meridiem punctuation boundaries; Italian
+   remains versioned-only because it has no typed locale implementation.
+   Residual identifier policy and established formatting still merit review;
+   these are compatibility adapters, not a second scientific, duration,
    fraction/range, grouping, Gregorian or quantity source grammar.
 
 2. **Two classification paths are still dispatched by language.**
@@ -200,7 +200,7 @@ existing accent-folding policy retains script-specific marks.
    values from those semantic spans rather than running parallel source
    recognizers. Numeric, calendar, clock and joined-quantity semantic dispatch
    now consumes the typed spans in typed legacy languages; residual dispatch
-   still differs for abbreviations and identifier-shaped text. Both
+   still differs for identifier-shaped text. Both
    front ends should ultimately consume the same parsed document once, retaining
    established versioned wording as explicit rendering adapters.
 

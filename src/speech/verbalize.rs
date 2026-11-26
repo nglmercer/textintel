@@ -34,6 +34,14 @@ pub fn verbalize_document_with_options(
     document: &SpeechDocument,
     options: &SpeechOptions,
 ) -> Result<SpeechNormalization, TextIntelError> {
+    verbalize_document_with_mode(document, options, super::abbreviations::MatcherMode::Typed)
+}
+
+pub(crate) fn verbalize_document_with_mode(
+    document: &SpeechDocument,
+    options: &SpeechOptions,
+    abbreviation_mode: super::abbreviations::MatcherMode,
+) -> Result<SpeechNormalization, TextIntelError> {
     options.validate()?;
     let length = document.text.chars().count();
     if length > options.max_input_chars {
@@ -69,11 +77,12 @@ pub fn verbalize_document_with_options(
             SpeechValue::Text => (Some(span.source.clone()), None),
             SpeechValue::Abbreviation { id } => {
                 let matcher = abbreviation_matcher.get_or_insert_with(|| {
-                    super::abbreviations::Matcher::new(
+                    super::abbreviations::Matcher::with_mode(
                         &document.text,
                         &super::lexer::protected_regions(&document.text),
                         document.locale,
                         options.abbreviation_policy,
+                        abbreviation_mode,
                     )
                 });
                 (

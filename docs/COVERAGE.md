@@ -314,10 +314,11 @@ Recommended implementation order:
 4. Continue consolidating semantic dispatch around the shared typed document.
    Source protection, timestamps, scientific notation, attached durations,
    fractions, ranges, ordinals, two-component clocks, numeric calendar dates,
-   plain numbers, percentages, legacy measure units and compatibility currencies
-   now use shared parsing/shape evidence with versioned adapters retaining
-   offsets, warnings, context-sensitive morphology and compatibility wording;
-   abbreviation and residual identifier dispatch still needs consolidation.
+   plain numbers, percentages, legacy measure units, compatibility currencies
+   and pre-catalog abbreviations now use shared parsing/shape evidence with
+   versioned adapters retaining offsets, warnings, context-sensitive morphology
+   and compatibility wording; residual identifier dispatch still needs
+   consolidation.
 5. Context distinguishing padded counts, phone/serial/postal identifiers,
    mixed-script text, and domain abbreviations. Add independently reviewed
    minimal pairs before expanding transformations.

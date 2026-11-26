@@ -9,6 +9,8 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ### Added
 
+- Consolidated abbreviation dispatch in typed legacy languages: the internal versioned parse now uses exact pre-catalog abbreviation context boundaries as typed semantic spans, projects their established expansions through the shared augmentation adapter, and keeps newer reviewed catalog entries confined to the typed coverage path.
+
 - Consolidated digit-run protection in typed legacy languages: the shared augmentation pass now applies the single versioned phone-like digit-group boundary before typed numeric, unit, percent or currency rows can rewrite individual groups, while Italian uses the same lexical helper through the legacy classifier.
 
 - Consolidated joined quantity and currency dispatch in typed legacy languages: typed semantic spans now feed versioned percent, unit and money renderers while preserving symbol ambiguity, minor-unit precision, scale-word warnings, locale separator policy, quantity-context canonicalization, warning offsets, protected sources, and scientific/range precedence.

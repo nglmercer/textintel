@@ -84,8 +84,12 @@ fn analyze(
     }
     let document = crate::speech::parser::parse_lexical_source(source, &options)
         .map_err(|_| NormalizeError::InvalidReadingOptions)?;
-    let result = crate::speech::verbalize::verbalize_document_with_options(&document, &options)
-        .map_err(|_| NormalizeError::InvalidReadingOptions)?;
+    let result = crate::speech::verbalize::verbalize_document_with_mode(
+        &document,
+        &options,
+        crate::speech::abbreviations::MatcherMode::Versioned,
+    )
+    .map_err(|_| NormalizeError::InvalidReadingOptions)?;
     Ok(TypedAnalysis { document, result })
 }
 
@@ -691,10 +695,7 @@ fn next_word_after_field<'a>(
 /// lexical guard retains the compatibility boundary: two or more digit
 /// groups joined by one space-like separator are data, not independent
 /// quantities. Italian still uses the classifier implementation directly.
-fn legacy_digit_run_membership(
-    text: &str,
-    fields: &[crate::speech::lexer::Field],
-) -> Vec<bool> {
+fn legacy_digit_run_membership(text: &str, fields: &[crate::speech::lexer::Field]) -> Vec<bool> {
     let mut members = vec![false; fields.len()];
     let mut index = 0;
     while index < fields.len() {
@@ -1436,6 +1437,29 @@ fn timestamp_shaped(source: &str) -> bool {
             .is_some_and(|b| *b == b'T' || *b == b't')
 }
 
+/// Project a compatibility-matched pre-catalog abbreviation through the exact
+/// versioned expansion table. Newer catalog entries remain generic typed
+/// coverage and are still blocked in languages whose legacy adapter already
+/// owns the abbreviation feature.
+fn legacy_abbreviation(span: &SpeechSpan) -> Option<LegacyRow> {
+    let SpeechValue::Abbreviation { id } = &span.value else {
+        return None;
+    };
+    let entry = crate::speech::abbreviations::entry(id)?;
+    (entry.legacy && entry.written == span.source).then(|| {
+        (
+            Some(TextChange {
+                kind: ChangeKind::Abbreviation,
+                start: span.start,
+                end: span.end,
+                replacement: entry.spoken.clone(),
+                confidence: Confidence::Medium,
+            }),
+            None,
+        )
+    })
+}
+
 /// Compatibility renderers for semantic values that used to have a second
 /// classifier. They only replace wording; shared parsing remains authoritative.
 fn legacy_row(
@@ -1446,6 +1470,9 @@ fn legacy_row(
     opts: &NormalizeOptions,
 ) -> Option<(Option<TextChange>, Option<NormalizationWarning>)> {
     let _ = reading;
+    if let Some(row) = legacy_abbreviation(span) {
+        return Some(row);
+    }
     if let Some(row) = legacy_money(source, span, rules, opts) {
         return Some(row);
     }

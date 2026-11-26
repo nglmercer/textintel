@@ -129,6 +129,18 @@ pub struct AbbreviationMatch {
     pub entry: &'static CatalogEntry,
 }
 
+/// Which context grammar the matcher uses for catalog entries.
+///
+/// The public typed pipeline intentionally uses the reviewed catalog policy.
+/// The versioned frontend additionally needs the exact legacy boundary for
+/// entries that existed before the catalog migration; newer entries continue
+/// to use the typed policy even in that mode.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum MatcherMode {
+    Typed,
+    Versioned,
+}
+
 /// One lexical field scan per source, reusing the caller's protected ranges.
 /// `regions` should be sorted and disjoint, as returned by the shared lexer.
 pub struct Matcher<'a> {
@@ -137,6 +149,7 @@ pub struct Matcher<'a> {
     blocked: Vec<bool>,
     candidates: Vec<&'static CatalogEntry>,
     policy: AbbreviationPolicy,
+    mode: MatcherMode,
     disabled: bool,
 }
 
@@ -146,6 +159,16 @@ impl<'a> Matcher<'a> {
         regions: &[Range<usize>],
         locale: SpeechLocale,
         policy: AbbreviationPolicy,
+    ) -> Self {
+        Self::with_mode(text, regions, locale, policy, MatcherMode::Typed)
+    }
+
+    pub(crate) fn with_mode(
+        text: &'a str,
+        regions: &[Range<usize>],
+        locale: SpeechLocale,
+        policy: AbbreviationPolicy,
+        mode: MatcherMode,
     ) -> Self {
         // Structured documents are data even when a quoted string resembles a
         // treatment followed by a name. This check is once, never per alias.
@@ -182,6 +205,7 @@ impl<'a> Matcher<'a> {
             blocked,
             candidates,
             policy,
+            mode,
             disabled,
         }
     }
@@ -192,7 +216,10 @@ impl<'a> Matcher<'a> {
         }
         let index = self.fields.partition_point(|field| field.end <= start);
         let field = *self.fields.get(index)?;
-        if start < field.start || self.blocked[index] {
+        if start < field.start
+            || field.protected
+            || (self.mode == MatcherMode::Typed && self.blocked[index])
+        {
             return None;
         }
         self.candidates.iter().find_map(|&entry| {
@@ -200,22 +227,43 @@ impl<'a> Matcher<'a> {
             if self.text.get(start..end)? != entry.written || end > field.end {
                 return None;
             }
-            let company = entry.context == AbbreviationContext::CompanyName;
-            if !company
-                && (!self.text[field.start..start].chars().all(is_opening)
-                    || !self.text[..start]
-                        .chars()
-                        .next_back()
-                        .is_none_or(|c| !is_word(c))
-                    || !self.text[end..field.end].chars().all(is_closing)
-                    || self.text[end..field.end]
-                        .chars()
-                        .any(|c| matches!(c, '.' | '!' | '?' | '…' | '。' | '！' | '？')))
-            {
+            let legacy_compatibility = self.mode == MatcherMode::Versioned && entry.legacy;
+            if !legacy_compatibility && self.blocked[index] {
                 return None;
             }
-            self.context_matches(entry, index, start, end)
-                .then_some(AbbreviationMatch { start, end, entry })
+            if legacy_compatibility {
+                // The legacy adapter recognizes the complete lexical core plus
+                // exactly one following period. Punctuation after that period
+                // belongs to the legacy continuation rule, not to a general
+                // closing-punctuation boundary.
+                if start != field.core_start
+                    || end != field.core_end + 1
+                    || !entry.written.ends_with('.')
+                {
+                    return None;
+                }
+            } else {
+                let company = entry.context == AbbreviationContext::CompanyName;
+                if !company
+                    && (!self.text[field.start..start].chars().all(is_opening)
+                        || !self.text[..start]
+                            .chars()
+                            .next_back()
+                            .is_none_or(|c| !is_word(c))
+                        || !self.text[end..field.end].chars().all(is_closing)
+                        || self.text[end..field.end]
+                            .chars()
+                            .any(|c| matches!(c, '.' | '!' | '?' | '…' | '。' | '！' | '？')))
+                {
+                    return None;
+                }
+            }
+            let matches = if legacy_compatibility {
+                self.legacy_context_matches(entry, index)
+            } else {
+                self.context_matches(entry, index, start, end)
+            };
+            matches.then_some(AbbreviationMatch { start, end, entry })
         })
     }
 
@@ -258,6 +306,36 @@ impl<'a> Matcher<'a> {
                     || matches!(c, '-' | '\'' | '’')
             });
         (numeric || word).then_some(first)
+    }
+
+    /// Exact versioned context policy for pre-catalog entries. This mirrors
+    /// `compatibility::legacy_match`: Unicode case is significant, only
+    /// ASCII digits continue a name/number context, LF alone blocks the next
+    /// field while CR does not, and capitalized contexts require the period
+    /// to be the field's final punctuation.
+    fn legacy_context_matches(&self, entry: &CatalogEntry, index: usize) -> bool {
+        let field = self.fields[index];
+        let dot = field.core_end;
+        let after_dot_empty = dot + 1 == field.end;
+        let next_first = self.fields.get(index + 1).and_then(|next| {
+            let gap = &self.text[field.end..next.start];
+            (!gap.contains('\n') && next.bare_start())
+                .then(|| self.text[next.start..].chars().next())
+                .flatten()
+        });
+        match entry.context {
+            AbbreviationContext::CapitalizedWord => {
+                after_dot_empty && next_first.is_some_and(char::is_uppercase)
+            }
+            AbbreviationContext::CapitalizedWordOrNumber => {
+                after_dot_empty
+                    && next_first.is_some_and(|c| c.is_uppercase() || c.is_ascii_digit())
+            }
+            AbbreviationContext::NotSentenceEnd => {
+                compatibility::period_continues(self.text, &self.fields, index, dot)
+            }
+            _ => false,
+        }
     }
 
     fn context_matches(

@@ -15,21 +15,34 @@ pub fn parse_for_speech(
     text: &str,
     options: &SpeechOptions,
 ) -> Result<SpeechDocument, TextIntelError> {
-    parse_with_regions(text, options, None)
+    parse_with_regions(
+        text,
+        options,
+        None,
+        super::abbreviations::MatcherMode::Typed,
+    )
 }
 
 /// Reuse the original source's protected ranges across compatibility adapters.
+/// Versioned normalization parses abbreviations with its exact pre-catalog
+/// context boundary; the public typed parser retains the newer catalog policy.
 pub(crate) fn parse_lexical_source(
     source: &super::lexer::LexicalSource<'_>,
     options: &SpeechOptions,
 ) -> Result<SpeechDocument, TextIntelError> {
-    parse_with_regions(source.text(), options, Some(source.regions()))
+    parse_with_regions(
+        source.text(),
+        options,
+        Some(source.regions()),
+        super::abbreviations::MatcherMode::Versioned,
+    )
 }
 
 fn parse_with_regions(
     text: &str,
     options: &SpeechOptions,
     regions: Option<&[std::ops::Range<usize>]>,
+    abbreviation_mode: super::abbreviations::MatcherMode,
 ) -> Result<SpeechDocument, TextIntelError> {
     options.validate()?;
     let length = text.chars().count();
@@ -63,11 +76,12 @@ fn parse_with_regions(
         }
     };
     let mut region_index = 0;
-    let abbreviations = super::abbreviations::Matcher::new(
+    let abbreviations = super::abbreviations::Matcher::with_mode(
         text,
         regions,
         options.locale,
         options.abbreviation_policy,
+        abbreviation_mode,
     );
     let mut spans = Vec::new();
     let mut cursor = 0;

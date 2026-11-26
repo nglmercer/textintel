@@ -581,7 +581,9 @@ impl<'a> Classifier<'a> {
             return index + 1;
         }
         let core = self.core(index);
-        if let Some(next) = self.abbreviation(index) {
+        if self.language == "it"
+            && let Some(next) = self.abbreviation(index)
+        {
             return next;
         }
         if self.language == "it"
