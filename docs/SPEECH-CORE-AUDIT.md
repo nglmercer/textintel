@@ -151,7 +151,7 @@ Two detector APIs retain different contracts:
 | Exact subsecond clocks | [`speech/temporal.rs`](../src/speech/temporal.rs), shared number/quantity core | `FractionalClock` retains the complete clock and every fraction digit; dot is automatic, comma requires Time intent; no compact projection or timezone conversion |
 | Literal invalid-date intent and diagnostics | [`speech/temporal.rs`](../src/speech/temporal.rs), [`speech/evaluation.rs`](../src/speech/evaluation.rs) | Shared component bounds/order checks produce distinct `InvalidCalendarDate` IR only under `ReadComponents`; evaluation retains reasons even for supported exact readings |
 | Number composition and spellout data | [`speech/numbers.rs`](../src/speech/numbers.rs) | Typed renderer, quantity/temporal/expression renderers and most versioned language number adapters |
-| Unit noun recognition | [`speech/lexicons.rs`](../src/speech/lexicons.rs) | Alias forms derive from the same CLDR patterns used to render units; derived resource profiles reuse those patterns |
+| Unit noun and symbol recognition | [`speech/lexicons.rs`](../src/speech/lexicons.rs), [`speech/data/unit-symbols.json`](../src/speech/data/unit-symbols.json) | Long/display alias forms derive from the same CLDR patterns used to render units; short/narrow surface forms are extracted from pinned CLDR 48 patterns with attached/separated evidence, conflict exclusion, and exact case-sensitive matching |
 | Locale aliases, defaults and regional conventions | [`speech/locales.rs`](../src/speech/locales.rs) | `for_locale` supplies versioned resolution, shared adapters and all ten legacy convention constructors; typed alias scope remains explicit |
 | Full localized currency names | [`speech/quantities.rs`](../src/speech/quantities.rs), shared CLDR lexicons | Opt-in `CurrencyNaming::Full` retains qualifiers across the twenty-language lexical path; the shared Arabic currencies have reviewed count/qualifier paradigms |
 | Pronunciation exceptions | [`speech/dictionary.rs`](../src/speech/dictionary.rs) | One public bounded dictionary with shared lexical boundaries and protected-region handling |
@@ -408,6 +408,29 @@ locale supplies a geographical time zone.
 [Coverage and evaluation](COVERAGE.md) records the
 separate metrics and remaining reference/quality-gate failures. These checks do
 not make the remaining architecture and language work above complete.
+
+## Implementation design: native unit symbols and attachment
+
+Status: implemented and regression-covered. `scripts/generate_unit_symbols.py`
+extracts short and narrow suffix patterns from pinned CLDR JSON 48.0.0 into
+`src/speech/data/unit-symbols.json` (1,574 locale-scoped surface forms). The
+extract records only the semantic distinction between attached (`{0}kg`) and
+separated (`{0} kg`) forms; directional formatting controls are removed, all
+Unicode whitespace widths satisfy separation at match time, and leading-slash
+reciprocal patterns are not treated as simple unit aliases. Forms that map to
+more than one canonical unit at the same attachment are excluded rather than
+guessed.
+
+Typed matching preserves original UTF-8 spans, applies NFKC compatibility for
+fullwidth forms, and remains case-sensitive because SI prefixes and bit/byte
+case are semantic. Established global aliases remain compatibility behavior.
+Newly projected punctuation-only symbols (`′`, `″`, bare `°`) and one-letter
+ASCII narrow forms (`B` and French `o`) require explicit measure intent. The
+irreconcilable narrow conflicts `m` (metre/minute) and Turkish `s`
+(hour/second) keep the established metre/second reading. Versioned typed
+legacy normalization surfaces new localized/non-ASCII unit evidence while
+keeping identifier-shaped tokens such as `4K`, duration opt-in policy, warning
+behavior and Italian's versioned-only boundary intact.
 
 ## Implementation design: month-year partial dates
 

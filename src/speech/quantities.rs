@@ -6,7 +6,10 @@ use super::core::{
     canonical_count, digit, left_boundary, parse_number, right_boundary as boundary,
     scan_numeric_end_for_locale, shift_decimal, skip_space,
 };
-use super::lexicons::{currency_name, spoken_unit_pattern, unit_forms, unit_pattern};
+use super::lexicons::{
+    UnitAttachment, currency_name, spoken_unit_pattern, unit_forms, unit_pattern,
+    unit_surface_forms,
+};
 use super::numbers::{arabic_construct_count, verbalize_with_gender, verbalize_with_options};
 use super::types::{
     CurrencyNaming, NumberReading, NumberValue, ReadingStyle, SpeechInterpretation, SpeechLocale,
@@ -93,10 +96,89 @@ pub(super) fn localized_unit_alias(
     }
     best
 }
-pub(super) fn unit_at<'a>(
+/// Match one exact NFKC surface form while retaining original byte offsets.
+/// Short/narrow unit symbols are case-sensitive: SI prefixes and bit/byte
+/// distinctions are semantic rather than cosmetic.
+fn exact_surface_at(text: &str, start: usize, form: &str) -> Option<usize> {
+    if !text.is_char_boundary(start) {
+        return None;
+    }
+    let mut normalized = String::new();
+    for (offset, ch) in text[start..].char_indices().take(64) {
+        normalized.extend(ch.to_string().nfkc());
+        if normalized == form {
+            let end = start + offset + ch.len_utf8();
+            return boundary(text, end).then_some(end);
+        }
+        if !form.starts_with(&normalized) {
+            break;
+        }
+    }
+    None
+}
+
+/// Punctuation-only symbols such as apostrophe feet or a bare degree sign are
+/// too context-dependent for automatic quantity recognition. They remain
+/// available under an explicit measure interpretation.
+fn punctuation_only(form: &str) -> bool {
+    !form.chars().any(char::is_alphanumeric)
+}
+
+/// A one-letter ASCII alias is also a common identifier shape. Established
+/// global SI aliases keep their compatibility behavior; newly projected CLDR
+/// narrow forms require explicit measure intent.
+fn single_ascii_letter(form: &str) -> bool {
+    form.chars().count() == 1 && form.chars().all(|c| c.is_ascii_alphabetic())
+}
+
+/// Match a locale-scoped CLDR short/narrow unit. Unlike the compatibility
+/// noun inventory, these forms retain the width's documented attachment:
+/// `{0}kg` is attached while `{0} kg` is separated. Any Unicode whitespace
+/// accepted by the shared scanner satisfies the separated form.
+fn localized_symbol_alias(
+    text: &str,
+    start: usize,
+    locale: SpeechLocale,
+    separated: Option<bool>,
+    explicit_measure: bool,
+) -> Option<(usize, &'static str)> {
+    let mut best = None;
+    for surface in unit_surface_forms(locale) {
+        if let Some(separated) = separated {
+            let wants_separated = surface.attachment == UnitAttachment::Separated;
+            if wants_separated != separated {
+                continue;
+            }
+        }
+        if (punctuation_only(surface.form) || single_ascii_letter(surface.form))
+            && !explicit_measure
+        {
+            continue;
+        }
+        if let Some(end) = exact_surface_at(text, start, surface.form)
+            && best.is_none_or(|(old, _)| end > old)
+        {
+            best = Some((end, surface.key));
+        }
+    }
+    best
+}
+
+fn longest_unit<'a>(
+    left: Option<(usize, &'a str)>,
+    right: Option<(usize, &'a str)>,
+) -> Option<(usize, &'a str)> {
+    match (left, right) {
+        (Some(a), Some(b)) => Some(if a.0 >= b.0 { a } else { b }),
+        (a, b) => a.or(b),
+    }
+}
+
+fn unit_at_impl<'a>(
     text: &str,
     start: usize,
     options: &'a SpeechOptions,
+    separated: Option<bool>,
 ) -> Option<(usize, &'a str)> {
     if let Some(found) = options
         .unit_aliases
@@ -111,11 +193,36 @@ pub(super) fn unit_at<'a>(
         return Some(found);
     }
     let global = unit_alias(text, start);
-    let local = localized_unit_alias(text, start, options.locale);
-    match (global, local) {
-        (Some(a), Some(b)) => Some(if a.0 >= b.0 { a } else { b }),
-        (a, b) => a.or(b),
-    }
+    let symbols = localized_symbol_alias(
+        text,
+        start,
+        options.locale,
+        separated,
+        options.interpret_as == SpeechInterpretation::Measure,
+    );
+    let nouns = localized_unit_alias(text, start, options.locale);
+    longest_unit(global, longest_unit(symbols, nouns))
+}
+
+/// Boundary/negative guards need to know whether any unit token is present;
+/// they intentionally accept either attachment form.
+pub(super) fn unit_at<'a>(
+    text: &str,
+    start: usize,
+    options: &'a SpeechOptions,
+) -> Option<(usize, &'a str)> {
+    unit_at_impl(text, start, options, None)
+}
+
+/// Positive quantity recognition uses the CLDR attachment evidence for short
+/// and narrow symbols while retaining established compatibility aliases.
+fn quantity_unit_at<'a>(
+    text: &str,
+    start: usize,
+    options: &'a SpeechOptions,
+    separated: bool,
+) -> Option<(usize, &'a str)> {
+    unit_at_impl(text, start, options, Some(separated))
 }
 /// Whether a canonical quantity key has a noun pattern in this language.
 pub fn supports_unit(locale: SpeechLocale, key: &str) -> bool {
@@ -235,16 +342,19 @@ pub(super) fn parse_at(
     if let Some(found) = custom_prefix_unit(text, start, options) {
         return Some(found);
     }
-    if let Some((end, value)) = super::expressions::parse_at(text, start, options)
-        && let Some((unit_end, unit)) = unit_at(text, skip_space(text, end), options)
-    {
-        return Some((
-            unit_end,
-            SpeechValue::MeasuredExpression {
-                unit: unit.into(),
-                value,
-            },
-        ));
+    if let Some((end, value)) = super::expressions::parse_at(text, start, options) {
+        let unit_start = skip_space(text, end);
+        if let Some((unit_end, unit)) =
+            quantity_unit_at(text, unit_start, options, unit_start > end)
+        {
+            return Some((
+                unit_end,
+                SpeechValue::MeasuredExpression {
+                    unit: unit.into(),
+                    value,
+                },
+            ));
+        }
     }
     if options.interpret_as == SpeechInterpretation::Measure
         && let Some(found) = parse_labelled(text, start, options)
@@ -306,9 +416,17 @@ pub(super) fn parse_at(
         }
     };
     value.negative |= negative_word;
+    let mut quantity_end = number_end;
     let mut suffix = skip_space(text, number_end);
-    if let Some((end, power)) = scale_at(text, suffix, options.locale) {
+    // An explicit measure hint resolves the narrow byte symbol before the
+    // established English billion abbreviation. Automatic mode retains the
+    // scale-word interpretation rather than silently changing `B` amounts.
+    let measure_unit_before_scale = options.interpret_as == SpeechInterpretation::Measure
+        && quantity_unit_at(text, suffix, options, suffix > number_end).is_some();
+    if !measure_unit_before_scale && let Some((end, power)) = scale_at(text, suffix, options.locale)
+    {
         value = scale_value(&value, power)?;
+        quantity_end = end;
         suffix = skip_space(text, end);
     }
     if options.locale == SpeechLocale::Zh
@@ -390,7 +508,7 @@ pub(super) fn parse_at(
     } else {
         suffix
     };
-    let (end, unit) = unit_at(text, unit_start, options)?;
+    let (end, unit) = quantity_unit_at(text, unit_start, options, suffix > quantity_end)?;
     let mut unit = if reciprocal {
         format!("per:{unit}")
     } else {
@@ -399,7 +517,9 @@ pub(super) fn parse_at(
     let mut end = end;
     if text[end..].starts_with('/') {
         let denominator = skip_space(text, end + 1);
-        if let Some((den_end, den)) = unit_at(text, denominator, options) {
+        if let Some((den_end, den)) =
+            quantity_unit_at(text, denominator, options, denominator > end + 1)
+        {
             unit = format!("{unit}/per:{den}");
             end = den_end;
         } else {

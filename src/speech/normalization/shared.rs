@@ -738,6 +738,85 @@ fn legacy_vulgar_fraction_warnings(
         .collect()
 }
 
+/// Whether the source uses one of the small unit surfaces owned by the
+/// versioned compatibility dictionary. Native/full CLDR forms are deliberately
+/// new typed coverage, while existing `kg`-style forms continue through the
+/// legacy renderer and warning policy.
+fn versioned_unit_surface(
+    source: &crate::speech::lexer::LexicalSource<'_>,
+    span: &SpeechSpan,
+) -> bool {
+    let text = source.text();
+    let fields = source.fields();
+    for index in overlapping_field_indices(&fields, span) {
+        let field = fields[index];
+        let core = field_core(text, field);
+        if super::rules::UNIT_FORMS.iter().any(|(form, _)| {
+            core.strip_suffix(form)
+                .is_some_and(|rest| rest.ends_with(|c: char| c.is_ascii_digit()))
+        }) {
+            return true;
+        }
+        if core.bytes().any(|byte| byte.is_ascii_digit())
+            && let Some(unit_index) = joinable_field(text, &fields, index)
+        {
+            let unit = field_core(text, fields[unit_index]);
+            if super::rules::unit_from_str(unit).is_some() {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Whether a typed unit row is evidence-backed localized coverage rather
+/// than an established compatibility alias. Conservative exclusions matter:
+/// duration aliases retain the opt-in Natural/precise compatibility split, and
+/// one-letter ASCII/punctuation forms remain explicit-measure-only evidence.
+fn expanded_unit_surface(span: &SpeechSpan, locale: SpeechLocale) -> bool {
+    let unit = match &span.value {
+        SpeechValue::Measure { unit, .. } | SpeechValue::MeasuredExpression { unit, .. } => unit,
+        _ => return false,
+    };
+    if unit.starts_with("duration-") {
+        return false;
+    }
+    let source = span.source.as_str();
+    for surface in crate::speech::lexicons::unit_surface_forms(locale) {
+        if surface.key != unit || !source.ends_with(surface.form) {
+            continue;
+        }
+        let before = &source[..source.len() - surface.form.len()];
+        let separated = before.chars().last().is_some_and(char::is_whitespace);
+        let number_before = before
+            .trim_end()
+            .chars()
+            .last()
+            .is_some_and(char::is_numeric);
+        let high_risk = surface.form.chars().count() == 1
+            && surface.form.chars().all(|c| c.is_ascii_alphabetic())
+            || !surface.form.chars().any(char::is_alphanumeric);
+        let attachment_matches = matches!(
+            (surface.attachment, separated),
+            (crate::speech::lexicons::UnitAttachment::Attached, false)
+                | (crate::speech::lexicons::UnitAttachment::Separated, true)
+        );
+        if number_before && attachment_matches && !high_risk {
+            return true;
+        }
+    }
+    // Distinctive non-ASCII native aliases (`кг`, `千克`, `キロ`, and localized
+    // noun forms) are not identifier-shaped in the Latin compatibility sense.
+    // ASCII-only aliases such as `4K` or `30min` do not use this path.
+    let mut seen_number = false;
+    source.chars().any(|ch| {
+        if ch.is_numeric() {
+            seen_number = true;
+        }
+        seen_number && ch.is_alphanumeric() && !ch.is_ascii()
+    })
+}
+
 /// Whether a core would reach the legacy plain-number dispatcher. Earlier
 /// numeric owners (scientific notation, Natural durations, slashes, clocks,
 /// ranges and ISO dates) consume or preserve the core before any separated
@@ -1620,7 +1699,16 @@ pub(super) fn augment(
             && legacy.coverage(feature(change.kind)) != CoverageLevel::None
             && !matches!(change.kind, ChangeKind::Date | ChangeKind::Time)
         {
-            continue;
+            let locale = opts
+                .language
+                .parse::<SpeechLocale>()
+                .unwrap_or(SpeechLocale::En);
+            let new_unit_surface = change.kind == ChangeKind::Unit
+                && !versioned_unit_surface(source, span)
+                && expanded_unit_surface(span, locale);
+            if !new_unit_surface {
+                continue;
+            }
         }
         // A terminal dot can denote a German ordinal; this adapter must not
         // resolve that ambiguity by stripping the marker and reading a count.

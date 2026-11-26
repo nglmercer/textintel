@@ -217,6 +217,16 @@ retains its existing Italian adapter.
 The central lexical data contains 55 unit keys and 37 currency names for every
 one of the twenty languages. This establishes resource presence, not complete
 coverage of arbitrary nouns, grammatical cases, dialects, counters, or precision.
+Short and narrow written unit symbols are also locale-aware. The parser uses
+pinned CLDR 48 surface data for forms such as Arabic `كغم`, Russian `мл`,
+Hindi `किग्रा`, Marathi `किग्रॅ`, Chinese `千克`, and Japanese `キロ`, while
+retaining the documented distinction between attached and separated forms.
+Thus Arabic `2 كغم` is a quantity but unattested attached `2كغم` remains
+fail-closed, whereas Marathi documents both `2 किग्रॅ` and `2किग्रॅ`. Matching
+is case-sensitive and NFKC-compatible. Punctuation-only forms and newly
+projected one-letter ASCII narrow forms require explicit measure intent;
+irreconcilable narrow-symbol conflicts keep the established global SI meaning.
+
 `CurrencyNaming::Full` uses these shared CLDR names independently of reading
 style: Natural English `US$7` can retain “seven US dollars.” It does not choose
 an ISO currency for an ambiguous symbol. Arabic additionally requires a reviewed

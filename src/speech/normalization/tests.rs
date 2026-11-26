@@ -441,6 +441,26 @@ fn english_features() {
 }
 
 #[test]
+fn native_unit_symbols_surface_through_typed_normalization_adapters() {
+    assert_eq!(spoken("2キロ", "en", Some("en-US")), "two kilograms");
+    assert_eq!(spoken("2кг", "es", Some("es-PE")), "dos kilogramos");
+    assert_eq!(spoken("2 мл", "ru", Some("ru-RU")), "два миллилитра");
+    assert_eq!(spoken("2 м/с", "ru", Some("ru-RU")), "два метра в секунду");
+    assert_eq!(spoken("2千克", "zh", Some("zh-CN")), "二千克");
+    assert_eq!(spoken("2キロ", "ja", Some("ja-JP")), "に キログラム");
+    assert_eq!(spoken("2 किग्रा", "hi", Some("hi-IN")), "दो किलोग्राम");
+    assert_eq!(spoken("2 किग्रॅ", "mr", Some("mr-IN")), "दोन किलोग्रॅम");
+    assert_eq!(spoken("2किग्रॅ", "mr", Some("mr-IN")), "दोन किलोग्रॅम");
+    assert_eq!(spoken("2 كغم", "ar", Some("ar-SA")), "اثنان كيلوغرام");
+    // Attachment that contradicts CLDR evidence remains fail-closed.
+    assert_eq!(spoken("2мл", "ru", Some("ru-RU")), "2мл");
+    assert_eq!(spoken("2किग्रा", "hi", Some("hi-IN")), "2किग्रा");
+    assert_eq!(spoken("2كغم", "ar", Some("ar-SA")), "2كغم");
+    // Italian remains on its versioned-only adapter rather than guessing.
+    assert_eq!(spoken("2кг", "it", Some("it-IT")), "2кг");
+}
+
+#[test]
 fn english_ambiguity() {
     assert_eq!(
         warning_codes("$5", "en", Some("en-GB")),

@@ -55,6 +55,98 @@ fn data() -> &'static BTreeMap<String, Value> {
     })
 }
 
+fn unit_symbol_data() -> &'static Value {
+    static DATA: OnceLock<Value> = OnceLock::new();
+    DATA.get_or_init(|| {
+        serde_json::from_str(UNIT_SYMBOLS).expect("bundled CLDR unit symbols must be valid")
+    })
+}
+
+/// Whether a short/narrow written unit is documented attached to the number
+/// or separated from it. Whitespace width is normalized at the matcher; the
+/// distinction that carries meaning is presence versus absence of separation.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum UnitAttachment {
+    Attached,
+    Separated,
+}
+
+/// One locale-scoped short or narrow CLDR unit surface form.
+#[derive(Clone, Debug)]
+pub(super) struct UnitSurfaceForm {
+    pub form: &'static str,
+    pub key: &'static str,
+    pub attachment: UnitAttachment,
+}
+
+/// Short and narrow written unit forms extracted from pinned CLDR data.
+/// Conflicting surface forms are excluded rather than assigning one meaning
+/// arbitrarily (notably narrow English `m`, which CLDR uses for both metre
+/// and minute in different unit entries).
+pub(super) fn unit_surface_forms(locale: SpeechLocale) -> &'static [UnitSurfaceForm] {
+    type Forms = BTreeMap<String, Vec<UnitSurfaceForm>>;
+    static FORMS: OnceLock<Forms> = OnceLock::new();
+    let forms = FORMS.get_or_init(|| {
+        let mut by_language = BTreeMap::new();
+        let Some(locales) = unit_symbol_data().get("locales").and_then(Value::as_object) else {
+            return by_language;
+        };
+        for (language, units) in locales {
+            let mut surfaces: BTreeMap<(&str, &str), Vec<&str>> = BTreeMap::new();
+            let Some(units) = units.as_object() else {
+                continue;
+            };
+            for (key, entries) in units {
+                let Some(entries) = entries.as_array() else {
+                    continue;
+                };
+                for entry in entries.iter().filter_map(Value::as_object) {
+                    let (Some(form), Some(attachment)) = (
+                        entry.get("form").and_then(Value::as_str),
+                        entry.get("attachment").and_then(Value::as_str),
+                    ) else {
+                        continue;
+                    };
+                    if !matches!(attachment, "attached" | "separated") {
+                        continue;
+                    }
+                    let keys = surfaces.entry((form, attachment)).or_default();
+                    if !keys.contains(&key.as_str()) {
+                        keys.push(key.as_str());
+                    }
+                }
+            }
+            let mut rows: Vec<UnitSurfaceForm> = surfaces
+                .into_iter()
+                .filter_map(|((form, attachment), keys)| {
+                    if keys.len() != 1 {
+                        return None;
+                    }
+                    let attachment = match attachment {
+                        "attached" => UnitAttachment::Attached,
+                        "separated" => UnitAttachment::Separated,
+                        _ => return None,
+                    };
+                    Some(UnitSurfaceForm {
+                        form,
+                        key: keys[0],
+                        attachment,
+                    })
+                })
+                .collect();
+            rows.sort_by(|a, b| {
+                b.form
+                    .len()
+                    .cmp(&a.form.len())
+                    .then_with(|| a.form.cmp(b.form))
+            });
+            by_language.insert(language.clone(), rows);
+        }
+        by_language
+    });
+    forms.get(locale.code()).map(Vec::as_slice).unwrap_or(&[])
+}
+
 pub(super) fn month(locale: SpeechLocale, month: u32) -> Option<&'static str> {
     data()
         .get(locale.code())?
@@ -160,3 +252,4 @@ pub(super) fn unit_forms(locale: SpeechLocale) -> &'static [(String, &'static st
 }
 
 const LEXICONS: &str = include_str!("data/lexicons.json");
+const UNIT_SYMBOLS: &str = include_str!("data/unit-symbols.json");

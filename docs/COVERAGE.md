@@ -303,9 +303,11 @@ Recommended implementation order:
    calendars and ambiguous dates protected.
 2. ~~Currency dictionaries with noun gender/case, minor units and inflected
    forms~~ — implemented and regression-covered for the shared currency matrix.
-   Remaining measure work includes broader native unit symbols and
-   script-specific attachment. Interpret symbols through explicit
-   source-locale options.
+   Native short/narrow unit symbols and CLDR attachment evidence are
+   implemented and regression-covered across the twenty typed locales.
+   High-risk punctuation-only and one-letter ASCII forms remain explicit
+   measure-intent forms, and irreconcilable narrow-symbol conflicts keep the
+   established global SI meaning rather than guessing.
 3. Independently reviewed spoken gold for RFC 3339 timestamps, ordinals,
    fractions, ranges, scientific notation and durations. The typed parser has
    timestamp IR/rendering, the versioned adapters now cover the shared

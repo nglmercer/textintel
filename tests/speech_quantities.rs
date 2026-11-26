@@ -1,6 +1,6 @@
 use textintel::speech::{
-    CurrencyNaming, NumberNotation, ReadingStyle, SpeechLocale, SpeechOptions, SpeechValue,
-    normalize_for_speech, parse_for_speech,
+    CurrencyNaming, NumberNotation, ReadingStyle, SpeechInterpretation, SpeechLocale,
+    SpeechOptions, SpeechValue, normalize_for_speech, parse_for_speech,
 };
 
 fn options(locale: SpeechLocale) -> SpeechOptions {
@@ -69,6 +69,149 @@ fn canonical_units_recognize_attached_native_fullwidth_and_case_variants() {
         assert_eq!(
             &parsed.text[parsed.spans[0].start..parsed.spans[0].end],
             source
+        );
+    }
+}
+
+#[test]
+fn cldr_short_and_narrow_unit_surface_matrix_matches_documented_attachment() {
+    let data: serde_json::Value =
+        serde_json::from_str(include_str!("../src/speech/data/unit-symbols.json")).unwrap();
+    let mut covered_keys = std::collections::BTreeSet::new();
+    for locale in SpeechLocale::ALL {
+        let mut options = options(locale);
+        options.interpret_as = SpeechInterpretation::Measure;
+        let units = data["locales"][locale.code()].as_object().unwrap();
+        assert!(
+            !units.is_empty(),
+            "{}: empty CLDR surface matrix",
+            locale.code()
+        );
+        for (key, forms) in units {
+            covered_keys.insert(key.as_str());
+            for form in forms.as_array().unwrap() {
+                let surface = form["form"].as_str().unwrap();
+                let attachment = form["attachment"].as_str().unwrap();
+                let source = if attachment == "attached" {
+                    format!("2{surface}")
+                } else {
+                    format!("2 {surface}")
+                };
+                // These narrow CLDR forms irreconcilably conflict with the
+                // established global SI meaning. Compatibility keeps metre/second;
+                // the conflicting minute/hour reading is not guessed.
+                if matches!(
+                    (locale, key.as_str(), surface, attachment),
+                    (SpeechLocale::En, "duration-minute", "m", "attached")
+                        | (SpeechLocale::Ja, "duration-minute", "m", "attached")
+                        | (SpeechLocale::Tr, "duration-hour", "s", "attached")
+                ) {
+                    continue;
+                }
+                let parsed = parse_for_speech(&source, &options).unwrap();
+                assert!(
+                    parsed.spans.iter().any(|span| {
+                        span.start == 0
+                            && span.end == source.len()
+                            && match (&span.value, key.as_str()) {
+                                (SpeechValue::Measure { unit, .. }, _) => unit == key,
+                                (SpeechValue::Percent { .. }, "concentr-percent") => true,
+                                _ => false,
+                            }
+                    }),
+                    "{} {} {} {}: {:?}",
+                    locale.code(),
+                    key,
+                    attachment,
+                    source,
+                    parsed.spans
+                );
+            }
+        }
+    }
+    assert_eq!(covered_keys.len(), 55);
+}
+
+#[test]
+fn conflicting_cldr_narrow_symbols_keep_the_established_si_meaning() {
+    for (locale, source, expected) in [
+        (SpeechLocale::En, "2m", "length-meter"),
+        (SpeechLocale::Ja, "2m", "length-meter"),
+        (SpeechLocale::Tr, "2s", "duration-second"),
+    ] {
+        let mut opts = options(locale);
+        opts.interpret_as = SpeechInterpretation::Measure;
+        let parsed = parse_for_speech(source, &opts).unwrap();
+        assert!(
+            matches!(&parsed.spans[0].value, SpeechValue::Measure { unit, .. } if unit == expected),
+            "{source}: {parsed:?}"
+        );
+    }
+}
+
+#[test]
+fn native_unit_symbols_respect_cldr_attachment_evidence() {
+    for (locale, separated, attached, key) in [
+        (SpeechLocale::Ar, "2 كغم", "2كغم", "mass-kilogram"),
+        (SpeechLocale::Hi, "2 किग्रा", "2किग्रा", "mass-kilogram"),
+        (SpeechLocale::Ru, "2 мл", "2мл", "volume-milliliter"),
+    ] {
+        let separated_parse = parse_for_speech(separated, &options(locale)).unwrap();
+        assert!(
+            matches!(&separated_parse.spans[0].value, SpeechValue::Measure { unit, .. } if unit == key),
+            "{separated}: {separated_parse:?}"
+        );
+        let attached_parse = parse_for_speech(attached, &options(locale)).unwrap();
+        assert!(
+            !attached_parse
+                .spans
+                .iter()
+                .any(|span| matches!(span.value, SpeechValue::Measure { .. })),
+            "{attached}: {attached_parse:?}"
+        );
+    }
+    // Marathi documents both the separated short form and the attached narrow form.
+    for source in ["2 किग्रॅ", "2किग्रॅ"] {
+        let parsed = parse_for_speech(source, &options(SpeechLocale::Mr)).unwrap();
+        assert!(
+            matches!(&parsed.spans[0].value, SpeechValue::Measure { unit, .. } if unit == "mass-kilogram"),
+            "{source}: {parsed:?}"
+        );
+    }
+    // French narrow nonbreaking whitespace and ordinary whitespace both satisfy
+    // the separated short form; the narrow form remains attached.
+    for source in ["2\u{202f}kg", "2 kg", "2kg"] {
+        let parsed = parse_for_speech(source, &options(SpeechLocale::Fr)).unwrap();
+        assert!(
+            matches!(&parsed.spans[0].value, SpeechValue::Measure { unit, .. } if unit == "mass-kilogram"),
+            "{source}: {parsed:?}"
+        );
+    }
+}
+
+#[test]
+fn punctuation_and_single_ascii_narrow_units_require_explicit_measure_intent() {
+    for (locale, source, key) in [
+        (SpeechLocale::En, "2B", "digital-byte"),
+        (SpeechLocale::Fr, "2o", "digital-byte"),
+        (SpeechLocale::En, "3′", "length-foot"),
+        (SpeechLocale::En, "3″", "length-inch"),
+        (SpeechLocale::En, "2°", "temperature-fahrenheit"),
+    ] {
+        let automatic = parse_for_speech(source, &options(locale)).unwrap();
+        assert!(
+            !automatic
+                .spans
+                .iter()
+                .any(|span| matches!(span.value, SpeechValue::Measure { .. })),
+            "automatically reinterpreted high-risk unit {source}: {automatic:?}"
+        );
+        let mut explicit = options(locale);
+        explicit.interpret_as = SpeechInterpretation::Measure;
+        let parsed = parse_for_speech(source, &explicit).unwrap();
+        assert!(
+            matches!(&parsed.spans[0].value, SpeechValue::Measure { unit, .. } if unit == key),
+            "{source}: {parsed:?}"
         );
     }
 }
@@ -1333,6 +1476,7 @@ fn si_prefix_and_bit_byte_case_are_semantic_not_cosmetic() {
         ("1mL", "volume-milliliter"),
         ("1ml", "volume-milliliter"),
         ("1mg", "mass-milligram"),
+        ("1mb", "pressure-millibar"),
         ("1Mg", "mass-tonne"),
         ("1Mbps", "digital-megabit/per:duration-second"),
         ("1MBps", "digital-megabyte/per:duration-second"),
@@ -1345,9 +1489,7 @@ fn si_prefix_and_bit_byte_case_are_semantic_not_cosmetic() {
             "{source}: {parsed:?}"
         );
     }
-    for source in [
-        "1mW", "1mHz", "1mb", "1ML", "1mG", "1MM", "1M/s", "1KM/H", "1M²",
-    ] {
+    for source in ["1mW", "1mHz", "1ML", "1mG", "1MM", "1M/s", "1KM/H", "1M²"] {
         let parsed = parse_for_speech(source, &options(SpeechLocale::En)).unwrap();
         assert!(
             !parsed

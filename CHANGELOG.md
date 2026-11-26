@@ -9,6 +9,8 @@ match `Cargo.toml`, `textintel::API_VERSION`, and the `--version` /
 
 ### Added
 
+- Implemented locale-aware native unit symbols and CLDR script-specific attachment across the twenty typed locales: pinned CLDR 48 short/narrow surface extraction, attached versus separated matching, conflict exclusion, case-sensitive SI/bit-byte behavior, fullwidth/NFKC compatibility, explicit-intent handling for punctuation-only and one-letter ASCII symbols, and typed legacy normalization adapters that surface new localized/non-ASCII unit evidence without weakening identifier, duration or Italian compatibility boundaries.
+
 - Completed typed semantic-dispatch consolidation for typed legacy languages: the legacy field classifier no longer runs for those languages, while shared compatibility adapters preserve vulgar-fraction diagnostics, digit-run protection, identifier-shaped malformed-quantity warnings, established wording, offsets and warning precedence. Italian remains on the versioned classifier because it has no typed locale implementation.
 
 - Consolidated abbreviation dispatch in typed legacy languages: the internal versioned parse now uses exact pre-catalog abbreviation context boundaries as typed semantic spans, projects their established expansions through the shared augmentation adapter, and keeps newer reviewed catalog entries confined to the typed coverage path.

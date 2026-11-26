@@ -141,6 +141,18 @@ Additional Telugu scale and basic ordinal rules: Copyright © 2026 Unicode,
 Inc., CLDR 49 `te.xml`; Unicode License V3 applies.
 
 Written-unit parsing indexes all bundled noun cases and plural patterns.
+`unit-symbols.json` additionally bundles locale-scoped short and narrow suffix
+forms extracted by `scripts/generate_unit_symbols.py` from the same pinned CLDR
+JSON 48.0.0 unit data. The extraction records attached versus separated written
+evidence (`{0}kg` versus `{0} kg`), removes directional formatting controls,
+retains lexical joining characters, normalizes compatibility width, and skips
+leading-slash reciprocal patterns. It currently contains 1,574 surface forms.
+The matcher is exact and case-sensitive; punctuation-only forms and newly
+projected one-letter ASCII narrow forms require explicit measure intent, while
+conflicting narrow forms such as metre/minute `m` keep the established global
+meaning rather than guessing.
+
+Written-unit parsing indexes all bundled noun cases and plural patterns.
 Additional Russian `килограммов` / `граммов` aliases coexist with CLDR's
 zero-ending counting forms; they are supported genitive plural vocabulary,
 not whole-input fixture replacements. See the primary
